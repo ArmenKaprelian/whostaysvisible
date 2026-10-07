@@ -1,13 +1,13 @@
 {
   "id": "B4-removal-cohorts",
-  "run_id": "20261007T043807Z-ro-B4-before-removal-figure.R",
+  "run_id": "20261007T043844Z-ro-B4-before-removal-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:38:07Z",
+  "time_utc": "2026-10-07T04:38:45Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B4-before-removal-figure.R",
-    "sha256": "0ed69c09e9eaa29f3712e4231c9b567e53987a8304ffc6941d46b2183ee7fed2"
+    "sha256": "6579e22b34f8ddf0f9a8de063d84021c5310a0514092de0d50a21d47377a3bcf"
   },
-  "lab_commit": "9fe8cf5eaee761bb9b6adbb8732abc68a390f0f1",
+  "lab_commit": "b99f5971c980ba8114a1d3a3cbca7742d3dfb342",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,
