@@ -44,7 +44,7 @@ ps <- ggplot(tab, aes(x = 100 * share, y = -rank)) +
 p <- patchwork::wrap_plots(pc, ps, nrow = 1, widths = c(1.15, 1)) +
   patchwork::plot_annotation(
     title = "Six-year reporting histories of the 2019 registered population",
-    subtitle = sprintf("The %d most common histories of %s firms eligible and registered in 2019. %s reported in every year;\nof the %s absent in 2019, %s had a recorded removal by 2024.",
+    subtitle = sprintf("The %d most common histories of %s firms eligible and registered in 2019.\n%s reported in every year; of the %s absent in 2019, %s had a recorded removal by 2024.",
                        nrow(top), lab_n(total), lab_pct(summ$always_available, 0), lab_pct(summ$absent_2019, 0), lab_pct(summ$absent_2019_removed_by_2024, 0)),
     theme = theme_lab())
 notes <- paste(

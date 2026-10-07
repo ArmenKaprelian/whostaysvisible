@@ -53,7 +53,7 @@ pr <- ggplot(w, aes(y = row)) +
             colour = ifelse(w$small, lab_palette[["neutral"]], lab_palette[["text"]])) +
   scale_x_continuous(limits = c(0, 145), breaks = c(0, 50, 100), expand = c(0, 0)) +
   coord_cartesian(clip = "off") +
-  labs(subtitle = "Original share (%), 2021 \u2192 2024", x = NULL, y = NULL) + theme_lab(grid_y = FALSE, grid_x = TRUE) +
+  labs(subtitle = "Share, 2021 \u2192 2024 (%)", x = NULL, y = NULL) + theme_lab(grid_y = FALSE, grid_x = TRUE) +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(6, 6, 6, 0))
 p <- patchwork::wrap_plots(pm, pn, pr, nrow = 1, widths = c(1.45, 0.75, 1.9)) +
   patchwork::plot_annotation(title = "How the five supplied lists overlap, and availability by pattern",
