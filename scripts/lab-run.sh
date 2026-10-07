@@ -35,8 +35,9 @@ LAB_MEMORY_MAX_USED=$MAX
 lab_write_env_file guarded "$MAX"
 echo "lab-run $LAB_RUN_ID: cap $MAX (high $HIGH), MemAvailable ${ma} MiB, scratch $LAB_SCRATCH" >&2
 
+high_bytes=$(echo "$HIGH" | awk '{v=$1; u=substr(v,length(v)); n=substr(v,1,length(v)-1); if (u=="G") print n*1073741824; else if (u=="M") print n*1048576; else print v}')
 "$LAB_SCRIPTS/ram-watch.sh" "$LAB_UNIT" "$LAB_RUN_DIR/ram.log" "$LAB_WATCH_INTERVAL" \
-  "$LAB_WATCH_FLOOR_MIB" "$LAB_WATCH_SWAP_FLOOR_MIB" &
+  "$LAB_WATCH_FLOOR_MIB" "$LAB_WATCH_SWAP_FLOOR_MIB" "$high_bytes" &
 WATCHER=$!
 cleanup() { kill "$WATCHER" 2>/dev/null; wait "$WATCHER" 2>/dev/null; rm -rf "$LAB_SCRATCH"; }
 trap cleanup EXIT

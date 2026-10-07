@@ -1,0 +1,4 @@
+"check","expected","observed","tolerance","pass"
+"origin rows 2019-2023 equal Task 5 source",15298927,15298927,0,TRUE
+"A counts 2019-2023 equal Task 5 source",9786337,9786337,0,TRUE
+"2021 prior-available origins = 2,122,411 (manuscript)",2122411,2122411,0,TRUE

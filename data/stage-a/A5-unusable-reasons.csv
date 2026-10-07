@@ -1,0 +1,145 @@
+"outcome","outcome_label","year","baseline_firms","reason","reason_label","rows","baseline_share"
+"borrowing_share","Borrowing share",2019,362682,"missing_inputs","Original present, required line missing",112750,0.310878400361749
+"borrowing_share","Borrowing share",2020,362682,"missing_inputs","Original present, required line missing",69765,0.192358595132926
+"borrowing_share","Borrowing share",2021,362682,"missing_inputs","Original present, required line missing",0,0
+"borrowing_share","Borrowing share",2022,362682,"missing_inputs","Original present, required line missing",41053,0.113192824568079
+"borrowing_share","Borrowing share",2023,362682,"missing_inputs","Original present, required line missing",79803,0.220035733783314
+"borrowing_share","Borrowing share",2024,362682,"missing_inputs","Original present, required line missing",101070,0.278673879597002
+"cash_share","Cash share",2019,1931064,"missing_inputs","Original present, required line missing",34451,0.0178404237249516
+"cash_share","Cash share",2020,1931064,"missing_inputs","Original present, required line missing",27741,0.0143656554106959
+"cash_share","Cash share",2021,1931064,"missing_inputs","Original present, required line missing",0,0
+"cash_share","Cash share",2022,1931064,"missing_inputs","Original present, required line missing",17033,0.00882052588624717
+"cash_share","Cash share",2023,1931064,"missing_inputs","Original present, required line missing",30352,0.0157177597428154
+"cash_share","Cash share",2024,1931064,"missing_inputs","Original present, required line missing",39148,0.0202727615449307
+"log_real_revenue","Real revenue",2019,1503491,"missing_inputs","Original present, required line missing",48811,0.0324651095350754
+"log_real_revenue","Real revenue",2020,1503491,"missing_inputs","Original present, required line missing",43780,0.0291188972863822
+"log_real_revenue","Real revenue",2021,1503491,"missing_inputs","Original present, required line missing",0,0
+"log_real_revenue","Real revenue",2022,1503491,"missing_inputs","Original present, required line missing",5308,0.00353045013239188
+"log_real_revenue","Real revenue",2023,1503491,"missing_inputs","Original present, required line missing",43281,0.0287870030482391
+"log_real_revenue","Real revenue",2024,1503491,"missing_inputs","Original present, required line missing",62345,0.0414668262064755
+"operating_margin","Operating margin",2019,1502770,"missing_inputs","Original present, required line missing",49196,0.0327368792296892
+"operating_margin","Operating margin",2020,1502770,"missing_inputs","Original present, required line missing",44227,0.0294303186781743
+"operating_margin","Operating margin",2021,1502770,"missing_inputs","Original present, required line missing",0,0
+"operating_margin","Operating margin",2022,1502770,"missing_inputs","Original present, required line missing",5656,0.00376371633716404
+"operating_margin","Operating margin",2023,1502770,"missing_inputs","Original present, required line missing",43443,0.0289086154235179
+"operating_margin","Operating margin",2024,1502770,"missing_inputs","Original present, required line missing",62449,0.0415559267219867
+"borrowing_share","Borrowing share",2019,362682,"absent_original","No original statement",19487,0.0537302650807043
+"borrowing_share","Borrowing share",2020,362682,"absent_original","No original statement",6093,0.0167998411831853
+"borrowing_share","Borrowing share",2021,362682,"absent_original","No original statement",0,0
+"borrowing_share","Borrowing share",2022,362682,"absent_original","No original statement",27007,0.0744646825593771
+"borrowing_share","Borrowing share",2023,362682,"absent_original","No original statement",39663,0.109360266018165
+"borrowing_share","Borrowing share",2024,362682,"absent_original","No original statement",47264,0.130318019642552
+"cash_share","Cash share",2019,1931064,"absent_original","No original statement",190785,0.0987978648040666
+"cash_share","Cash share",2020,1931064,"absent_original","No original statement",61724,0.0319637256973358
+"cash_share","Cash share",2021,1931064,"absent_original","No original statement",0,0
+"cash_share","Cash share",2022,1931064,"absent_original","No original statement",185214,0.0959129267595481
+"cash_share","Cash share",2023,1931064,"absent_original","No original statement",258015,0.133612868346155
+"cash_share","Cash share",2024,1931064,"absent_original","No original statement",290524,0.150447628871959
+"log_real_revenue","Real revenue",2019,1503491,"absent_original","No original statement",115804,0.0770234075228917
+"log_real_revenue","Real revenue",2020,1503491,"absent_original","No original statement",38235,0.0254308140188402
+"log_real_revenue","Real revenue",2021,1503491,"absent_original","No original statement",0,0
+"log_real_revenue","Real revenue",2022,1503491,"absent_original","No original statement",110616,0.0735727716361455
+"log_real_revenue","Real revenue",2023,1503491,"absent_original","No original statement",163273,0.108595927744163
+"log_real_revenue","Real revenue",2024,1503491,"absent_original","No original statement",193742,0.128861429832304
+"operating_margin","Operating margin",2019,1502770,"absent_original","No original statement",115617,0.0769359249918484
+"operating_margin","Operating margin",2020,1502770,"absent_original","No original statement",38181,0.0254070815893317
+"operating_margin","Operating margin",2021,1502770,"absent_original","No original statement",0,0
+"operating_margin","Operating margin",2022,1502770,"absent_original","No original statement",110523,0.0735461847122314
+"operating_margin","Operating margin",2023,1502770,"absent_original","No original statement",163158,0.108571504621466
+"operating_margin","Operating margin",2024,1502770,"absent_original","No original statement",193617,0.128840075327562
+"borrowing_share","Borrowing share",2019,362682,"structural_unavailable","Before incorporation or after dissolution year",21444,0.0591261766506196
+"borrowing_share","Borrowing share",2020,362682,"structural_unavailable","Before incorporation or after dissolution year",7569,0.0208695220606482
+"borrowing_share","Borrowing share",2021,362682,"structural_unavailable","Before incorporation or after dissolution year",0,0
+"borrowing_share","Borrowing share",2022,362682,"structural_unavailable","Before incorporation or after dissolution year",427,0.00117733992864272
+"borrowing_share","Borrowing share",2023,362682,"structural_unavailable","Before incorporation or after dissolution year",6360,0.0175360232931328
+"borrowing_share","Borrowing share",2024,362682,"structural_unavailable","Before incorporation or after dissolution year",16308,0.0449650106705047
+"cash_share","Cash share",2019,1931064,"structural_unavailable","Before incorporation or after dissolution year",224447,0.116229705488788
+"cash_share","Cash share",2020,1931064,"structural_unavailable","Before incorporation or after dissolution year",101096,0.0523524854691507
+"cash_share","Cash share",2021,1931064,"structural_unavailable","Before incorporation or after dissolution year",0,0
+"cash_share","Cash share",2022,1931064,"structural_unavailable","Before incorporation or after dissolution year",4045,0.00209470012386953
+"cash_share","Cash share",2023,1931064,"structural_unavailable","Before incorporation or after dissolution year",47939,0.0248251741009102
+"cash_share","Cash share",2024,1931064,"structural_unavailable","Before incorporation or after dissolution year",119380,0.0618208407385773
+"log_real_revenue","Real revenue",2019,1503491,"structural_unavailable","Before incorporation or after dissolution year",169773,0.112919199383302
+"log_real_revenue","Real revenue",2020,1503491,"structural_unavailable","Before incorporation or after dissolution year",71843,0.0477841237493274
+"log_real_revenue","Real revenue",2021,1503491,"structural_unavailable","Before incorporation or after dissolution year",0,0
+"log_real_revenue","Real revenue",2022,1503491,"structural_unavailable","Before incorporation or after dissolution year",1081,0.00071899332952442
+"log_real_revenue","Real revenue",2023,1503491,"structural_unavailable","Before incorporation or after dissolution year",23756,0.0158005601629807
+"log_real_revenue","Real revenue",2024,1503491,"structural_unavailable","Before incorporation or after dissolution year",66603,0.044298901689468
+"operating_margin","Operating margin",2019,1502770,"structural_unavailable","Before incorporation or after dissolution year",169725,0.112941434817038
+"operating_margin","Operating margin",2020,1502770,"structural_unavailable","Before incorporation or after dissolution year",71819,0.0477910791405205
+"operating_margin","Operating margin",2021,1502770,"structural_unavailable","Before incorporation or after dissolution year",0,0
+"operating_margin","Operating margin",2022,1502770,"structural_unavailable","Before incorporation or after dissolution year",1078,0.000717341975152552
+"operating_margin","Operating margin",2023,1502770,"structural_unavailable","Before incorporation or after dissolution year",23746,0.0158014865881006
+"operating_margin","Operating margin",2024,1502770,"structural_unavailable","Before incorporation or after dissolution year",66571,0.0442988614358817
+"borrowing_share","Borrowing share",2019,362682,"invalid_domain","Outside the outcome's domain",2800,0.0077202618271654
+"borrowing_share","Borrowing share",2020,362682,"invalid_domain","Outside the outcome's domain",2222,0.00612657920712911
+"borrowing_share","Borrowing share",2021,362682,"invalid_domain","Outside the outcome's domain",0,0
+"borrowing_share","Borrowing share",2022,362682,"invalid_domain","Outside the outcome's domain",2691,0.00741972306317931
+"borrowing_share","Borrowing share",2023,362682,"invalid_domain","Outside the outcome's domain",3425,0.00944353455644339
+"borrowing_share","Borrowing share",2024,362682,"invalid_domain","Outside the outcome's domain",3479,0.009592425320253
+"cash_share","Cash share",2019,1931064,"invalid_domain","Outside the outcome's domain",8577,0.00444159282136687
+"cash_share","Cash share",2020,1931064,"invalid_domain","Outside the outcome's domain",8253,0.00427380967176645
+"cash_share","Cash share",2021,1931064,"invalid_domain","Outside the outcome's domain",0,0
+"cash_share","Cash share",2022,1931064,"invalid_domain","Outside the outcome's domain",14058,0.00727992443544077
+"cash_share","Cash share",2023,1931064,"invalid_domain","Outside the outcome's domain",15860,0.00821308874278636
+"cash_share","Cash share",2024,1931064,"invalid_domain","Outside the outcome's domain",15874,0.00822033863196663
+"log_real_revenue","Real revenue",2019,1503491,"invalid_domain","Outside the outcome's domain",19449,0.0129358938630161
+"log_real_revenue","Real revenue",2020,1503491,"invalid_domain","Outside the outcome's domain",20055,0.0133389558035266
+"log_real_revenue","Real revenue",2021,1503491,"invalid_domain","Outside the outcome's domain",0,0
+"log_real_revenue","Real revenue",2022,1503491,"invalid_domain","Outside the outcome's domain",74373,0.0494668740950229
+"log_real_revenue","Real revenue",2023,1503491,"invalid_domain","Outside the outcome's domain",66928,0.044515065271425
+"log_real_revenue","Real revenue",2024,1503491,"invalid_domain","Outside the outcome's domain",61663,0.0410132152437228
+"operating_margin","Operating margin",2019,1502770,"invalid_domain","Outside the outcome's domain",19434,0.0129321186874904
+"operating_margin","Operating margin",2020,1502770,"invalid_domain","Outside the outcome's domain",20044,0.0133380357606287
+"operating_margin","Operating margin",2021,1502770,"invalid_domain","Outside the outcome's domain",0,0
+"operating_margin","Operating margin",2022,1502770,"invalid_domain","Outside the outcome's domain",74318,0.0494540082647378
+"operating_margin","Operating margin",2023,1502770,"invalid_domain","Outside the outcome's domain",66885,0.0445078089128742
+"operating_margin","Operating margin",2024,1502770,"invalid_domain","Outside the outcome's domain",61622,0.0410056096408632
+"borrowing_share","Borrowing share",2019,362682,"pending_financial_comparability","Pending financial comparability",64,0.000176463127478066
+"borrowing_share","Borrowing share",2020,362682,"pending_financial_comparability","Pending financial comparability",2,0.00000551447273368957
+"borrowing_share","Borrowing share",2021,362682,"pending_financial_comparability","Pending financial comparability",0,0
+"borrowing_share","Borrowing share",2022,362682,"pending_financial_comparability","Pending financial comparability",0,0
+"borrowing_share","Borrowing share",2023,362682,"pending_financial_comparability","Pending financial comparability",0,0
+"borrowing_share","Borrowing share",2024,362682,"pending_financial_comparability","Pending financial comparability",0,0
+"cash_share","Cash share",2019,1931064,"pending_financial_comparability","Pending financial comparability",256,0.000132569402153424
+"cash_share","Cash share",2020,1931064,"pending_financial_comparability","Pending financial comparability",16,0.00000828558763458901
+"cash_share","Cash share",2021,1931064,"pending_financial_comparability","Pending financial comparability",0,0
+"cash_share","Cash share",2022,1931064,"pending_financial_comparability","Pending financial comparability",1,0.000000517849227161813
+"cash_share","Cash share",2023,1931064,"pending_financial_comparability","Pending financial comparability",8,0.00000414279381729451
+"cash_share","Cash share",2024,1931064,"pending_financial_comparability","Pending financial comparability",5,0.00000258924613580907
+"log_real_revenue","Real revenue",2019,1503491,"pending_financial_comparability","Pending financial comparability",130,0.0000864654327827702
+"log_real_revenue","Real revenue",2020,1503491,"pending_financial_comparability","Pending financial comparability",12,0.00000798142456456341
+"log_real_revenue","Real revenue",2021,1503491,"pending_financial_comparability","Pending financial comparability",0,0
+"log_real_revenue","Real revenue",2022,1503491,"pending_financial_comparability","Pending financial comparability",0,0
+"log_real_revenue","Real revenue",2023,1503491,"pending_financial_comparability","Pending financial comparability",1,0.000000665118713713617
+"log_real_revenue","Real revenue",2024,1503491,"pending_financial_comparability","Pending financial comparability",1,0.000000665118713713617
+"operating_margin","Operating margin",2019,1502770,"pending_financial_comparability","Pending financial comparability",130,0.000086506917226189
+"operating_margin","Operating margin",2020,1502770,"pending_financial_comparability","Pending financial comparability",12,0.00000798525389780206
+"operating_margin","Operating margin",2021,1502770,"pending_financial_comparability","Pending financial comparability",0,0
+"operating_margin","Operating margin",2022,1502770,"pending_financial_comparability","Pending financial comparability",0,0
+"operating_margin","Operating margin",2023,1502770,"pending_financial_comparability","Pending financial comparability",1,0.000000665437824816838
+"operating_margin","Operating margin",2024,1502770,"pending_financial_comparability","Pending financial comparability",1,0.000000665437824816838
+"borrowing_share","Borrowing share",2019,362682,"other_unresolved","Unresolved",0,0
+"borrowing_share","Borrowing share",2020,362682,"other_unresolved","Unresolved",0,0
+"borrowing_share","Borrowing share",2021,362682,"other_unresolved","Unresolved",0,0
+"borrowing_share","Borrowing share",2022,362682,"other_unresolved","Unresolved",0,0
+"borrowing_share","Borrowing share",2023,362682,"other_unresolved","Unresolved",0,0
+"borrowing_share","Borrowing share",2024,362682,"other_unresolved","Unresolved",1,0.00000275723636684478
+"cash_share","Cash share",2019,1931064,"other_unresolved","Unresolved",0,0
+"cash_share","Cash share",2020,1931064,"other_unresolved","Unresolved",0,0
+"cash_share","Cash share",2021,1931064,"other_unresolved","Unresolved",0,0
+"cash_share","Cash share",2022,1931064,"other_unresolved","Unresolved",6,0.00000310709536297088
+"cash_share","Cash share",2023,1931064,"other_unresolved","Unresolved",13,0.00000673203995310357
+"cash_share","Cash share",2024,1931064,"other_unresolved","Unresolved",15,0.0000077677384074272
+"log_real_revenue","Real revenue",2019,1503491,"other_unresolved","Unresolved",0,0
+"log_real_revenue","Real revenue",2020,1503491,"other_unresolved","Unresolved",0,0
+"log_real_revenue","Real revenue",2021,1503491,"other_unresolved","Unresolved",0,0
+"log_real_revenue","Real revenue",2022,1503491,"other_unresolved","Unresolved",1,0.000000665118713713617
+"log_real_revenue","Real revenue",2023,1503491,"other_unresolved","Unresolved",3,0.00000199535614114085
+"log_real_revenue","Real revenue",2024,1503491,"other_unresolved","Unresolved",5,0.00000332559356856809
+"operating_margin","Operating margin",2019,1502770,"other_unresolved","Unresolved",0,0
+"operating_margin","Operating margin",2020,1502770,"other_unresolved","Unresolved",0,0
+"operating_margin","Operating margin",2021,1502770,"other_unresolved","Unresolved",0,0
+"operating_margin","Operating margin",2022,1502770,"other_unresolved","Unresolved",1,0.000000665437824816838
+"operating_margin","Operating margin",2023,1502770,"other_unresolved","Unresolved",3,0.00000199631347445051
+"operating_margin","Operating margin",2024,1502770,"other_unresolved","Unresolved",5,0.00000332718912408419

@@ -96,7 +96,7 @@ lab_finish() {
     [[ -n "$peak" ]] || peak="null"
   fi
   if [[ "$peak" == "null" && -f "$LAB_RUN_DIR/ram.log" ]]; then
-    peak=$(awk -F, 'NR>1 && $5 ~ /^[0-9]+$/ {if ($5>m) m=$5} END {if (m>0) printf "%d", m*1048576; else print "null"}' "$LAB_RUN_DIR/ram.log")
+    peak=$(awk -F, 'NR>1 && $7 ~ /^[0-9]+$/ {if ($7>m) m=$7} END {if (m>0) printf "%d", m*1048576; else print "null"}' "$LAB_RUN_DIR/ram.log")
   fi
   ro=$(grep -c . "$LAB_RUN_DIR/readonly-check.txt" 2>/dev/null); ro=${ro:-0}
   jq -n --arg run "$LAB_RUN_ID" --arg mode "$mode" --arg cmd "$cmd" --arg status "$status" \

@@ -1,0 +1,201 @@
+{
+  "id": "A4-persistence-by-list",
+  "run_id": "20261007T041910Z-ro-A4-persistence-by-list.R",
+  "mode": "ro",
+  "time_utc": "2026-10-07T04:19:11Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-a/A4-persistence-by-list.R",
+    "sha256": "a3d1f85c20e5dc887f756cd9842b65f2e85fd32af6136bd4de6e5c940ffefd0d"
+  },
+  "lab_commit": "d7b8823140c93caad8dc53a3bbb11dcaeb0c122a",
+  "programming": {
+    "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
+    "dirty_files": 6,
+    "pinned_utc": "2026-10-07T03:59:26Z"
+  },
+  "sources": [
+    {
+      "name": "acct.transition-membership-denominators",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/accounting/generation-10b9d50c61438/transition-membership-denominators.csv",
+      "kind": "csv",
+      "generation": "10b9d50c61438",
+      "size": 35358,
+      "mtime": 1791234706,
+      "sha256": "0bd327c0a8344396b11a81c8b413a40a7004e04b7af45d80b569410938979d1c",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "acct.transition-denominators",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/accounting/generation-10b9d50c61438/transition-denominators.csv",
+      "kind": "csv",
+      "generation": "10b9d50c61438",
+      "size": 1631,
+      "mtime": 1791234636,
+      "sha256": "6d854cf32fdde2cf97588d8ece82c9881acf916e88fe74261cc8fed4ab9a7635",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 240,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "withr",
+      "version": "3.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": null,
+  "memory_max": "none",
+  "extra": [],
+  "output": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A4-persistence-by-list.csv",
+    "sha256": "12657569f9a212553f5883e7e0576cb394af6e694178f72770c94cbacc861a23",
+    "columns": ["origin_year", "destination_year", "membership_group", "group", "prior", "member", "R", "A", "N", "X", "share_A", "share_N", "share_X", "supported"]
+  }
+}

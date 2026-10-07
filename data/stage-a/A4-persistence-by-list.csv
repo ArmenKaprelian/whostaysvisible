@@ -1,0 +1,241 @@
+"origin_year","destination_year","membership_group","group","prior","member","R","A","N","X","share_A","share_N","share_X","supported"
+2012,2013,"member_sanctioned","Sanctioned list","Previously available",FALSE,739268,598189,122050,18961,0.809163929725079,0.165095743356942,0.0256483440376156,TRUE
+2013,2014,"member_sanctioned","Sanctioned list","Previously available",FALSE,1587680,1286808,255220,45458,0.810495817797037,0.160750277133931,0.0286317141993349,TRUE
+2014,2015,"member_sanctioned","Sanctioned list","Previously available",FALSE,1781125,1488893,236077,56028,0.835928416029195,0.132543757456664,0.0314565232647905,TRUE
+2015,2016,"member_sanctioned","Sanctioned list","Previously available",FALSE,2102305,1703031,346527,52650,0.810077985829839,0.164831934471925,0.0250439398660042,TRUE
+2016,2017,"member_sanctioned","Sanctioned list","Previously available",FALSE,2132043,1758652,326859,46430,0.824867040674133,0.1533078835652,0.0217772343240732,TRUE
+2017,2018,"member_sanctioned","Sanctioned list","Previously available",FALSE,2147378,1768197,324487,54636,0.823421400424145,0.151108468094579,0.025443121797839,TRUE
+2019,2020,"member_sanctioned","Sanctioned list","Previously available",FALSE,2022942,1777315,175228,70389,0.878579316658609,0.0866203776479998,0.0347953623979333,TRUE
+2020,2021,"member_sanctioned","Sanctioned list","Previously available",FALSE,2169652,1905330,190683,73638,0.878173089509285,0.0878864444620612,0.0339400051252459,TRUE
+2021,2022,"member_sanctioned","Sanctioned list","Previously available",FALSE,2120313,1876586,186258,57460,0.885051405146316,0.0878445776637694,0.0270997725335835,TRUE
+2022,2023,"member_sanctioned","Sanctioned list","Previously available",FALSE,2076748,1869628,157557,49534,0.90026714844555,0.0758671730994805,0.0238517143148808,TRUE
+2023,2024,"member_sanctioned","Sanctioned list","Previously available",FALSE,2084762,1884882,150149,49694,0.90412334837262,0.0720221301040598,0.0238367736940716,TRUE
+2024,2025,"member_sanctioned","Sanctioned list","Previously available",FALSE,2081516,1806012,174290,101186,0.867642622012034,0.0837322413087384,0.0486116849450112,TRUE
+2012,2013,"member_sanctioned","Sanctioned list","Previously available",TRUE,1624,1505,85,33,0.926724137931034,0.0523399014778325,0.020320197044335,TRUE
+2013,2014,"member_sanctioned","Sanctioned list","Previously available",TRUE,1825,1717,82,26,0.940821917808219,0.0449315068493151,0.0142465753424658,TRUE
+2014,2015,"member_sanctioned","Sanctioned list","Previously available",TRUE,1994,1893,69,32,0.949348044132397,0.0346038114343029,0.0160481444332999,TRUE
+2015,2016,"member_sanctioned","Sanctioned list","Previously available",TRUE,2229,2048,164,17,0.918797667115298,0.0735755944369672,0.00762673844773441,TRUE
+2016,2017,"member_sanctioned","Sanctioned list","Previously available",TRUE,2311,2136,128,46,0.924275205538728,0.0553872782345305,0.0199048031155344,TRUE
+2017,2018,"member_sanctioned","Sanctioned list","Previously available",TRUE,2607,2479,95,33,0.95090141925585,0.0364403528960491,0.0126582278481013,TRUE
+2019,2020,"member_sanctioned","Sanctioned list","Previously available",TRUE,1962,1906,24,32,0.971457696228338,0.0122324159021407,0.0163098878695209,TRUE
+2020,2021,"member_sanctioned","Sanctioned list","Previously available",TRUE,2031,1971,24,36,0.970457902511078,0.0118168389955687,0.017725258493353,TRUE
+2021,2022,"member_sanctioned","Sanctioned list","Previously available",TRUE,2098,1943,144,11,0.926120114394662,0.0686367969494757,0.00524308865586273,TRUE
+2022,2023,"member_sanctioned","Sanctioned list","Previously available",TRUE,2144,1940,179,25,0.904850746268657,0.0834888059701493,0.011660447761194,TRUE
+2023,2024,"member_sanctioned","Sanctioned list","Previously available",TRUE,2064,1895,120,49,0.91812015503876,0.0581395348837209,0.0237403100775194,TRUE
+2024,2025,"member_sanctioned","Sanctioned list","Previously available",TRUE,1948,1730,139,79,0.888090349075975,0.0713552361396304,0.0405544147843942,TRUE
+2012,2013,"member_sanctioned","Sanctioned list","Previously absent",FALSE,3676024,783227,2448468,443847,0.213063625264688,0.666064204151007,0.120741050656905,TRUE
+2013,2014,"member_sanctioned","Sanctioned list","Previously absent",FALSE,2799677,264067,2084748,450674,0.0943205234032354,0.744638756542273,0.160973569451047,TRUE
+2014,2015,"member_sanctioned","Sanctioned list","Previously absent",FALSE,2551762,327691,1968792,255199,0.128417540507304,0.771542173603965,0.100008935002559,TRUE
+2015,2016,"member_sanctioned","Sanctioned list","Previously absent",FALSE,2402568,170228,1550942,681318,0.0708525211357181,0.645535110764815,0.283579070394678,TRUE
+2016,2017,"member_sanctioned","Sanctioned list","Previously absent",FALSE,2108646,165217,1374165,569203,0.0783521748079099,0.651681221029988,0.269937675645888,TRUE
+2017,2018,"member_sanctioned","Sanctioned list","Previously absent",FALSE,1902446,139671,1170416,592304,0.0734165384983332,0.61521641087316,0.3113381404781,TRUE
+2019,2020,"member_sanctioned","Sanctioned list","Previously absent",FALSE,1386766,230641,691456,464589,0.166315730267399,0.498610436079339,0.33501614547804,TRUE
+2020,2021,"member_sanctioned","Sanctioned list","Previously absent",FALSE,944488,57124,566624,320680,0.0604814460321359,0.599927156300556,0.339527871185235,TRUE
+2021,2022,"member_sanctioned","Sanctioned list","Previously absent",FALSE,835396,51388,543512,240468,0.0615133421754473,0.650604024917524,0.287849115868403,TRUE
+2022,2023,"member_sanctioned","Sanctioned list","Previously absent",FALSE,829199,68853,548487,211847,0.0830355560004293,0.66146606544388,0.255483906758209,TRUE
+2023,2024,"member_sanctioned","Sanctioned list","Previously absent",FALSE,811129,54763,592811,163468,0.0675145383779892,0.730846758037254,0.201531445676335,TRUE
+2024,2025,"member_sanctioned","Sanctioned list","Previously absent",FALSE,841120,53121,525634,262321,0.0631550789423626,0.624921533193837,0.311871076659692,TRUE
+2012,2013,"member_sanctioned","Sanctioned list","Previously absent",TRUE,951,222,712,17,0.233438485804416,0.748685594111462,0.017875920084122,TRUE
+2013,2014,"member_sanctioned","Sanctioned list","Previously absent",TRUE,829,147,663,19,0.177322074788902,0.799758745476478,0.02291917973462,TRUE
+2014,2015,"member_sanctioned","Sanctioned list","Previously absent",TRUE,788,167,609,12,0.211928934010152,0.772842639593909,0.0152284263959391,TRUE
+2015,2016,"member_sanctioned","Sanctioned list","Previously absent",TRUE,733,115,598,20,0.156889495225102,0.815825375170532,0.0272851296043656,TRUE
+2016,2017,"member_sanctioned","Sanctioned list","Previously absent",TRUE,803,313,474,15,0.389788293897883,0.590286425902864,0.0186799501867995,TRUE
+2017,2018,"member_sanctioned","Sanctioned list","Previously absent",TRUE,621,93,506,22,0.14975845410628,0.814814814814815,0.035426731078905,TRUE
+2019,2020,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1392,30,1336,26,0.021551724137931,0.959770114942529,0.0186781609195402,TRUE
+2020,2021,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1379,11,1340,27,0.00797679477882524,0.971718636693256,0.0195794053662074,TRUE
+2021,2022,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1386,84,1287,15,0.0606060606060606,0.928571428571429,0.0108225108225108,TRUE
+2022,2023,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1457,20,1413,24,0.0137268359643102,0.969800960878518,0.0164722031571723,TRUE
+2023,2024,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1619,27,1564,28,0.0166769610870908,0.966028412600371,0.0172946263125386,TRUE
+2024,2025,"member_sanctioned","Sanctioned list","Previously absent",TRUE,1698,57,1587,54,0.0335689045936396,0.934628975265018,0.0318021201413428,TRUE
+2012,2013,"member_putin_decree","Decree list","Previously available",FALSE,740785,599588,122134,18994,0.809395438622542,0.164871048954825,0.0256403679880127,TRUE
+2013,2014,"member_putin_decree","Decree list","Previously available",FALSE,1589396,1288416,255302,45484,0.810632466672874,0.160628314152043,0.0286171602294205,TRUE
+2014,2015,"member_putin_decree","Decree list","Previously available",FALSE,1783008,1490676,236145,56060,0.836045603833522,0.132441918376137,0.031441249842962,TRUE
+2015,2016,"member_putin_decree","Decree list","Previously available",FALSE,2104424,1704969,346691,52667,0.810183214029112,0.164743891915317,0.0250268006827521,TRUE
+2016,2017,"member_putin_decree","Decree list","Previously available",FALSE,2134243,1760680,326984,46476,0.824966978924143,0.153208420971745,0.0217763394327637,TRUE
+2017,2018,"member_putin_decree","Decree list","Previously available",FALSE,2149877,1770569,324581,54669,0.823567580842997,0.150976544239508,0.0254288966299002,TRUE
+2019,2020,"member_putin_decree","Decree list","Previously available",FALSE,2024861,1779178,175252,70421,0.878666733173289,0.0865501385033343,0.0347781897127753,TRUE
+2020,2021,"member_putin_decree","Decree list","Previously available",FALSE,2171640,1907258,190707,73674,0.878256985504043,0.0878170414985909,0.0339255125158866,TRUE
+2021,2022,"member_putin_decree","Decree list","Previously available",FALSE,2122368,1878490,186398,57471,0.885091558108679,0.0878254854954466,0.0270787158494663,TRUE
+2022,2023,"member_putin_decree","Decree list","Previously available",FALSE,2078835,1871512,157735,49559,0.900269622168186,0.075876632825597,0.0238397948851159,TRUE
+2023,2024,"member_putin_decree","Decree list","Previously available",FALSE,2086769,1886724,150265,49743,0.904136490430901,0.0720084494258828,0.0238373293833673,TRUE
+2024,2025,"member_putin_decree","Decree list","Previously available",FALSE,2083411,1807691,174427,101265,0.867659333660041,0.0837218388498477,0.0486053879911357,TRUE
+2012,2013,"member_putin_decree","Decree list","Previously available",TRUE,107,106,1,0,0.990654205607477,0.00934579439252336,0,TRUE
+2013,2014,"member_putin_decree","Decree list","Previously available",TRUE,109,109,0,0,1,0,0,TRUE
+2014,2015,"member_putin_decree","Decree list","Previously available",TRUE,111,110,1,0,0.990990990990991,0.00900900900900901,0,TRUE
+2015,2016,"member_putin_decree","Decree list","Previously available",TRUE,110,110,0,0,1,0,0,TRUE
+2016,2017,"member_putin_decree","Decree list","Previously available",TRUE,111,108,3,0,0.972972972972973,0.027027027027027,0,TRUE
+2017,2018,"member_putin_decree","Decree list","Previously available",TRUE,108,107,1,0,0.990740740740741,0.00925925925925926,0,TRUE
+2019,2020,"member_putin_decree","Decree list","Previously available",TRUE,43,43,0,0,1,0,0,FALSE
+2020,2021,"member_putin_decree","Decree list","Previously available",TRUE,43,43,0,0,1,0,0,FALSE
+2021,2022,"member_putin_decree","Decree list","Previously available",TRUE,43,39,4,0,0.906976744186046,0.0930232558139535,0,FALSE
+2022,2023,"member_putin_decree","Decree list","Previously available",TRUE,57,56,1,0,0.982456140350877,0.0175438596491228,0,TRUE
+2023,2024,"member_putin_decree","Decree list","Previously available",TRUE,57,53,4,0,0.929824561403509,0.0701754385964912,0,TRUE
+2024,2025,"member_putin_decree","Decree list","Previously available",TRUE,53,51,2,0,0.962264150943396,0.0377358490566038,0,TRUE
+2012,2013,"member_putin_decree","Decree list","Previously absent",FALSE,3676972,783447,2449179,443864,0.213068524862305,0.666085844548177,0.120714544467567,TRUE
+2013,2014,"member_putin_decree","Decree list","Previously absent",FALSE,2800504,264213,2085410,450693,0.0943448036496288,0.744655247769687,0.16093281780708,TRUE
+2014,2015,"member_putin_decree","Decree list","Previously absent",FALSE,2552549,327858,1969400,255211,0.128443371704128,0.771542485570306,0.0999828015054755,TRUE
+2015,2016,"member_putin_decree","Decree list","Previously absent",FALSE,2403299,170342,1551539,681338,0.0708784050590459,0.64558716996928,0.283501137394889,TRUE
+2016,2017,"member_putin_decree","Decree list","Previously absent",FALSE,2109448,165530,1374638,569218,0.0784707658117195,0.651657684854047,0.269842157758807,TRUE
+2017,2018,"member_putin_decree","Decree list","Previously absent",FALSE,1903063,139761,1170921,592326,0.0734400279969712,0.615282310674949,0.311248760550754,TRUE
+2019,2020,"member_putin_decree","Decree list","Previously absent",FALSE,1388088,230671,692722,464615,0.166178945427091,0.4990476108143,0.334715810524981,TRUE
+2020,2021,"member_putin_decree","Decree list","Previously absent",FALSE,945797,57135,567894,320707,0.0604093690295063,0.600439629222761,0.339086505878111,TRUE
+2021,2022,"member_putin_decree","Decree list","Previously absent",FALSE,836712,51454,544747,240483,0.0614954727552611,0.651056755490539,0.287414307431948,TRUE
+2022,2023,"member_putin_decree","Decree list","Previously absent",FALSE,830600,68872,549845,211871,0.0829183722610161,0.661985311822779,0.255081868528774,TRUE
+2023,2024,"member_putin_decree","Decree list","Previously absent",FALSE,812692,54790,594319,163496,0.0674179147819838,0.73129672741949,0.201178306172572,TRUE
+2024,2025,"member_putin_decree","Decree list","Previously absent",FALSE,842758,53178,527163,262373,0.0630999646399085,0.625521205375683,0.311326620453321,TRUE
+2012,2013,"member_putin_decree","Decree list","Previously absent",TRUE,3,2,1,0,0.666666666666667,0.333333333333333,0,FALSE
+2013,2014,"member_putin_decree","Decree list","Previously absent",TRUE,2,1,1,0,0.5,0.5,0,FALSE
+2014,2015,"member_putin_decree","Decree list","Previously absent",TRUE,1,0,1,0,0,1,0,FALSE
+2015,2016,"member_putin_decree","Decree list","Previously absent",TRUE,2,1,1,0,0.5,0.5,0,FALSE
+2016,2017,"member_putin_decree","Decree list","Previously absent",TRUE,1,0,1,0,0,1,0,FALSE
+2017,2018,"member_putin_decree","Decree list","Previously absent",TRUE,4,3,1,0,0.75,0.25,0,FALSE
+2019,2020,"member_putin_decree","Decree list","Previously absent",TRUE,70,0,70,0,0,1,0,TRUE
+2020,2021,"member_putin_decree","Decree list","Previously absent",TRUE,70,0,70,0,0,1,0,TRUE
+2021,2022,"member_putin_decree","Decree list","Previously absent",TRUE,70,18,52,0,0.257142857142857,0.742857142857143,0,TRUE
+2022,2023,"member_putin_decree","Decree list","Previously absent",TRUE,56,1,55,0,0.0178571428571429,0.982142857142857,0,TRUE
+2023,2024,"member_putin_decree","Decree list","Previously absent",TRUE,56,0,56,0,0,1,0,TRUE
+2024,2025,"member_putin_decree","Decree list","Previously absent",TRUE,60,0,58,2,0,0.966666666666667,0.0333333333333333,TRUE
+2012,2013,"member_strateg_government","Government strategic list","Previously available",FALSE,740400,599221,122119,18991,0.809320637493247,0.164936520799568,0.0256496488384657,TRUE
+2013,2014,"member_strateg_government","Government strategic list","Previously available",FALSE,1588982,1288015,255289,45484,0.810591309404386,0.160661983584458,0.0286246162637462,TRUE
+2014,2015,"member_strateg_government","Government strategic list","Previously available",FALSE,1782582,1490276,236120,56059,0.836021007729238,0.132459544638059,0.0314482026633277,TRUE
+2015,2016,"member_strateg_government","Government strategic list","Previously available",FALSE,2104000,1704587,346651,52665,0.810164923954373,0.164758079847909,0.0250308935361217,TRUE
+2016,2017,"member_strateg_government","Government strategic list","Previously available",FALSE,2133834,1760340,326916,46475,0.824965765846828,0.153205919485771,0.0217800447457487,TRUE
+2017,2018,"member_strateg_government","Government strategic list","Previously available",FALSE,2149352,1770073,324558,54663,0.823537977958008,0.151002720820043,0.0254323163446471,TRUE
+2019,2020,"member_strateg_government","Government strategic list","Previously available",FALSE,2024780,1779100,175249,70421,0.878663360957734,0.0865521192425844,0.0347795809915151,TRUE
+2020,2021,"member_strateg_government","Government strategic list","Previously available",FALSE,2171561,1907185,190706,73669,0.878255319560445,0.0878197757281513,0.033924444213172,TRUE
+2021,2022,"member_strateg_government","Government strategic list","Previously available",FALSE,2122295,1878428,186391,57467,0.885092788702796,0.0878252080884137,0.027077762516521,TRUE
+2022,2023,"member_strateg_government","Government strategic list","Previously available",FALSE,2078790,1871487,157718,49556,0.900277084265366,0.0758700975086469,0.0238388678029046,TRUE
+2023,2024,"member_strateg_government","Government strategic list","Previously available",FALSE,2086740,1886698,150264,49741,0.904136595838485,0.0720089709307341,0.0238367022245225,TRUE
+2024,2025,"member_strateg_government","Government strategic list","Previously available",FALSE,2083384,1807667,174426,101263,0.867659058531697,0.0837224438701651,0.0486050579249913,TRUE
+2012,2013,"member_strateg_government","Government strategic list","Previously available",TRUE,492,473,16,3,0.961382113821138,0.032520325203252,0.00609756097560976,TRUE
+2013,2014,"member_strateg_government","Government strategic list","Previously available",TRUE,523,510,13,0,0.975143403441683,0.0248565965583174,0,TRUE
+2014,2015,"member_strateg_government","Government strategic list","Previously available",TRUE,537,510,26,1,0.949720670391061,0.0484171322160149,0.00186219739292365,TRUE
+2015,2016,"member_strateg_government","Government strategic list","Previously available",TRUE,534,492,40,2,0.921348314606742,0.0749063670411985,0.00374531835205993,TRUE
+2016,2017,"member_strateg_government","Government strategic list","Previously available",TRUE,520,448,71,1,0.861538461538462,0.136538461538462,0.00192307692307692,TRUE
+2017,2018,"member_strateg_government","Government strategic list","Previously available",TRUE,633,603,24,6,0.95260663507109,0.037914691943128,0.00947867298578199,TRUE
+2019,2020,"member_strateg_government","Government strategic list","Previously available",TRUE,124,121,3,0,0.975806451612903,0.0241935483870968,0,TRUE
+2020,2021,"member_strateg_government","Government strategic list","Previously available",TRUE,122,116,1,5,0.950819672131147,0.00819672131147541,0.040983606557377,TRUE
+2021,2022,"member_strateg_government","Government strategic list","Previously available",TRUE,116,101,11,4,0.870689655172414,0.0948275862068965,0.0344827586206897,TRUE
+2022,2023,"member_strateg_government","Government strategic list","Previously available",TRUE,102,81,18,3,0.794117647058823,0.176470588235294,0.0294117647058824,TRUE
+2023,2024,"member_strateg_government","Government strategic list","Previously available",TRUE,86,79,5,2,0.918604651162791,0.0581395348837209,0.0232558139534884,TRUE
+2024,2025,"member_strateg_government","Government strategic list","Previously available",TRUE,80,75,3,2,0.9375,0.0375,0.025,TRUE
+2012,2013,"member_strateg_government","Government strategic list","Previously absent",FALSE,3676547,783420,2448782,443863,0.2130858112245,0.666054860715775,0.120728226784535,TRUE
+2013,2014,"member_strateg_government","Government strategic list","Previously absent",FALSE,2800085,264195,2085009,450693,0.0943524928707521,0.744623466787615,0.160956899522693,TRUE
+2014,2015,"member_strateg_government","Government strategic list","Previously absent",FALSE,2552133,327850,1968994,255209,0.128461173457653,0.771509165078779,0.0999983151348304,TRUE
+2015,2016,"member_strateg_government","Government strategic list","Previously absent",FALSE,2402864,170321,1551125,681338,0.0708824968870481,0.645531748779789,0.283552460730195,TRUE
+2016,2017,"member_strateg_government","Government strategic list","Previously absent",FALSE,2108991,165349,1374363,569217,0.0784019467129068,0.651668499296583,0.269900156046185,TRUE
+2017,2018,"member_strateg_government","Government strategic list","Previously absent",FALSE,1902720,139723,1170622,592320,0.0734332954927683,0.615236083081063,0.311301715438951,TRUE
+2019,2020,"member_strateg_government","Government strategic list","Previously absent",FALSE,1387305,230671,691945,464609,0.166272737429765,0.498769196391565,0.334900400416635,TRUE
+2020,2021,"member_strateg_government","Government strategic list","Previously absent",FALSE,945012,57135,567122,320694,0.0604595497200036,0.600121479938879,0.339354420896243,TRUE
+2021,2022,"member_strateg_government","Government strategic list","Previously absent",FALSE,835935,51471,543963,240473,0.0615729691901882,0.65072403954853,0.287669495834006,TRUE
+2022,2023,"member_strateg_government","Government strategic list","Previously absent",FALSE,829807,68868,549068,211859,0.0829927922998962,0.661681571738971,0.255311174767145,TRUE
+2023,2024,"member_strateg_government","Government strategic list","Previously absent",FALSE,811898,54789,593537,163485,0.0674826148112201,0.731048727795856,0.201361501075258,TRUE
+2024,2025,"member_strateg_government","Government strategic list","Previously absent",FALSE,841975,53170,526406,262355,0.0631491433831171,0.625203836218415,0.311594762314796,TRUE
+2012,2013,"member_strateg_government","Government strategic list","Previously absent",TRUE,428,29,398,1,0.0677570093457944,0.929906542056075,0.00233644859813084,TRUE
+2013,2014,"member_strateg_government","Government strategic list","Previously absent",TRUE,421,19,402,0,0.0451306413301663,0.954869358669834,0,TRUE
+2014,2015,"member_strateg_government","Government strategic list","Previously absent",TRUE,417,8,407,2,0.0191846522781775,0.976019184652278,0.00479616306954436,TRUE
+2015,2016,"member_strateg_government","Government strategic list","Previously absent",TRUE,437,22,415,0,0.0503432494279176,0.949656750572082,0,TRUE
+2016,2017,"member_strateg_government","Government strategic list","Previously absent",TRUE,458,181,276,1,0.395196506550218,0.602620087336245,0.00218340611353712,TRUE
+2017,2018,"member_strateg_government","Government strategic list","Previously absent",TRUE,347,41,300,6,0.118155619596542,0.864553314121037,0.0172910662824208,TRUE
+2019,2020,"member_strateg_government","Government strategic list","Previously absent",TRUE,853,0,847,6,0,0.992966002344666,0.00703399765533412,TRUE
+2020,2021,"member_strateg_government","Government strategic list","Previously absent",TRUE,855,0,842,13,0,0.984795321637427,0.0152046783625731,TRUE
+2021,2022,"member_strateg_government","Government strategic list","Previously absent",TRUE,847,1,836,10,0.00118063754427391,0.987012987012987,0.0118063754427391,TRUE
+2022,2023,"member_strateg_government","Government strategic list","Previously absent",TRUE,849,5,832,12,0.00588928150765607,0.979976442873969,0.0141342756183746,TRUE
+2023,2024,"member_strateg_government","Government strategic list","Previously absent",TRUE,850,1,838,11,0.00117647058823529,0.985882352941176,0.0129411764705882,TRUE
+2024,2025,"member_strateg_government","Government strategic list","Previously absent",TRUE,843,8,815,20,0.00948991696322657,0.966785290628707,0.0237247924080664,TRUE
+2012,2013,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,740795,599599,122133,18994,0.80939936149677,0.164867473457569,0.0256400218683981,TRUE
+2013,2014,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,1589406,1288430,255298,45484,0.810636174772211,0.160624786870063,0.0286169801800169,TRUE
+2014,2015,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,1783022,1490691,236145,56059,0.836047452022465,0.132440878463642,0.0314404421257842,TRUE
+2015,2016,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2104437,1704986,346687,52667,0.810186287353815,0.164740973476517,0.0250266460815886,TRUE
+2016,2017,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2134257,1760696,326982,46476,0.824969064175495,0.153206478882346,0.0217761965873838,TRUE
+2017,2018,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2149886,1770577,324582,54669,0.82356785429553,0.150976377352101,0.0254287901777117,TRUE
+2019,2020,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2024846,1779165,175250,70421,0.878666822069431,0.086549791934794,0.0347784473485885,TRUE
+2020,2021,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2171627,1907245,190707,73674,0.878256256714436,0.0878175671973133,0.0339257156040149,TRUE
+2021,2022,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2122355,1878479,186397,57470,0.885091796612725,0.0878255522756561,0.0270784105392359,TRUE
+2022,2023,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2078841,1871519,157734,49559,0.900270391049628,0.0758759327913967,0.0238397260781368,TRUE
+2023,2024,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2086772,1886726,150266,49743,0.904136149037844,0.0720088251136205,0.0238372951141763,TRUE
+2024,2025,"member_strateg_putin","Presidential strategic list","Previously available",FALSE,2083412,1807694,174425,101265,0.867660357144914,0.0837208387011306,0.0486053646614304,TRUE
+2012,2013,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,97,95,2,0,0.979381443298969,0.0206185567010309,0,TRUE
+2013,2014,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,99,95,4,0,0.95959595959596,0.0404040404040404,0,TRUE
+2014,2015,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,97,95,1,1,0.979381443298969,0.0103092783505155,0.0103092783505155,TRUE
+2015,2016,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,97,93,4,0,0.958762886597938,0.0412371134020619,0,TRUE
+2016,2017,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,97,92,5,0,0.948453608247423,0.0515463917525773,0,TRUE
+2017,2018,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,99,99,0,0,1,0,0,TRUE
+2019,2020,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,58,56,2,0,0.96551724137931,0.0344827586206897,0,TRUE
+2020,2021,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,56,56,0,0,1,0,0,TRUE
+2021,2022,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,56,50,5,1,0.892857142857143,0.0892857142857143,0.0178571428571429,TRUE
+2022,2023,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,51,49,2,0,0.96078431372549,0.0392156862745098,0,TRUE
+2023,2024,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,54,51,3,0,0.944444444444444,0.0555555555555556,0,TRUE
+2024,2025,"member_strateg_putin","Presidential strategic list","Previously available",TRUE,52,48,4,0,0.923076923076923,0.0769230769230769,0,TRUE
+2012,2013,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,3676949,783445,2449159,443863,0.213069313716345,0.666084571746848,0.120715027594889,TRUE
+2013,2014,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,2800483,264213,2085389,450693,0.0943455111136186,0.744653333014341,0.160934024595043,TRUE
+2014,2015,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,2552524,327856,1969377,255211,0.128443846169517,0.77154103154368,0.09998378075975,TRUE
+2015,2016,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,2403276,170341,1551517,681338,0.0708786672858215,0.645584194241527,0.283503850577295,TRUE
+2016,2017,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,2109421,165523,1374618,569218,0.0784684517694666,0.651656544615797,0.269845611663106,TRUE
+2017,2018,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,1903040,139762,1170897,592326,0.0734414410627207,0.61527713553052,0.311252522280141,TRUE
+2019,2020,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,1388089,230671,692723,464615,0.166178825709303,0.499047971707866,0.334715569390723,TRUE
+2020,2021,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,945795,57135,567892,320707,0.0604094967725564,0.600438784303152,0.339087222918286,TRUE
+2021,2022,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,836710,51471,544728,240483,0.0615159374215678,0.651035603733671,0.287414994442519,TRUE
+2022,2023,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,830579,68868,549829,211870,0.0829156528156864,0.661982785502643,0.255087113928958,TRUE
+2023,2024,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,812675,54789,594303,163496,0.0674180945642477,0.7312923370351,0.201182514535331,TRUE
+2024,2025,"member_strateg_putin","Presidential strategic list","Previously absent",FALSE,842743,53178,527148,262373,0.0631010877574777,0.625514540019911,0.311332161762245,TRUE
+2012,2013,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,26,4,21,1,0.153846153846154,0.807692307692308,0.0384615384615385,FALSE
+2013,2014,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,23,1,22,0,0.0434782608695652,0.956521739130435,0,FALSE
+2014,2015,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,26,2,24,0,0.0769230769230769,0.923076923076923,0,FALSE
+2015,2016,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,25,2,23,0,0.08,0.92,0,FALSE
+2016,2017,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,28,7,21,0,0.25,0.75,0,FALSE
+2017,2018,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,27,2,25,0,0.0740740740740741,0.925925925925926,0,FALSE
+2019,2020,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,69,0,69,0,0,1,0,TRUE
+2020,2021,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,72,0,72,0,0,1,0,TRUE
+2021,2022,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,72,1,71,0,0.0138888888888889,0.986111111111111,0,TRUE
+2022,2023,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,77,5,71,1,0.0649350649350649,0.922077922077922,0.012987012987013,TRUE
+2023,2024,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,73,1,72,0,0.0136986301369863,0.986301369863014,0,TRUE
+2024,2025,"member_strateg_putin","Presidential strategic list","Previously absent",TRUE,75,0,73,2,0,0.973333333333333,0.0266666666666667,TRUE
+2012,2013,"administrative_union","Any administrative list","Previously available",FALSE,740243,599066,122117,18991,0.809282897643071,0.164968800785688,0.0256550889370112,TRUE
+2013,2014,"administrative_union","Any administrative list","Previously available",FALSE,1588822,1287855,255289,45484,0.810572235278716,0.160678162814966,0.0286274988639382,TRUE
+2014,2015,"administrative_union","Any administrative list","Previously available",FALSE,1782418,1490114,236119,56058,0.836007042119189,0.132471171184313,0.0314505351718845,TRUE
+2015,2016,"administrative_union","Any administrative list","Previously available",FALSE,2103836,1704424,346650,52665,0.810150601092481,0.164770447886622,0.0250328447654665,TRUE
+2016,2017,"administrative_union","Any administrative list","Previously available",FALSE,2133668,1760180,326910,46475,0.82495496019062,0.153215026892656,0.0217817392396568,TRUE
+2017,2018,"administrative_union","Any administrative list","Previously available",FALSE,2149190,1769913,324556,54663,0.823525607321828,0.151013172404487,0.0254342333623365,TRUE
+2019,2020,"administrative_union","Any administrative list","Previously available",FALSE,2024705,1779025,175249,70421,0.87865886635337,0.086555325343692,0.0347808693118257,TRUE
+2020,2021,"administrative_union","Any administrative list","Previously available",FALSE,2171486,1907110,190706,73669,0.878251114674467,0.0878228088967647,0.0339256159146317,TRUE
+2021,2022,"administrative_union","Any administrative list","Previously available",FALSE,2122220,1878358,186387,57466,0.885091083865009,0.0878264270433791,0.0270782482494746,TRUE
+2022,2023,"administrative_union","Any administrative list","Previously available",FALSE,2078701,1871400,157716,49556,0.900273776748075,0.0758723837627441,0.0238398884688082,TRUE
+2023,2024,"administrative_union","Any administrative list","Previously available",FALSE,2086652,1886615,150259,49741,0.904134949191336,0.0720096115691548,0.0238377074854839,TRUE
+2024,2025,"administrative_union","Any administrative list","Previously available",FALSE,2083300,1807588,174421,101263,0.86765612249796,0.0837234195747132,0.0486070177122834,TRUE
+2012,2013,"administrative_union","Any administrative list","Previously available",TRUE,649,628,18,3,0.967642526964561,0.0277349768875193,0.00462249614791988,TRUE
+2013,2014,"administrative_union","Any administrative list","Previously available",TRUE,683,670,13,0,0.980966325036603,0.0190336749633968,0,TRUE
+2014,2015,"administrative_union","Any administrative list","Previously available",TRUE,701,672,27,2,0.958630527817404,0.0385164051355207,0.00285306704707561,TRUE
+2015,2016,"administrative_union","Any administrative list","Previously available",TRUE,698,655,41,2,0.938395415472779,0.0587392550143266,0.00286532951289398,TRUE
+2016,2017,"administrative_union","Any administrative list","Previously available",TRUE,686,608,77,1,0.886297376093295,0.112244897959184,0.00145772594752187,TRUE
+2017,2018,"administrative_union","Any administrative list","Previously available",TRUE,795,763,26,6,0.959748427672956,0.0327044025157233,0.00754716981132075,TRUE
+2019,2020,"administrative_union","Any administrative list","Previously available",TRUE,199,196,3,0,0.984924623115578,0.0150753768844221,0,TRUE
+2020,2021,"administrative_union","Any administrative list","Previously available",TRUE,197,191,1,5,0.969543147208122,0.0050761421319797,0.0253807106598985,TRUE
+2021,2022,"administrative_union","Any administrative list","Previously available",TRUE,191,171,15,5,0.895287958115183,0.0785340314136126,0.0261780104712042,TRUE
+2022,2023,"administrative_union","Any administrative list","Previously available",TRUE,191,168,20,3,0.879581151832461,0.104712041884817,0.0157068062827225,TRUE
+2023,2024,"administrative_union","Any administrative list","Previously available",TRUE,174,162,10,2,0.931034482758621,0.0574712643678161,0.0114942528735632,TRUE
+2024,2025,"administrative_union","Any administrative list","Previously available",TRUE,164,154,8,2,0.939024390243902,0.0487804878048781,0.0121951219512195,TRUE
+2012,2013,"administrative_union","Any administrative list","Previously absent",FALSE,3676531,783416,2448771,443862,0.21308565057659,0.666054767388062,0.120728480189614,TRUE
+2013,2014,"administrative_union","Any administrative list","Previously absent",FALSE,2800072,264193,2084998,450693,0.094352216657286,0.744622995408689,0.160957646803368,TRUE
+2014,2015,"administrative_union","Any administrative list","Previously absent",FALSE,2552122,327849,1968984,255209,0.12846133531234,0.771508572082369,0.0999987461414462,TRUE
+2015,2016,"administrative_union","Any administrative list","Previously absent",FALSE,2402853,170319,1551116,681338,0.070881989035534,0.645530958406528,0.283553758802557,TRUE
+2016,2017,"administrative_union","Any administrative list","Previously absent",FALSE,2108980,165347,1374354,569217,0.0784014073153847,0.651667630797826,0.26990156378913,TRUE
+2017,2018,"administrative_union","Any administrative list","Previously absent",FALSE,1902704,139718,1170611,592320,0.0734312851604874,0.61523547540763,0.311304333201591,TRUE
+2019,2020,"administrative_union","Any administrative list","Previously absent",FALSE,1387201,230671,691841,464609,0.166285203081601,0.498731618561405,0.334925508271692,TRUE
+2020,2021,"administrative_union","Any administrative list","Previously absent",FALSE,944908,57135,567018,320694,0.0604662041172262,0.600077467859305,0.339391771474048,TRUE
+2021,2022,"administrative_union","Any administrative list","Previously absent",FALSE,835831,51452,543879,240472,0.0615578986661179,0.650704508447282,0.287704093291586,TRUE
+2022,2023,"administrative_union","Any administrative list","Previously absent",FALSE,829718,68867,548981,211858,0.0830004893228784,0.661647692348485,0.255337355583463,TRUE
+2023,2024,"administrative_union","Any administrative list","Previously absent",FALSE,811809,54788,593449,163485,0.0674887812280968,0.731020474027758,0.201383576678751,TRUE
+2024,2025,"administrative_union","Any administrative list","Previously absent",FALSE,841882,53170,526318,262350,0.0631561192661204,0.625168372764829,0.311623244112595,TRUE
+2012,2013,"administrative_union","Any administrative list","Previously absent",TRUE,444,33,409,2,0.0743243243243243,0.921171171171171,0.0045045045045045,TRUE
+2013,2014,"administrative_union","Any administrative list","Previously absent",TRUE,434,21,413,0,0.0483870967741935,0.951612903225806,0,TRUE
+2014,2015,"administrative_union","Any administrative list","Previously absent",TRUE,428,9,417,2,0.0210280373831776,0.974299065420561,0.00467289719626168,TRUE
+2015,2016,"administrative_union","Any administrative list","Previously absent",TRUE,448,24,424,0,0.0535714285714286,0.946428571428571,0,TRUE
+2016,2017,"administrative_union","Any administrative list","Previously absent",TRUE,469,183,285,1,0.390191897654584,0.607675906183369,0.00213219616204691,TRUE
+2017,2018,"administrative_union","Any administrative list","Previously absent",TRUE,363,46,311,6,0.126721763085399,0.856749311294766,0.0165289256198347,TRUE
+2019,2020,"administrative_union","Any administrative list","Previously absent",TRUE,957,0,951,6,0,0.993730407523511,0.00626959247648903,TRUE
+2020,2021,"administrative_union","Any administrative list","Previously absent",TRUE,959,0,946,13,0,0.986444212721585,0.013555787278415,TRUE
+2021,2022,"administrative_union","Any administrative list","Previously absent",TRUE,951,20,920,11,0.0210304942166141,0.967402733964248,0.0115667718191377,TRUE
+2022,2023,"administrative_union","Any administrative list","Previously absent",TRUE,938,6,919,13,0.00639658848614072,0.979744136460554,0.0138592750533049,TRUE
+2023,2024,"administrative_union","Any administrative list","Previously absent",TRUE,939,2,926,11,0.00212992545260916,0.98615548455804,0.0117145899893504,TRUE
+2024,2025,"administrative_union","Any administrative list","Previously absent",TRUE,936,8,903,25,0.00854700854700855,0.96474358974359,0.0267094017094017,TRUE

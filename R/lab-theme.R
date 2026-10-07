@@ -50,9 +50,10 @@ lab_era_layers <- function(ymin = -Inf, ymax = Inf, xmax = 2025.5, label_y = NUL
                       fill = lab_palette[["era"]], colour = NA),
     ggplot2::geom_vline(xintercept = ticks, colour = lab_palette[["tick"]], linetype = "dotted", linewidth = 0.4))
   if (!is.null(label_y) && !is.null(labels)) {
-    layers <- c(layers, list(ggplot2::annotate("text", x = c(2015, 2022), y = label_y, label = labels,
-                                               colour = lab_palette[["era_label"]], family = lab_font,
-                                               size = lab_pt(10), hjust = 0.5)))
+    lab_df <- data.frame(x = c(2015, 2022), y = label_y, label = labels)
+    layers <- c(layers, list(ggplot2::geom_text(data = lab_df, ggplot2::aes(x = x, y = y, label = label),
+                                                inherit.aes = FALSE, colour = lab_palette[["era_label"]],
+                                                family = lab_font, size = lab_pt(10), hjust = 0.5)))
   }
   layers
 }

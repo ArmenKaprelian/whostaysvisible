@@ -1,0 +1,3 @@
+"check","expected","observed","tolerance","pass"
+"located eligible 2021 across cells = coverage file",3277638,3277638,0,TRUE
+"located available 2021 across cells = coverage file",2097055,2097055,0,TRUE

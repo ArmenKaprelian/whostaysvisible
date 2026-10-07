@@ -1,0 +1,5 @@
+"check","expected","observed","tolerance","pass"
+"usable = baseline minus reasons, all cohorts and years (max abs diff)",0,0,0,TRUE
+"borrowing cohort baseline = 362,682 (manuscript)",362682,362682,0,TRUE
+"borrowing 2024 missing inputs = 101,070 (manuscript)",101070,101070,0,TRUE
+"borrowing 2024 absent original = 47,264 (manuscript)",47264,47264,0,TRUE

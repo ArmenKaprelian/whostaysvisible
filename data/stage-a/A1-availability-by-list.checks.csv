@@ -1,0 +1,5 @@
+"check","expected","observed","tolerance","pass"
+"eligible rows 2021 (list levels + unknown) = annual accounting",3357109,3357109,0,TRUE
+"eligible available 2024 = annual accounting",2086055,2086055,0,TRUE
+"2021 eligible availability share = 63.43 % (manuscript)",0.6343,0.634328227054886,0.00005,TRUE
+"2024 eligible availability share = 66.28 % (manuscript)",0.6628,0.662764844778593,0.00005,TRUE
