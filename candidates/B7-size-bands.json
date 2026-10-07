@@ -1,0 +1,35 @@
+{
+  "id": "B7-size-bands",
+  "title": "Availability by size of the previous original statement",
+  "question": "Do smaller firms withhold or lose their statements more often than larger firms, and did that gradient change after 2022?",
+  "rank": 5,
+  "finalist": true,
+  "stage": "B",
+  "script": "R/stage-b/B7-size-bands-figure.R",
+  "folder": "20261007-polished",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B7-size-bands.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B7-size-bands.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B7-size-bands-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry and payload. For each financial year t, eligible firms with a consistent identity and an original statement in t-1 reporting positive total assets (line 1600) are ranked into deciles of those assets within year; the share with an original statement in t is plotted per decile. Each decile holds about 170,000 to 220,000 firms. Conditioning on a prior original statement selects prior observers, so levels exceed the population rate. No lag crosses the 2018 to 2019 provider change. Nominal assets rank identically to deflated assets within a year. This previews the deferred financial-predictor analysis descriptively; it is not an estimate. *2025 is the flagged latest financial year.",
+  "reading": "Among firms that reported last year, the share reporting again rises steadily with size: from about 75 percent in the smallest asset decile to about 95 percent in the largest, in both eras, with the smallest firms gaining most after 2022. Going dark is concentrated among very small firms.",
+  "caveats": [
+    "Conditions on a prior original statement with positive assets, so levels exceed the population rate",
+    "Previews the deferred Pass 2 financial-predictor family descriptively",
+    "No lag crosses the provider change",
+    "Nominal assets rank as real assets within a year"
+  ],
+  "source_line": "Foundation registry and payload, year-by-year lab join",
+  "data": [
+    {
+      "id": "B7-size-rates",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B7-size-rates.csv",
+      "sha256": "61e0dbb21bcd7b5d48286cead2447937cb4a1cc17619729308fcf42f1016feb9",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B7-size-rates.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 4.8,
+  "pdf_sha256": "ec46a53b925011e4222650464099cddb6d822ddb889fb06b228d445a4d909201",
+  "run_id": "20261007T043657Z-ro-B7-size-bands-figure.R"
+}

@@ -1,13 +1,13 @@
 {
   "id": "A1-availability-by-list",
-  "run_id": "20261007T042342Z-ro-A1-availability-by-list.R",
+  "run_id": "20261007T043659Z-ro-A1-availability-by-list.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:23:43Z",
+  "time_utc": "2026-10-07T04:36:59Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-a/A1-availability-by-list.R",
     "sha256": "72ff32d24cd27c7627a4ca5c62fefcf5a0ddaf993ac505c446e22a19381c76bf"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

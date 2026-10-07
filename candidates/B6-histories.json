@@ -1,0 +1,42 @@
+{
+  "id": "B6-histories",
+  "title": "Six-year reporting histories of the 2019 registered population",
+  "question": "Which available, absent, removed and no-record sequences are most common among 2019 firms, and when do histories break?",
+  "rank": 2,
+  "finalist": true,
+  "stage": "B",
+  "script": "R/stage-b/B6-histories-figure.R",
+  "folder": "20261007-polished",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B6-histories.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B6-histories.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B6-histories-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry. The population is firms eligible and registered at year-end 2019 with consistent identity across the release. Each year's state: A, eligible with an original statement; N, eligible, registered, no original; X, recorded registry removal by year-end, which takes precedence over a dissolution-year statement; other, a record that is ineligible or has unresolved registration; blank, no record in that year. A blank after X is expected; a blank without a prior X is not an exit. Rows after the top histories are pooled. FNS era only; no history crosses the provider change. Descriptive; the histories describe the retrieved release, not dated disclosure decisions.",
+  "reading": "One third of the 2019 registered population reported in all six years. Two in five were absent in 2019, and two thirds of those had a recorded removal by 2024, mostly within one to three years; six percent stayed registered and absent throughout. Histories that break after years of availability (A then N or X) are individually rare but numerous in total.",
+  "caveats": [
+    "FNS era only; no history crosses the provider change",
+    "A blank cell after X is expected, a blank without X is not an exit",
+    "States describe the retrieved release, not dated disclosure decisions",
+    "Firms entering after 2019 are excluded"
+  ],
+  "source_line": "Foundation registry 2019-2024, lab pivot of 3,413,062 firms",
+  "data": [
+    {
+      "id": "B6-top-histories",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B6-top-histories.csv",
+      "sha256": "3ec7abbd3e0fdf44096c68709f3f740a801fb2aecd9a170cb5bb5f9e4b3efe52",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B6-top-histories.provenance.json"
+    },
+    {
+      "id": "B6-summary",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B6-summary.csv",
+      "sha256": "7a2c83b092ba7a108f73ba4c0c05e5a6306a1f2c5fd211822f1f2b907cd4c187",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B6-summary.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "2d3bd8d3490fefb88e7ee21b88ffa13fc48b5b9021dbd5e2e2cfc5824047b8f5",
+  "run_id": "20261007T043655Z-ro-B6-histories-figure.R"
+}

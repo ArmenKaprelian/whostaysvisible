@@ -25,7 +25,7 @@ p <- ggplot(d, aes(decile, 100 * rate, group = year)) +
   coord_cartesian(clip = "off") +
   facet_wrap(~ era, ncol = 2) +
   labs(title = "Smaller firms go dark more often",
-       subtitle = sprintf("Share of eligible firms with an original statement in year t (%%), by decile of total assets in the firm's original\nstatement of t-1; one line per year, blue from 2022. Median assets by decile in 2024, million rubles: %s.", med_txt),
+       subtitle = sprintf("Share of eligible firms with an original statement in year t (%%), by decile of total assets in the\nfirm's original statement of t-1; one line per year, blue from 2022.\nMedian assets by decile in 2024, million rubles: %s.", med_txt),
        x = "Decile of assets in the previous year's original statement (1 = smallest)", y = NULL) +
   theme_lab()
 notes <- paste(

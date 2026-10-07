@@ -1,0 +1,42 @@
+{
+  "id": "B4-going-dark",
+  "title": "Going dark before a recorded registry removal",
+  "question": "Do firms stop reporting originals in the years before their registry removal, how far ahead, and did the profile change between the Rosstat and FNS eras?",
+  "rank": 1,
+  "finalist": true,
+  "stage": "B",
+  "script": "R/stage-b/B4-before-removal-figure.R",
+  "folder": "20261007-polished",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B4-going-dark.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B4-going-dark.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B4-going-dark-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry among eligible records with consistent identity and dates (99.97 percent of eligible records). A firm's removal year is the year of its reconciled registry dissolution date; horizons count financial years before it and stay within one provider era. The dashed reference is the availability of eligible firms with no recorded removal in the release, which is right-censored: some will be removed after 2025. Removal is a registry event, not a verified business exit, and absence before it is not evidence of non-submission or concealment. Descriptive.",
+  "reading": "Firms that will be removed from the register go dark years before the removal. For FNS-era removals the share with an original statement falls from the reference level four or five years ahead to about 20 to 30 percent one year ahead; Rosstat-era removal cohorts sat far below the reference throughout. Absence is therefore partly the leading edge of exit, not only a disclosure choice among continuing firms.",
+  "caveats": [
+    "Removal is a registry event, not a verified business exit",
+    "The no-removal reference is right-censored at the 2025 release",
+    "Absence before removal is not evidence of non-submission or concealment",
+    "Horizons never cross the 2019 provider change"
+  ],
+  "source_line": "Foundation registry, lab aggregation; 99.97 % of eligible records have consistent identity and dates",
+  "data": [
+    {
+      "id": "B4-removal-cohorts",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B4-removal-cohorts.csv",
+      "sha256": "28ddb6f61d3e69a876e9080668e6732fd0cd02497046564ad3378221621bd554",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B4-removal-cohorts.provenance.json"
+    },
+    {
+      "id": "B4-no-removal-reference",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B4-no-removal-reference.csv",
+      "sha256": "6f3f47663fa334024244c4ca9ef28d48fa020850abe1102df14972e26ffc39bb",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B4-no-removal-reference.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 5.2,
+  "pdf_sha256": "cb8d38b3d207dde60f87bc5adc39cbf79843449b7c10ad816eebd7e2856c7ddd",
+  "run_id": "20261007T043654Z-ro-B4-before-removal-figure.R"
+}

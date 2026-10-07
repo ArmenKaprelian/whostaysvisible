@@ -1,13 +1,13 @@
 {
   "id": "B2-industry-heatmap",
-  "run_id": "20261007T043215Z-ro-B2-industry-year-figure.R",
+  "run_id": "20261007T043700Z-ro-B2-industry-year-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:32:16Z",
+  "time_utc": "2026-10-07T04:37:01Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B2-industry-year-figure.R",
-    "sha256": "2bc20f5ff626e7d78d999528ef11897a1b6235aecd7a1c97b12aea97effe9bba"
+    "sha256": "f7d77ece50ea87cc65acb838895508d3b9bd124e8cf1e477a829d7eca5889be8"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

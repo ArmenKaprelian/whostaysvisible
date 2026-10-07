@@ -1,0 +1,33 @@
+{
+  "id": "A4-availability-next-year-by-list",
+  "title": "Availability next year, listed firms versus others, by prior state and era",
+  "question": "Do listed firms that reported keep reporting, and do absent listed firms reappear, compared with other firms, in each era?",
+  "rank": 9,
+  "finalist": false,
+  "stage": "A",
+  "script": "R/stage-a/A4-persistence-by-list.R",
+  "folder": "20261007-sketch",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A4-availability-next-year-by-list.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A4-availability-next-year-by-list.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A4-availability-next-year-by-list-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0, foundation transition accounting by supplied membership. Origins are eligible firms registered at the preceding year-end, split by prior original availability and by exact membership in the named supplied file; the others line includes members of the other lists. Panels are not additive across lists. Hollow points have fewer than 50 origins. Removal takes precedence over a dissolution-year statement; a missing destination row is not an exit. No transition crosses the 2018 to 2019 provider change (shaded). Lists are fixed supplied files, not dated designations. Descriptive associations only.",
+  "reading": "Listed firms that reported keep reporting at least as often as others; absent listed firms almost never reappear in the FNS era.",
+  "caveats": [
+    "Small lists give hollow points",
+    "Panels are not additive"
+  ],
+  "source_line": "Foundation transition accounting by membership",
+  "data": [
+    {
+      "id": "A4-persistence-by-list",
+      "stage": "stage-a",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A4-persistence-by-list.csv",
+      "sha256": "12657569f9a212553f5883e7e0576cb394af6e694178f72770c94cbacc861a23",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A4-persistence-by-list.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "88644dcdf8b37bab87d51dbac4f1f61837711f98ed5f0ce7a350fec2c42c6155",
+  "run_id": "20261007T041910Z-ro-A4-persistence-by-list.R"
+}

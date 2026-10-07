@@ -31,7 +31,7 @@ p <- ggplot(k, aes(k, 100 * rate)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25), expand = c(0, 0)) +
   facet_wrap(~ panel, ncol = 4) +
   labs(title = "Going dark before a recorded registry removal",
-       subtitle = "Share of eligible firms with an original statement (%) by years before the firm's recorded removal (blue),\nagainst firms with no recorded removal in the same years (dashed). Top: Rosstat-era removals; bottom: FNS-era.",
+       subtitle = "Share of eligible firms with an original statement (%), by years before the recorded removal (blue),\nand among firms with no recorded removal in the same years (dashed). Top: Rosstat era; bottom: FNS era.",
        x = "Years before the recorded removal", y = NULL) +
   theme_lab() + theme(panel.spacing.x = grid::unit(12, "pt"))
 notes <- paste(

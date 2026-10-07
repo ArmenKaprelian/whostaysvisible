@@ -1,0 +1,41 @@
+{
+  "id": "B2-industries",
+  "title": "Original availability by industry and financial year, 2012-2025",
+  "question": "Which industries drive the level of availability, which moved in 2022, and how large was the provider break per industry?",
+  "rank": 4,
+  "finalist": true,
+  "stage": "B",
+  "script": "R/stage-b/B2-industry-year-figure.R",
+  "folder": "20261007-polished",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B2-industries.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B2-industries.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/B2-industries-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry by released two-digit OKVED class and financial year. Cells show eligible records with an original statement as a percentage of eligible records; darker blue is higher on a 20 to 90 scale. Industries holding at least 1 percent of 2021 eligible records are listed; the remaining classes are pooled in one row and records with a missing class in another. The 2018 to 2019 change coincides with the Rosstat to FNS provider change and is a measurement break, not industry behaviour. 2011 has no original statements and is not shown; 2025 is the flagged latest year. Descriptive.",
+  "reading": "A numbers-in-cells table: human health, engineering and software report most, membership organisations and transport support least, and the ordering is stable across years. The provider change lifted most industries by a few points but metal products by thirteen. Records without an industry class almost never carry an original statement.",
+  "caveats": [
+    "Industries with at least 1 % of 2021 eligible records; the rest pooled",
+    "Released two-digit OKVED classes",
+    "The 2018 to 2019 column is a measurement break"
+  ],
+  "source_line": "Foundation registry, lab aggregation by industry and year",
+  "data": [
+    {
+      "id": "B2-industry-heatmap",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B2-industry-heatmap.csv",
+      "sha256": "c9a740232fe78e85310e3a4e546191324b508800bc68202c3ef5b2e170a4401b",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B2-industry-heatmap.provenance.json"
+    },
+    {
+      "id": "B2-industry-side",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B2-industry-side.csv",
+      "sha256": "7bb7a41027f2cb60194f3efec185aedc7999597190f38461492181ac05bdd363",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B2-industry-side.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "6406b30148df3ba5790eaf85d3af42e0b436e06054479d55472347c9afe04c31",
+  "run_id": "20261007T043652Z-ro-B2-industry-year-figure.R"
+}

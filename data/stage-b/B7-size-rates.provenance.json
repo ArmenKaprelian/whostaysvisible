@@ -1,13 +1,13 @@
 {
   "id": "B7-size-rates",
-  "run_id": "20261007T043156Z-ro-B7-size-bands-figure.R",
+  "run_id": "20261007T043705Z-ro-B7-size-bands-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:31:57Z",
+  "time_utc": "2026-10-07T04:37:06Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B7-size-bands-figure.R",
-    "sha256": "1415de6d2865286d7280a6cc522629a3eeba51c433c1366e27b173955274f879"
+    "sha256": "9f0934976f73c8af6d6830082eb3edba429eb2fddc047358fbb6281ca852fa58"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

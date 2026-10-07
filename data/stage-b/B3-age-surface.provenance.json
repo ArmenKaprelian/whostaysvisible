@@ -1,13 +1,13 @@
 {
   "id": "B3-age-surface",
-  "run_id": "20261007T043150Z-ro-B3-age-year-figure.R",
+  "run_id": "20261007T043428Z-ro-B3-age-year-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:31:50Z",
+  "time_utc": "2026-10-07T04:34:29Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B3-age-year-figure.R",
-    "sha256": "008953b8a4a6beaa5225f534efbf8887d2b678577e068618a6983d214f52f6f0"
+    "sha256": "4a5a57df6b2a558e1082ac653540d76075d9c04f165aaa602d057a73f9bc501f"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

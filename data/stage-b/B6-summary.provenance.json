@@ -1,13 +1,13 @@
 {
   "id": "B6-summary",
-  "run_id": "20261007T043154Z-ro-B6-histories-figure.R",
+  "run_id": "20261007T043703Z-ro-B6-histories-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:31:55Z",
+  "time_utc": "2026-10-07T04:37:04Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B6-histories-figure.R",
-    "sha256": "eb4e06b23babf845197d276ceba7225ef3213aacb5df4639bab7b76147c52f50"
+    "sha256": "4c33e2d50e86b210e4cc479e08071626afcd0714a2fe68bb740b9613ebbadae2"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

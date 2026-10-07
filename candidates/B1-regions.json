@@ -1,0 +1,47 @@
+{
+  "id": "B1-regions",
+  "title": "Original availability across regions: dispersion through time and 2021 versus 2024",
+  "question": "Which registered-address regions report originals least, how dispersed are regions within each year, and did the ordering change between 2021 and 2024?",
+  "rank": 8,
+  "finalist": false,
+  "stage": "B",
+  "script": "R/stage-b/B1-region-year-figure.R",
+  "folder": "20261007-sketch",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B1-regions.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B1-regions.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B1-regions-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry by released region and financial year. Rates divide eligible records with an original statement by all eligible records in the region-year; region-years with fewer than 50 eligible records are omitted. Regions are registered addresses, not operating sites. The four regions annexed in 2022 carry registry rows with no original statements before 2022 by construction of the release. The upper panel breaks at the 2019 provider change; no line crosses it. The lower panel compares the same regions in 2021 and 2024. Descriptive; not a withdrawal history.",
+  "reading": "Regional dispersion narrowed after 2019, and between 2021 and 2024 most regions rose a little; the four regions annexed in 2022 move from structural zero to 35 to 50 percent.",
+  "caveats": [
+    "Registered addresses, not operating sites",
+    "Region-years under 50 records omitted"
+  ],
+  "source_line": "Foundation registry, lab aggregation by region and year",
+  "data": [
+    {
+      "id": "B1-region-year",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-year.csv",
+      "sha256": "9b5f20062e2011869afb2a0ed80971cb082f22aa07b1d0fd61ce0021f7ff5bf3",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-year.provenance.json"
+    },
+    {
+      "id": "B1-region-2021-2024",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-2021-2024.csv",
+      "sha256": "b0fb04a9c24bfc3e65e081b4fac268d6db332bfea47631f8608c6103bb129798",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-2021-2024.provenance.json"
+    },
+    {
+      "id": "B1-region-summary",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-summary.csv",
+      "sha256": "be41179ee5de73f3ba8b1c32f3e7861071d818e938c0fab9c358fbc3c69dbd08",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B1-region-summary.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "fa7814a558ed78d4166cdf8862287f2305eacc12ec264329cbfab0ee5ffeb0f9",
+  "run_id": "20261007T042554Z-ro-B1-region-year-figure.R"
+}

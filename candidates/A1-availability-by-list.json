@@ -1,0 +1,35 @@
+{
+  "id": "A1-availability-by-list",
+  "title": "Original-statement availability by supplied list, 2012-2025",
+  "question": "Do firms on each supplied list show different original availability than other eligible firms, and did the gap move at the 2019 provider change, Decree 35 (2020) and 2022?",
+  "rank": 3,
+  "finalist": true,
+  "stage": "A",
+  "script": "R/stage-a/A1-availability-by-list.R",
+  "folder": "20261007-polished",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/A1-availability-by-list.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/A1-availability-by-list.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-polished/A1-availability-by-list-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0, foundation accounting (annual-membership-shares). Each panel divides eligible records with an original statement (filed and not imputed) by all eligible records in that financial year, separately for firms on the named supplied list and for all other eligible firms, which include members of the other lists. Lists are fixed supplied files with overlaps, not dated designations. End labels give the 2024 share and the count of listed eligible firms in 2024. 2011 has no original statements in the release and is not plotted; 2025 is the flagged latest financial year. Lines break at the 2019 provider change (shaded): the Rosstat archive and the FNS resource are different collections, and the fall in listed groups' availability between 2018 and 2019 coincides with that change; it is not evidence of a change in firms' behaviour. Dotted markers identify 2014, 2020 (Government Decree 35) and 2022 for context, not as causal comparisons.",
+  "reading": "Model-free, every supplied list shows the chapter's pattern: in the FNS era listed firms report originals far less often than other eligible firms, the government strategic list least of all. In the Rosstat archive the same groups were above other firms. The break sits exactly at the 2019 provider change, so the two eras are two collections, not one history.",
+  "caveats": [
+    "Fixed supplied lists with overlaps, not dated designations",
+    "The non-member line includes members of the other lists",
+    "The 2018 to 2019 fall coincides with the provider change and is not firm behaviour",
+    "2011 omitted; 2025 flagged"
+  ],
+  "source_line": "Foundation accounting, annual-membership-shares",
+  "data": [
+    {
+      "id": "A1-availability-by-list",
+      "stage": "stage-a",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A1-availability-by-list.csv",
+      "sha256": "5d942085ffe46e4452db22e882e5179c4b71ad4881fb3629900e3294162360c4",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A1-availability-by-list.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "1b9e6c73c44e12600e9086481fcb06a845efd6acfd39162bf36d046876f9d34d",
+  "run_id": "20261007T043650Z-ro-A1-availability-by-list.R"
+}

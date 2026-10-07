@@ -55,6 +55,7 @@ p <- ggplot(h[h$year >= 2012, ], aes(year, label)) +
   scale_fill_gradientn(colours = lab_seq(9), limits = c(20, 90), oob = scales::squish, na.value = "white", name = "%") +
   scale_colour_identity() +
   scale_x_continuous(breaks = c(2012, 2015, 2018, 2021, 2024), limits = c(2011.4, 2030), expand = c(0, 0)) +
+  scale_y_discrete(expand = expansion(add = c(0.6, 2.4))) +
   coord_cartesian(clip = "off") +
   labs(title = "Original availability by industry and financial year, 2012-2025",
        subtitle = "Share of eligible records with an original statement (%); industries with at least 1 % of 2021 eligible\nfirms, sorted by the 2021 value. The vertical rule marks the 2019 provider change.",

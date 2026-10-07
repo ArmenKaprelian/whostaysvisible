@@ -1,13 +1,13 @@
 {
   "id": "B4-no-removal-reference",
-  "run_id": "20261007T043151Z-ro-B4-before-removal-figure.R",
+  "run_id": "20261007T043702Z-ro-B4-before-removal-figure.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:31:52Z",
+  "time_utc": "2026-10-07T04:37:02Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-b/B4-before-removal-figure.R",
-    "sha256": "c405288412c5ad090d99cbd5f908d0c596e57cda9f3e0bab9d3315b29b20aaaa"
+    "sha256": "1a782402867677d9663ea4c94ebe2092b7c39d8a49e6784a8bec20cc464380d3"
   },
-  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "lab_commit": "fac81b8b5e401c0c45a628d280becf251e303ad0",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

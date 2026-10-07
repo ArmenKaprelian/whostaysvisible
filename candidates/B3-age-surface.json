@@ -1,0 +1,34 @@
+{
+  "id": "B3-age-surface",
+  "title": "Original availability by firm age and financial year, 2012-2025",
+  "question": "Are young firms the absent ones, and did 2022 move all ages alike?",
+  "rank": 6,
+  "finalist": false,
+  "stage": "B",
+  "script": "R/stage-b/B3-age-year-figure.R",
+  "folder": "20261007-sketch",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B3-age-surface.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B3-age-surface.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/B3-age-surface-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0; lab aggregation of the foundation registry by financial year and age at year-end (released age, otherwise the age implied by the registry creation date; unknown ages form their own row). Tiles with fewer than 50 eligible records are gray; 2011 has no original statements and is omitted. A diagonal reads as one registration cohort ageing through the years; the eligible population changes with entry and removal, so a tile is not a fixed set of firms. The 2018 to 2019 step coincides with the provider change. Descriptive; no survival claim.",
+  "reading": "Availability rises with firm age in both eras: the newest firms report least, and each registration cohort reports more as it ages, visible along the diagonals. The 2019 step applies at every age.",
+  "caveats": [
+    "A tile is not a fixed set of firms",
+    "Unknown ages form their own row",
+    "No survival claim"
+  ],
+  "source_line": "Foundation registry, lab aggregation by age and year",
+  "data": [
+    {
+      "id": "B3-age-surface",
+      "stage": "stage-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B3-age-surface.csv",
+      "sha256": "c81e61c8bb33a2ed5f31f23cf46403b781ccc509f473936415315c2eb42fc502",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B3-age-surface.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 7,
+  "pdf_sha256": "2b7fcd2ba6d74cbf4570cf44ff3243a540c64bfc12ca9412187b130473783dd1",
+  "run_id": "20261007T043428Z-ro-B3-age-year-figure.R"
+}

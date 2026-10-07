@@ -1,0 +1,39 @@
+{
+  "id": "A2-sparkline-table",
+  "title": "Original availability by supplied list, at a glance",
+  "question": "Which supplied groups changed most between 2021 and 2024, and at what N?",
+  "rank": 14,
+  "finalist": false,
+  "stage": "A",
+  "script": "R/stage-a/A2-sparkline-table.R",
+  "folder": "20261007-sketch",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A2-sparkline-table.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A2-sparkline-table.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A2-sparkline-table-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0, foundation accounting (annual-membership-shares, annual-accounting). Sparklines share one 0-100 scale. Shares divide eligible records with an original statement by all eligible records on each list; listed counts are eligible firm-year records matched to the supplied file. Rows with fewer than 50 listed firms are printed in gray. Lists overlap and are fixed supplied files, not dated designations. Sparklines break at the 2019 provider change. 2011 is omitted (no original statements in the release); 2025 is the flagged latest year. Descriptive; no causal comparison.",
+  "reading": "Companion table to A1 with the 2021 and 2024 values, the change and the listed counts.",
+  "caveats": [
+    "Rows under 50 listed firms in gray"
+  ],
+  "source_line": "Foundation accounting",
+  "data": [
+    {
+      "id": "A2-sparkline-table",
+      "stage": "stage-a",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A2-sparkline-table.csv",
+      "sha256": "d4ea5289d5c51251d50ef49990606d2e2750288608cdeeccbf8cf09cbc9817f2",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A2-sparkline-table.provenance.json"
+    },
+    {
+      "id": "A1-availability-by-list",
+      "stage": "stage-a",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A1-availability-by-list.csv",
+      "sha256": "5d942085ffe46e4452db22e882e5179c4b71ad4881fb3629900e3294162360c4",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A1-availability-by-list.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 3.6,
+  "pdf_sha256": "ecb4e5816fa8e5752a07f9a1cd4289e8e7d18aee4fa478bab3e2a7638db39e6d",
+  "run_id": "20261007T042344Z-ro-A2-sparkline-table.R"
+}

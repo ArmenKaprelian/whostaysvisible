@@ -44,6 +44,7 @@ lab_save_figure <- function(plot, id, dir, height, title, notes, data = list(), 
                             png_dpi = 110, min_pt = lab_min_pt) {
   if (width != 6.5 || height > 7) stop("Figures are 6.5 in wide and at most 7 in tall.")
   lab_assert_min_text_size(plot, min_pt)
+  dir <- Sys.getenv("LAB_FIGURE_DIR", unset = dir)   # launcher-side override for polished or reproduction renders
   out <- lab_dir("figures", dir)
   pdf <- file.path(out, paste0(id, ".pdf"))
   grDevices::cairo_pdf(pdf, width = width, height = height, family = lab_font, pointsize = 10.5, onefile = TRUE)

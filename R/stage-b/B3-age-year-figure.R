@@ -26,7 +26,7 @@ p1 <- ggplot(s, aes(year, ypos)) +
   scale_x_continuous(breaks = c(2012, 2015, 2018, 2021, 2024), limits = c(2011.5, 2029), expand = c(0, 0)) +
   coord_cartesian(clip = "off") +
   labs(title = "Original availability by firm age and financial year, 2012-2025",
-       subtitle = "Share of eligible records with an original statement (%); each tile is one age in one financial year.\nDotted diagonals follow three registration cohorts; the vertical rule marks the 2019 provider change.",
+       subtitle = "Share of eligible records with an original statement (%); each tile is one age in one financial year.\nDotted diagonals follow three registration cohorts; the rule marks the 2019 provider change.",
        x = NULL, y = "Age at year-end (years)") +
   theme_lab(grid_y = FALSE) + theme(legend.position = "bottom", legend.key.height = grid::unit(6, "pt"), legend.key.width = grid::unit(40, "pt"),
                                     legend.title.position = "top", axis.ticks = element_blank())

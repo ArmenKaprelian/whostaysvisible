@@ -1,0 +1,34 @@
+{
+  "id": "A3-persistence-across-eras",
+  "title": "What follows an available or an absent statement, across both eras",
+  "question": "Among eligible firms registered at the prior year-end, how do next-year availability, absence and recorded removal move over the whole release, by prior state?",
+  "rank": 7,
+  "finalist": false,
+  "stage": "A",
+  "script": "R/stage-a/A3-persistence-across-eras.R",
+  "folder": "20261007-sketch",
+  "png": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A3-persistence-across-eras.png",
+  "pdf": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A3-persistence-across-eras.pdf",
+  "notes_tex": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/figures/20261007-sketch/A3-persistence-across-eras-notes.tex",
+  "notes_text": "Source: RFSD v3.1.0, foundation transition accounting. Origins are eligible firms registered at the preceding year-end, split by prior original availability. Destinations: available original (A), registered with original absent (N), recorded registry removal (X); scope changes and unresolved destinations (under 0.01 %) complete the denominator and are omitted. Removal takes precedence over a dissolution-year statement; a missing destination row is not an exit. No transition crosses the 2018 to 2019 provider change, so the 2018 origin does not exist; the 2012 origin is a coverage diagnostic (low original coverage). *Destination 2025 is the flagged latest financial year. The manuscript figure shows destinations 2020-2024 only. Descriptive.",
+  "reading": "Extends the manuscript's transition figure to the whole release: an available statement is followed by another in 81 to 91 percent of cases in every year, while an absent one is followed by availability in under 10 percent in the FNS era and by a recorded removal in 20 to 34 percent.",
+  "caveats": [
+    "No transition crosses the provider change",
+    "The 2012 origin is a coverage diagnostic",
+    "Removal takes precedence over a dissolution-year statement"
+  ],
+  "source_line": "Foundation transition accounting",
+  "data": [
+    {
+      "id": "A3-persistence-across-eras",
+      "stage": "stage-a",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A3-persistence-across-eras.csv",
+      "sha256": "6676d8c8c07b80494237831d148dd8dbd864eb8cb789f08570ca8a477738da7a",
+      "provenance": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-a/A3-persistence-across-eras.provenance.json"
+    }
+  ],
+  "width_in": 6.5,
+  "height_in": 6.6,
+  "pdf_sha256": "5c6c50627ece7ea09958835d10139d47b8382a5a857c7cc446b96d3602d3bd0d",
+  "run_id": "20261007T041909Z-ro-A3-persistence-across-eras.R"
+}
