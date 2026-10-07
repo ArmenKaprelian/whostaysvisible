@@ -36,3 +36,17 @@ lab_query <- function(con, sql, name = "query") {
 }
 
 lab_duck_disconnect <- function(con) DBI::dbDisconnect(con, shutdown = TRUE)
+
+# Pinned foundation partitions as read_parquet fragments.
+lab_registry_sql <- function(years = 2011:2025) lab_parquet_sql(paste0("registry.", years))
+lab_payload_sql <- function(years = 2011:2025) lab_parquet_sql(paste0("payload.", years))
+
+# Standard check: per-year eligible rows and available counts equal the foundation's annual accounting.
+lab_annual_checks <- function(df, year_col = "year", rows_col = "eligible_rows", avail_col = "eligible_available", years = 2011:2025) {
+  ann <- lab_read_csv("acct.annual-accounting")
+  by_year <- aggregate(df[, c(rows_col, avail_col)], by = list(year = df[[year_col]]), FUN = sum)
+  by_year <- by_year[by_year$year %in% years, ]
+  m <- merge(by_year, ann, by = "year", suffixes = c("", "_ann"))
+  data.frame(check = c("eligible rows per year equal annual accounting (max abs diff)", "eligible available per year equal annual accounting (max abs diff)"),
+             expected = 0, observed = c(max(abs(m[[rows_col]] - m$eligible_rows_ann)), max(abs(m[[avail_col]] - m$eligible_available_ann))), tolerance = 0)
+}

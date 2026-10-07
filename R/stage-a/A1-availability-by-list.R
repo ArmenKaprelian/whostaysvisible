@@ -43,13 +43,21 @@ d$era <- ifelse(d$year >= 2019, "FNS", "Rosstat")
 ends <- d[d$year == 2024, ]
 ends$label <- ifelse(ends$member, sprintf("listed %s\n%s firms", lab_pct(ends$eligible_rate, 0), lab_fmt_n(ends$eligible_rows)),
                      sprintf("others %s", lab_pct(ends$eligible_rate, 0)))
+# Deterministic end-label placement: push the two labels of a panel apart when they would collide.
+ends$label_y <- 100 * ends$eligible_rate
+for (g in unique(ends$group)) {
+  i <- which(ends$group == g); hi <- i[which.max(ends$label_y[i])]; lo <- i[which.min(ends$label_y[i])]
+  gap <- ends$label_y[hi] - ends$label_y[lo]
+  need <- if (ends$member[lo]) 15 else 12
+  if (gap < need) { mid <- mean(ends$label_y[i]); ends$label_y[hi] <- mid + need / 2; ends$label_y[lo] <- mid - need / 2 }
+}
+ends$label_y <- pmin(pmax(ends$label_y, 4), 96)
 p <- ggplot(d, aes(year, 100 * eligible_rate, group = interaction(member, era))) +
   lab_era_layers(0, 100, xmax = 2031, label_y = 93) +
   geom_line(aes(colour = member, linewidth = member)) +
   geom_point(aes(colour = member), size = 1.1) +
-  ggrepel::geom_text_repel(data = ends, aes(x = 2025.4, y = 100 * eligible_rate, label = label, colour = member),
-            hjust = 0, direction = "y", nudge_x = 0, segment.colour = NA, min.segment.length = Inf, box.padding = 0.4, point.padding = 0,
-            family = lab_font, size = lab_pt(10), lineheight = 0.9, xlim = c(2025.4, 2031)) +
+  geom_text(data = ends, aes(x = 2025.5, y = label_y, label = label, colour = member), hjust = 0, vjust = 0.5,
+            family = lab_font, size = lab_pt(10), lineheight = 0.9) +
   scale_colour_manual(values = c(`TRUE` = lab_palette[["primary"]], `FALSE` = lab_palette[["neutral"]])) +
   scale_linewidth_manual(values = c(`TRUE` = 0.9, `FALSE` = 0.6)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25), expand = c(0, 0)) +

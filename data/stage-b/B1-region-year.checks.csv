@@ -1,0 +1,3 @@
+"check","expected","observed","tolerance","pass"
+"eligible rows per year equal annual accounting (max abs diff)",0,0,0,TRUE
+"eligible available per year equal annual accounting (max abs diff)",0,0,0,TRUE

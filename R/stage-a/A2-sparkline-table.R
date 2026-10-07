@@ -60,7 +60,7 @@ p <- ggplot() +
   scale_x_continuous(limits = c(-16, 48), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, nrow_ + 1.5), expand = c(0, 0)) +
   labs(title = "Original availability by supplied list, at a glance",
-       subtitle = "Share of eligible records with an original statement (%), 2012-2025, and the change 2021 to 2024 in points.\nBrick dot: lowest year; blue dot: highest year. Gray rows have fewer than 50 listed firms.",
+       subtitle = "Share of eligible records with an original statement (%), 2012-2025; change 2021 to 2024 in points.\nBrick dot: lowest year; blue dot: highest year. Gray rows have fewer than 50 listed firms.",
        x = NULL, y = NULL) +
   theme_lab(grid_y = FALSE) + theme(axis.text = element_blank(), axis.ticks = element_blank())
 notes <- paste(

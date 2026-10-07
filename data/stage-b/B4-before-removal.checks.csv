@@ -1,0 +1,2 @@
+"check","expected","observed","tolerance","pass"
+"rows by removal horizon sum to the consistent universe each year (max abs diff)",0,0,0,TRUE

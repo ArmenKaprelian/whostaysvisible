@@ -1,13 +1,13 @@
 {
   "id": "A6-cells-availability",
-  "run_id": "20261007T042107Z-ro-A6-availability-vs-density.R",
+  "run_id": "20261007T042347Z-ro-A6-availability-vs-density.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:21:08Z",
+  "time_utc": "2026-10-07T04:23:48Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-a/A6-availability-vs-density.R",
-    "sha256": "dc96250753bd9410a15c199f111dcc2e564d0823bca400591b9fa08f36e86015"
+    "sha256": "83d269ad0c013f2f183f5a65a6b9d977daae4ab6234becf1a63263d7f9e3c464"
   },
-  "lab_commit": "d7b8823140c93caad8dc53a3bbb11dcaeb0c122a",
+  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,

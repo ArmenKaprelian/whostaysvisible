@@ -6,6 +6,7 @@
 # MemoryHigh threshold: a job throttled there crawls instead of finishing.
 # A child of the launcher; it dies with it.
 set -u
+exec 9>&-   # never inherit the launcher's lock descriptor
 unit=$1; log=$2; interval=$3; floor=$4; sfloor=$5; high=${6:-0}
 strikes=0; crawl=0
 mib() { if [[ "${1:-}" =~ ^[0-9]+$ ]]; then echo $(( $1 / 1048576 )); else echo ""; fi; }

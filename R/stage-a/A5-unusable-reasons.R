@@ -46,7 +46,7 @@ p <- ggplot(r, aes(year, 100 * baseline_share)) +
   geom_text(data = usable, aes(year, 100 * (1 - usable_share) + 1.5, label = lab), family = lab_font, size = lab_pt(10),
             colour = lab_palette[["text"]], vjust = 0, angle = 90, hjust = 0) +
   scale_fill_manual(values = fills, breaks = names(fills)) +
-  scale_y_continuous(limits = c(0, 75), breaks = seq(0, 75, 25), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 56), breaks = seq(0, 50, 25), expand = c(0, 0)) +
   scale_x_continuous(breaks = 2019:2024, limits = c(2018.4, 2024.6), expand = c(0, 0)) +
   coord_cartesian(clip = "off") +
   facet_wrap(~ panel, ncol = 2) +

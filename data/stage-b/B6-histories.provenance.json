@@ -1,0 +1,245 @@
+{
+  "id": "B6-histories",
+  "run_id": "20261007T042536Z-run-B6-histories-query.R",
+  "mode": "guarded",
+  "time_utc": "2026-10-07T04:25:48Z",
+  "script": {
+    "path": null,
+    "sha256": null
+  },
+  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
+  "programming": {
+    "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
+    "dirty_files": 6,
+    "pinned_utc": "2026-10-07T03:59:26Z"
+  },
+  "sources": [
+    {
+      "name": "registry.2019",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d382646ef",
+      "size": 109769199,
+      "mtime": 1791233045,
+      "sha256": "622ec3b5f1f5b74c3b47d9f3d18888ba253190f1ffc5bc8408a8678c7e08fbd0",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2020",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2020/generation-10b9d3c8381fa/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3c8381fa",
+      "size": 98479578,
+      "mtime": 1791233116,
+      "sha256": "56a56e5ec00ff037bbd35931f3a2f125e5cd3f1a84432446cc35ab7c4dee093b",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5d363d92",
+      "size": 134403043,
+      "mtime": 1791233185,
+      "sha256": "048f43d8391caf3f87bdcee98e801c58f2fca66675c7c4c0a6362d9ca9fb58e1",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2022",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2022/generation-10b9d826b541/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d826b541",
+      "size": 127525251,
+      "mtime": 1791233252,
+      "sha256": "27286e8c8d8f684482abbf76b2614f82c51025f8bc642da8c3ec04a459417023",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2023",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2023/generation-10b9dafdc90e/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9dafdc90e",
+      "size": 124672335,
+      "mtime": 1791233317,
+      "sha256": "f1e2af758c0f4d82cfe6e423fe6cf40ccfee680a40ef91ccb9a5fca4d265ba81",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1db9b6af",
+      "size": 122521400,
+      "mtime": 1791232284,
+      "sha256": "5969b72b6002f9c425af462033a2c4ef4d6a27289e84f19fc9e0512e0b65b2eb",
+      "sha256_source": "stage-manifest"
+    }
+  ],
+  "sql": "\nWITH r AS (\n  SELECT inn_key, year, CASE WHEN registered_year_end = false THEN 'X'\n                   WHEN eligible_raw = 1 AND original_available = 1 THEN 'A'\n                   WHEN eligible_raw = 1 AND original_available = 0 AND registered_year_end THEN 'N'\n                   ELSE 'O' END AS state\n  FROM read_parquet(['/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet', '/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2020/generation-10b9d3c8381fa/registry.parquet', '/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet', '/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2022/generation-10b9d826b541/registry.parquet', '/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2023/generation-10b9dafdc90e/registry.parquet', '/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet']) WHERE inn_key IS NOT NULL AND identity_consistent),\nu AS (SELECT DISTINCT inn_key FROM r WHERE year = 2019 AND state IN ('A', 'N')),\np AS (SELECT r.inn_key, coalesce(max(CASE WHEN year = 2019 THEN state END), '-') || coalesce(max(CASE WHEN year = 2020 THEN state END), '-') || coalesce(max(CASE WHEN year = 2021 THEN state END), '-') || coalesce(max(CASE WHEN year = 2022 THEN state END), '-') || coalesce(max(CASE WHEN year = 2023 THEN state END), '-') || coalesce(max(CASE WHEN year = 2024 THEN state END), '-') AS history FROM r JOIN u USING (inn_key) GROUP BY r.inn_key)\nSELECT history, count(*) AS firms FROM p GROUP BY 1 ORDER BY 2 DESC",
+  "rows": 161,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": {
+    "LAB_DUCKDB_MEMORY_LIMIT": "1536MB",
+    "LAB_DUCKDB_THREADS": "2",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-uKOOrDgT/duckdb",
+    "LAB_DUCKDB_MAX_TEMP": "5GB",
+    "duckdb_version": "1.5.6"
+  },
+  "memory_max": "3G",
+  "extra": {
+    "universe_sql": "SELECT count(DISTINCT inn_key) AS firms_2019 FROM read_parquet(['/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet']) WHERE inn_key IS NOT NULL AND identity_consistent AND eligible_raw = 1 AND registered_year_end",
+    "state_definition": "CASE WHEN registered_year_end = false THEN 'X'\n                   WHEN eligible_raw = 1 AND original_available = 1 THEN 'A'\n                   WHEN eligible_raw = 1 AND original_available = 0 AND registered_year_end THEN 'N'\n                   ELSE 'O' END"
+  },
+  "output": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/stage-b/B6-histories.csv",
+    "sha256": "3228d9c3faf5158acf9b779dce37ff1e47cfc4453a016f6ae284c778b1354b68",
+    "columns": ["history", "firms"]
+  }
+}

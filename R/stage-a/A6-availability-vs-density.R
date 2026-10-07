@@ -36,12 +36,12 @@ p <- ggplot(sup, aes(log10_eligible, 100 * rate)) +
   geom_line(data = dec, aes(median_log10_eligible, 100 * median_rate), colour = lab_palette[["text"]], linewidth = 0.9) +
   geom_point(data = dec, aes(median_log10_eligible, 100 * median_rate), colour = lab_palette[["text"]], size = 1.6) +
   geom_text(data = nat, aes(x = 5.85, y = 100 * rate - 3.5, label = lab), hjust = 1, vjust = 1, family = lab_font, size = lab_pt(10), colour = lab_palette[["comparison"]]) +
-  scale_x_continuous(breaks = log10(c(100, 1000, 10000, 100000)), labels = c("100", "1,000", "10,000", "100,000"), limits = c(1.69, 5.9)) +
+  scale_x_continuous(breaks = log10(c(100, 1000, 10000, 100000)), labels = c("100", "1k", "10k", "100k"), limits = c(1.69, 5.9)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25), expand = c(0, 0)) +
   facet_wrap(~ panel, ncol = 3) +
   labs(title = "Original availability against local firm density, 100 km cells, 2019-2024",
        subtitle = "Each dot is a cell with at least 50 located eligible firms: share with an original statement (%).\nBlack line: median rate within deciles of cell density. Dashed line: national rate among located eligible firms.",
-       x = "Located eligible firms in the cell (log scale)", y = NULL) +
+       x = "Located eligible firms in the cell (log scale; k = thousand)", y = NULL) +
   theme_lab(grid_x = TRUE)
 notes <- paste(
   "Source: RFSD v3.1.0; saved geographic review aggregates (100 km spherical equal-area cells, all valid coordinates). Each dot is a",

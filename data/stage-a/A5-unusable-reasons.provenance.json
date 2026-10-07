@@ -1,13 +1,13 @@
 {
   "id": "A5-unusable-reasons",
-  "run_id": "20261007T042045Z-ro-A5-unusable-reasons.R",
+  "run_id": "20261007T042345Z-ro-A5-unusable-reasons.R",
   "mode": "ro",
-  "time_utc": "2026-10-07T04:20:46Z",
+  "time_utc": "2026-10-07T04:23:46Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/stage-a/A5-unusable-reasons.R",
-    "sha256": "29f10a0982dbdbba6296c73c052c803b2b11c8837583161532728b9086545b3e"
+    "sha256": "d7d9aa086ebccccbbd7819e1e364ce0ea719e0c93b52f19d2174841f217d056c"
   },
-  "lab_commit": "d7b8823140c93caad8dc53a3bbb11dcaeb0c122a",
+  "lab_commit": "bda821dcc64bc3da475de55acaa89d8738685bc7",
   "programming": {
     "head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
     "dirty_files": 6,
