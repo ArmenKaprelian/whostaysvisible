@@ -39,7 +39,7 @@ lab_run_checks <- function(id, checks, dir) {
 }
 
 # Saves a lab aggregate with its provenance sidecar. Returns the CSV path.
-lab_save_aggregate <- function(df, id, stage = c("stage-a", "stage-b", "stage-c", "fig28"), sources = .lab$used_sources,
+lab_save_aggregate <- function(df, id, stage = c("stage-a", "stage-b", "stage-c", "fig28", "fig27", "flow"), sources = .lab$used_sources,
                                sql = NULL, checks = NULL, extra = list()) {
   stage <- match.arg(stage)
   if (any(grepl("inn|ogrn", names(df), ignore.case = TRUE))) stop("Lab aggregates never carry firm identifiers.")
@@ -55,7 +55,7 @@ lab_save_aggregate <- function(df, id, stage = c("stage-a", "stage-b", "stage-c"
   csv
 }
 
-lab_read_aggregate <- function(id, stage = c("stage-a", "stage-b", "stage-c", "fig28")) {
+lab_read_aggregate <- function(id, stage = c("stage-a", "stage-b", "stage-c", "fig28", "fig27", "flow")) {
   stage <- match.arg(stage)
   path <- lab_path("data", stage, paste0(id, ".csv"))
   if (!file.exists(path)) stop("No lab aggregate ", id, " in ", stage)

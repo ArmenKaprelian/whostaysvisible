@@ -1,0 +1,15 @@
+"check","expected","observed","tolerance","pass"
+"cells in either year",1193,1193,0,TRUE
+"located eligible 2021",3277638,3277638,0,TRUE
+"located available 2021",2097055,2097055,0,TRUE
+"located eligible 2024",3083823,3083823,0,TRUE
+"located available 2024",2051002,2051002,0,TRUE
+"coverage table located 2021",3277638,3277638,0,TRUE
+"coverage table located 2024",3083823,3083823,0,TRUE
+"supported cells (both years >= 50)",658,658,0,TRUE
+"supported in 2021 only",9,9,0,TRUE
+"supported in 2024 only",12,12,0,TRUE
+"classes used",6,6,0,TRUE
+"zero is a class boundary",1,1,0,TRUE
+"share recomputes 2021",0,0,0.000000001,TRUE
+"share recomputes 2024",0,0,0.000000001,TRUE

@@ -1,0 +1,407 @@
+{
+  "id": "fig27-change-palette",
+  "run_id": "20261018T192244Z-run-F1-maps.R",
+  "mode": "guarded",
+  "time_utc": "2026-10-18T19:22:47Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/fig27/F1-maps.R",
+    "sha256": "53e6d4fdf2d452f054d37ec454aa0a387032dcb73b65794cf0c9efa02fdc4b6b"
+  },
+  "lab_commit": "0600885e23fba3ed5e9fddcfc32bf29cbb1ab9d1",
+  "programming": {
+    "head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
+    "dirty_files": 8,
+    "pinned_utc": "2026-10-18T19:22:42Z"
+  },
+  "sources": [
+    {
+      "name": "fig28.script",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/research/evidence/chapter2-editorial-memo-2026-10-15/implementation/figure-source/chapter2-reconcile-refine-maps.R",
+      "kind": "r",
+      "generation": null,
+      "size": 19846,
+      "mtime": 1792056739,
+      "sha256": "725ae323e23938eb21946e44df5ec03c000ffa872082991cde5f891bca6e4761",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.script-programming",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/R/chapter2-reconcile-refine-maps.R",
+      "kind": "r",
+      "generation": null,
+      "size": 22614,
+      "mtime": 1792339446,
+      "sha256": "ffa636606f72d9caa21b9cc9420190d4fe30509fd11c0ceef557b303ded6942d",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.points",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/candidate-01-eligible-points.parquet",
+      "kind": "parquet",
+      "generation": "8e559d19ccc1",
+      "size": 27960242,
+      "mtime": 1791947431,
+      "sha256": "2989f3096763960efadb7fa7d351f2d9b595daad878e6189a824584f5ad773db",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.population-accounting",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-01-population-accounting.csv",
+      "kind": "csv",
+      "generation": "91a7a2b80fd6",
+      "size": 258,
+      "mtime": 1791955230,
+      "sha256": "6af65f3324289d42e627b3f6853408dd1792824a57101ff6c10befa451ec0811",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.view-accounting",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-01-view-accounting.csv",
+      "kind": "csv",
+      "generation": "91a7a2b80fd6",
+      "size": 826,
+      "mtime": 1791955230,
+      "sha256": "4a9c5c33b32d9fbd1a308e975aeaa2a6ae3f5637915999c618ef44c7fe845193",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.manifest",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/map-refinement-manifest.json",
+      "kind": "json",
+      "generation": "91a7a2b80fd6",
+      "size": 2969,
+      "mtime": 1791955231,
+      "sha256": "c9e8407752cb253c7ec1af55894f3a2d667bfcbbd1d5d2036d3755695de8fbde",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.basemap",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/inputs/geoboundaries/basemap-geometry.json",
+      "kind": "json",
+      "generation": null,
+      "size": 8304729,
+      "mtime": 1791954691,
+      "sha256": "a160f5f0dc84679e7c2f79b24d6fb65e865f15bfd7465381840236d82a6c9f5f",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.cells-lists-2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/visual-revision-20261006/geo/aggregates/cells.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 1293714,
+      "mtime": 1791334870,
+      "sha256": "92796b88a216a44964b4d09bebfe919d1374d40d084a1d053980e9375b3bea41",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.membership-overlap",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/visual-revision-20261006/geo/aggregates/membership_overlap.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 413,
+      "mtime": 1791334870,
+      "sha256": "0c9ede1f8200c9f61c97082f1c8f319b017c11c85b090fbec6eeac55ccdaed0c",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.cells-years",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/cells.csv",
+      "kind": "csv",
+      "generation": "8e559d19ccc1",
+      "size": 265727,
+      "mtime": 1791947469,
+      "sha256": "3893bc31200ca2d362b5387aec5c256ecaae4ab7c794191ff261f8f274308087",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig27.coverage-years",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/coverage.csv",
+      "kind": "csv",
+      "generation": "8e559d19ccc1",
+      "size": 638,
+      "mtime": 1791947469,
+      "sha256": "365b90e751c6bef55a8ed499d1ea046b8c0b07e4df7ec40e3fa80c06d8e3f0a6",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 6,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": {
+    "LAB_DUCKDB_MEMORY_LIMIT": "1536MB",
+    "LAB_DUCKDB_THREADS": "2",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-gTe6rf0y/duckdb",
+    "LAB_DUCKDB_MAX_TEMP": "5GB",
+    "duckdb_version": "1.5.6"
+  },
+  "memory_max": "3G",
+  "extra": {
+    "validation": [
+      {
+        "palette": "change-navy-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Lightness monotone     steps read light→dark"
+      },
+      {
+        "palette": "change-navy-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Adjacent ΔL            all gaps >= 0.06"
+      },
+      {
+        "palette": "change-navy-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "FAIL",
+        "detail": "Light-end contrast     #A9C4DE at 1.61:1 vs surface — below 2:1 floor"
+      },
+      {
+        "palette": "change-navy-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Single hue             hue spread 3°"
+      },
+      {
+        "palette": "change-navy-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "VERDICT",
+        "detail": "→ FAILED — fix the marked checks  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)"
+      },
+      {
+        "palette": "change-brick-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Lightness monotone     steps read light→dark"
+      },
+      {
+        "palette": "change-brick-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Adjacent ΔL            all gaps >= 0.06"
+      },
+      {
+        "palette": "change-brick-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "FAIL",
+        "detail": "Light-end contrast     #DCB7A8 at 1.64:1 vs surface — below 2:1 floor"
+      },
+      {
+        "palette": "change-brick-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "PASS",
+        "detail": "Single hue             hue spread 1°"
+      },
+      {
+        "palette": "change-brick-side",
+        "mode": "ordinal",
+        "surface": "#F1F2EF",
+        "status": "VERDICT",
+        "detail": "→ FAILED — fix the marked checks  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "FAIL",
+        "detail": "Lightness band         outside band: [[\"#DCB7A8\",0.808],[\"#A9C4DE\",0.809]]"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "FAIL",
+        "detail": "Chroma floor           below floor (reads gray): [[\"#8D4B30\",0.098],[\"#BE856F\",0.078],[\"#DCB7A8\",0.048],[\"#A9C4DE\",0.047],[\"#6E9AC2\",0.077],[\"#2F6395\",0.098]]"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "WARN",
+        "detail": "CVD separation         worst all-pairs #A9C4DE↔#DCB7A8 ΔE 7.5 (protan) · tritan 11.1"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "FAIL",
+        "detail": "Normal-vision floor    worst all-pairs #A9C4DE↔#DCB7A8 ΔE 9.3 (normal) — below 15, hard to tell apart even with full color vision"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "WARN",
+        "detail": "Contrast vs surface    below 3:1 — relief required (visible labels or table view): [[\"#BE856F\",2.76],[\"#DCB7A8\",1.64],[\"#A9C4DE\",1.61],[\"#6E9AC2\",2.65]]"
+      },
+      {
+        "palette": "change-all-six",
+        "mode": "all-pairs",
+        "surface": "#F1F2EF",
+        "status": "VERDICT",
+        "detail": "→ FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)"
+      }
+    ]
+  },
+  "output": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/fig27/fig27-change-palette.csv",
+    "sha256": "3c03851d424b78845f99d5d2f35a8fcf711b0116094eb3402c777bca1389c1ef",
+    "columns": ["class", "label", "hex", "oklab_L"]
+  }
+}

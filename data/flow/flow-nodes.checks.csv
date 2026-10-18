@@ -1,0 +1,45 @@
+"check","expected","observed","tolerance","pass"
+"flow-ch2 count 3,357,109 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 3,147,504 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 2,959,193 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 2,926,282 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 10,484,716 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 4,814,211 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 9,323,396 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 860,366 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 300,868 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 462,941 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 2,949,830 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,401,172 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 13,596,533 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 13,517,387 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 9,975,404 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 7,326,875 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,138 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,226,797 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 2,129,174 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 579,417 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 580,228 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 46,500 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 370,000 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,503,198 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,179,338 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,502,477 printed in the manuscript",1,1,0,TRUE
+"flow-ch2 count 1,178,930 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 3,357,109 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 2,959,193 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 10,484,716 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 4,814,211 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 13,596,533 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 9,975,404 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 7,326,875 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 1,503,198 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 1,179,338 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 1,502,477 printed in the manuscript",1,1,0,TRUE
+"flow-ch1 count 1,178,930 printed in the manuscript",1,1,0,TRUE
+"prior observers resolve: A + N + X + 39 + 47",10484716,10484716,0,TRUE
+"prior absentees resolve: A + N + X + 18 + 250",4814211,4814211,0,TRUE
+"survivor population = available + absent survivors",13596533,13596533,0,TRUE
+"removals = removed observers + removed absentees",1702040,1702040,0,TRUE
+"survivor model retained = survivor population - 79,146",13517387,13517387,0,TRUE
+"identity screen and statement requirement leave 2,129,174",2129174,2129174,0,TRUE

@@ -79,6 +79,19 @@ re-render of the manuscript figure), `R/fig28/F1-render.R`, `scripts/fig28-compa
 Ranking and reasoning: `candidates/fig28-ranking.md`; page: `gallery/fig28.html`;
 palette checks: `scripts/validate_palette.py` (copied from the Claude Code dataviz skill).
 
+## Figure 2.7 gallery (18 October 2026)
+
+Candidates for Points 20, 22 and 13 of the Chapter 2 author-points review: the Figure 2.7
+redesigns (one panel or two, both supplied lists in warm brick over the navy or phthalo-green
+population, the current availability panels with the overlay), the availability-change map
+2024 against 2021 on 15 km gapped tiles, a composite page, and the sample-flow diagram in TikZ
+and R for two placements. Inputs are pinned as `fig27.*` and `flow.*`. Run
+`scripts/ram-status.sh`, then `scripts/lab-run.sh Rscript --vanilla R/fig27/F1-maps.R`
+(guarded: 3.28 million points), `scripts/lab-ro.sh Rscript --vanilla R/flow/F1-flow.R`,
+`scripts/lab-ro.sh scripts/flow-build.sh` (pdflatex), `scripts/lab-ro.sh scripts/fig27-postprocess.sh`
+and `scripts/lab-ro.sh Rscript --vanilla R/fig27/G-gallery.R`. Ranking (provisional until the
+terminology registry is approved): `candidates/fig27-ranking.md`; page: `gallery/fig27.html`.
+
 ## Decision log
 
 - 2026-10-06: plan approved by the author; firm-level reads allowed including raw
@@ -87,3 +100,6 @@ palette checks: `scripts/validate_palette.py` (copied from the Claude Code datav
 - 2026-10-18: Figure 2.8 restyle previews. The author chose pooled cell quintiles (one
   legend for both panels) and asked for Dark2 renders beside the ordered palettes for
   comparison; firm asset quintiles do not apply to a map of cell shares.
+- 2026-10-18: Figure 2.7 gallery (Points 20, 22, 13) built; labels use the proposed registry names; ranking provisional until the registry is approved. Author picks pending.
+- 2026-10-18 (later): author's picks recorded; Figure 2.7 kept, the change map adopted (layout to Codex, brief in candidates/fig27-change-codex-brief.md), the diagram redone as a flowchart (flow2, `R/flow/F2-flowchart.R`).
+- 2026-10-18 (evening): the flowchart was rejected too (still too dense); Codex makes its own pass from candidates/fig27-flow-codex-brief.md. Gallery phase closed for Points 20, 22 and 13.

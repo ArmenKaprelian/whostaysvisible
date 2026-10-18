@@ -1,0 +1,14 @@
+"check","expected","observed","tolerance","pass"
+"50 km cells",3006,3006,0,TRUE
+"100 km cells",1157,1157,0,TRUE
+"located eligible in 50 km cells",3277638,3277638,0,TRUE
+"located eligible in 100 km cells",3277638,3277638,0,TRUE
+"located sanctions-list firms (50 km)",3466,3466,0,TRUE
+"located sanctions-list firms (100 km)",3466,3466,0,TRUE
+"located government-strategic firms (50 km)",953,953,0,TRUE
+"located government-strategic firms (100 km)",953,953,0,TRUE
+"eligible sanctions-list firms (overlap table)",3550,3550,0,TRUE
+"eligible government-strategic firms (overlap table)",982,982,0,TRUE
+"located on both lists",507,507,0,TRUE
+"located sanctions-list firms (overlap table)",3466,3466,0,TRUE
+"located government-strategic firms (overlap table)",953,953,0,TRUE

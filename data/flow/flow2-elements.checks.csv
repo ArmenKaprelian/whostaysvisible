@@ -1,0 +1,30 @@
+"check","expected","observed","tolerance","pass"
+"count 3,357,109 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 3,147,504 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 2,959,193 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 2,926,282 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 10,484,716 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 4,814,211 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 9,323,396 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 860,366 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 300,868 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 462,941 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 2,949,830 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,401,172 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 13,596,533 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 13,517,387 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 9,975,404 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 7,326,875 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,138 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,226,797 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 579,417 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 46,559 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,503,198 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,179,338 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,502,477 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"count 1,178,930 printed in the manuscript or Figure B.1/B.2",1,1,0,TRUE
+"segments sum to the total: Prior observers",10484716,10484716,0,TRUE
+"segments sum to the total: Prior absentees",4814211,4814211,0,TRUE
+"segments sum to the total: 2021 annual eligible population",3357109,3357109,0,TRUE
+"survivor population = available + absent survivors",13596533,13596533,0,TRUE
+"survivor model retained = survivor population - 79,146",13517387,13517387,0,TRUE

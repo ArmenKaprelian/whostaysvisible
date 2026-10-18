@@ -1,0 +1,216 @@
+{
+  "id": "flow-nodes",
+  "run_id": "20261018T193543Z-ro-F1-flow.R",
+  "mode": "ro",
+  "time_utc": "2026-10-18T19:35:44Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/flow/F1-flow.R",
+    "sha256": "ae9479caf9ce784e6c9c57b0da08556f518a77b06683e9e3d174eceea14dec35"
+  },
+  "lab_commit": "0600885e23fba3ed5e9fddcfc32bf29cbb1ab9d1",
+  "programming": {
+    "head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
+    "dirty_files": 8,
+    "pinned_utc": "2026-10-18T19:22:42Z"
+  },
+  "sources": [
+    {
+      "name": "flow.tex-02-data",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
+      "kind": "tex",
+      "generation": null,
+      "size": 10813,
+      "mtime": 1792338227,
+      "sha256": "28dd898bce0460d6d9ae0d5be827779c1f52713714ccf2c39c9e7356f8f2d59e",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "flow.tex-05-results",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/05-results.tex",
+      "kind": "tex",
+      "generation": null,
+      "size": 17956,
+      "mtime": 1792338573,
+      "sha256": "2206c2de600fddb9fdb1ce19f03bdfc477cffbd87c7dad07978d6acc6dab1cd5",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "flow.tex-07-financial",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
+      "kind": "tex",
+      "generation": null,
+      "size": 8163,
+      "mtime": 1792338227,
+      "sha256": "5a9769741c683e03ca1caaf2ec66aaeb107e5fb28514fb7279241e966727d222",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "flow.tex-appendix-b",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/appendices/b-chapter2-evidence.tex",
+      "kind": "tex",
+      "generation": null,
+      "size": 52707,
+      "mtime": 1792063739,
+      "sha256": "10253364249a6874aa2e48dcf9a85d888be2c6ebb1bca555ff1fc5eece478e2d",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 16,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": null,
+  "memory_max": "none",
+  "extra": [],
+  "output": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/flow/flow-nodes.csv",
+    "sha256": "0b6702e8d634acacfed74302d7b2e7b1ea8853ba84dc5a192fbf49c33d31a1db",
+    "columns": ["diagram", "node", "column", "title", "body"]
+  }
+}

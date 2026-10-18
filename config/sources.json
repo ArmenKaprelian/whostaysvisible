@@ -1,8 +1,8 @@
 {
- "pinned_utc": "2026-10-18T04:47:18Z",
+ "pinned_utc": "2026-10-18T19:22:42Z",
  "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
- "programming_dirty_files": 7,
- "count": 140,
+ "programming_dirty_files": 8,
+ "count": 154,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -1527,9 +1527,9 @@
    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/R/chapter2-reconcile-refine-maps.R",
    "kind": "r",
    "generation": null,
-   "size": 19817,
-   "mtime": 1791955175,
-   "sha256": "2924deafbe952a6e99dd2e28e65ad3cc84a33baa3338d7f83ff365fc57ced3f1",
+   "size": 22614,
+   "mtime": 1792339446,
+   "sha256": "ffa636606f72d9caa21b9cc9420190d4fe30509fd11c0ceef557b303ded6942d",
    "sha256_source": "computed",
    "stage": "fig28"
   },
@@ -1538,11 +1538,165 @@
    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/figures/chapter2/stage3-08-cohort-map.pdf",
    "kind": "pdf",
    "generation": null,
-   "size": 3421218,
-   "mtime": 1792056741,
-   "sha256": "cd371e613eb598911fcd68cc7a42ed457beeaa934a08a78bbf2b53612cc36763",
+   "size": 3426696,
+   "mtime": 1792339455,
+   "sha256": "a499c4260b99582e9750e0a1bec003b528c6d94e84ffa5420998ea1f94234ce6",
    "sha256_source": "computed",
    "stage": "fig28"
+  },
+  "fig27.points": {
+   "name": "fig27.points",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/candidate-01-eligible-points.parquet",
+   "kind": "parquet",
+   "generation": "8e559d19ccc1",
+   "size": 27960242,
+   "mtime": 1791947431,
+   "sha256": "2989f3096763960efadb7fa7d351f2d9b595daad878e6189a824584f5ad773db",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.population-accounting": {
+   "name": "fig27.population-accounting",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-01-population-accounting.csv",
+   "kind": "csv",
+   "generation": "91a7a2b80fd6",
+   "size": 258,
+   "mtime": 1791955230,
+   "sha256": "6af65f3324289d42e627b3f6853408dd1792824a57101ff6c10befa451ec0811",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.view-accounting": {
+   "name": "fig27.view-accounting",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-01-view-accounting.csv",
+   "kind": "csv",
+   "generation": "91a7a2b80fd6",
+   "size": 826,
+   "mtime": 1791955230,
+   "sha256": "4a9c5c33b32d9fbd1a308e975aeaa2a6ae3f5637915999c618ef44c7fe845193",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.cells-lists-2021": {
+   "name": "fig27.cells-lists-2021",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/visual-revision-20261006/geo/aggregates/cells.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 1293714,
+   "mtime": 1791334870,
+   "sha256": "92796b88a216a44964b4d09bebfe919d1374d40d084a1d053980e9375b3bea41",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.membership-overlap": {
+   "name": "fig27.membership-overlap",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/visual-revision-20261006/geo/aggregates/membership_overlap.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 413,
+   "mtime": 1791334870,
+   "sha256": "0c9ede1f8200c9f61c97082f1c8f319b017c11c85b090fbec6eeac55ccdaed0c",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.cells-years": {
+   "name": "fig27.cells-years",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/cells.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 265727,
+   "mtime": 1791947469,
+   "sha256": "3893bc31200ca2d362b5387aec5c256ecaae4ab7c794191ff261f8f274308087",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.coverage-years": {
+   "name": "fig27.coverage-years",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/coverage.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 638,
+   "mtime": 1791947469,
+   "sha256": "365b90e751c6bef55a8ed499d1ea046b8c0b07e4df7ec40e3fa80c06d8e3f0a6",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "fig27.manuscript-pdf": {
+   "name": "fig27.manuscript-pdf",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/figures/chapter2/stage3-07-eligible-map.pdf",
+   "kind": "pdf",
+   "generation": null,
+   "size": 3764696,
+   "mtime": 1791968359,
+   "sha256": "b1b88b2cd7c818e3fdb9466c938d7c891b45f1d070d1fd4bb6c47082e7f6e420",
+   "sha256_source": "computed",
+   "stage": "fig27"
+  },
+  "flow.tex-02-data": {
+   "name": "flow.tex-02-data",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
+   "kind": "tex",
+   "generation": null,
+   "size": 10813,
+   "mtime": 1792338227,
+   "sha256": "28dd898bce0460d6d9ae0d5be827779c1f52713714ccf2c39c9e7356f8f2d59e",
+   "sha256_source": "computed",
+   "stage": "flow"
+  },
+  "flow.tex-05-results": {
+   "name": "flow.tex-05-results",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/05-results.tex",
+   "kind": "tex",
+   "generation": null,
+   "size": 17956,
+   "mtime": 1792338573,
+   "sha256": "2206c2de600fddb9fdb1ce19f03bdfc477cffbd87c7dad07978d6acc6dab1cd5",
+   "sha256_source": "computed",
+   "stage": "flow"
+  },
+  "flow.tex-07-financial": {
+   "name": "flow.tex-07-financial",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
+   "kind": "tex",
+   "generation": null,
+   "size": 8163,
+   "mtime": 1792338227,
+   "sha256": "5a9769741c683e03ca1caaf2ec66aaeb107e5fb28514fb7279241e966727d222",
+   "sha256_source": "computed",
+   "stage": "flow"
+  },
+  "flow.tex-appendix-b": {
+   "name": "flow.tex-appendix-b",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/appendices/b-chapter2-evidence.tex",
+   "kind": "tex",
+   "generation": null,
+   "size": 52707,
+   "mtime": 1792063739,
+   "sha256": "10253364249a6874aa2e48dcf9a85d888be2c6ebb1bca555ff1fc5eece478e2d",
+   "sha256_source": "computed",
+   "stage": "flow"
+  },
+  "flow.fig-cohort-accounting-1": {
+   "name": "flow.fig-cohort-accounting-1",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/figures/chapter2/stage3-b-cohort-accounting-1.pdf",
+   "kind": "pdf",
+   "generation": null,
+   "size": 25803,
+   "mtime": 1791968359,
+   "sha256": "e6a9ae98ec06d328bb62dd996f5b4946a45a7d25881f96e15a5de00b8e149491",
+   "sha256_source": "computed",
+   "stage": "flow"
+  },
+  "flow.fig-cohort-accounting-2": {
+   "name": "flow.fig-cohort-accounting-2",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/figures/chapter2/stage3-b-cohort-accounting-2.pdf",
+   "kind": "pdf",
+   "generation": null,
+   "size": 25904,
+   "mtime": 1791968359,
+   "sha256": "9298562cf7c84e661a858d19fd805d2e9c317cfc00034bad823cbdc7d84f5ef0",
+   "sha256_source": "computed",
+   "stage": "flow"
   }
  }
 }

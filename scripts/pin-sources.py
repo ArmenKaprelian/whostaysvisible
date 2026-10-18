@@ -101,6 +101,32 @@ add_small("fig28.script", f"{memo19}/figure-source/chapter2-reconcile-refine-map
 add_small("fig28.script-programming", f"{PROG}/R/chapter2-reconcile-refine-maps.R", "fig28", kind="r")
 add_small("fig28.manuscript-pdf", f"{LATEX}/kaprelian_dissertation/figures/chapter2/stage3-08-cohort-map.pdf", "fig28", kind="pdf")
 
+
+# Figure 2.7 gallery and the sample-flow diagram (18 Oct 2026). The located 2021 eligible
+# points are the pass2 parquet that the map manifest hashes as its point input
+# (sha256 2989f309...); the 2021 cells with supplied-list counts come from the October
+# geographic review's visual revision (byte-identical to geo.cells); the 2021/2024 cells for
+# the availability-change map are the pass2 aggregates. The manuscript figure PDF is the
+# fidelity reference, and the four manuscript files hold every count the diagram repeats.
+pass2 = f"{PROG}/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates"
+vis = f"{PROG}/output/visual-revision-20261006/geo/aggregates"
+maps = f"{refine}/exhibits/generation-91a7a2b80fd6/maps"
+add_small("fig27.points", f"{pass2}/candidate-01-eligible-points.parquet", "fig27", kind="parquet")
+add_small("fig27.population-accounting", f"{maps}/candidate-01-population-accounting.csv", "fig27")
+add_small("fig27.view-accounting", f"{maps}/candidate-01-view-accounting.csv", "fig27")
+add_small("fig27.cells-lists-2021", f"{vis}/cells.csv", "fig27")
+add_small("fig27.membership-overlap", f"{vis}/membership_overlap.csv", "fig27")
+add_small("fig27.cells-years", f"{pass2}/cells.csv", "fig27")
+add_small("fig27.coverage-years", f"{pass2}/coverage.csv", "fig27")
+add_small("fig27.manuscript-pdf", f"{LATEX}/kaprelian_dissertation/figures/chapter2/stage3-07-eligible-map.pdf", "fig27", kind="pdf")
+tex = f"{LATEX}/kaprelian_dissertation"
+add_small("flow.tex-02-data", f"{tex}/chapters/02-opacity/02-data-and-samples.tex", "flow", kind="tex")
+add_small("flow.tex-05-results", f"{tex}/chapters/02-opacity/05-results.tex", "flow", kind="tex")
+add_small("flow.tex-07-financial", f"{tex}/chapters/02-opacity/07-financial-sample-implications.tex", "flow", kind="tex")
+add_small("flow.tex-appendix-b", f"{tex}/appendices/b-chapter2-evidence.tex", "flow", kind="tex")
+add_small("flow.fig-cohort-accounting-1", f"{tex}/figures/chapter2/stage3-b-cohort-accounting-1.pdf", "flow", kind="pdf")
+add_small("flow.fig-cohort-accounting-2", f"{tex}/figures/chapter2/stage3-b-cohort-accounting-2.pdf", "flow", kind="pdf")
+
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 dirty = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "status", "--porcelain"], capture_output=True, text=True).stdout.count("\n")
 doc = {"pinned_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "programming_head": head,
