@@ -6,3 +6,4 @@ lib/
 logs/
 *.tmp
 __pycache__/
+gallery/fig28-compare.html
