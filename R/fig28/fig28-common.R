@@ -150,6 +150,8 @@ fig28_fill <- function(d, spec, panel) {
 fig28_cells <- function(d, fill, spec) {
   if (spec$shape == "tile") {
     h <- 50 - spec$gap_km / 2
+    if (isTRUE(spec$white_backing))   # polish: gaps read as white, not as land showing through
+      graphics::rect(d$x_km - 50, d$y_km - 50, d$x_km + 50, d$y_km + 50, col = "white", border = NA)
     graphics::rect(d$x_km - h, d$y_km - h, d$x_km + h, d$y_km + h, col = fill, border = NA)
   } else {
     r <- if (spec$shape == "dot") rep(spec$radius_km, nrow(d)) else spec$radii_km[d$class]
@@ -170,6 +172,21 @@ fig28_legend <- function(spec, cuts, range, cex = .96) {
     x <- seq(.12, .88, length.out = 102)
     graphics::rect(head(x, -1), .123, tail(x, -1), .139, col = spec$hex, border = NA)
     graphics::text(seq(.12, .88, length.out = 5), .111, paste0(seq(0, 100, 25), "%"), cex = .85)
+    return(invisible())
+  }
+  if (identical(spec$legend, "boundaries")) {   # polish: five touching classes, values at the boundaries
+    left <- .12; right <- .70; w <- (right - left) / 5; edges <- left + w * 0:5
+    gap <- if (spec$shape == "tile") .005 else 0
+    b <- formatC(c(range[1], cuts, range[2]), format = "f", digits = 0)
+    labels <- c(paste0(b[1], "%"), b[2:5], paste0(b[6], "%"))
+    for (k in 1:5) {
+      if (spec$shape == "tile") graphics::rect(edges[k] + gap / 2, .123, edges[k + 1] - gap / 2, .139, col = spec$hex[k], border = NA)
+      else fig28_page_circle((edges[k] + edges[k + 1]) / 2, .131, .0079, spec$hex[k])
+    }
+    graphics::text(edges, .111, labels, cex = cex)
+    if (spec$shape == "tile") graphics::rect(.78, .123, .86, .139, col = fig28_gray, border = NA)
+    else fig28_page_circle(.82, .131, .0063, fig28_gray)
+    graphics::text(.82, .111, "<50 eligible", cex = cex)
     return(invisible())
   }
   labels <- c(fig28_class_labels(cuts, range), "<50 eligible")
@@ -204,11 +221,12 @@ fig28_draw <- function(inputs, c2rr, cells, spec, cuts, range) {
     fig28_page()
     for (i in 1:2) {
       offset <- if (i == 1) 0 else -.42; a <- accounting[i, ]
-      title <- paste0(if (i == 1) "02  " else "", "Inclusion in the revenue cohort by ", a$moderator, " share")
+      prefix <- if (i == 1 && !isTRUE(spec$drop_prefix)) "02  " else ""   # polish drops the stray candidate number
+      title <- paste0(prefix, "Inclusion in the revenue cohort by ", a$moderator, " share")
       graphics::text(.035, .971 + offset, title, adj = c(0, 1), font = 2, cex = 1.02)
       graphics::text(.035, .942 + offset,
         paste0(count(a$cohort_firms), " located cohort firms / ", count(a$eligible_firms), " located eligible firms"),
-        adj = c(0, 1), cex = .87)
+        adj = c(0, 1), cex = if (is.null(spec$subtitle_cex)) .87 else spec$subtitle_cex)
     }
     fig28_legend(spec, cuts, range)
     notes <- c("Each panel shows the share of located eligible firms in a 2021 cell included in its fixed revenue cohort.",
