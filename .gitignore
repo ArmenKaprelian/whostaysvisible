@@ -1,6 +1,8 @@
 # Regenerable or large; everything else (scripts, config, data CSVs, briefs) is tracked.
 figures/
 gallery/index.html
+gallery/fig28.html
 lib/
 logs/
 *.tmp
+__pycache__/

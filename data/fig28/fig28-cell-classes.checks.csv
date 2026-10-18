@@ -1,0 +1,23 @@
+"check","expected","observed","tolerance","pass"
+"rows",2308,2308,0,TRUE
+"cells per panel",1154,1154,0,TRUE
+"panels",2,2,0,TRUE
+"supported cells cash",667,667,0,TRUE
+"supported cells inventory",667,667,0,TRUE
+"gray cells cash",487,487,0,TRUE
+"gray cells inventory",487,487,0,TRUE
+"cohort firms cash",1485616,1485616,0,TRUE
+"cohort firms inventory",1164866,1164866,0,TRUE
+"eligible firms cash",3277638,3277638,0,TRUE
+"eligible firms inventory",3277638,3277638,0,TRUE
+"support rule agrees",2308,2308,0,TRUE
+"share recomputes",0,0.000000000000049737991503207,0.000000001,TRUE
+"pooled supported cells",1334,1334,0,TRUE
+"class cells cash",667,667,0,TRUE
+"class cells inventory",667,667,0,TRUE
+"cutpoints increasing",1,1,0,TRUE
+"classes used",5,5,0,TRUE
+"pooled p20",33.31,33.3085501858736,0.005,TRUE
+"pooled p40",38.33,38.3333333333333,0.005,TRUE
+"pooled p60",42.97,42.9696987542627,0.005,TRUE
+"pooled p80",47.62,47.6248003194888,0.005,TRUE

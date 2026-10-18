@@ -1,0 +1,226 @@
+{
+  "id": "fig28-palette-validation",
+  "run_id": "20261018T045510Z-ro-F1-render.R",
+  "mode": "ro",
+  "time_utc": "2026-10-18T04:55:12Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/fig28/F1-render.R",
+    "sha256": "87cc1d94de09473c512fbfe407d0bb97877519bbc035748186e78a4ade1827f1"
+  },
+  "lab_commit": "608d5d86cbcbb2109db8402b0d504c2efb89aafd",
+  "programming": {
+    "head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
+    "dirty_files": 7,
+    "pinned_utc": "2026-10-18T04:47:18Z"
+  },
+  "sources": [
+    {
+      "name": "fig28.script",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/research/evidence/chapter2-editorial-memo-2026-10-15/implementation/figure-source/chapter2-reconcile-refine-maps.R",
+      "kind": "r",
+      "generation": null,
+      "size": 19846,
+      "mtime": 1792056739,
+      "sha256": "725ae323e23938eb21946e44df5ec03c000ffa872082991cde5f891bca6e4761",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.script-programming",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/R/chapter2-reconcile-refine-maps.R",
+      "kind": "r",
+      "generation": null,
+      "size": 19817,
+      "mtime": 1791955175,
+      "sha256": "2924deafbe952a6e99dd2e28e65ad3cc84a33baa3338d7f83ff365fc57ced3f1",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.cells",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-02-cell-source.csv",
+      "kind": "csv",
+      "generation": "91a7a2b80fd6",
+      "size": 257675,
+      "mtime": 1791955230,
+      "sha256": "9766c77dd10b8c6bc016ed6f10a933d0eb042bc9acc69fb7337ba6adf7a9e6d7",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.manifest",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/map-refinement-manifest.json",
+      "kind": "json",
+      "generation": "91a7a2b80fd6",
+      "size": 2969,
+      "mtime": 1791955231,
+      "sha256": "c9e8407752cb253c7ec1af55894f3a2d667bfcbbd1d5d2036d3755695de8fbde",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "fig28.basemap",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/inputs/geoboundaries/basemap-geometry.json",
+      "kind": "json",
+      "generation": null,
+      "size": 8304729,
+      "mtime": 1791954691,
+      "sha256": "a160f5f0dc84679e7c2f79b24d6fb65e865f15bfd7465381840236d82a6c9f5f",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 26,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": null,
+  "memory_max": "none",
+  "extra": [],
+  "output": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/fig28/fig28-palette-validation.csv",
+    "sha256": "8449931cf886b699ea94dfeab90dadec0c8179fed0612684b83585226a3ab224",
+    "columns": ["palette", "mode", "surface", "status", "detail"]
+  }
+}

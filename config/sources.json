@@ -1,8 +1,8 @@
 {
- "pinned_utc": "2026-10-07T03:59:26Z",
- "programming_head": "db5c52274e12538829e315de7bc1a4e73fe69a3d",
- "programming_dirty_files": 6,
- "count": 134,
+ "pinned_utc": "2026-10-18T04:47:18Z",
+ "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
+ "programming_dirty_files": 7,
+ "count": 140,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -1477,6 +1477,72 @@
    "sha256": "e26b5f7b1e3739c3c16ef80d9141d78e9020f77b4f642da43690db7dcc8de84a",
    "sha256_source": "rfsd-manifest",
    "stage": "C"
+  },
+  "fig28.cells": {
+   "name": "fig28.cells",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/candidate-02-cell-source.csv",
+   "kind": "csv",
+   "generation": "91a7a2b80fd6",
+   "size": 257675,
+   "mtime": 1791955230,
+   "sha256": "9766c77dd10b8c6bc016ed6f10a933d0eb042bc9acc69fb7337ba6adf7a9e6d7",
+   "sha256_source": "computed",
+   "stage": "fig28"
+  },
+  "fig28.manifest": {
+   "name": "fig28.manifest",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/map-refinement-manifest.json",
+   "kind": "json",
+   "generation": "91a7a2b80fd6",
+   "size": 2969,
+   "mtime": 1791955231,
+   "sha256": "c9e8407752cb253c7ec1af55894f3a2d667bfcbbd1d5d2036d3755695de8fbde",
+   "sha256_source": "computed",
+   "stage": "fig28"
+  },
+  "fig28.basemap": {
+   "name": "fig28.basemap",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/inputs/geoboundaries/basemap-geometry.json",
+   "kind": "json",
+   "generation": null,
+   "size": 8304729,
+   "mtime": 1791954691,
+   "sha256": "a160f5f0dc84679e7c2f79b24d6fb65e865f15bfd7465381840236d82a6c9f5f",
+   "sha256_source": "computed",
+   "stage": "fig28"
+  },
+  "fig28.script": {
+   "name": "fig28.script",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/research/evidence/chapter2-editorial-memo-2026-10-15/implementation/figure-source/chapter2-reconcile-refine-maps.R",
+   "kind": "r",
+   "generation": null,
+   "size": 19846,
+   "mtime": 1792056739,
+   "sha256": "725ae323e23938eb21946e44df5ec03c000ffa872082991cde5f891bca6e4761",
+   "sha256_source": "computed",
+   "stage": "fig28"
+  },
+  "fig28.script-programming": {
+   "name": "fig28.script-programming",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/R/chapter2-reconcile-refine-maps.R",
+   "kind": "r",
+   "generation": null,
+   "size": 19817,
+   "mtime": 1791955175,
+   "sha256": "2924deafbe952a6e99dd2e28e65ad3cc84a33baa3338d7f83ff365fc57ced3f1",
+   "sha256_source": "computed",
+   "stage": "fig28"
+  },
+  "fig28.manuscript-pdf": {
+   "name": "fig28.manuscript-pdf",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/LaTeX/kaprelian_dissertation/figures/chapter2/stage3-08-cohort-map.pdf",
+   "kind": "pdf",
+   "generation": null,
+   "size": 3421218,
+   "mtime": 1792056741,
+   "sha256": "cd371e613eb598911fcd68cc7a42ed457beeaa934a08a78bbf2b53612cc36763",
+   "sha256_source": "computed",
+   "stage": "fig28"
   }
  }
 }

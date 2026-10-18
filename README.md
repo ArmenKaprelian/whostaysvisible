@@ -66,8 +66,24 @@ with the launcher.
 9. Numbers cross-checked against the saved aggregates and the manuscript before a
    figure is drawn (`<id>.checks.csv`).
 
+## Figure 2.8 restyle study (18 October 2026)
+
+Previews of the Chapter 2 cohort-inclusion map with five pooled quintile classes instead
+of the continuous 0–100% ramp, in three cell shapes (gapped tiles, fixed circles,
+graduated circles) and four palettes (classed navy, YlGnBu, Dark2 for comparison, a
+navy/green two-hue version). Inputs are pinned as `fig28.*`; the production drawing
+helpers are reused read-only from the evidence copy of
+`chapter2-reconcile-refine-maps.R`. Run `R/fig28/F0-fidelity.R` (pixel-identical
+re-render of the manuscript figure), `R/fig28/F1-render.R`, `scripts/fig28-compare.sh`,
+`scripts/fig28-postprocess.sh` and `R/fig28/F2-gallery.R` through `scripts/lab-ro.sh`.
+Ranking and reasoning: `candidates/fig28-ranking.md`; page: `gallery/fig28.html`;
+palette checks: `scripts/validate_palette.py` (copied from the Claude Code dataviz skill).
+
 ## Decision log
 
 - 2026-10-06: plan approved by the author; firm-level reads allowed including raw
   RFSD under the guard; scope limited to Chapter 2 opacity, sample selection and
   geography; judging by gallery plus top five; Codex stays idle during lab runs.
+- 2026-10-18: Figure 2.8 restyle previews. The author chose pooled cell quintiles (one
+  legend for both panels) and asked for Dark2 renders beside the ordered palettes for
+  comparison; firm asset quintiles do not apply to a map of cell shares.

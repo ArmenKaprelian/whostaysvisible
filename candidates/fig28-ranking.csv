@@ -1,0 +1,12 @@
+id,rank,role,verdict
+s1b-gap25-c1,1,recommended,"Discrete 1 pt gaps, the largest coloured area per cell so the five classes read best, the land outline still visible, and the smallest change to the production script."
+s2-dots-c1,2,alternative,"The Hunt Brothers look: airy and graphic, with the gray unsupported dots nicely recessive. At 2.8 pt the two darkest classes are harder to tell apart, and a dot grid reads as point locations rather than equal-area cells."
+s3-graduated-c1,3,alternative,"The strongest hierarchy and the best grayscale reading, but size plus colour double-encodes the class, which exaggerates the dense core, and the small light dots resemble the gray unsupported dots."
+s1a-gap15-c1,4,not recommended,"A 0.6 pt gap nearly closes at page scale (1.8 px at 220 dpi); the map reads almost contiguous again."
+s1b-gap25-c2,,colour option 2,"Multi-hue YlGnBu: larger perceived steps at the light end, still ordered and colour-vision safe, but the teal end draws the eye to low-coverage cells and the three dark steps drift toward indigo, away from the manuscript's navy."
+s2-dots-c2,,colour option 2,"The same palette on dots; the teal light classes stand out most here."
+e-gap25-navy-green,,optional,"Navy for cash and a lightness-matched phthalo green for inventory follows the manuscript's rule for adjacent cohort displays, but the two panels compare the same quantity, where the shared-palette rule applies; the cross-panel darkness comparison is lost."
+s1b-gap25-dark2,,rejected,"Dark2 has no order, fails the colour-vision checks (pink vs teal 1.7 under deuteranopia) and the normal-vision floor (lime vs teal 10.5), and collapses to one gray in grayscale."
+s2-dots-dark2,,rejected,"Same failures on dots."
+s1b-gap25-continuous,,control,"Gaps alone leave the flat gradient: classing, not the gap, does the work."
+s0-current,,reference,"The manuscript figure, redrawn by the lab function and verified pixel-identical at 200 dpi."

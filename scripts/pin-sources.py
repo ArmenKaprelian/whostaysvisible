@@ -36,8 +36,8 @@ def entry(name, path, kind, sha, sha_source, stage_hint):
             "sha256_source": sha_source, "stage": stage_hint}
 
 sources = {}
-def add_small(name, path, stage):
-    sources[name] = entry(name, path, "csv", sha256(path), "computed", stage)
+def add_small(name, path, stage, kind="csv"):
+    sources[name] = entry(name, path, kind, sha256(path), "computed", stage)
 def add_large(name, path, stage, sha, src):
     e = entry(name, path, "parquet", sha, src, stage); sources[name] = e
 
@@ -85,6 +85,21 @@ for row in rows:
     e = entry(f"rfsd.{y}", p, "parquet", row["sha256"], "rfsd-manifest", "C")
     assert e["size"] == int(row["size_bytes"]), p
     sources[e["name"]] = e
+
+# Figure 2.8 restyle study (18 Oct 2026): the three saved inputs the manuscript copy was
+# rendered from on 15 Oct, the evidence copy of the drawing script actually used (two label
+# strings differ from programming/R), programming's copy as a hash record, and the manuscript
+# PDF for the fidelity comparison. config/sources.json is the only place the lab names paths
+# outside itself, which is why the LaTeX-side files are pinned here too.
+LATEX = f"{ROOT}/LaTeX"
+refine = f"{PROG}/output/reconcile-visual-refinement-20261014"
+memo19 = f"{LATEX}/research/evidence/chapter2-editorial-memo-2026-10-15/implementation"
+add_small("fig28.cells", f"{refine}/exhibits/generation-91a7a2b80fd6/maps/candidate-02-cell-source.csv", "fig28")
+add_small("fig28.manifest", f"{refine}/exhibits/generation-91a7a2b80fd6/maps/map-refinement-manifest.json", "fig28", kind="json")
+add_small("fig28.basemap", f"{refine}/inputs/geoboundaries/basemap-geometry.json", "fig28", kind="json")
+add_small("fig28.script", f"{memo19}/figure-source/chapter2-reconcile-refine-maps.R", "fig28", kind="r")
+add_small("fig28.script-programming", f"{PROG}/R/chapter2-reconcile-refine-maps.R", "fig28", kind="r")
+add_small("fig28.manuscript-pdf", f"{LATEX}/kaprelian_dissertation/figures/chapter2/stage3-08-cohort-map.pdf", "fig28", kind="pdf")
 
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 dirty = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "status", "--porcelain"], capture_output=True, text=True).stdout.count("\n")

@@ -1,0 +1,21 @@
+"palette","label","class","hex","oklab_L","adjacent_dL"
+"c1","C1 classed navy (navy set anchored on #16436E and #061C38; min adjacent OKLab dL 0.102)",1,"#78A3C9",0.6985,NA
+"c1","C1 classed navy (navy set anchored on #16436E and #061C38; min adjacent OKLab dL 0.102)",2,"#4F84B4",0.5968,0.1017
+"c1","C1 classed navy (navy set anchored on #16436E and #061C38; min adjacent OKLab dL 0.102)",3,"#2F6395",0.4882,0.1086
+"c1","C1 classed navy (navy set anchored on #16436E and #061C38; min adjacent OKLab dL 0.102)",4,"#16436E",0.3756,0.1126
+"c1","C1 classed navy (navy set anchored on #16436E and #061C38; min adjacent OKLab dL 0.102)",5,"#061C38",0.2269,0.1487
+"c2","C2 classed multi-hue sequential: ColorBrewer YlGnBu 9-class, steps 5-9",1,"#41B6C4",0.7171,NA
+"c2","C2 classed multi-hue sequential: ColorBrewer YlGnBu 9-class, steps 5-9",2,"#1D91C0",0.6179,0.0992
+"c2","C2 classed multi-hue sequential: ColorBrewer YlGnBu 9-class, steps 5-9",3,"#225EA8",0.4837,0.1342
+"c2","C2 classed multi-hue sequential: ColorBrewer YlGnBu 9-class, steps 5-9",4,"#253494",0.3795,0.1042
+"c2","C2 classed multi-hue sequential: ColorBrewer YlGnBu 9-class, steps 5-9",5,"#081D58",0.2604,0.1191
+"dark2","Dark2 first five (author request; qualitative, comparison only)",1,"#1B9E77",0.6233,NA
+"dark2","Dark2 first five (author request; qualitative, comparison only)",2,"#D95F02",0.6288,0.0055
+"dark2","Dark2 first five (author request; qualitative, comparison only)",3,"#7570B3",0.578,0.0508
+"dark2","Dark2 first five (author request; qualitative, comparison only)",4,"#E7298A",0.6194,0.0414
+"dark2","Dark2 first five (author request; qualitative, comparison only)",5,"#66A61E",0.657,0.0376
+"green","phthalo-green ramp matched to C1 in OKLCH lightness and chroma (hue of #004B3C)",1,"#6BAD9A",0.6977,NA
+"green","phthalo-green ramp matched to C1 in OKLCH lightness and chroma (hue of #004B3C)",2,"#36917A",0.5959,0.1018
+"green","phthalo-green ramp matched to C1 in OKLCH lightness and chroma (hue of #004B3C)",3,"#00715B",0.4891,0.1068
+"green","phthalo-green ramp matched to C1 in OKLCH lightness and chroma (hue of #004B3C)",4,"#004D3D",0.3745,0.1146
+"green","phthalo-green ramp matched to C1 in OKLCH lightness and chroma (hue of #004B3C)",5,"#00231A",0.2282,0.1463
