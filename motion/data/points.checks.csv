@@ -1,147 +1,147 @@
 "check","expected","observed","tolerance","pass"
 "region 2014: firms equal marks + city-level + treated",1358479,1358479,0,TRUE
 "region 2014: drawn firms equal the three states",1230604,1230604,0,TRUE
-"region 2014: outcome marks hold the baseline firms",153323,153323,0,TRUE
+"region 2014: outcome marks hold the firms with a statement and a value",93627,93627,0,TRUE
 "region 2014: class counts sum to the filers",93627,93627,0,TRUE
 "region 2015: firms equal marks + city-level + treated",1300598,1300598,0,TRUE
 "region 2015: drawn firms equal the three states",1188819,1188819,0,TRUE
-"region 2015: outcome marks hold the baseline firms",177754,177754,0,TRUE
+"region 2015: outcome marks hold the firms with a statement and a value",126473,126473,0,TRUE
 "region 2015: class counts sum to the filers",126473,126473,0,TRUE
 "region 2016: firms equal marks + city-level + treated",1368904,1368904,0,TRUE
 "region 2016: drawn firms equal the three states",1252816,1252816,0,TRUE
-"region 2016: outcome marks hold the baseline firms",204303,204303,0,TRUE
+"region 2016: outcome marks hold the firms with a statement and a value",147940,147940,0,TRUE
 "region 2016: class counts sum to the filers",147940,147940,0,TRUE
 "region 2017: firms equal marks + city-level + treated",1207105,1207105,0,TRUE
 "region 2017: drawn firms equal the three states",1106924,1106924,0,TRUE
-"region 2017: outcome marks hold the baseline firms",231623,231623,0,TRUE
+"region 2017: outcome marks hold the firms with a statement and a value",174181,174181,0,TRUE
 "region 2017: class counts sum to the filers",174181,174181,0,TRUE
 "region 2018: firms equal marks + city-level + treated",1173735,1173735,0,TRUE
 "region 2018: drawn firms equal the three states",1078859,1078859,0,TRUE
-"region 2018: outcome marks hold the baseline firms",258818,258818,0,TRUE
+"region 2018: outcome marks hold the firms with a statement and a value",199825,199825,0,TRUE
 "region 2018: class counts sum to the filers",199825,199825,0,TRUE
 "region 2019: firms equal marks + city-level + treated",1028707,1028707,0,TRUE
 "region 2019: drawn firms equal the three states",945613,945613,0,TRUE
-"region 2019: outcome marks hold the baseline firms",288593,288593,0,TRUE
+"region 2019: outcome marks hold the firms with a statement and a value",268475,268475,0,TRUE
 "region 2019: class counts sum to the filers",268475,268475,0,TRUE
 "region 2020: firms equal marks + city-level + treated",877534,877534,0,TRUE
 "region 2020: drawn firms equal the three states",838347,838347,0,TRUE
-"region 2020: outcome marks hold the baseline firms",323191,323191,0,TRUE
+"region 2020: outcome marks hold the firms with a statement and a value",321467,321467,0,TRUE
 "region 2020: class counts sum to the filers",321467,321467,0,TRUE
 "region 2021: firms equal marks + city-level + treated",777287,777287,0,TRUE
 "region 2021: drawn firms equal the three states",745500,745500,0,TRUE
-"region 2021: outcome marks hold the baseline firms",322173,322173,0,TRUE
+"region 2021: outcome marks hold the firms with a statement and a value",299483,299483,0,TRUE
 "region 2021: class counts sum to the filers",299483,299483,0,TRUE
 "region 2022: firms equal marks + city-level + treated",747011,747011,0,TRUE
 "region 2022: drawn firms equal the three states",717287,717287,0,TRUE
-"region 2022: outcome marks hold the baseline firms",316676,316676,0,TRUE
+"region 2022: outcome marks hold the firms with a statement and a value",267011,267011,0,TRUE
 "region 2022: class counts sum to the filers",267011,267011,0,TRUE
 "region 2023: firms equal marks + city-level + treated",771396,771396,0,TRUE
 "region 2023: drawn firms equal the three states",743161,743161,0,TRUE
-"region 2023: outcome marks hold the baseline firms",305129,305129,0,TRUE
+"region 2023: outcome marks hold the firms with a statement and a value",244629,244629,0,TRUE
 "region 2023: class counts sum to the filers",244629,244629,0,TRUE
 "region 2024: firms equal marks + city-level + treated",793908,793908,0,TRUE
 "region 2024: drawn firms equal the three states",763956,763956,0,TRUE
-"region 2024: outcome marks hold the baseline firms",289480,289480,0,TRUE
+"region 2024: outcome marks hold the firms with a statement and a value",225742,225742,0,TRUE
 "region 2024: class counts sum to the filers",225742,225742,0,TRUE
 "region 2025: firms equal marks + city-level + treated",798286,798286,0,TRUE
 "region 2025: drawn firms equal the three states",768871,768871,0,TRUE
-"region 2025: outcome marks hold the baseline firms",277073,277073,0,TRUE
+"region 2025: outcome marks hold the firms with a statement and a value",204669,204669,0,TRUE
 "region 2025: class counts sum to the filers",204669,204669,0,TRUE
 "city 2014: firms equal marks + city-level + treated",1220470,1220470,0,TRUE
 "city 2014: drawn firms equal the three states",1113465,1113465,0,TRUE
-"city 2014: outcome marks hold the baseline firms",131712,131712,0,TRUE
+"city 2014: outcome marks hold the firms with a statement and a value",80827,80827,0,TRUE
 "city 2014: class counts sum to the filers",80827,80827,0,TRUE
 "city 2015: firms equal marks + city-level + treated",1163550,1163550,0,TRUE
 "city 2015: drawn firms equal the three states",1069547,1069547,0,TRUE
-"city 2015: outcome marks hold the baseline firms",152481,152481,0,TRUE
+"city 2015: outcome marks hold the firms with a statement and a value",109553,109553,0,TRUE
 "city 2015: class counts sum to the filers",109553,109553,0,TRUE
 "city 2016: firms equal marks + city-level + treated",1222819,1222819,0,TRUE
 "city 2016: drawn firms equal the three states",1124855,1124855,0,TRUE
-"city 2016: outcome marks hold the baseline firms",175085,175085,0,TRUE
+"city 2016: outcome marks hold the firms with a statement and a value",127503,127503,0,TRUE
 "city 2016: class counts sum to the filers",127503,127503,0,TRUE
 "city 2017: firms equal marks + city-level + treated",1059449,1059449,0,TRUE
 "city 2017: drawn firms equal the three states",976958,976958,0,TRUE
-"city 2017: outcome marks hold the baseline firms",198541,198541,0,TRUE
+"city 2017: outcome marks hold the firms with a statement and a value",149336,149336,0,TRUE
 "city 2017: class counts sum to the filers",149336,149336,0,TRUE
 "city 2018: firms equal marks + city-level + treated",1027651,1027651,0,TRUE
 "city 2018: drawn firms equal the three states",950003,950003,0,TRUE
-"city 2018: outcome marks hold the baseline firms",221642,221642,0,TRUE
+"city 2018: outcome marks hold the firms with a statement and a value",171747,171747,0,TRUE
 "city 2018: class counts sum to the filers",171747,171747,0,TRUE
 "city 2019: firms equal marks + city-level + treated",895316,895316,0,TRUE
 "city 2019: drawn firms equal the three states",828044,828044,0,TRUE
-"city 2019: outcome marks hold the baseline firms",247182,247182,0,TRUE
+"city 2019: outcome marks hold the firms with a statement and a value",230685,230685,0,TRUE
 "city 2019: class counts sum to the filers",230685,230685,0,TRUE
 "city 2020: firms equal marks + city-level + treated",758397,758397,0,TRUE
 "city 2020: drawn firms equal the three states",734295,734295,0,TRUE
-"city 2020: outcome marks hold the baseline firms",278853,278853,0,TRUE
+"city 2020: outcome marks hold the firms with a statement and a value",277358,277358,0,TRUE
 "city 2020: class counts sum to the filers",277358,277358,0,TRUE
 "city 2021: firms equal marks + city-level + treated",665935,665935,0,TRUE
 "city 2021: drawn firms equal the three states",649391,649391,0,TRUE
-"city 2021: outcome marks hold the baseline firms",277840,277840,0,TRUE
+"city 2021: outcome marks hold the firms with a statement and a value",257738,257738,0,TRUE
 "city 2021: class counts sum to the filers",257738,257738,0,TRUE
 "city 2022: firms equal marks + city-level + treated",635519,635519,0,TRUE
 "city 2022: drawn firms equal the three states",620443,620443,0,TRUE
-"city 2022: outcome marks hold the baseline firms",272363,272363,0,TRUE
+"city 2022: outcome marks hold the firms with a statement and a value",228779,228779,0,TRUE
 "city 2022: class counts sum to the filers",228779,228779,0,TRUE
 "city 2023: firms equal marks + city-level + treated",657675,657675,0,TRUE
 "city 2023: drawn firms equal the three states",643432,643432,0,TRUE
-"city 2023: outcome marks hold the baseline firms",261794,261794,0,TRUE
+"city 2023: outcome marks hold the firms with a statement and a value",209136,209136,0,TRUE
 "city 2023: class counts sum to the filers",209136,209136,0,TRUE
 "city 2024: firms equal marks + city-level + treated",676097,676097,0,TRUE
 "city 2024: drawn firms equal the three states",660305,660305,0,TRUE
-"city 2024: outcome marks hold the baseline firms",247610,247610,0,TRUE
+"city 2024: outcome marks hold the firms with a statement and a value",192690,192690,0,TRUE
 "city 2024: class counts sum to the filers",192690,192690,0,TRUE
 "city 2025: firms equal marks + city-level + treated",679154,679154,0,TRUE
 "city 2025: drawn firms equal the three states",664138,664138,0,TRUE
-"city 2025: outcome marks hold the baseline firms",236803,236803,0,TRUE
+"city 2025: outcome marks hold the firms with a statement and a value",174514,174514,0,TRUE
 "city 2025: class counts sum to the filers",174514,174514,0,TRUE
 "downtown 2014: firms equal marks + city-level + treated",649915,649915,0,TRUE
 "downtown 2014: drawn firms equal the three states",560623,560623,0,TRUE
-"downtown 2014: outcome marks hold the baseline firms",62713,62713,0,TRUE
+"downtown 2014: outcome marks hold the firms with a statement and a value",39367,39367,0,TRUE
 "downtown 2014: class counts sum to the filers",39367,39367,0,TRUE
 "downtown 2015: firms equal marks + city-level + treated",602875,602875,0,TRUE
 "downtown 2015: drawn firms equal the three states",522797,522797,0,TRUE
-"downtown 2015: outcome marks hold the baseline firms",71889,71889,0,TRUE
+"downtown 2015: outcome marks hold the firms with a statement and a value",52625,52625,0,TRUE
 "downtown 2015: class counts sum to the filers",52625,52625,0,TRUE
 "downtown 2016: firms equal marks + city-level + treated",622178,622178,0,TRUE
 "downtown 2016: drawn firms equal the three states",539193,539193,0,TRUE
-"downtown 2016: outcome marks hold the baseline firms",81625,81625,0,TRUE
+"downtown 2016: outcome marks hold the firms with a statement and a value",60178,60178,0,TRUE
 "downtown 2016: class counts sum to the filers",60178,60178,0,TRUE
 "downtown 2017: firms equal marks + city-level + treated",522098,522098,0,TRUE
 "downtown 2017: drawn firms equal the three states",453926,453926,0,TRUE
-"downtown 2017: outcome marks hold the baseline firms",92004,92004,0,TRUE
+"downtown 2017: outcome marks hold the firms with a statement and a value",69489,69489,0,TRUE
 "downtown 2017: class counts sum to the filers",69489,69489,0,TRUE
 "downtown 2018: firms equal marks + city-level + treated",494457,494457,0,TRUE
 "downtown 2018: drawn firms equal the three states",431146,431146,0,TRUE
-"downtown 2018: outcome marks hold the baseline firms",100664,100664,0,TRUE
+"downtown 2018: outcome marks hold the firms with a statement and a value",78789,78789,0,TRUE
 "downtown 2018: class counts sum to the filers",78789,78789,0,TRUE
 "downtown 2019: firms equal marks + city-level + treated",424517,424517,0,TRUE
 "downtown 2019: drawn firms equal the three states",369988,369988,0,TRUE
-"downtown 2019: outcome marks hold the baseline firms",110036,110036,0,TRUE
+"downtown 2019: outcome marks hold the firms with a statement and a value",103051,103051,0,TRUE
 "downtown 2019: class counts sum to the filers",103051,103051,0,TRUE
 "downtown 2020: firms equal marks + city-level + treated",356448,356448,0,TRUE
 "downtown 2020: drawn firms equal the three states",341307,341307,0,TRUE
-"downtown 2020: outcome marks hold the baseline firms",129817,129817,0,TRUE
+"downtown 2020: outcome marks hold the firms with a statement and a value",129149,129149,0,TRUE
 "downtown 2020: class counts sum to the filers",129149,129149,0,TRUE
 "downtown 2021: firms equal marks + city-level + treated",313209,313209,0,TRUE
 "downtown 2021: drawn firms equal the three states",304849,304849,0,TRUE
-"downtown 2021: outcome marks hold the baseline firms",128702,128702,0,TRUE
+"downtown 2021: outcome marks hold the firms with a statement and a value",119392,119392,0,TRUE
 "downtown 2021: class counts sum to the filers",119392,119392,0,TRUE
 "downtown 2022: firms equal marks + city-level + treated",300005,300005,0,TRUE
 "downtown 2022: drawn firms equal the three states",292096,292096,0,TRUE
-"downtown 2022: outcome marks hold the baseline firms",125467,125467,0,TRUE
+"downtown 2022: outcome marks hold the firms with a statement and a value",105410,105410,0,TRUE
 "downtown 2022: class counts sum to the filers",105410,105410,0,TRUE
 "downtown 2023: firms equal marks + city-level + treated",308157,308157,0,TRUE
 "downtown 2023: drawn firms equal the three states",301075,301075,0,TRUE
-"downtown 2023: outcome marks hold the baseline firms",119930,119930,0,TRUE
+"downtown 2023: outcome marks hold the firms with a statement and a value",95871,95871,0,TRUE
 "downtown 2023: class counts sum to the filers",95871,95871,0,TRUE
 "downtown 2024: firms equal marks + city-level + treated",312799,312799,0,TRUE
 "downtown 2024: drawn firms equal the three states",305187,305187,0,TRUE
-"downtown 2024: outcome marks hold the baseline firms",113217,113217,0,TRUE
+"downtown 2024: outcome marks hold the firms with a statement and a value",88456,88456,0,TRUE
 "downtown 2024: class counts sum to the filers",88456,88456,0,TRUE
 "downtown 2025: firms equal marks + city-level + treated",312205,312205,0,TRUE
 "downtown 2025: drawn firms equal the three states",304927,304927,0,TRUE
-"downtown 2025: outcome marks hold the baseline firms",107687,107687,0,TRUE
+"downtown 2025: outcome marks hold the firms with a statement and a value",79856,79856,0,TRUE
 "downtown 2025: class counts sum to the filers",79856,79856,0,TRUE
 "2021 inscribed 90 km square equals the density pass Moscow window",762760,762760,0,TRUE
 "red-from histogram equals an R recomputation from the list file (max abs diff)",0,0,0,TRUE

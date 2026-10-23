@@ -1,13 +1,13 @@
 {
   "id": "moscowcells",
-  "run_id": "20261023T051251Z-run-M7-moscow.R",
+  "run_id": "20261023T063649Z-run-M7-moscow.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T05:12:57Z",
+  "time_utc": "2026-10-23T06:36:56Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M7-moscow.R",
-    "sha256": "2b4d31003941845bc993f642cba72a44e01f5de03ec88c75d04598b2cbbec9a3"
+    "sha256": "e375e61c23fcca4d193cca9a1612118bf5e3dca914322f675fb0604bdd6d56ef"
   },
-  "lab_commit": "a31be4af45015f703e1a5182efe3dd3b44b3d584",
+  "lab_commit": "9a5f0416e72fc51b56ca1c6e9129aa493ef76813",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 18,
@@ -428,7 +428,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-RXNjZN9C/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-SodyL8sy/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -436,10 +436,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/moscowcells.json",
-    "json_sha256": "8eebe0605fb7bb9c0160dab7b4c59c1ebc817eaf16025fc589719518e28437f4",
-    "json_bytes": 1795515,
+    "json_sha256": "e88025f5b6631807c68c3c9de703fb7bdf2a0d25fe62e13ddaee69eeeec25c68",
+    "json_bytes": 1776386,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/moscowcells.js",
-    "js_sha256": "d93d242fd2716040a2ab0f768727f19e9cec8e463db0c48263774342c4ba8755",
-    "names": ["origin", "extent", "years", "breaks", "min_filers", "class_colours", "ramp", "grids", "sums", "support", "class_counts", "rules", "notes", "xmin", "xmax", "ymin", "ymax", "1km", "5km", "size_km", "nx", "ny", "cells", "year", "ix", "iy", "n", "nb", "f", "nfb", "med", "cls", "grid", "supported", "thin", "empty", "Freq", "population", "cell", "colour", "absence"]
+    "js_sha256": "9609ba8d563ed890c12f8dce4b17e2b0f4961ee343e37ce5a61ffc7bdb77ba55",
+    "names": ["origin", "extent", "years", "breaks", "min_filers", "class_colours", "ramp", "metric_kind", "metric", "grids", "sums", "support", "class_counts", "rules", "notes", "xmin", "xmax", "ymin", "ymax", "1km", "5km", "size_km", "nx", "ny", "cells", "year", "ix", "iy", "n", "nb", "f", "nfb", "med", "cls", "grid", "supported", "thin", "empty", "Freq", "population", "cell", "colour", "absence"]
   }
 }

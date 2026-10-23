@@ -2,15 +2,15 @@
    Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
    code once per theme (getComputedStyle), so every colour lives here. */
 :root {
-  --stage: #0B1A2E;        /* navy ground, deeper than the ramp's end */
-  --land: #1E2E42;         /* slate land */
-  --border: #33475E;       /* region borders */
-  --graticule: #16263A;    /* faint meridians and parallels */
-  --ink: #E8EEF4;          /* text */
-  --muted: #9FB0C2;        /* secondary text */
-  --dim: #5F7389;          /* tertiary text, axes */
-  --grid: #1C2C40;         /* chart grid lines */
-  --panel: #10223A;        /* control bar and cards */
+  --stage: #121418;        /* charcoal ground (author's pick, 23 October 2026, round 3) */
+  --land: #22262D;         /* neutral dark land */
+  --border: #4A515C;       /* region borders: thin pale lines, never heavier than the marks */
+  --graticule: #1A1D22;    /* faint meridians and parallels */
+  --ink: #ECEEF1;          /* text */
+  --muted: #A3AAB4;        /* secondary text */
+  --dim: #6B7380;          /* tertiary text, axes */
+  --grid: #1D2126;         /* chart grid lines */
+  --panel: #171A1F;        /* control bar and cards */
   /* Data colours sit off the navy chrome (round 2, 23 October 2026): ColorBrewer YlGnBu for ordered
      quantities, PRGn for signed change, one red reserved for listed (treated) firms. */
   --accent: #7FCDBB;       /* principal series, density: YlGnBu step 4 */
@@ -19,7 +19,8 @@
   --rise: #A6DBA0;         /* rising: PRGn light green */
   --treated: #E31A1C;      /* listed firms, solid; never used for anything else */
   --treated-outline: #FFD9D9;
-  --control-dark: #5A3175; --backdrop: #B5C3D1; /* non-treated firm with no statement in the year */
+  --control-dark: #5A3175; --backdrop: #B5C3D1; /* the purple is no longer drawn on maps (round 3); the backdrop neutral */
+  --anchor-a: #F2B134; --anchor-b: #7CE8C3; --accent-muted: #6FA39A; /* the two anchor firms (amber: Aeroflot, mint: the private firm) and the comparison groups */
   --nobase: #55606B; --ramp6: #1D91C0 #38ADC3 #6CC5BE #A2DAB8 #D4EEB3 #FFFFD9;       /* non-treated firm without a revenue baseline */
   --below: #3C4852;        /* cells below support */
   --highlight: rgba(127, 205, 187, 0.10);
@@ -49,3 +50,4 @@ html[data-render] body { padding: 0; gap: 0; }
 html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none; aspect-ratio: auto; }
 html[data-render] * { transition: none !important; animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .controls button { transition: none; } }
+

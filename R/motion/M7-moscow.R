@@ -14,7 +14,7 @@ source(lab_path("R", "motion", "motion-common.R"))
 con <- lab_duck_connect(); on.exit(lab_duck_disconnect(con))
 source(lab_path("R", "motion", "M6-common.R"))
 
-P <- motion_read_json("points"); CY <- motion_read_json("cellsyears"); TR <- motion_read_json("treated"); AN <- motion_read_json("anchors")
+P <- motion_read_json(paste0("points", SUFFIX)); CY <- motion_read_json("cellsyears"); TR <- motion_read_json("treated"); AN <- motion_read_json("anchors")
 MIN_FILERS <- 20L
 
 # ---- cells ------------------------------------------------------------------------------------------
@@ -22,8 +22,8 @@ cells_for <- function(g) {
   nx <- as.integer(round(R$w / g)); ny <- as.integer(round(R$h / g))
   d <- lab_query(con, sprintf("SELECT year, least(CAST(floor((x_km - %.9f) / %g) AS INTEGER), %d) AS ix, least(CAST(floor((y_km - %.9f) / %g) AS INTEGER), %d) AS iy,
                                       count(*) AS n, count(*) FILTER (WHERE base IS NOT NULL) AS nb, count(*) FILTER (WHERE pct IS NOT NULL) AS f,
-                                      count(*) FILTER (WHERE base IS NOT NULL AND NOT filed) AS nfb, quantile_cont(pct, 0.5) AS med
-                               FROM fym WHERE NOT treated AND NOT city_level GROUP BY 1, 2, 3 ORDER BY 1, 3, 2", R$xmin, g, nx - 1L, R$ymin, g, ny - 1L), sprintf("%g km cells", g))
+                                      count(*) FILTER (WHERE base IS NOT NULL AND NOT filed) AS nfb, quantile_cont(%s, 0.5) AS med
+                               FROM fym WHERE NOT treated AND NOT city_level GROUP BY 1, 2, 3 ORDER BY 1, 3, 2", R$xmin, g, nx - 1L, R$ymin, g, ny - 1L, PCOL), sprintf("%g km cells", g))
   d$med <- ifelse(d$f > 0, round(d$med, 1), NA)
   d$cls <- ifelse(d$f >= MIN_FILERS, class_of(d$med), NA_integer_)
   list(size_km = g, nx = nx, ny = ny, cells = d)
@@ -113,7 +113,7 @@ checks <- motion_checks(cell_checks, city_checks, class_checks, do.call(rbind, m
 
 # ---- save ------------------------------------------------------------------------------------------------
 cells_out <- list(origin = c(R$xmin, R$ymin), extent = list(xmin = R$xmin, xmax = R$xmax, ymin = R$ymin, ymax = R$ymax), years = years, breaks = BREAKS, min_filers = MIN_FILERS,
-                  class_colours = CLASS_COLS, ramp = RAMPS[[VARIANT]]$name,
+                  class_colours = CLASS_COLS, ramp = RAMPS[[VARIANT]]$name, metric_kind = METRIC_TEXT$kind, metric = METRIC_TEXT$description,
                   grids = lapply(G, function(g) list(size_km = g$size_km, nx = g$nx, ny = g$ny, cells = g$cells[, c("year", "ix", "iy", "n", "nb", "f", "nfb", "med", "cls")])),
                   sums = sums[, c("grid", "year", "n", "nb", "f", "nfb")], support = support[, c("grid", "year", "cells", "supported", "thin", "empty")],
                   class_counts = class_counts[, c("grid", "year", "cls", "Freq")],
@@ -122,7 +122,8 @@ cells_out <- list(origin = c(R$xmin, R$ymin), extent = list(xmin = R$xmin, xmax 
                                colour = "a cell carries the class of its filers' median revenue change when it has 20 or more filers with a value; otherwise it is an outline only",
                                absence = "statements absent (baseline firms without a statement) are counted per cell (nfb) but not mapped at the city and region scales; the sequence shows absence only at the downtown scale"),
                   notes = c("Registered addresses, not operating sites.", "Descriptive: the metric is each firm's own revenue path, aggregated by cell; no spatial or proximity effect is estimated."))
-motion_save_json(cells_out, "moscowcells", checks = checks, rows = sum(vapply(G, function(g) nrow(g$cells), 0L)), digits = 1)
+motion_save_json(cells_out, paste0("moscowcells", SUFFIX), checks = checks, rows = sum(vapply(G, function(g) nrow(g$cells), 0L)), digits = 1)
+if (!CANONICAL) { message("  comparison groups unchanged by the metric; not rewritten in this run"); quit(save = "no", status = 0) }
 cmp_out <- list(years = years, index = "100 * real revenue (line 2110 times the GDP deflator, 2021 = 1) / the firm's own 2019-2021 average of statements with positive revenue",
                 filter = "members with a baseline, a statement and positive revenue in the year (the map's metric admits a filed zero; the log axis cannot)",
                 groups = list(listed2022 = list(label = "firms listed in 2022", rule = "on a supplied list with red-from 2022 (the sanctions file's first start year), inside the rectangle", members = members$a[1], by_year = ga),

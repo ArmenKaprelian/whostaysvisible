@@ -16,14 +16,14 @@ source(lab_path("R", "motion", "motion-common.R"))
 con <- lab_duck_connect(); on.exit(lab_duck_disconnect(con))
 # Extents, deflator, sanctions, the fy_all / fy / firms / fym tables, breaks, colours, the ramp variant.
 source(lab_path("R", "motion", "M6-common.R"))
-POINTS_DIR <- if (VARIANT == "a") "points" else "points-b"
+POINTS_DIR <- paste0(if (VARIANT == "a") "points" else "points-b", SUFFIX, LOOK_SUFFIX)
 
 # Three states for a drawn (non-treated, geocoded below city level) firm in a year (author's rule,
 # 23 October 2026): a filer with a baseline carries its revenue-change class; a firm with a baseline
 # and no statement that year is the outcome, in the dark control colour; a firm without a usable
 # baseline is only part of the faint neutral backdrop. A baseline firm that filed without a revenue
 # value is counted (base_filed_novalue) and left to the backdrop.
-dist <- lab_query(con, "SELECT quantile_cont(pct, [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]) AS q FROM fym WHERE NOT treated AND NOT city_level AND year BETWEEN 2022 AND 2024 AND pct IS NOT NULL", "metric quantiles")
+dist <- lab_query(con, sprintf("SELECT quantile_cont(%s, [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]) AS q FROM fym WHERE NOT treated AND NOT city_level AND year BETWEEN 2022 AND 2024 AND pct IS NOT NULL", PCOL), "metric quantiles")
 
 # ---- marks per extent and year -------------------------------------------------------------------
 # One mark per pile (distinct coordinate; the region groups by pixel). n: all firms; nb: firms with a
@@ -34,8 +34,8 @@ marks_for <- function(e, year) {
          else "round(x_km, 3) AS px, round(y_km, 3) AS py"
   grp <- if (identical(e$k, 12)) "col, row" else "px, py"
   lab_query(con, sprintf("SELECT %s, count(*) AS n, count(*) FILTER (WHERE base IS NOT NULL) AS nb, count(*) FILTER (WHERE pct IS NOT NULL) AS f,
-                                 count(*) FILTER (WHERE base IS NOT NULL AND NOT filed) AS nfb, quantile_cont(pct, 0.5) AS med
-                          FROM fym WHERE %s GROUP BY %s", key, where, grp), sprintf("%s %s marks", names(EXT)[vapply(EXT, function(z) identical(z$k, e$k), NA)], year))
+                                 count(*) FILTER (WHERE base IS NOT NULL AND NOT filed) AS nfb, quantile_cont(%s, 0.5) AS med
+                          FROM fym WHERE %s GROUP BY %s", key, PCOL, where, grp), sprintf("%s %s marks", names(EXT)[vapply(EXT, function(z) identical(z$k, e$k), NA)], year))
 }
 hex2rgb <- function(h) t(grDevices::col2rgb(h)) / 255
 block_size <- function(cnt) ifelse(cnt >= 100, 3L, ifelse(cnt >= 10, 2L, 1L))
@@ -71,27 +71,25 @@ draw_discs <- function(m, e, file, inner, outer, inner_frac, cnt, order_by) {
   grid::grid.circle(m$px[o], m$py[o], r = r_km[o] * ifelse(is.na(outer[o]), 1, inner_frac[o]), default.units = "native", gp = grid::gpar(fill = inner[o], col = NA))
   grid::popViewport(); grDevices::dev.off()
 }
-# Backdrop: every drawn firm, neutral, sized by the whole pile. Outcome layer: baseline firms only,
-# sized by their count; a pile with any filers takes the filers' median class, its disc scaled by
-# sqrt(filers / baseline firms) inside a dark disc for the non-filers; a pile with baseline firms and
-# no filers is dark throughout.
+# Backdrop: every drawn firm, neutral, sized by the whole pile. Outcome layer (author's rule, 23 October,
+# round 3): firms on no list with a statement and a value that year only, one disc per pile sized by
+# their count in the pile's median class; firms without a statement are not drawn as marks (they stay
+# in the backdrop and in the counts). Listed firms are vector marks drawn by the page.
 draw_pair <- function(n, e, m, y) {
   back <- file.path(out_dir, sprintf("%s-%d-all.png", n, y)); layer <- file.path(out_dir, sprintf("%s-%d.png", n, y))
   neutral <- rep(COL_NEUTRAL, nrow(m))
-  sel <- which(m$nb > 0); mo <- m[sel, ]
-  inner <- ifelse(mo$f > 0, CLASS_COLS[class_of(mo$med)], COL_NONFILER)
-  outer <- ifelse(mo$f > 0 & mo$nfb > 0, COL_NONFILER, NA)
-  frac <- sqrt(mo$f / mo$nb)
+  sel <- which(m$f > 0); mo <- m[sel, ]
+  inner <- CLASS_COLS[class_of(mo$med)]
   strength <- abs(ifelse(is.na(mo$med), 0, mo$med))
   if (n == "region") {
     draw_region(m, back, neutral, m$n, m$n)
-    draw_region(mo, layer, inner, mo$nb, strength)
+    draw_region(mo, layer, inner, mo$f, strength)
   } else {
     draw_discs(m, e, back, neutral, rep(NA, nrow(m)), rep(1, nrow(m)), m$n, m$n)
-    draw_discs(mo, e, layer, inner, outer, frac, mo$nb, strength)
+    draw_discs(mo, e, layer, inner, rep(NA, nrow(mo)), rep(1, nrow(mo)), mo$f, strength)
   }
   list(backdrop = paste0(POINTS_DIR, "/", basename(back)), layer = paste0(POINTS_DIR, "/", basename(layer)),
-       piles = nrow(m), piles_outcome = nrow(mo), piles_coloured = sum(mo$f > 0), piles_dark_only = sum(mo$f == 0))
+       piles = nrow(m), piles_outcome = nrow(mo), piles_coloured = nrow(mo), piles_dark_only = 0L, marks_firms_f = sum(mo$f))
 }
 
 out_dir <- lab_dir("motion", "data", POINTS_DIR)
@@ -114,8 +112,8 @@ for (n in names(EXT)) {
                                     count(*) FILTER (WHERE NOT treated AND NOT city_level AND base IS NOT NULL AND filed AND pct IS NULL) AS base_filed_novalue,
                                     count(*) FILTER (WHERE NOT city_level AND base IS NOT NULL) AS with_base_all
                                     FROM fym WHERE year = %1$d AND x_km BETWEEN %2$.9f AND %3$.9f AND y_km BETWEEN %4$.9f AND %5$.9f", yy, e$xmin, e$xmax, e$ymin, e$ymax), sprintf("%s %d totals", n, yy))
-    counts[[n]][[as.character(yy)]] <- c(as.list(tot), pair[c("piles", "piles_outcome", "piles_coloured", "piles_dark_only")], list(marks_firms = sum(m$n), marks_firms_base = sum(m$nb)))
-    pcts <- lab_query(con, sprintf("SELECT pct FROM fym WHERE NOT treated AND NOT city_level AND pct IS NOT NULL AND year = %d AND x_km BETWEEN %.9f AND %.9f AND y_km BETWEEN %.9f AND %.9f", yy, e$xmin, e$xmax, e$ymin, e$ymax), sprintf("%s %d filer values", n, yy))$pct
+    counts[[n]][[as.character(yy)]] <- c(as.list(tot), pair[c("piles", "piles_outcome", "piles_coloured", "piles_dark_only", "marks_firms_f")], list(marks_firms = sum(m$n), marks_firms_base = sum(m$nb)))
+    pcts <- lab_query(con, sprintf("SELECT %s AS v FROM fym WHERE NOT treated AND NOT city_level AND pct IS NOT NULL AND year = %d AND x_km BETWEEN %.9f AND %.9f AND y_km BETWEEN %.9f AND %.9f", PCOL, yy, e$xmin, e$xmax, e$ymin, e$ymax), sprintf("%s %d filer values", n, yy))$v
     classes[[n]][[as.character(yy)]] <- c(list(filers = length(pcts), quantiles = round(unname(stats::quantile(pcts, c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95))), 1)),
                                           lapply(CANDIDATES, function(b) as.integer(tabulate(class_of(pcts, b), nbins = 6))))
   }
@@ -132,7 +130,7 @@ align_px <- as.numeric(strsplit(trimws(system2("magick", c("identify", "-format"
 # Per firm and year: the filing string ('-' absent, '0' no statement, '1' statement) and the state the
 # page draws before the firm turns red, under the same three-state rule as the rasters ('-' absent,
 # 'b' backdrop only, 'd' dark, '1'..'6' revenue-change class).
-cls_sql <- paste0("1", paste(sprintf(" + CAST(y.pct > %d AS INTEGER)", BREAKS), collapse = ""))
+cls_sql <- paste0("1", paste(sprintf(" + CAST(y.%s > %d AS INTEGER)", PCOL, BREAKS), collapse = ""))
 tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, m.first_year, m.last_year,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.filed THEN '1' ELSE '0' END, '' ORDER BY g.year) AS filed,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
@@ -225,15 +223,15 @@ tr_keys <- lab_query(con, "SELECT inn_key, residents, other_lists, red_from FROM
 r_start <- san_first$start_year[match(tr_keys$inn_key, san_first$inn)]
 r_red <- ifelse(!is.na(r_start), pmax(r_start, 2014), ifelse(tr_keys$residents & !tr_keys$other_lists, 2020, 2014))
 red_hist_r <- table(factor(r_red, levels = years))
-pile_big <- lab_query(con, "SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n, count(*) FILTER (WHERE pct IS NOT NULL) AS filers, count(*) FILTER (WHERE base IS NOT NULL) AS nb, quantile_cont(pct, 0.5) AS med
-                             FROM fym WHERE year = 2023 AND NOT treated AND NOT city_level GROUP BY 1, 2 ORDER BY n DESC LIMIT 1", "largest pile 2023")
+pile_big <- lab_query(con, sprintf("SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n, count(*) FILTER (WHERE pct IS NOT NULL) AS filers, count(*) FILTER (WHERE base IS NOT NULL) AS nb, quantile_cont(%s, 0.5) AS med
+                             FROM fym WHERE year = 2023 AND NOT treated AND NOT city_level GROUP BY 1, 2 ORDER BY n DESC LIMIT 1", PCOL), "largest pile 2023")
 m23 <- marks_for(EXT$downtown, 2023L)
 pile_in_marks <- m23[m23$px == pile_big$px[1] & m23$py == pile_big$py[1], ]
 expect_aero <- c(`2014` = 240.3, `2019` = 551.8, `2021` = 378.7, `2024` = 712.9)
 rows_check <- do.call(rbind, lapply(names(EXT), function(n) do.call(rbind, lapply(years, function(y) { c <- counts[[n]][[as.character(y)]]
   rbind(motion_check(sprintf("%s %d: firms equal marks + city-level + treated", n, y), c$firms, c$marks_firms + c$city_level + c$treated),
         motion_check(sprintf("%s %d: drawn firms equal the three states", n, y), c$drawn, c$filers_base + c$nonfilers_base + c$nobase + c$base_filed_novalue),
-        motion_check(sprintf("%s %d: outcome marks hold the baseline firms", n, y), c$filers_base + c$nonfilers_base + c$base_filed_novalue, c$marks_firms_base),
+        motion_check(sprintf("%s %d: outcome marks hold the firms with a statement and a value", n, y), c$filers_base, c$marks_firms_f),
         motion_check(sprintf("%s %d: class counts sum to the filers", n, y), c$filers_base, sum(classes[[n]][[as.character(y)]]$current))) }))))
 checks <- motion_checks(rows_check,
   motion_check("2021 inscribed 90 km square equals the density pass Moscow window", msk_n, sq21$n),
@@ -258,25 +256,26 @@ checks <- motion_checks(rows_check,
 
 # ---- save --------------------------------------------------------------------------------------------
 manifest <- list(
-  anchor = list(x = MX, y = MY), years = years, breaks = BREAKS, candidate_breaks = CANDIDATES, class_colours = CLASS_COLS, variant = VARIANT, ramp = RAMPS[[VARIANT]]$name,
+  anchor = list(x = MX, y = MY), years = years, breaks = BREAKS, candidate_breaks = CANDIDATES, class_colours = CLASS_COLS, variant = VARIANT, ramp = LOOKS[[LOOK]]$ramp, look = LOOK,
   nonfiler = COL_NONFILER, neutral = COL_NEUTRAL, backdrop_alpha = BACKDROP_ALPHA, layer_alpha = LAYER_ALPHA, treated = COL_RED,
-  metric = "real revenue (line 2110 times the GDP deflator rebased to 2021 = 1) as percent change against the firm's own 2019-2021 average of original filings with positive revenue (at least two of the three years)",
+  metric_kind = METRIC_TEXT$kind, legend_title = METRIC_TEXT$legend_title, legend_subtitle = METRIC_TEXT$legend_subtitle, metric = METRIC_TEXT$description,
+  metric_median_by_year = yearmed,
   metric_quantiles_2022_2024 = list(probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95), values = round(unlist(dist$q[[1]]), 2)),
   extents = lapply(EXT, function(e) list(xmin = e$xmin, xmax = e$xmax, ymin = e$ymin, ymax = e$ymax, w_km = e$w, h_km = e$h, k = e$k, mark = e$mark)),
   files = files, align = paste0(POINTS_DIR, "/align.png"), counts = counts, classes = classes,
   pile_check = list(year = 2023, x = pile_big$px[1], y = pile_big$py[1], n = pile_big$n[1], filers = pile_big$filers[1], baseline_firms = pile_big$nb[1], median_pct = round(pile_big$med[1], 2)),
   deflator = deflator,
   rules = list(red_from = "minimum sanctions-list startDate year, clamped to 2014; residents-list-only firms 2020 (Decree 35); other undated list members 2014 (author's decision 23 October 2026)",
-               states = "filers_base: filed with a revenue value and a baseline (revenue-change class); nonfilers_base: baseline and no statement that year (dark control colour); nobase: no usable baseline, filed or not (faint neutral backdrop only); base_filed_novalue: baseline, filed, no revenue value (backdrop only)",
-               excluded = "city-level geocodes are not drawn; treated firms are vector marks drawn by the page, not in the rasters",
-               piles = "one mark per distinct coordinate (1 m); backdrop disc sized by all firms at the address, min(cap, base + s * sqrt(n - 1)); outcome disc sized by its baseline firms, a dark disc for non-filers with an inner disc scaled by sqrt(filers / baseline firms) in the filers' median class; region rasters by pixel with 2x2 and 3x3 blocks for 10+ and 100+ firms"),
+               states = "filers_base: a statement with a revenue value and a baseline (revenue-change class, drawn); nonfilers_base: baseline and no statement that year (counted, not drawn as a mark since round 3); nobase: no usable baseline, filed or not (faint neutral backdrop only); base_filed_novalue: baseline, filed, no revenue value (backdrop only)",
+               excluded = "city-level geocodes are not drawn; listed firms are vector marks drawn by the page, not in the rasters",
+               piles = "one mark per distinct coordinate (1 m); backdrop disc sized by all firms at the address, min(cap, base + s * sqrt(n - 1)); outcome disc sized by the firms with a statement and a value at the address, in their median class; region rasters by pixel with 2x2 and 3x3 blocks for 10+ and 100+ firms"),
   excluded_no_identifier = list(firm_years = no_id$n[1], firm_years_2021 = no_id$n2021[1]),
   notes = c("Supplied memberships are fixed lists; designation dates come from the supplied sanctions file (2,419 of 5,743 inferred, all 2023-2024); undated administrative lists are red throughout.",
             "Eligible firm-years without an identifier (excluded_no_identifier) are counted in the window check and drawn nowhere.",
             "Registered addresses, not production sites; coincident addresses are drawn as one mark sized by count.",
             "Descriptive: the control metric is a firm's own revenue path, not an estimate of any effect."))
 motion_save_json(manifest, POINTS_DIR, checks = checks, rows = sum(vapply(counts, length, 0L)))
-if (VARIANT == "a") {   # the treated and anchor data do not depend on the ramp; variant B leaves them untouched
+if (CANONICAL) {   # the treated and anchor data belong to the canonical run (ramp A, the default metric)
   treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
                       red_from_counts = as.list(stats::setNames(as.integer(red_hist), names(red_hist))), n = nrow(tr), inferred_n = sum(tr$inferred), undated_n = sum(tr$undated),
                       state_key = list(`-` = "absent from the registry", b = "no usable baseline (backdrop only)", d = "baseline, no statement (dark)", `1-6` = "revenue-change class"))

@@ -75,10 +75,17 @@ exec("CREATE TEMP TABLE firms AS
          f.treated AND s.start_year IS NULL AND NOT (f.residents AND NOT f.other_lists) AS undated
   FROM f LEFT JOIN b USING (inn_key) LEFT JOIN san s ON s.inn = f.inn_key", "firm attributes")
 
-exec("CREATE TEMP TABLE fym AS
+exec("CREATE TEMP TABLE fym0 AS
   SELECT y.*, m.treated, m.red_from, m.undated, m.inferred, m.base,
          CASE WHEN y.filed AND y.line_2110 >= 0 AND m.base IS NOT NULL THEN 100 * (y.real_rev / m.base - 1) END AS pct
   FROM fy y JOIN firms m USING (inn_key)", "firm-year metric")
+# The relative metric (author's test, 23 October): the firm's change minus the year's median change of
+# the drawn firms on no list (the same population as the marks: no list, below city-level geocodes,
+# inside the rectangle), so the field stays centred each year and a mark pales only when a firm
+# outgrows its peers.
+exec("CREATE TEMP TABLE yearmed AS SELECT year, quantile_cont(pct, 0.5) AS med FROM fym0 WHERE NOT treated AND NOT city_level AND pct IS NOT NULL GROUP BY year", "yearly median of the drawn firms")
+exec("CREATE TEMP TABLE fym AS SELECT f.*, f.pct - m.med AS pct_rel FROM fym0 f LEFT JOIN yearmed m USING (year)", "firm-year metric, absolute and relative")
+yearmed <- lab_query(con, "SELECT year, med FROM yearmed ORDER BY year", "yearly medians")
 
 # ---- classes and colours ------------------------------------------------------------------------
 # Breaks chosen by the author on 23 October 2026 from the 2022-2024 quantiles (zero stays the midpoint,
@@ -92,16 +99,46 @@ CANDIDATES <- list(current = BREAKS, previous = c(-40, -15, 0, 15, 40), c2 = c(-
 # 3.25:1 at the dark end, deltaE 22.3 / 18.0 against the purple control and 16.6 / 15.7 against the
 # backdrop at 0.25. Variant B ("b"): a six-class muted diverging ramp without red (BrBG family, lightness
 # rising with magnitude), written to points-b/ for the author's A/B review. Same breaks in both.
-# The launcher runs the job in a systemd unit with its own environment, so the variant travels as the
-# script's first trailing argument (`Rscript --vanilla R/motion/M6-treated.R b`); the env var is a fallback.
-VARIANT <- tolower(if (length(commandArgs(trailingOnly = TRUE))) commandArgs(trailingOnly = TRUE)[1] else Sys.getenv("MOTION_VARIANT", "a"))
+# The launcher runs the job in a systemd unit with its own environment, so the options travel as the
+# script's trailing arguments: `Rscript --vanilla R/motion/M6-treated.R [a|b] [abs|rel]`.
+ARGS <- commandArgs(trailingOnly = TRUE)
+VARIANT <- tolower(if (length(ARGS) >= 1) ARGS[1] else Sys.getenv("MOTION_VARIANT", "a"))
 if (!VARIANT %in% c("a", "b")) stop("the ramp variant must be a or b")
-RAMPS <- list(a = list(name = "blues-even-lightness", cols = c("#3080BD", "#4A97C9", "#6AAED6", "#91C2DE", "#B9D5EA", "#DCEAF6")),
+# The author's pick (23 October) is ramp A with its dark end lifted to L 0.65 (a clear mid-blue against
+# the land): six Blues steps at even lightness 0.65-0.96; validator: gaps 0.061-0.063, 4.30:1 at the
+# dark end, deltaE 28.3 / 24.8 against the purple control and 22.4 / 21.4 against the backdrop at 0.25.
+RAMPS <- list(a = list(name = "blues-even-lightness-0.65-0.96", cols = c("#4A97C9", "#67ABD4", "#88BEDC", "#ABCFE5", "#CDE0F1", "#EAF3FB")),
               b = list(name = "brbg-muted", cols = c("#F6E8C3", "#DFC27D", "#BF812D", "#80CDC1", "#C7EAE5", "#E8F6F3")))
 CLASS_COLS <- RAMPS[[VARIANT]]$cols
+# Looks (author's colour review, 23 October): the ground and the control-firm scale together. "navy"
+# is the current dark navy ground with the lifted blue ramp; "light" a cream ground with a navy scale
+# running pale (largest decline) to deep navy (largest rise); "green" the navy ground with a phthalo
+# green scale (even lightness 0.65-0.96, validator passes, 4.47:1 at the dark end); "charcoal" a
+# neutral dark ground with the blue ramp (rasters identical to "navy"). The third trailing argument.
+LOOK <- tolower(if (length(ARGS) >= 3) ARGS[3] else "navy")
+LOOKS <- list(navy = list(cols = CLASS_COLS, neutral = "#B5C3D1", ramp = RAMPS[[VARIANT]]$name),
+              charcoal = list(cols = CLASS_COLS, neutral = "#B5C3D1", ramp = RAMPS[[VARIANT]]$name),
+              green = list(cols = c("#45A382", "#5DB694", "#7EC7A9", "#9FD8BE", "#C2E8D4", "#E7F6EE"), neutral = "#B5C3D1", ramp = "phthalo-green-even-lightness-0.65-0.96"),
+              light = list(cols = c("#A4C1E2", "#7DA7D5", "#568EC8", "#3373B6", "#1B5A9A", "#0E4377"), neutral = "#8A9BAE", ramp = "navy-on-cream-even-lightness-0.80-0.38"))
+if (!LOOK %in% names(LOOKS)) stop("the look must be navy, charcoal, green or light")
+CLASS_COLS <- LOOKS[[LOOK]]$cols
+LOOK_SUFFIX <- if (LOOK %in% c("navy", "charcoal")) "" else paste0("-", LOOK)
+# The metric: "abs" is the firm's own change; "rel" subtracts the year's median of the drawn firms on
+# no list (the author's test). DEFAULT_METRIC names the canonical outputs (points, moscowcells,
+# treated, anchors, moscowcomparison); the other metric writes "-rel" or "-abs" suffixed copies.
+DEFAULT_METRIC <- "rel"   # the author's pick, 23 October 2026
+METRIC <- tolower(if (length(ARGS) >= 2) ARGS[2] else DEFAULT_METRIC)
+if (!METRIC %in% c("abs", "rel")) stop("the metric must be abs or rel")
+PCOL <- if (METRIC == "rel") "pct_rel" else "pct"
+SUFFIX <- if (METRIC == DEFAULT_METRIC) "" else paste0("-", METRIC)
+CANONICAL <- VARIANT == "a" && METRIC == DEFAULT_METRIC && LOOK %in% c("navy", "charcoal")
+METRIC_TEXT <- list(abs = list(kind = "absolute", legend_title = "Firms on no list, real revenue against own 2019-2021 average", legend_subtitle = NULL,
+                               description = "real revenue (line 2110 times the GDP deflator rebased to 2021 = 1) as percent change against the firm's own 2019-2021 average of statements with positive revenue (at least two of the three years)"),
+                    rel = list(kind = "relative", legend_title = "Firms on no list, real revenue against own 2019-2021 average,", legend_subtitle = "relative to the year's median of firms on no list",
+                               description = "the firm's own percent change against its 2019-2021 average, minus the median change of the drawn firms on no list in the same year"))[[METRIC]]
 # Dark control: a saturated deep purple, so it separates from the faint backdrop and from the land by
 # chroma rather than lightness alone (validator, 23 October: deltaE 13.8 normal / 11.0 deutan against
 # the effective backdrop at 0.35, 14.1 / 10.7 against the land).
-COL_NONFILER <- "#5A3175"; COL_NEUTRAL <- "#B5C3D1"; COL_RED <- "#E31A1C"
+COL_NONFILER <- "#5A3175"; COL_NEUTRAL <- LOOKS[[LOOK]]$neutral; COL_RED <- "#E31A1C"
 BACKDROP_ALPHA <- 0.25; LAYER_ALPHA <- 0.9   # applied by the page when it composites the rasters
 class_of <- function(p, breaks = BREAKS) ifelse(is.na(p), NA_integer_, 1L + findInterval(p, breaks, left.open = TRUE))
