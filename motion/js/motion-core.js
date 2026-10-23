@@ -100,7 +100,7 @@
       stage.resize(); stage.base();
       ctx.fillStyle = theme.stage; ctx.fillRect(0, 0, width, height);
       const cam = cameraFn ? cameraFn(t) : null; stage.cam = cam;
-      const A = Motion.audit; A.boxes = []; A.panels = []; A.seq = 0; A.scale = stage.scale; A.t = t; A.scene = null;
+      const A = Motion.audit; A.boxes = []; A.panels = []; A.marks = []; A.seq = 0; A.scale = stage.scale; A.t = t; A.scene = null;
       for (const s of scenes) {
         // A scene fades in over the fadeIn seconds before its start, so consecutive scenes crossfade
         // instead of dipping to the stage colour; its own clock starts at s.start.
@@ -130,7 +130,7 @@
   // effective alpha and its group (a paragraph's lines, or an explicit group for blocks that
   // crossfade in place), so capture.py --audit and audit.py can test overlaps, bounds, sizes and
   // transitions frame by frame. Off by default; the record is a pure function of the frame.
-  Motion.audit = { on: false, boxes: [], panels: [], scene: null, para: null, seq: 0, paraSeq: 0, scale: 1, t: 0 };
+  Motion.audit = { on: false, boxes: [], panels: [], marks: [], scene: null, para: null, seq: 0, paraSeq: 0, scale: 1, t: 0 };
   Motion.recordText = function (ctx, str, x, y, size, weight, group, kind) {
     const A = Motion.audit; if (!A.on) return;
     const m = ctx.measureText(str), tr = ctx.getTransform(), s = A.scale || 1;
@@ -149,10 +149,10 @@
   };
   // A translucent panel in the stage colour behind a block of text; in audit mode its rectangle is
   // recorded so audit.py can test that the text drawn after it stays inside it (panel-clip).
-  Motion.panel = function (ctx, x, y, w, h, theme, alpha = 0.92) {
+  Motion.panel = function (ctx, x, y, w, h, theme, alpha = 0.92, kind = 'panel') {
     if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.stage; ctx.fillRect(x, y, w, h);
-    const A = Motion.audit; if (A.on) A.panels.push({ scene: A.scene, x, y, x1: x + w, y1: y + h, eff: Math.round(ctx.globalAlpha * 1000) / 1000, seq: A.seq++ });
+    const A = Motion.audit; if (A.on) A.panels.push({ scene: A.scene, kind, x, y, x1: x + w, y1: y + h, eff: Math.round(ctx.globalAlpha * 1000) / 1000, seq: A.seq++ });
     ctx.restore();
   };
   // Split-flap text: from one string to another over u in 0..1. Each glyph has its own window
@@ -206,8 +206,9 @@
       if (!es.length) return 0;
       let i = 0; while (i < es.length - 1 && t >= es[i + 1].start) i++;
       const cur = val(es[i], t);
-      if (i === 0 || blend <= 0) return cur;
-      const u = Motion.clamp((t - es[i].start) / blend, 0, 1);
+      const bl = es[i].blend == null ? blend : es[i].blend;   // an entry may carry its own blend length
+      if (i === 0 || bl <= 0) return cur;
+      const u = Motion.clamp((t - es[i].start) / bl, 0, 1);
       return u >= 1 ? cur : Motion.lerp(val(es[i - 1], t), cur, Motion.ease.inOutSine(u));
     };
   };

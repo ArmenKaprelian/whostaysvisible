@@ -6,15 +6,15 @@
    Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
    code once per theme (getComputedStyle), so every colour lives here. */
 :root {
-  --stage: #0B1A2E;        /* navy ground, deeper than the ramp's end */
-  --land: #1E2E42;         /* slate land */
-  --border: #33475E;       /* region borders */
-  --graticule: #16263A;    /* faint meridians and parallels */
-  --ink: #E8EEF4;          /* text */
-  --muted: #9FB0C2;        /* secondary text */
-  --dim: #5F7389;          /* tertiary text, axes */
-  --grid: #1C2C40;         /* chart grid lines */
-  --panel: #10223A;        /* control bar and cards */
+  --stage: #121418;        /* charcoal ground (author's pick, 23 October 2026, round 3) */
+  --land: #22262D;         /* neutral dark land */
+  --border: #4A515C;       /* region borders: thin pale lines, never heavier than the marks */
+  --graticule: #1A1D22;    /* faint meridians and parallels */
+  --ink: #ECEEF1;          /* text */
+  --muted: #A3AAB4;        /* secondary text */
+  --dim: #6B7380;          /* tertiary text, axes */
+  --grid: #1D2126;         /* chart grid lines */
+  --panel: #171A1F;        /* control bar and cards */
   /* Data colours sit off the navy chrome (round 2, 23 October 2026): ColorBrewer YlGnBu for ordered
      quantities, PRGn for signed change, one red reserved for listed (treated) firms. */
   --accent: #7FCDBB;       /* principal series, density: YlGnBu step 4 */
@@ -23,7 +23,8 @@
   --rise: #A6DBA0;         /* rising: PRGn light green */
   --treated: #E31A1C;      /* listed firms, solid; never used for anything else */
   --treated-outline: #FFD9D9;
-  --control-dark: #5A3175; --backdrop: #B5C3D1; /* non-treated firm with no statement in the year */
+  --control-dark: #5A3175; --backdrop: #B5C3D1; /* the purple is no longer drawn on maps (round 3); the backdrop neutral */
+  --anchor-a: #F2B134; --anchor-b: #7CE8C3; --accent-muted: #6FA39A; /* the two anchor firms (amber: Aeroflot, mint: the private firm) and the comparison groups */
   --nobase: #55606B; --ramp6: #1D91C0 #38ADC3 #6CC5BE #A2DAB8 #D4EEB3 #FFFFD9;       /* non-treated firm without a revenue baseline */
   --below: #3C4852;        /* cells below support */
   --highlight: rgba(127, 205, 187, 0.10);
@@ -54,16 +55,17 @@ html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none
 html[data-render] * { transition: none !important; animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .controls button { transition: none; } }
 
+
 </style>
 <div class="stage-wrap"><canvas class="stage" id="stage" width="1920" height="1080" aria-label="Animated explainer: who stays visible? Financial statements of Russian firms under sanctions"></canvas></div>
 <div class="controls" id="controls">
   <button id="play" type="button" aria-label="Play or pause">Play</button>
-  <button id="cut" type="button" aria-pressed="false" title="Switch between the full cut and the 40-second teaser">Full cut (3:02)</button>
+  <button id="cut" type="button" aria-pressed="false" title="Switch between the cuts">Full cut (3:12)</button>
   <span class="time" id="time">0:00 / 0:00</span>
-  <input id="scrub" type="range" min="0" max="182" step="0.0333" value="0" aria-label="Scrub the timeline">
+  <input id="scrub" type="range" min="0" max="192" step="0.0333" value="0" aria-label="Scrub the timeline">
   <div class="chapters" id="chapters"></div>
 </div>
-<p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab; descriptive associations, not causal effects.</p>
+<p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab. Descriptive associations, not causal effects.</p>
 <script src="data/basemap.js"></script>
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
@@ -72,6 +74,8 @@ html[data-render] * { transition: none !important; animation: none !important; }
 <script src="data/points.js" onerror="this.remove()"></script>
 <script src="data/treated.js" onerror="this.remove()"></script>
 <script src="data/anchors.js" onerror="this.remove()"></script>
+<script src="data/moscowcells.js" onerror="this.remove()"></script>
+<script src="data/moscowcomparison.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>
@@ -90,12 +94,15 @@ html[data-render] * { transition: none !important; animation: none !important; }
   const theme = { stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'),
                   accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), treated: tok('treated'), treatedOutline: tok('treated-outline'),
                   controlDark: tok('control-dark'), nobase: tok('nobase'), below: tok('below'), highlightBand: tok('highlight'),
+                  anchorA: tok('anchor-a'), anchorB: tok('anchor-b'), accentMuted: tok('accent-muted'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
-  const CUTS = window.ExplainerScenes.cuts;
-  const CUT_LABEL = { full: 'Full cut (3:02)', teaser: 'Teaser (0:40)', treated: 'Two firms (1:25)' };
+  const CUTS = Object.assign({}, window.ExplainerScenes.cuts);   // full and teaser; the local cuts join once their rasters are decoded
+  const NAMES = { full: 'Full cut', teaser: 'Teaser', 'full-moscow': 'Full cut, Moscow sequence', 'teaser-moscow': 'Teaser, Moscow sequence', treated: 'Two firms' };
+  const LOCAL = new Set(['full-moscow', 'teaser-moscow', 'treated']);
+  window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   const wanted = q.get('cut');
-  let cutName = wanted === 'teaser' ? 'teaser' : 'full';   // the treated cut is built once its rasters are decoded
+  let cutName = wanted && CUTS[wanted] ? wanted : 'full';
   let X = CUTS[cutName], stage = null;
   const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters'), cutBtn = document.getElementById('cut');
   const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
@@ -109,7 +116,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
     scrub.max = String(X.DURATION); scrub.value = '0';
     chapters.innerHTML = '';
     Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
-    cutBtn.textContent = CUT_LABEL[name] || name; cutBtn.setAttribute('aria-pressed', String(name !== 'full'));
+    cutBtn.textContent = `${NAMES[name] || name} (${fmtTime(X.DURATION)})`; cutBtn.setAttribute('aria-pressed', String(name !== 'full'));
     window.__videoMeta = Object.assign({ cut: name }, stage.meta());
   }
   const nextCut = () => { const names = Object.keys(CUTS); return names[(names.indexOf(cutName) + 1) % names.length]; };
@@ -139,15 +146,18 @@ html[data-render] * { transition: none !important; animation: none !important; }
     // The treated cut (local data only): decode every raster first, check the page's listed-firm
     // counters against the M6 manifest, then build the cut and switch to it when requested.
     let treated = false;
-    if (D.points && D.treated && D.anchors && window.TreatedScenes) {
-      const images = await TreatedScenes.loadImages('data/');
+    if (D.points && D.treated && D.anchors && D.moscowcells && D.moscowcomparison && window.TreatedScenes) {
+      const images = await TreatedScenes.loadImages('data/', { layers: ['downtown'] });
       const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
       for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
       if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
-      CUTS.treated = TreatedScenes.make(images, { align: q.get('__align') === '1' });
+      const cs = TreatedScenes.cellSums; const badCells = [];
+      for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
+      if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));
+      Object.assign(CUTS, ExplainerScenes.makeMoscowCuts(images, { align: q.get('__align') === '1' }));
       treated = true;
-      if (wanted === 'treated') build('treated');
-    } else if (wanted === 'treated') throw new Error('the treated cut needs the local M6 data (points, treated, anchors)');
+      if (LOCAL.has(wanted)) build(wanted);
+    } else if (LOCAL.has(wanted)) throw new Error('the cut ' + wanted + ' needs the local M6 and M7 data (points, treated, anchors, moscowcells, moscowcomparison)');
     const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
     await window.__seek(t0); show(t0);
     return Object.assign({ yearsLayer: !!D.cellsyears, treatedCut: treated, cut: cutName }, window.__videoMeta);

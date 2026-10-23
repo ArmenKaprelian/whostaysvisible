@@ -310,7 +310,9 @@ def audit(a, cdp, meta, fps, frames, log):
         t = i / fps
         cdp.evaluate("window.__seek(%r)" % t, await_promise=True, timeout=60)
         boxes = json.loads(cdp.evaluate("JSON.stringify(window.__textBoxes())", timeout=60))
-        out["frames"].append({"frame": i, "t": round(t, 4), "boxes": boxes})
+        panels = json.loads(cdp.evaluate("JSON.stringify(window.__panels ? window.__panels() : [])", timeout=60))
+        marks = json.loads(cdp.evaluate("JSON.stringify(window.__marks ? window.__marks() : [])", timeout=60))
+        out["frames"].append({"frame": i, "t": round(t, 4), "boxes": boxes, "panels": panels, "marks": marks})
         if n % 100 == 0 or n == len(frames) - 1:
             print("%saudit frame %d/%d (t=%.2f s) %d boxes; elapsed %.0f s" % (a.tag, n + 1, len(frames), t, len(boxes), time.time() - t_all), file=sys.stderr, flush=True)
     with open(a.audit, "w") as fh:

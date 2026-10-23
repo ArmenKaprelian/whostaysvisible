@@ -151,46 +151,67 @@
   // A firm's path against its comparison group: the group's median line and interquartile band, the
   // firm's line (broken where a year is missing), on a log y axis. data: { firm: [{x, y|null}],
   // band: [{x, med, q1, q3}] }. progress reveals left to right; labels fade with the progress.
+  // Options: progress reveals left to right (the first showing); `current` (a year, fractional during
+  // a transition) draws the years beyond it in place at `futureAlpha` and puts a dot on each line at
+  // the current year (the live box); `compact` drops the labels and the marker's text. The marker is
+  // drawn in `colors.marker` (red for the listing year) and the firm line in `colors.firm`.
   C.bandLines = function (ctx, box, data, { xDomain = [2013.6, 2025.4], yDomain = [25, 500], yTicks = [50, 100, 200, 400], xTicks = [2014, 2018, 2022, 2025], progress = 1, theme,
-                                            colors = {}, marker = null, labels = {}, gapLabel = null, size = 22 } = {}) {
-    const col = Object.assign({ firm: theme.ink, median: theme.accent, band: theme.accent }, colors);
+                                            colors = {}, marker = null, labels = {}, gapLabel = null, size = 22, current = null, futureAlpha = 0.3, compact = false, textAlpha = 1,
+                                            labelAlpha = 1, xTicksMinor = [], minorAlpha = 1 } = {}) {
+    const col = Object.assign({ firm: theme.ink, median: theme.accent, band: theme.accent, marker: theme.tick }, colors);
     const sx = C.scale(xDomain, [box.x, box.x + box.w]), sy = C.logScale(yDomain, [box.y + box.h, box.y]);
     const xReveal = xDomain[0] + (xDomain[1] - xDomain[0]) * progress;
-    for (const tk of yTicks) { const y = sy(tk); ctx.strokeStyle = tk === 100 ? theme.dim : theme.grid; ctx.lineWidth = tk === 100 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(tk), box.x - 12, y, { size, color: theme.muted, align: 'right', baseline: 'middle' }); }
-    C.axisBottom(ctx, box, sx, xTicks, theme, { fmt: v => (v === 2025 ? '2025*' : String(v)), size });
-    // The band: q3 forward, q1 back, clipped to the reveal with the last segment interpolated (presentation only).
+    for (const tk of yTicks) { const y = sy(tk); ctx.strokeStyle = tk === 100 ? theme.dim : theme.grid; ctx.lineWidth = tk === 100 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(tk), box.x - 10, y, { size, color: theme.muted, align: 'right', baseline: 'middle', alpha: textAlpha }); }
+    const dy = compact ? 28 : 34, xf = v => (v === 2025 ? '2025*' : String(v));
+    ctx.save(); ctx.globalAlpha *= textAlpha; C.axisBottom(ctx, box, sx, xTicks, theme, { fmt: xf, size, dy }); ctx.restore();
+    for (const tk of xTicksMinor) T(ctx, xf(tk), sx(tk), box.y + box.h + dy, { size, color: theme.muted, align: 'center', alpha: textAlpha * minorAlpha });
     const band = data.band.filter(p => p.q1 != null && p.q3 != null).sort((a, b) => a.x - b.x);
-    const clipTo = (pts, key) => { const out = []; for (let i = 0; i < pts.length; i++) { const p = pts[i]; if (p.x <= xReveal) out.push([p.x, p[key]]); else { if (i > 0) { const q = pts[i - 1]; const u = (xReveal - q.x) / (p.x - q.x); out.push([xReveal, q[key] + (p[key] - q[key]) * u]); } break; } } return out; };
-    const top = clipTo(band, 'q3'), bottom = clipTo(band, 'q1');
-    if (top.length > 1) {
-      ctx.save(); ctx.globalAlpha *= 0.22; ctx.fillStyle = col.band; ctx.beginPath();
-      top.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y))));
-      bottom.slice().reverse().forEach(([x, y]) => ctx.lineTo(sx(x), sy(y)));
-      ctx.closePath(); ctx.fill(); ctx.restore();
-    }
-    const med = clipTo(band, 'med');
-    ctx.strokeStyle = col.median; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
-    med.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y)))); ctx.stroke();
-    // The firm's line, broken at missing years, with dots.
     const firm = data.firm.slice().sort((a, b) => a.x - b.x);
-    ctx.strokeStyle = col.firm; ctx.lineWidth = 3.5; ctx.beginPath(); let pen = false, lastPt = null;
-    for (let i = 0; i < firm.length; i++) {
-      const p = firm[i];
-      if (p.y == null) { pen = false; continue; }
-      if (p.x > xReveal) { if (lastPt && pen) { const u = (xReveal - lastPt.x) / (p.x - lastPt.x); ctx.lineTo(sx(xReveal), sy(lastPt.y + (p.y - lastPt.y) * u)); } break; }
-      if (pen) ctx.lineTo(sx(p.x), sy(p.y)); else ctx.moveTo(sx(p.x), sy(p.y));
-      pen = true; lastPt = p;
+    const clipTo = (pts, key, xr) => { const out = []; for (let i = 0; i < pts.length; i++) { const p = pts[i]; if (p.x <= xr) out.push([p.x, p[key]]); else { if (i > 0) { const q = pts[i - 1]; const u = (xr - q.x) / (p.x - q.x); out.push([xr, q[key] + (p[key] - q[key]) * u]); } break; } } return out; };
+    // Draws the band, the median and the firm line up to xr (the last segment interpolated, presentation only).
+    const drawTo = (xr) => {
+      const top = clipTo(band, 'q3', xr), bottom = clipTo(band, 'q1', xr);
+      if (top.length > 1) {
+        ctx.save(); ctx.globalAlpha *= 0.22; ctx.fillStyle = col.band; ctx.beginPath();
+        top.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y))));
+        bottom.slice().reverse().forEach(([x, y]) => ctx.lineTo(sx(x), sy(y)));
+        ctx.closePath(); ctx.fill(); ctx.restore();
+      }
+      const med = clipTo(band, 'med', xr);
+      ctx.strokeStyle = col.median; ctx.lineWidth = compact ? 2.5 : 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
+      med.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(sx(x), sy(y)) : ctx.lineTo(sx(x), sy(y)))); ctx.stroke();
+      ctx.strokeStyle = col.firm; ctx.lineWidth = compact ? 3 : 3.5; ctx.beginPath(); let pen = false, lastPt = null;
+      for (let i = 0; i < firm.length; i++) {
+        const p = firm[i];
+        if (p.y == null) { pen = false; continue; }
+        if (p.x > xr) { if (lastPt && pen) { const u = (xr - lastPt.x) / (p.x - lastPt.x); ctx.lineTo(sx(xr), sy(lastPt.y + (p.y - lastPt.y) * u)); } break; }
+        if (pen) ctx.lineTo(sx(p.x), sy(p.y)); else ctx.moveTo(sx(p.x), sy(p.y));
+        pen = true; lastPt = p;
+      }
+      ctx.stroke();
+      for (const p of firm) { if (p.y == null || p.x > xr) continue; ctx.fillStyle = col.firm; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), compact ? 3.5 : 4.5, 0, Math.PI * 2); ctx.fill(); }
+      return med;
+    };
+    let med;
+    if (current == null) med = drawTo(xReveal);
+    else {   // the whole path at reduced opacity, then the past at full opacity, then the dots of the current year
+      ctx.save(); ctx.globalAlpha *= futureAlpha; drawTo(xDomain[1]); ctx.restore();
+      med = drawTo(Math.min(current, xDomain[1]));
+      const at = (pts, key) => { const s = pts.filter(p => p[key] != null).sort((a, b) => a.x - b.x); for (let i = 0; i < s.length - 1; i++) { if (current >= s[i].x && current <= s[i + 1].x && s[i + 1].x - s[i].x <= 1.001) { const u = (current - s[i].x) / (s[i + 1].x - s[i].x); return s[i][key] * Math.pow(s[i + 1][key] / s[i][key], u); } } const e = s.find(p => Math.abs(p.x - current) < 1e-9); return e ? e[key] : null; };
+      const yf = at(firm, 'y'), ym = at(band, 'med');
+      if (ym != null) { ctx.fillStyle = col.median; ctx.beginPath(); ctx.arc(sx(current), sy(ym), 6, 0, Math.PI * 2); ctx.fill(); }
+      if (yf != null) { ctx.fillStyle = col.firm; ctx.beginPath(); ctx.arc(sx(current), sy(yf), 6.5, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = theme.stage; ctx.lineWidth = 1.5; ctx.stroke(); }
     }
-    ctx.stroke();
-    for (const p of firm) { if (p.y == null || p.x > xReveal) continue; ctx.fillStyle = col.firm; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), 4.5, 0, Math.PI * 2); ctx.fill(); }
-    if (marker && marker.x <= xReveal) {
-      const x = sx(marker.x), a = Motion.clamp((xReveal - marker.x) / 1.2, 0, 1);   // over 1.2 years of the reveal
-      ctx.save(); ctx.globalAlpha *= a; ctx.setLineDash([3, 7]); ctx.strokeStyle = theme.tick; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
-      if (marker.label) T(ctx, marker.label, x + 8, box.y + 24, { size, color: theme.muted, alpha: a });
+    // The marker's label sits at the foot of its dotted line, the gap label at the top of the plot, so
+    // neither meets the band or the other.
+    if (marker && marker.x <= Math.max(xReveal, current == null ? -Infinity : xDomain[1])) {
+      const x = sx(marker.x), a = current == null ? Motion.clamp((xReveal - marker.x) / 1.2, 0, 1) : 1;
+      ctx.save(); ctx.globalAlpha *= a; ctx.setLineDash([3, 7]); ctx.strokeStyle = col.marker; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
+      if (marker.label && labelAlpha > 0) T(ctx, marker.label, x + 8, box.y + box.h - 10, { size, color: theme.muted, alpha: a * textAlpha * labelAlpha });
     }
-    if (gapLabel && gapLabel.x <= xReveal) { const a = Motion.clamp((xReveal - gapLabel.x) / 1.2, 0, 1); T(ctx, gapLabel.text, sx(gapLabel.x), sy(gapLabel.y) - 14, { size, color: theme.muted, align: 'center', alpha: a }); }
+    if (gapLabel && labelAlpha > 0 && gapLabel.x <= xReveal) { const a = Motion.clamp((xReveal - gapLabel.x) / 1.2, 0, 1); T(ctx, gapLabel.text, sx(gapLabel.x), box.y + 20, { size, color: theme.muted, align: 'center', alpha: a * textAlpha * labelAlpha }); }
     // End labels at the last revealed points, one above and one below if they would collide.
-    const la = tail(progress, 0.9);
+    const la = tail(progress, 0.9) * textAlpha * labelAlpha;
     if (la > 0) {
       const lastFirm = firm.filter(p => p.y != null && p.x <= xReveal).pop(), lastMed = med[med.length - 1];
       let yF = lastFirm ? sy(lastFirm.y) : null, yM = lastMed ? sy(lastMed[1]) : null;

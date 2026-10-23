@@ -1,5 +1,9 @@
 // Scenes of the explainer "Who stays visible?". Each scene is a pure function of its local time.
 // Every number drawn comes from MOTION_DATA (series.facts and the cell layers); nothing is typed in.
+// Round 3 (23 October 2026): one continuous camera journey. A cut is a list of beats; a ground
+// scene draws the land and the national density under every beat from two schedules, the chart
+// beats keep the dimmed map under a slow drift, and the Moscow section (treated-scenes.js) replaces
+// the published cut's 250 m leg when the local firm-level data are present.
 (function () {
   'use strict';
   const D = window.MOTION_DATA;
@@ -7,19 +11,21 @@
   const F = S.facts, fmt = Motion.fmt, step = Motion.step, E = Motion.ease;
   const MM = MotionMap, CH = MotionCharts;
 
-  // ---- timeline ------------------------------------------------------------------------------
-  const T = [
-    ['hook', 0, 11, 'Who stays visible?'], ['archive', 11, 25, 'The archive'], ['availability', 25, 41, 'Availability over time'],
-    ['years', 41, 65, 'The map through time'], ['change', 65, 77, 'The change map'], ['zoom', 77, 103, 'Moscow and St Petersburg'],
-    ['groups', 103, 119, 'Who went dark'], ['transitions', 119, 131, 'Absence and removal'], ['size', 131, 147, 'Firm size'],
-    ['lists', 147, 163, 'Supplied lists'], ['next', 163, 175, 'What comes next'], ['credits', 175, 182, 'Sources'],
-  ];
-  const timeline = {}; T.forEach(([id, start, end, title]) => timeline[id] = { id, start, end, title });
-  const DURATION = 182;
+  // ---- beats -----------------------------------------------------------------------------------
+  // Scenes, the ground schedules and the camera keyframes are built from the beat starts, so the
+  // published cut (192 s) and the local cut with the Moscow section (275 s) share one definition.
+  const TITLES = { hook: 'Who stays visible?', archive: 'The archive', availability: 'Availability over time', years: 'The map through time', change: 'The change map',
+                   zoom: 'To Moscow', moscow250: 'Central Moscow', out: 'Out to the country', groups: 'Availability by group', transitions: 'Absence and removal',
+                   size: 'Firm size', lists: 'Supplied lists', next: 'What comes next', credits: 'Sources' };
+  const HEAD = [['hook', 11], ['archive', 14], ['availability', 16], ['years', 24], ['change', 12], ['zoom', 11]];
+  const TAIL = [['groups', 16], ['transitions', 12], ['size', 16], ['lists', 16], ['next', 12], ['credits', 7]];
+  const LIST_FULL = HEAD.concat([['moscow250', 20], ['out', 5]], TAIL);
+  const LIST_MOSCOW = HEAD.concat([['section', 108]], TAIL);
+  function beatsOf(list) { const B = {}; let t = 0; for (const [id, d] of list) { B[id] = { id, start: t, end: t + d, dur: d }; t += d; } return { B, total: t }; }
 
-  // ---- palette (dark ground: lightness rises with the value) ----------------------------------
+  // ---- palette (charcoal ground: lightness rises with the value) ---------------------------------
   // Ordered quantities use ColorBrewer YlGnBu (teal to pale yellow), signed change uses PRGn
-  // (purple declines, green rises), both off the navy chrome. Red is reserved for listed firms.
+  // (purple declines, green rises). Red is reserved for listed firms.
   const RAMP6 = ['#1D91C0', '#38ADC3', '#6CC5BE', '#A2DAB8', '#D4EEB3', '#FFFFD9'];   // availability share, 6 fixed classes (YlGnBu resampled at even lightness steps)
   const RAMP5 = RAMP6.slice(1);                                                        // 5 classes (fine cells, cohort inclusion)
   const CHANGE6 = ['#E7D4E8', '#C2A5CF', '#9970AB', '#5AAE61', '#A6DBA0', '#D9F0D3']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points
@@ -31,11 +37,7 @@
   const bmp = MM.buildBasemap(BM);
   const city = Object.fromEntries(bmp.cities.map(c => [c.label, c]));
   const nat = MM.decodeDensity(DEN.national); const natPaths = MM.buildDensityPaths(nat, FINE_BREAKS);
-  const dens = {};
-  for (const label of ['Moscow', 'St Petersburg']) {
-    dens[label] = { one: MM.buildDensityPaths(MM.decodeDensity(DEN.windows_1km[label]), FINE_BREAKS), fine: MM.buildDensityPaths(MM.decodeDensity(DEN.windows_250m[label]), FINE_BREAKS),
-                    oneMeta: DEN.windows_1km[label], fineMeta: DEN.windows_250m[label] };
-  }
+  const dens = { one: MM.buildDensityPaths(MM.decodeDensity(DEN.windows_1km.Moscow), FINE_BREAKS), fine: MM.buildDensityPaths(MM.decodeDensity(DEN.windows_250m.Moscow), FINE_BREAKS) };
   const yearSource = CY ? CY.avail : C100.avail;
   const yearList = CY ? (CY.mapped_years || CY.years) : Array.from(new Set(C100.avail.year)).sort();   // 2012-2013 carry no coordinates
   const yearTotals = {};
@@ -62,7 +64,6 @@
   const finCounts = {}; finIdx.forEach(i => { const v = fin.change_pct[i]; let c = 0; while (c < FIN_BREAKS.length && v >= FIN_BREAKS[c]) c++; finCounts[c] = (finCounts[c] || 0) + 1; });
 
   const series = (() => { const a = S.avail; const el = [], reg = []; for (let i = 0; i < a.year.length; i++) { if (a.eligible_share[i] == null) continue; el.push({ x: a.year[i], y: a.eligible_share[i] }); reg.push({ x: a.year[i], y: a.registered_share[i] }); } return { el, reg }; })();
-  const groupShare = (label, y) => { const g = S.groups; for (let i = 0; i < g.label.length; i++) if (g.label[i] === label && g.year[i] === y) return g.share[i]; return null; };
   const sizeRows = (() => { const z = S.size; const out = {}; for (let i = 0; i < z.year.length; i++) { if (z.era[i] !== 'recent') continue; (out[z.quintile[i]] = out[z.quintile[i]] || []).push({ x: z.year[i], y: z.or[i], low: z.low[i], high: z.high[i] }); } return out; })();
   const earlyQ5 = (() => { const z = S.size; const v = []; for (let i = 0; i < z.year.length; i++) if (z.era[i] === 'early' && z.quintile[i] === 'Q5') v.push(z.or[i]); return [Math.min(...v), Math.max(...v)]; })();
   const listRows = (model, contrast) => { const z = S.lists; const out = []; for (let i = 0; i < z.year.length; i++) if (z.model[i] === model && z.contrast[i] === contrast && z.comparison[i] === 'level' && z.year[i] != null) out.push({ x: z.year[i], y: z.or[i], low: z.low[i], high: z.high[i] }); return out.sort((a, b) => a.x - b.x); };
@@ -70,60 +71,69 @@
   const pooled = (() => { const p = S.transitions_pooled; const o = {}; for (let i = 0; i < p.prior.length; i++) o[p.prior[i]] = { origin: p.origin[i], A: p.A[i], N: p.N[i], X: p.X[i] }; return o; })();
   const cohortCounts = S.flow;
   const flowValue = id => cohortCounts.value[cohortCounts.id.indexOf(id)];
-  const msk1 = DEN.windows_1km.Moscow, spb1 = DEN.windows_1km['St Petersburg'];
+  const msk1 = DEN.windows_1km.Moscow;
 
   // ---- camera --------------------------------------------------------------------------------
   const NAT = { cx: (BM.extents.national.x[0] + BM.extents.national.x[1]) / 2, cy: (BM.extents.national.y[0] + BM.extents.national.y[1]) / 2 };
   const K_FULL = 1080 / (BM.extents.national.y[1] - BM.extents.national.y[0]);
   const LEFT = { ox: 700, oy: 560, k: 0.168 };
   const msk = city.Moscow, spb = city['St Petersburg'];
-  const keyframes = [
-    { t: 0, cx: NAT.cx, cy: NAT.cy, k: K_FULL * 0.98, ox: 960, oy: 540 },
-    { t: 40.5, cx: NAT.cx, cy: NAT.cy, k: K_FULL * 0.98, ox: 960, oy: 540 },
-    { t: 41, cx: NAT.cx, cy: NAT.cy, k: LEFT.k, ox: LEFT.ox, oy: LEFT.oy },
-    { t: 77, cx: NAT.cx, cy: NAT.cy, k: LEFT.k, ox: LEFT.ox, oy: LEFT.oy },
-    { t: 77.6, cx: NAT.cx, cy: NAT.cy, k: K_FULL * 0.98, ox: 960, oy: 540 },
-    { t: 83, cx: msk.x, cy: msk.y, k: 12, ox: 960, oy: 540 },
-    { t: 88, cx: msk.x, cy: msk.y, k: 12, ox: 960, oy: 540 },
-    { t: 91, cx: msk.x + 1.5, cy: msk.y + 0.5, k: 60, ox: 960, oy: 540 },
-    { t: 96, cx: msk.x + 1.5, cy: msk.y + 0.5, k: 60, ox: 960, oy: 540 },
-    { t: 97.8, cx: (msk.x + spb.x) / 2, cy: (msk.y + spb.y) / 2, k: 0.9, ox: 960, oy: 540 },
-    { t: 99.6, cx: spb.x, cy: spb.y, k: 12, ox: 960, oy: 540 },
-    { t: 103, cx: spb.x, cy: spb.y, k: 12, ox: 960, oy: 540 },
-    { t: 163, cx: NAT.cx, cy: NAT.cy, k: LEFT.k, ox: LEFT.ox, oy: LEFT.oy },
-  ];
+  const natK = (f, ox = 960) => ({ cx: NAT.cx, cy: NAT.cy, k: K_FULL * f, ox, oy: 540 });
+  const leftK = () => ({ cx: NAT.cx, cy: NAT.cy, k: LEFT.k, ox: LEFT.ox, oy: LEFT.oy });
+  const cityK = (c, k, dx = 0, dy = 0) => ({ cx: c.cx + dx, cy: c.cy + dy, k, ox: 960, oy: 540 });
+  // One path per cut: the national framing with a slow push-in, a pull-out under the availability
+  // chart, the left framing for the 100 km maps, one eased flight to Moscow, the Moscow leg or the
+  // section, the national framing with a slow drift under the charts, the left framing to close.
+  function keyframesFor(B, section) {
+    const kf = []; const at = (t, c) => kf.push(Object.assign({ t }, c));
+    const mos = section ? { cx: section.rest.cx, cy: section.rest.cy } : { cx: msk.x, cy: msk.y };
+    at(0, natK(0.96)); at(B.archive.start, natK(0.98)); at(B.availability.start, natK(1.0)); at(B.years.start - 2, natK(0.85)); at(B.years.start, leftK());
+    at(B.zoom.start, leftK()); at(B.zoom.start + 6, cityK(mos, 12)); at(B.zoom.end, cityK(mos, 12));
+    if (section) section.keyframes.forEach(k => kf.push(k));
+    else { const m = B.moscow250; at(m.start + 3, cityK(mos, 60, 1.5, 0.5)); at(m.end - 5, cityK(mos, 60, 1.5, 0.5)); at(m.end - 2, cityK(mos, 12)); at(m.end, cityK(mos, 12)); }
+    at(B.groups.start, natK(0.98)); at(B.next.start - 2, natK(0.90, 900)); at(B.next.start + 0.5, leftK()); at(B.credits.end, leftK());
+    return kf;
+  }
+
+  // ---- ground: the land and the national density under every beat --------------------------------
+  function schedulesFor(B, section) {
+    const land = [{ start: 0, value: 1 }, { start: B.archive.start, value: 0.3 }, { start: B.availability.start, value: 0.12 }, { start: B.years.start, value: 1 }];
+    const dens = [{ start: 0, value: 1 }, { start: B.archive.start, value: 0.22 }, { start: B.availability.start, value: 0.12 }, { start: B.years.start, value: 0 }, { start: B.zoom.start, value: 1 }];
+    if (section) { const s = B.section.start, SEC = section.SEC; land.push({ start: s + SEC.profiles, value: 0, blend: 2 }, { start: s + SEC.back + 2.5, value: 1, blend: 3 }); }
+    land.push({ start: B.groups.start, value: 0.15 }, { start: B.next.start, value: 1 }, { start: B.credits.start, value: 0.3 });
+    dens.push({ start: B.groups.start, value: 0.12 }, { start: B.next.start, value: 0 }, { start: B.credits.start, value: 0.12 });
+    return { land: Motion.schedule(land, 0.6), dens: Motion.schedule(dens, 0.6) };
+  }
+  function drawGround(ctx, stage, cam, theme, T, sch) {
+    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: Math.min(sch.land(T), step(T, 0, 1.6)), borderPx: 1 });
+    const dA = sch.dens(T) * (1 - step(cam.k, 1.5, 2.5, E.linear));   // the national density leaves as the camera closes in
+    if (dA <= 0) return;
+    const g0 = ctx.globalAlpha;
+    Motion.camTransform(ctx, stage, cam); ctx.save(); ctx.fillStyle = theme.accent;
+    for (const [c, p] of natPaths.byCount) { const a = dA * MM.countAlpha[c] * (T < 6 ? step(T, 1.2 + c * 0.28, 1.4, E.outCubic) : 1); if (a <= 0) continue; ctx.globalAlpha = g0 * a; ctx.fill(p); }
+    ctx.restore(); stage.base();
+  }
+  const groundScene = (sch, duration, timeMap) => ({ id: 'ground', title: 'Ground', start: 0, end: duration, z: 0, fadeIn: 0, fadeOut: 0, draw({ ctx, t, cam, stage, theme }) { drawGround(ctx, stage, cam, theme, timeMap ? timeMap(t) : t, sch); } });
 
   // ---- helpers ---------------------------------------------------------------------------------
   const title = (ctx, s, t, t0, theme, y = 118, size = 54) => Motion.reveal(ctx, s, 80, y, t, t0, { size, weight: 700, color: theme.ink });
   const subtitle = (ctx, s, t, t0, theme, y = 164) => Motion.reveal(ctx, s, 80, y, t, t0, { size: 28, color: theme.muted });
   const eyebrow = (ctx, s, x, y, theme, alpha = 1) => Motion.text(ctx, s.toUpperCase(), x, y, { size: 22, weight: 600, color: theme.muted, alpha, letterSpacing: 1.5 });
-  function panel(ctx, x, y, w, h, theme, alpha = 0.82) { ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.stage; ctx.fillRect(x, y, w, h); ctx.restore(); }
+  // The location line of a map beat without a panel: the name and the window under it.
+  const locationLine = (ctx, theme, name, sub, x, y, alpha) => { if (alpha <= 0) return; Motion.text(ctx, name, x, y, { size: 24, weight: 600, color: theme.muted, letterSpacing: 2, alpha, group: 'location' }); Motion.text(ctx, sub, x, y + 30, { size: 22, color: theme.dim, letterSpacing: 1, alpha, group: 'location-size' }); };
   function drawYearTiles(ctx, stage, cam, y, theme, alpha) {
     const yt = yearTiles(y);
     MM.drawTiles(ctx, stage, cam, yt.paths, c => (c === 'below' ? theme.below : RAMP6[c]), { alpha, alphaOf: c => (c === 'below' ? 0.45 : 1) });
     return yt;
   }
-  function gridAlphas(k) {
-    return { nat: 1 - step(k, 1.5, 2.5, E.linear), one: Math.min(step(k, 1.5, 2.5, E.linear), 1 - step(k, 24, 16, E.linear)), fine: step(k, 24, 16, E.linear) };
-  }
-  function drawZoomDensity(ctx, stage, cam, theme, shareMix) {
-    const ga = gridAlphas(cam.k);
-    if (ga.nat > 0) { MM.drawDensityCounts(ctx, stage, cam, natPaths, theme.accent, ga.nat * (1 - shareMix)); if (shareMix > 0) MM.drawDensityShares(ctx, stage, cam, natPaths, RAMP5, theme.below, ga.nat * shareMix); }
-    for (const label of ['Moscow', 'St Petersburg']) {
-      const d = dens[label];
-      if (ga.one > 0) { MM.drawDensityCounts(ctx, stage, cam, d.one, theme.accent, ga.one * (1 - shareMix)); if (shareMix > 0) MM.drawDensityShares(ctx, stage, cam, d.one, RAMP5, theme.below, ga.one * shareMix); }
-      if (ga.fine > 0) { MM.drawDensityCounts(ctx, stage, cam, d.fine, theme.accent, ga.fine); }
-    }
-  }
+  // The Moscow density windows by scale: 1 km cells between k 1.5 and 40, 250 m cells above k 24,
+  // leaving above k 60 where the firm field of the Moscow section takes over.
+  const gridAlphas = k => ({ one: Math.min(step(k, 1.5, 2.5, E.linear), 1 - step(k, 24, 16, E.linear)), fine: step(k, 24, 16, E.linear) * (1 - step(k, 60, 20, E.linear)) });
   const shareLegend = (ctx, x, y, w, theme, alpha, title) => MM.legendBar(ctx, x, y, w, RAMP5, FINE_BREAKS.map(b => b + '%'), theme, { alpha, title, left: '', right: '' });
 
-  // ---- scenes ----------------------------------------------------------------------------------
-  const scenes = [];
-  scenes.push({ id: 'hook', ...timeline.hook, z: 1, fadeIn: 0, draw({ ctx, local: l, cam, stage, theme }) {
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: step(l, 0, 1.6) });
-    Motion.camTransform(ctx, stage, cam); ctx.save();
-    for (const [c, p] of natPaths.byCount) { const a = step(l, 1.2 + c * 0.28, 1.4, E.outCubic) * MM.countAlpha[c]; if (a <= 0) continue; ctx.globalAlpha = a; ctx.fillStyle = theme.accent; ctx.fill(p); }
-    ctx.restore(); stage.base();
+  // ---- scenes (beat-local time l) --------------------------------------------------------------
+  const DEFS = {};
+  DEFS.hook = { z: 1, fadeIn: 0, draw({ ctx, local: l, theme }) {
     Motion.reveal(ctx, 'Who stays visible?', 80, 128, l, 0.9, { size: 78, weight: 700, color: theme.ink });
     Motion.reveal(ctx, 'Financial statements of Russian firms under sanctions, 2012–2025', 80, 184, l, 1.8, { size: 30, color: theme.muted });
     if (l > 5.2) {
@@ -131,11 +141,9 @@
       Motion.text(ctx, fmt.int(v), 80, 990, { size: 84, weight: 700, color: theme.ink, alpha: step(l, 5.2, 0.6) });
       Motion.reveal(ctx, 'firms eligible to file 2021 accounts, each drawn at its registered address', 80, 1034, l, 5.8, { size: 26, color: theme.muted });
     }
-  } });
+  } };
 
-  scenes.push({ id: 'archive', ...timeline.archive, z: 1, draw({ ctx, local: l, dur, cam, stage, theme }) {
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 0.35, borders: false });
-    MM.drawDensityCounts(ctx, stage, cam, natPaths, theme.accent, 0.22);
+  DEFS.archive = { z: 1, draw({ ctx, local: l, dur, theme }) {
     const out = 1 - step(l, dur - 1.0, 0.5, E.inOutSine);   // the text leaves before the scene crossfades into the chart
     eyebrow(ctx, 'The archive', 80, 120, theme, step(l, 0.2, 0.5) * out);
     const v = Motion.counter(l, 0.4, 3.0, F.records_total);
@@ -153,7 +161,11 @@
       const reach = 2011 + 15 * u;   // the bar's right edge in years; each year label fades in over the next two years of growth
       years.forEach(yy => Motion.text(ctx, yy === 2025 ? '2025*' : String(yy), sx(yy + 0.5), y + 68, { size: 22, color: theme.muted, align: 'center', alpha: Motion.clamp((reach - yy) / 2, 0, 1) }));
       const labAlpha = Motion.clamp((u - 0.85) / 0.15, 0, 1);
-      if (labAlpha > 0) { segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 600, alpha: labAlpha }); }); Motion.text(ctx, '2011: imputed records only, no availability rate', sx(2011), y + 100, { size: 22, color: theme.muted, alpha: labAlpha }); }
+      if (labAlpha > 0) {
+        segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 600, alpha: labAlpha }); });
+        Motion.text(ctx, '2011: imputed records only, no availability rate', sx(2011), y + 100, { size: 22, color: theme.muted, alpha: labAlpha });
+        Motion.text(ctx, '2025*: a flagged latest-year extension', sx(2026), y + 100, { size: 22, color: theme.muted, align: 'right', alpha: labAlpha });
+      }
       ctx.restore();
     }
     // 2021 nested bars.
@@ -166,9 +178,9 @@
       ctx.restore();
     }
     Motion.paragraph(ctx, 'A statement is available when the firm’s own filing for the year is in the release: filed, not imputed.', 80, 1000, 1500, { size: 28, color: theme.ink, alpha: step(l, 11.2, 0.6) * out });
-  } });
+  } };
 
-  scenes.push({ id: 'availability', ...timeline.availability, z: 1, draw({ ctx, local: l, theme }) {
+  DEFS.availability = { z: 1, draw({ ctx, local: l, theme }) {
     title(ctx, 'Availability rose while the archive shrank', l, 0.2, theme);
     subtitle(ctx, 'Share of firms with a statement, by financial year and denominator', l, 0.6, theme);
     const box = { x: 170, y: 250, w: 1000, h: 620 };
@@ -182,74 +194,88 @@
     const px = 1440;
     if (l > 10) {
       Motion.reveal(ctx, 'Share up, statements down', px, 300, l, 10, { size: 32, weight: 700, color: theme.ink });
-      Motion.reveal(ctx, '2021 → 2024', px, 346, l, 10.3, { size: 26, color: theme.muted });
+      Motion.reveal(ctx, '2021 to 2024', px, 346, l, 10.3, { size: 26, color: theme.muted });
       const u = step(l, 10.6, 1.6, E.outCubic);
       CH.bars(ctx, { x: px, y: 400, w: 300, h: 200 }, [{ label: 'Statements 2021', value: F.statements_2021, color: theme.dim }, { label: 'Statements 2024', value: F.statements_2024, color: theme.accent }], { max: F.statements_2021, progress: u, theme, barH: 40, gap: 46, size: 24 });
       Motion.paragraph(ctx, `${fmt.int(F.statements_2021 - F.statements_2024)} fewer statements, while the eligible share rose from ${fmt.pct(F.eligible_share_2021)} to ${fmt.pct(F.eligible_share_2024)}.`, px, 620, 400, { size: 26, color: theme.ink, alpha: step(l, 12.4, 0.6) });
     }
-  } });
+  } };
 
-  scenes.push({ id: 'years', ...timeline.years, z: 1, draw({ ctx, local: l, cam, stage, theme, dur }) {
+  DEFS.years = { z: 1, draw({ ctx, local: l, cam, stage, theme, dur }) {
     const n = yearList.length, start = 1.6, dwell = (dur - start - 1.2) / n;
     const pos = Motion.clamp((l - start) / dwell, 0, n - 1e-6); const i = Math.floor(pos), frac = pos - i;
     const blend = i < n - 1 ? step(frac, 0.78, 0.22, E.inOutSine) : 0;
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 1 });
     const intro = step(l, 0.3, 1.2);
     const yt = drawYearTiles(ctx, stage, cam, yearList[i], theme, intro * (1 - blend));
     if (blend > 0) drawYearTiles(ctx, stage, cam, yearList[i + 1], theme, blend);
     const yShow = blend > 0.5 ? yearList[i + 1] : yearList[i]; const tot = yearTotals[yShow] || {}; const ytShow = blend > 0.5 ? yearTiles(yShow) : yt;
     const px = 1400;
-    eyebrow(ctx, 'Availability by 100 km cell', px, 140, theme, step(l, 0.2, 0.5));
+    eyebrow(ctx, 'Availability by cell', px, 140, theme, step(l, 0.2, 0.5));
+    locationLine(ctx, theme, 'Russia', '100 km cells', px, 196, step(l, 0.2, 0.5));
     const yearLabel = y => String(y) + (y === 2025 ? '*' : '');
-    Motion.text(ctx, yearLabel(yearList[i]), px, 300, { size: 128, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * (1 - blend), group: 'year' });
-    if (blend > 0) Motion.text(ctx, yearLabel(yearList[i + 1]), px, 300, { size: 128, weight: 700, color: theme.ink, alpha: blend, group: 'year' });
-    Motion.text(ctx, providerOf(yShow) + (yShow === 2019 ? '  ← provider changes' : ''), px, 350, { size: 26, color: yShow === 2019 ? theme.accentStrong : theme.muted, alpha: step(l, 0.4, 0.5) });
+    Motion.text(ctx, yearLabel(yearList[i]), px, 330, { size: 128, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * (1 - blend), group: 'year' });
+    if (blend > 0) Motion.text(ctx, yearLabel(yearList[i + 1]), px, 330, { size: 128, weight: 700, color: theme.ink, alpha: blend, group: 'year' });
+    Motion.text(ctx, yShow === 2019 ? 'FNS, the provider changes' : providerOf(yShow), px, 380, { size: 26, color: yShow === 2019 ? theme.accentStrong : theme.muted, alpha: step(l, 0.4, 0.5) });
     if (tot.share != null) {
-      Motion.text(ctx, fmt.pct(tot.share), px, 470, { size: 72, weight: 700, color: theme.accentStrong, alpha: step(l, 0.6, 0.5) });
-      Motion.text(ctx, 'of eligible firms have a statement', px, 512, { size: 26, color: theme.muted, alpha: step(l, 0.6, 0.5) });
+      Motion.text(ctx, fmt.pct(tot.share), px, 500, { size: 72, weight: 700, color: theme.accentStrong, alpha: step(l, 0.6, 0.5) });
+      Motion.text(ctx, 'of eligible firms have a statement', px, 542, { size: 26, color: theme.muted, alpha: step(l, 0.6, 0.5) });
     }
-    if (tot.located != null) Motion.text(ctx, `${fmt.pct(tot.located)} of ${fmt.int(tot.n)} eligible firms located`, px, 570, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
-    Motion.text(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 606, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
-    MM.legendBar(ctx, px, 720, 440, RAMP6, YEAR_BREAKS.map(b => b + '%'), theme, { alpha: step(l, 1.0, 0.6), title: 'Share with a statement, located firms in the cell' });
-    MM.legendSwatches(ctx, px, 800, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 located firms' }], theme, { alpha: step(l, 1.0, 0.6) });
-  } });
+    if (tot.located != null) Motion.text(ctx, `${fmt.pct(tot.located)} of ${fmt.int(tot.n)} eligible firms located`, px, 600, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
+    Motion.text(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 636, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
+    MM.legendBar(ctx, px, 740, 440, RAMP6, YEAR_BREAKS.map(b => b + '%'), theme, { alpha: step(l, 1.0, 0.6), title: 'Share with a statement, located firms in the cell' });
+    MM.legendSwatches(ctx, px, 820, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 located firms' }], theme, { alpha: step(l, 1.0, 0.6) });
+  } };
 
-  scenes.push({ id: 'change', ...timeline.change, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 1 });
+  DEFS.change = { z: 1, draw({ ctx, local: l, cam, stage, theme }) {
     const waves = { 3: 0.3, 4: 0.3, 2: 1.4, 5: 1.4, 1: 2.6, 6: 2.6, below: 0.3 };
     MM.drawTiles(ctx, stage, cam, changeTiles, c => (c === 'below' ? theme.below : CHANGE6[c - 1]), { alphaOf: c => (c === 'below' ? 0.45 : 1) * step(l, waves[c], 0.9, E.outCubic) });
     const px = 1400;
     eyebrow(ctx, 'The change map', px, 140, theme, step(l, 0.2, 0.5));
-    Motion.text(ctx, '2024 against 2021', px, 230, { size: 54, weight: 700, color: theme.ink, alpha: step(l, 0.3, 0.5) });
-    Motion.paragraph(ctx, 'Change in the share of located firms with a statement, by 100 km cell', px, 280, 440, { size: 26, color: theme.muted, alpha: step(l, 0.5, 0.5) });
+    locationLine(ctx, theme, 'Russia', '100 km cells', px, 196, step(l, 0.2, 0.5));
+    Motion.text(ctx, '2024 against 2021', px, 276, { size: 54, weight: 700, color: theme.ink, alpha: step(l, 0.3, 0.5) });
+    Motion.paragraph(ctx, 'Change in the share of located firms with a statement, by 100 km cell', px, 326, 440, { size: 26, color: theme.muted, alpha: step(l, 0.5, 0.5) });
     const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
     const items = [6, 5, 4, 3, 2, 1].map(c => ({ color: CHANGE6[c - 1], label: labels[c - 1], right: fmt.int(changeCounts[c]) + ' cells', rightAlpha: step(l, waves[c] + 0.9, 0.4) }));
-    MM.legendSwatches(ctx, px, 380, items, theme, { alpha: step(l, 0.8, 0.6), colWidth: 440, rowGap: 14 });
-    MM.legendSwatches(ctx, px, 620, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 firms in a year', right: '' }], theme, { alpha: step(l, 0.8, 0.6), colWidth: 440 });
+    MM.legendSwatches(ctx, px, 420, items, theme, { alpha: step(l, 0.8, 0.6), colWidth: 440, rowGap: 14 });
+    MM.legendSwatches(ctx, px, 660, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 firms in a year', right: '' }], theme, { alpha: step(l, 0.8, 0.6), colWidth: 440 });
     const ct = C100.change_totals;
-    Motion.paragraph(ctx, `${fmt.int(C100.change.supported.reduce((s, v) => s + v, 0))} cells with 50 or more located firms in both years`, px, 720, 460, { size: 24, color: theme.ink, alpha: step(l, 4.4, 0.5) });
-    Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} → ${fmt.pct(ct.availability_share_percent[1])}`, px, 790, l, 4.8, { size: 24, color: theme.ink });
-  } });
+    Motion.paragraph(ctx, `${fmt.int(C100.change.supported.reduce((s, v) => s + v, 0))} cells with 50 or more located firms in both years`, px, 760, 460, { size: 24, color: theme.ink, alpha: step(l, 4.4, 0.5) });
+    Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} to ${fmt.pct(ct.availability_share_percent[1])}`, px, 830, l, 4.8, { size: 24, color: theme.ink });
+  } };
 
-  scenes.push({ id: 'zoom', ...timeline.zoom, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 1, borderPx: cam.k > 9 ? 1.4 : 0.8 });
-    const shareMix = Math.min(step(l, 8.6, 1.2, E.inOutSine), 1 - step(l, 13, 1.0, E.inOutSine)) + step(l, 23.6, 1.0, E.inOutSine);
-    drawZoomDensity(ctx, stage, cam, theme, Motion.clamp(shareMix, 0, 1));
-    // City labels between the national view and the city windows; held back during the fast Moscow-to-St Petersburg leg.
-    const cityAlpha = step(cam.k, 1.5, 3, E.linear) * (1 - step(cam.k, 12.5, 7.5, E.linear)) * (1 - Motion.plateau(l, 18.9, 21.2, 0.4, 0.4));
-    if (cityAlpha > 0) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: cityAlpha });
-    const cap = (y, lines, alpha, width = 900) => { if (alpha <= 0) return; const rows = lines.reduce((s, ln) => s + (ln.lines || 1), 0); panel(ctx, 60, y - 60, width, 40 + rows * 40, theme, 0.78); let yy = y; lines.forEach(s => { if (s.lines > 1) yy = Motion.paragraph(ctx, s.text, 84, yy, width - 48, { size: s.size || 26, weight: s.weight || 400, color: s.color || theme.ink, alpha, lineHeight: 1.45 }) + 4; else { Motion.text(ctx, s.text, 84, yy, { size: s.size || 26, weight: s.weight || 400, color: s.color || theme.ink, alpha }); yy += 40; } }); };
-    cap(960, [{ text: 'Moscow, 90 km window at 1 km', size: 32, weight: 700 }, { text: `${fmt.int(msk1.sum_n)} located firms; ${fmt.int(msk1.sum_a)} with a 2021 statement (${fmt.pct(100 * msk1.sum_a / msk1.sum_n)})`, color: theme.muted }], Motion.plateau(l, 4.6, 13.4, 0.5, 0.5));
-    shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, 8.6, 13.4, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
-    cap(920, [{ text: 'Central Moscow at 250 m, registered addresses', size: 32, weight: 700 }, { text: `${fmt.int(F.largest_location_firms)} firms at the largest address; ${fmt.int(F.firms_at_100plus_locations)} at addresses shared by 100 or more`, size: 24, color: theme.muted }], Motion.plateau(l, 14.2, 20.2, 0.5, 0.5), 1000);
-    MM.legendSwatches(ctx, 1380, 120, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: Motion.plateau(l, 14.6, 20.2, 0.6, 0.5), columns: 2, colWidth: 220, swatch: 22, size: 22, rowGap: 10 });
-    cap(960, [{ text: 'St Petersburg, 90 km window at 1 km', size: 32, weight: 700 }, { text: `${fmt.int(spb1.sum_n)} located firms; ${fmt.int(spb1.sum_a)} with a 2021 statement (${fmt.pct(100 * spb1.sum_a / spb1.sum_n)})`, color: theme.muted }], Motion.plateau(l, 22.8, 26.1, 0.5, 0.3));
-    shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, 23.6, 26.1, 0.6, 0.3), 'Share with a statement, cells with 50 or more firms');
-    eyebrow(ctx, 'Firm density, 2021', 80, 120, theme, Motion.plateau(l, 0.3, 26, 0.6, 0.4));
-  } });
+  // The flight to Moscow and what follows it. 'published': the Moscow hold, the push-in to 250 m,
+  // the pull-back and the pull-out to the country (36 s). 'moscow': the Moscow hold under the start
+  // of the section's street zoom (23 s); the density windows leave by scale.
+  function zoomScene(mode, len) {
+    const published = mode === 'published', hold = 6;   // the camera reaches Moscow at k 12 six seconds in
+    const MOS = { name: 'Moscow', size: '90 by 90 km, 1 km cells' }, CEN = { name: 'Central Moscow', size: '250 m cells, registered addresses' };
+    const loc = published ? [Object.assign({ start: 0 }, MOS), Object.assign({ start: 11.2 }, CEN), Object.assign({ start: 26.2 }, MOS)] : [Object.assign({ start: 0 }, MOS)];
+    const panelEnd = published ? len - 4.5 : hold + 5.6, eyebrowEnd = published ? len - 3 : hold + 9.5, legendEnd = published ? 11.2 : hold + 6.5;
+    const linesM = [[`${fmt.int(msk1.sum_n)} located firms`, null], [`${fmt.int(msk1.sum_a)} with a 2021 statement (${fmt.pct(100 * msk1.sum_a / msk1.sum_n)})`, null]];
+    const linesC = [[`${fmt.int(F.largest_location_firms)} firms at the largest address`, null], [`${fmt.int(F.firms_at_100plus_locations)} at addresses with 100 or more`, null]];
+    return { z: 1, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local: l, cam, stage, theme }) {
+      const k = cam.k, ga = gridAlphas(k), shareMix = step(l, hold + 1.6, 1.2, E.inOutSine);
+      if (ga.one > 0) { MM.drawDensityCounts(ctx, stage, cam, dens.one, theme.accent, ga.one * (1 - shareMix)); if (shareMix > 0) MM.drawDensityShares(ctx, stage, cam, dens.one, RAMP5, theme.below, ga.one * shareMix); }
+      if (ga.fine > 0) MM.drawDensityCounts(ctx, stage, cam, dens.fine, theme.accent, ga.fine);
+      // City labels inside the scale window, and only once the camera has nearly arrived (they would otherwise fly in
+      // from the screen edge faster than any fade); the published cut shows them again after the pull-back.
+      const cityGate = Motion.plateau(l, 5.0, 11.2, 0.6, 0.6) + (published ? Motion.plateau(l, 29.0, 31.4, 0.6, 0.6) : 0);
+      const cityAlpha = step(k, 1.5, 3, E.linear) * (1 - step(k, 12.5, 7.5, E.linear)) * Math.min(1, cityGate);
+      if (cityAlpha > 0) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: cityAlpha });
+      eyebrow(ctx, 'Firm density, 2021', 80, 120, theme, Motion.plateau(l, 0.3, eyebrowEnd, 0.6, 0.5));
+      const pa = Motion.plateau(l, hold - 1.4, panelEnd, 0.6, 0.6);
+      if (pa > 0) {
+        const central = published ? Motion.plateau(l, 11.2, 26.2, 0.6, 0.6) : 0;
+        MM.infoPanel(ctx, theme, { alpha: pa, loc: MM.locationAt(loc, l), year: { a: '2021' } });
+        MM.infoLines(ctx, theme, linesM, pa * (1 - central)); if (central > 0) MM.infoLines(ctx, theme, linesC, pa * central);
+      }
+      shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, hold + 1.6, legendEnd, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
+      if (published) MM.legendSwatches(ctx, 1420, 320, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: Motion.plateau(l, 14.6, 27.5, 0.6, 0.5), columns: 2, colWidth: 220, swatch: 22, size: 22, rowGap: 10 });
+    } };
+  }
 
-  scenes.push({ id: 'groups', ...timeline.groups, z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Visibility diverged after 2021', l, 0.2, theme);
+  DEFS.groups = { z: 1, draw({ ctx, local: l, theme }) {
+    title(ctx, 'Availability diverged after 2021', l, 0.2, theme);
     subtitle(ctx, 'Share of eligible firms with a statement, 2021 and 2024, by group', l, 0.6, theme);
     const u = step(l, 1.2, 3.0, E.inOutSine);
     const own = [{ label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Foreign or joint', a: F.own.foreign[0], b: F.own.foreign[1], color: theme.muted }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }];
@@ -259,10 +285,10 @@
     CH.slopes(ctx, { x: 120, y: 300, w: 760, h: 520 }, own, { yDomain: [44, 82], progress: u, theme });
     CH.slopes(ctx, { x: 1000, y: 300, w: 760, h: 520 }, leg, { yDomain: [44, 82], progress: u, theme });
     ctx.restore();
-    Motion.paragraph(ctx, 'Visibility rose among private firms and joint-stock companies and fell among state-related firms and unitary enterprises.', 120, 940, 1660, { size: 27, color: theme.ink, alpha: step(l, 6.0, 0.6) });
-  } });
+    Motion.paragraph(ctx, 'Availability rose among private firms and joint-stock companies and fell among state-related firms and unitary enterprises.', 120, 940, 1660, { size: 27, color: theme.ink, alpha: step(l, 6.0, 0.6) });
+  } };
 
-  scenes.push({ id: 'transitions', ...timeline.transitions, z: 1, draw({ ctx, local: l, theme }) {
+  DEFS.transitions = { z: 1, draw({ ctx, local: l, theme }) {
     title(ctx, 'Absence often precedes removal', l, 0.2, theme);
     subtitle(ctx, 'The following year, by the preceding year’s statement: transitions ending 2020–2024, continuing and removed firms', l, 0.6, theme);
     const u = step(l, 1.2, 2.6, E.outCubic);
@@ -274,12 +300,12 @@
       { label: 'Firms without a statement the year before', sub: `${fmt.int(pb.origin)} firm-years`, total: pb.origin, parts: parts(pb) },
     ], { progress: u, theme, barH: 90, gap: 140, size: 26 });
     ctx.restore();
-    Motion.paragraph(ctx, `Of ${fmt.int(pb.origin)} prior-absent firm-years, ${fmt.pct(100 * pb.X / pb.origin)} end in a recorded removal and ${fmt.pct(100 * pb.A / pb.origin)} reappear with a statement; among prior-available firm-years, ${fmt.pct(100 * pa.X / pa.origin)} end in removal.`, 120, 920, 1660, { size: 27, color: theme.ink, alpha: step(l, 5.4, 0.6) });
-  } });
+    Motion.paragraph(ctx, `Of ${fmt.int(pb.origin)} firm-years without a statement, ${fmt.pct(100 * pb.X / pb.origin)} end in a recorded removal and ${fmt.pct(100 * pb.A / pb.origin)} reappear with a statement. Among firm-years with a statement, ${fmt.pct(100 * pa.X / pa.origin)} end in removal.`, 120, 920, 1660, { size: 27, color: theme.ink, alpha: step(l, 5.4, 0.6) });
+  } };
 
-  scenes.push({ id: 'size', ...timeline.size, z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Larger firms stay visible; the gap widened in 2022', l, 0.2, theme);
-    subtitle(ctx, 'Odds of a following-year statement relative to the smallest asset quintile (Q1), adjusted; outcomes 2020–2024', l, 0.6, theme);
+  DEFS.size = { z: 1, draw({ ctx, local: l, theme }) {
+    title(ctx, 'Larger firms stay visible, and the gap widened in 2022', l, 0.2, theme);
+    subtitle(ctx, 'Odds of a following-year statement against the smallest asset quintile (Q1), adjusted, outcomes 2020–2024', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const cols = { Q2: '#5587B8', Q3: '#79A6D0', Q4: '#A3C4E3', Q5: theme.accentStrong };
     const ser = ['Q2', 'Q3', 'Q4', 'Q5'].map(q => ({ label: q + ' vs Q1', color: cols[q], points: sizeRows[q], whiskers: q === 'Q5', dot: q === 'Q5' ? 9 : 7, width: q === 'Q5' ? 4 : 3 }));
@@ -295,21 +321,21 @@
       Motion.paragraph(ctx, `Raw shares in 2022: Q1 ${fmt.pct(F.size_raw_q1_2022)}, Q5 ${fmt.pct(F.size_raw_q5_2022)}.`, px, 510, 440, { size: 26, color: theme.ink, alpha: step(l, 8.2, 0.6) });
       Motion.paragraph(ctx, `Provisional: without wholesale trade the later widening shrinks. Early-era (2014–2018) Q5 ratios: ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 600, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
     }
-  } });
+  } };
 
-  scenes.push({ id: 'lists', ...timeline.lists, z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Sanctioned-only firms became relatively less visible by 2024', l, 0.2, theme);
-    subtitle(ctx, 'Odds of a statement against firms on no supplied list; annual eligible population, two-way 95% intervals', l, 0.6, theme);
+  DEFS.lists = { z: 1, draw({ ctx, local: l, theme }) {
+    title(ctx, 'Firms on the sanctions list only fell behind by 2024', l, 0.2, theme);
+    subtitle(ctx, 'Odds of a statement against firms on no supplied list, annual eligible population, two-way 95% intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
-    const ser = [{ label: 'Sanctioned only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
-                 { label: 'Government strategic only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
+    const ser = [{ label: 'Sanctions list only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
+                 { label: 'Government strategic list only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.yearDots(ctx, { x: 170, y: 250, w: 700, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
     ctx.restore();
     const px = 1300;
     if (l > 6.4) {
       eyebrow(ctx, 'Six-year histories, fixed 2019 cohort', px, 270, theme, step(l, 6.4, 0.5));
-      const groups = [['10000', 'Sanctioned only'], ['00000', 'No list']];
+      const groups = [['10000', 'Sanctions list only'], ['00000', 'No list']];
       const bins = [['all_available', 'available all six years'], ['available_then_absent', 'available 2019–21, absent 2022–24'], ['all_absent', 'absent all six years'], ['removed', 'removed from the registry']];
       groups.forEach(([g, name], gi) => {
         const y0 = 320 + gi * 290; const d0 = bin(g, 'all_available');
@@ -318,11 +344,10 @@
         CH.bars(ctx, { x: px, y: y0 + 40, w: 340, h: 220 }, rows, { max: 75, progress: step(l, 7.2 + gi * 0.4, 1.4, E.outCubic), theme, barH: 22, gap: 32, size: 22 });
       });
     }
-    Motion.paragraph(ctx, 'Supplied memberships are fixed lists, not dated designations; the odds compare populations, not the same firms.', 170, 960, 1000, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
-  } });
+    Motion.paragraph(ctx, 'Supplied memberships are fixed lists, not dated designations. The odds compare populations, not the same firms.', 170, 960, 1000, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
+  } };
 
-  scenes.push({ id: 'next', ...timeline.next, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
-    MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 1 });
+  DEFS.next = { z: 1, draw({ ctx, local: l, cam, stage, theme }) {
     const mix = step(l, 6.6, 1.2, E.inOutSine);
     MM.drawTiles(ctx, stage, cam, cohortTiles, c => (c === 'below' ? theme.below : RAMP5[c - 1]), { alpha: step(l, 0.6, 1.0) * (1 - mix), alphaOf: c => (c === 'below' ? 0.45 : 1) });
     if (mix > 0) MM.drawTiles(ctx, stage, cam, finTiles, c => CHANGE6[c], { alpha: mix });
@@ -345,43 +370,81 @@
       ctx.restore();
     }
     Motion.paragraph(ctx, 'Chapter 3 asks whether the cash and inventories firms held in 2021 predicted their revenue and operating margins in 2022–2024: import substitution, or scarring?', px, 900, 440, { size: 26, color: theme.ink, alpha: step(l, 8.8, 0.6) });
-  } });
+  } };
 
-  scenes.push({ id: 'credits', ...timeline.credits, z: 1, draw({ ctx, local: l, theme }) {
+  DEFS.credits = { z: 1, draw({ ctx, local: l, theme }) {
     const lines = [
       ['Who stays visible?', 40, 700, theme.ink, 0.3],
       ['Data: RFSD v3.1.0 (Bondarkov et al. 2025), 63,308,662 annual records, financial years 2011–2025', 26, 400, theme.muted, 0.8],
       ['Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 26, 400, theme.muted, 1.1],
-      ['Descriptive, not causal; dated events are context. Absence from the archive is not withdrawal or concealment; supplied lists are fixed lists, not dated designations.', 24, 400, theme.muted, 1.4],
+      ['Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment.', 24, 400, theme.muted, 1.4],
     ];
     let y = 400;
     for (const [s, size, w, color, t0] of lines) { Motion.reveal(ctx, s, 960, y, l, t0, { size, weight: w, color, align: 'center' }); y += size === 40 ? 90 : 52; }
-  } });
+  } };
 
   // ---- cuts ------------------------------------------------------------------------------------
-  // The teaser reuses four scenes plus the closing card, each played faster (speed = full length /
-  // teaser length), with the camera keyframes inside each scene compressed by the same factor and a
-  // hold at each scene's start and end so the camera never drifts during a scene it does not belong to.
-  const full = { scenes, keyframes, DURATION, timeline };
-  const camFull = Motion.camera(keyframes, 1920, 1080);
-  const TEASER = [['hook', 0, 7.5, null], ['years', 7.5, 17.5, null], ['zoom', 17.5, 29, 19], ['groups', 29, 37.5, null], ['credits', 37.5, 40, null]];
-  const MAP_SCENES = new Set(['hook', 'archive', 'years', 'change', 'zoom', 'next']);
-  function makeTeaser() {
-    const tl = {}, sc = [], kf = [];
-    for (const [id, start, end, fullLen] of TEASER) {
-      const f = timeline[id], fl = fullLen || (f.end - f.start), speed = fl / (end - start);
-      tl[id] = { id, start, end, title: f.title };
-      const s = scenes.find(x => x.id === id);
-      sc.push(Object.assign({}, s, { start, end, speed }));
-      if (!MAP_SCENES.has(id)) continue;   // chart scenes leave the camera where the last map scene left it
-      // Holds at the scene's start and 0.5 s before its end, so the camera slides to the next map
-      // scene's start only during the crossfade; interior keyframes are compressed by the speed.
-      kf.push(Object.assign({}, camFull(f.start), { t: start }));
-      for (const k of keyframes) if (k.t > f.start && k.t < f.start + fl) kf.push(Object.assign({}, k, { t: start + (k.t - f.start) / speed }));
-      kf.push(Object.assign({}, camFull(f.start + fl), { t: end - 0.5 }));
+  // buildCut assembles a full cut from a beat list: the ground, one scene per beat (the zoom scene
+  // spans the Moscow beats), the section's scenes when a factory is given, the chapters, the camera.
+  function buildCut(list, sectionFor) {
+    const { B, total } = beatsOf(list);
+    const section = sectionFor ? sectionFor(B) : null;
+    const sch = schedulesFor(B, section);
+    const scenes = [groundScene(sch, total, null)], timeline = {};
+    for (const [id] of list) {
+      const b = B[id];
+      if (id === 'section') { section.scenes.forEach(s => scenes.push(s)); Object.assign(timeline, section.timeline); continue; }
+      timeline[id] = { id, start: b.start, end: b.end, title: TITLES[id] };
+      if (id === 'moscow250' || id === 'out') continue;   // chapters inside the zoom scene
+      const end = id === 'zoom' ? (section ? B.section.start + section.SEC.profiles : B.out.end) : b.end;
+      const def = id === 'zoom' ? zoomScene(section ? 'moscow' : 'published', end - b.start) : DEFS[id];
+      scenes.push(Object.assign({ id, title: TITLES[id], start: b.start, end }, def));
     }
-    kf.sort((a, b) => a.t - b.t);
-    return { scenes: sc, keyframes: kf, DURATION: 40, timeline: tl };
+    return { scenes, keyframes: keyframesFor(B, section), DURATION: total, timeline, B, sch };
   }
-  window.ExplainerScenes = Object.assign({}, full, { cuts: { full, teaser: makeTeaser() } });
+  // makeCut re-cuts a full cut: entries [id, title, cutStart, cutEnd, fullStart, fullEnd] play the
+  // parent's window [fullStart, fullEnd] between cutStart and cutEnd (speed = window / slot). Every
+  // parent scene meeting the window is cloned with the matching start, end, speed and offset, and
+  // clipped scenes get a 0.5 s fade; the ground draws from the parent's clock through the same time
+  // map; map windows carry the parent's keyframes compressed by the speed, with a hold at each end so
+  // the camera moves between map windows only during the crossfade. Chart windows leave the camera
+  // where the last map window left it.
+  function makeCut(parent, entries, duration, mapWindows) {
+    const camFull = Motion.camera(parent.keyframes, 1920, 1080);
+    const tl = {}, sc = [], kf = [], maps = [];
+    for (const [id, title, start, end, fs, fe] of entries) {
+      const speed = (fe - fs) / (end - start);
+      tl[id] = { id, start, end, title }; maps.push({ start, end, fs, speed });
+      for (const s of parent.scenes) {
+        if (s.id === 'ground' || s.end <= fs || s.start >= fe) continue;
+        const a = Math.max(s.start, fs), b = Math.min(s.end, fe);
+        sc.push(Object.assign({}, s, { id: s.id + '@' + id, start: start + (a - fs) / speed, end: start + (b - fs) / speed, speed, offset: a - s.start,
+                                       fadeIn: s.start < fs ? 0.5 : s.fadeIn, fadeOut: s.end > fe ? 0.5 : s.fadeOut }));
+      }
+      if (!mapWindows.has(id)) continue;
+      kf.push(Object.assign({}, camFull(fs), { t: start }));
+      for (const k of parent.keyframes) if (k.t > fs && k.t < fe) kf.push(Object.assign({}, k, { t: start + (k.t - fs) / speed }));
+      kf.push(Object.assign({}, camFull(fe), { t: end - 0.5 }));
+    }
+    const timeMap = t => { let m = maps[0]; for (const x of maps) if (t >= x.start) m = x; return m.fs + Math.min(Math.max(0, t - m.start), m.end - m.start) * m.speed; };
+    sc.push(groundScene(parent.sch, duration, timeMap));
+    kf.sort((a, b) => a.t - b.t);
+    return { scenes: sc, keyframes: kf, DURATION: duration, timeline: tl };
+  }
+  const full = buildCut(LIST_FULL, null);
+  const Bf = full.B;
+  const TEASER = [['hook', TITLES.hook, 0, 7.5, 0, Bf.hook.end], ['years', TITLES.years, 7.5, 17.5, Bf.years.start, Bf.years.end], ['zoom', 'Central Moscow', 17.5, 29, Bf.zoom.start, Bf.zoom.start + 19],
+                  ['groups', TITLES.groups, 29, 37.5, Bf.groups.start, Bf.groups.end], ['credits', TITLES.credits, 37.5, 40, Bf.credits.start, Bf.credits.end]];
+  const cuts = { full, teaser: makeCut(full, TEASER, 40, new Set(['hook', 'years', 'zoom'])) };
+  // The local cuts, built once the Moscow rasters are decoded: the full cut with the section, a
+  // 46 s teaser with a six-second excerpt of the designation, and the standalone treated cut.
+  function makeMoscowCuts(images, opts) {
+    const TS = window.TreatedScenes;
+    const fm = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start));
+    const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
+    const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 8],
+                  ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
+    return { 'full-moscow': fm, 'teaser-moscow': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), treated: TS.standalone(images, opts) };
+  }
+  window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts });
 })();

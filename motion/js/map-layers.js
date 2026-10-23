@@ -46,13 +46,30 @@
     }
     return bmp.lod0;
   };
+  // The fine geometry (lod1) of a city window, when the viewport lies inside its box, or null.
+  M.windowLod = function (bmp, cam, stage) {
+    const hw = stage.width / (2 * cam.k), hh = stage.height / (2 * cam.k);
+    for (const w of Object.values(bmp.lod1)) {
+      if (cam.cx - hw >= w.box[0] && cam.cx + hw <= w.box[1] && cam.cy - hh >= w.box[2] && cam.cy + hh <= w.box[3]) return w.path;
+    }
+    return null;
+  };
+  // Boundaries follow the zoom (round 3): the national geometry's regional borders below k 6, the
+  // window geometry (the Moscow city limit among them) above k 12, a crossfade between; thin pale
+  // lines, never heavier than the marks. The land fill is one polygon set at a time.
   M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true } = {}) {
     Motion.camTransform(ctx, stage, cam);
-    const path = M.chooseLod(bmp, cam, stage);
+    const fine = M.windowLod(bmp, cam, stage);
+    const w1 = fine ? Motion.clamp((cam.k - 6) / 6, 0, 1) : 0;
+    const path = w1 >= 0.5 && fine ? fine : bmp.lod0;
     ctx.save(); ctx.globalAlpha *= landAlpha;
     ctx.fillStyle = theme.land; ctx.fill(path, 'evenodd');
     if (graticule) { ctx.strokeStyle = theme.graticule; ctx.lineWidth = 0.7 / cam.k; ctx.stroke(bmp.grat); }
-    if (borders) { ctx.strokeStyle = theme.border; ctx.lineWidth = borderPx / cam.k; ctx.lineJoin = 'round'; ctx.stroke(path); }
+    if (borders) {
+      ctx.strokeStyle = theme.border; ctx.lineWidth = Math.min(borderPx, 1) / cam.k; ctx.lineJoin = 'round';
+      if (w1 < 1) { ctx.save(); ctx.globalAlpha *= 1 - w1; ctx.stroke(bmp.lod0); ctx.restore(); }
+      if (w1 > 0 && fine) { ctx.save(); ctx.globalAlpha *= w1; ctx.stroke(fine); ctx.restore(); }
+    }
     ctx.restore();
     stage.base();
   };
@@ -146,4 +163,34 @@
   };
 
   window.MotionMap = M;
+  // --- the top-right information panel -------------------------------------------------------
+  // Shared by the explainer's Moscow beats and the treated cut's ticker: the location (split-flap)
+  // with its window line, a large year (two strings crossfading during a dissolve) and up to two
+  // right-aligned count lines. Everything sits inside one 440 x 210 panel at (1420, 70).
+  M.infoLines = function (ctx, theme, lines, alpha) {
+    if (alpha <= 0) return;
+    lines.forEach(([s, color], i) => Motion.text(ctx, s, 1836, i === 0 ? 244 : 272, { size: i === 0 ? 24 : 22, color: color || (i === 0 ? theme.ink : theme.muted), align: 'right', alpha, group: 'counters' }));
+  };
+  M.infoPanel = function (ctx, theme, { alpha = 1, loc = null, year = null, lines = [] } = {}) {
+    if (alpha <= 0) return;
+    Motion.panel(ctx, 1420, 70, 440, 210, theme, 0.92 * alpha);
+    if (loc) {
+      Motion.flipText(ctx, loc.from.name, loc.to.name, loc.u, { x: 1836, y: 108, size: 24, weight: 600, color: theme.muted, align: 'right', letterSpacing: 2, group: 'location', alpha });
+      Motion.flipText(ctx, loc.from.size, loc.to.size, loc.u, { x: 1836, y: 138, size: 22, weight: 400, color: theme.dim, align: 'right', letterSpacing: 1, group: 'location-size', alpha });
+    }
+    if (year) {
+      const u = year.b == null ? 0 : year.u;
+      Motion.text(ctx, year.a, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * (1 - u), group: 'year' });
+      if (u > 0) Motion.text(ctx, year.b, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * u, group: 'year' });
+    }
+    M.infoLines(ctx, theme, lines, alpha);
+  };
+  // Location schedule: entries [{start, name, size}] on the caller's clock; returns the previous
+  // and current entries and the flip progress (0.5 s plus 30 ms per extra glyph, a pure function of time).
+  M.locationAt = function (entries, l) {
+    let i = 0; while (i < entries.length - 1 && l >= entries[i + 1].start) i++;
+    const to = entries[i], from = i > 0 ? entries[i - 1] : to;
+    const n = Math.max(from.name.length, to.name.length), u = i > 0 ? Motion.clamp((l - to.start) / (0.5 + 0.03 * (n - 1)), 0, 1) : 1;
+    return { from, to, u };
+  };
 })();

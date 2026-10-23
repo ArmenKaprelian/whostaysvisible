@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Make the artifact copies of the two pages under motion/publish/.
+"""Assemble the publish set of the two pages under motion/publish/.
 
-The claude.ai artifact wraps a page in its own document skeleton, so the copies drop the doctype,
-html, head and body tags, keep the <title>, inline css/theme.css, add the Google Fonts fallback
-(Arimo is metric-compatible with the Liberation/Arial family the pages use locally) and the
-viewport-fit meta the page contract asks for. Scripts and data stay relative (published as files)."""
-import os, re, sys
+The claude.ai artifact wraps a page in its own document skeleton, so the page copies drop the
+doctype, html, head and body tags, keep the <title>, inline css/theme.css, add the Google Fonts
+fallback (Arimo is metric-compatible with the Liberation/Arial family the pages use locally) and the
+viewport-fit meta the page contract asks for. The shared scripts and the aggregate data files are
+copied beside them (published as files). Any name matching points|treated|anchors|moscow is refused:
+the Moscow firm-level pieces never leave the lab. The script prints every file with its size and the
+total, and exits non-zero if the set exceeds the artifact limit."""
+import os, re, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
@@ -32,5 +35,35 @@ def convert(name):
         fh.write(out)
     print("%s: %d bytes" % (name, len(out.encode("utf-8"))))
 
-for n in ("explainer.html", "explorer.html"):
-    convert(n)
+REFUSE = re.compile(r"points|treated|anchors|moscow", re.I)
+SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "explorer-app.js"]
+DATA = ["basemap.js", "cells100.js", "density.js", "series.js", "cellsyears.js"]
+LIMIT = 16 * 1024 * 1024
+
+def copy(sub, name):
+    if REFUSE.search(name):
+        sys.exit("refused: %s/%s matches the local-only pattern" % (sub, name))
+    src = os.path.join(MOTION, sub, name); dst = os.path.join(OUT, sub, name)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copyfile(src, dst)
+    return os.path.getsize(dst)
+
+def main():
+    total = 0
+    for n in ("explainer.html", "explorer.html"):
+        convert(n); total += os.path.getsize(os.path.join(OUT, n))
+    for n in SCRIPTS:
+        b = copy("js", n); total += b; print("js/%s: %d bytes" % (n, b))
+    for n in DATA:
+        b = copy("data", n); total += b; print("data/%s: %d bytes" % (n, b))
+    # Nothing in the set may carry a local-only name, whatever put it there.
+    for root, _, files in os.walk(OUT):
+        for f in files:
+            if REFUSE.search(f):
+                sys.exit("refused: %s is in the publish set" % os.path.join(root, f))
+    print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
+    if total > LIMIT:
+        sys.exit("the publish set exceeds the 16 MB artifact limit")
+
+if __name__ == "__main__":
+    main()

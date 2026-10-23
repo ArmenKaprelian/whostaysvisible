@@ -7,6 +7,10 @@
   cut-in    a block that goes from absent to 0.95 alpha or more within one audit step (no fade in)
   cut-out   a block that goes from 0.9 alpha or more to absent within one audit step, before its scene's
             own fade-out (no fade out)
+  panel-clip a text block whose anchor lies inside a panel drawn before it, but which is not wholly inside
+            that panel (2 px tolerance; panels at alpha >= 0.3)
+  label-under-panel a map label (kind 'label') that intersects a visible panel
+  label-over-mark a map label that intersects a red listed-firm mark
 
 A block is a string in a scene at a size: the same string (a label may move with the camera), or a box
 whose left or right edge is within 2 px and whose baseline is within 14 px of the previous frame's
@@ -42,6 +46,7 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--min-size", type=float, default=22)
     ap.add_argument("--overlap", type=float, default=0.15)
+    ap.add_argument("--panel-alpha", type=float, default=0.3)
     a = ap.parse_args()
     data = json.load(open(a.audit))
     frames = data["frames"]; meta = data.get("meta") or {}
@@ -50,11 +55,37 @@ def main():
     prev = []
     for fi, fr in enumerate(frames):
         t = fr["t"]; boxes = [b for b in fr["boxes"] if b["eff"] >= 0.05 and b["str"].strip()]
+        panels = [p for p in fr.get("panels", []) if p.get("eff", 1) >= a.panel_alpha]
+        marks = fr.get("marks", [])
+        # The live comparison box (kind 'livebox') must not overlap the legend or the counters, and the
+        # red marks it covers are counted (box-over-mark); a dense field makes zero impossible, so the
+        # count is reported and the box is placed where it covers the fewest.
+        for p in panels:
+            if p.get("kind") != "livebox":
+                continue
+            for q in panels:
+                if q is p or q.get("kind") == "livebox":
+                    continue
+                if inter(p, q) > 0:
+                    findings.append(("box-over-chrome", p["scene"], "live box over a panel", t))
+            covered = sum(1 for m in marks if p["x"] <= m["x"] <= p["x1"] and p["y"] <= m["y"] <= p["y1"])
+            if covered:
+                findings.append(("box-over-mark", p["scene"], "live box covers red marks (%d)" % covered, t))
         for b in boxes:
             if b["x"] < -0.5 or b["y"] < -0.5 or b["x1"] > 1920.5 or b["y1"] > 1080.5:
                 findings.append(("offcanvas", b["scene"], label(b), t))
             if b["size"] < a.min_size:
                 findings.append(("small", b["scene"], "%s (%g px)" % (label(b), b["size"]), t))
+            # panel-clip: the panels drawn before this box that contain its anchor must contain the whole box
+            if "ax" in b and "seq" in b:
+                holders = [p for p in panels if p.get("seq", -1) < b["seq"] and p["x"] <= b["ax"] <= p["x1"] and p["y"] <= b["ay"] <= p["y1"]]
+                if holders and not any(p["x"] - 2 <= b["x"] and p["y"] - 2 <= b["y"] and b["x1"] <= p["x1"] + 2 and b["y1"] <= p["y1"] + 2 for p in holders):
+                    findings.append(("panel-clip", b["scene"], label(b), t))
+            if b.get("kind") == "label":
+                if any(inter(b, p) > 0 for p in panels):
+                    findings.append(("label-under-panel", b["scene"], label(b), t))
+                if any(b["x"] <= m["x"] + m["r"] and b["x1"] >= m["x"] - m["r"] and b["y"] <= m["y"] + m["r"] and b["y1"] >= m["y"] - m["r"] for m in marks):
+                    findings.append(("label-over-mark", b["scene"], label(b), t))
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
                 p, q = boxes[i], boxes[j]
