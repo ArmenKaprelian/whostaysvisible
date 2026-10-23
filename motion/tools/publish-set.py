@@ -5,7 +5,7 @@ The claude.ai artifact wraps a page in its own document skeleton, so the page co
 doctype, html, head and body tags, keep the <title>, inline css/theme.css, add the Google Fonts
 fallback (Arimo is metric-compatible with the Liberation/Arial family the pages use locally) and the
 viewport-fit meta the page contract asks for. The shared scripts and the aggregate data files are
-copied beside them (published as files). Any name matching points|treated|anchors|moscow is refused:
+copied beside them (published as files). Any name matching points|treated|anchors|moscow|national is refused:
 the Moscow firm-level pieces never leave the lab. The script prints every file with its size and the
 total, and exits non-zero if the set exceeds the artifact limit."""
 import os, re, shutil, sys
@@ -35,7 +35,7 @@ def convert(name):
         fh.write(out)
     print("%s: %d bytes" % (name, len(out.encode("utf-8"))))
 
-REFUSE = re.compile(r"points|treated|anchors|moscow", re.I)
+REFUSE = re.compile(r"points|treated|anchors|moscow|national", re.I)
 SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "explorer-app.js"]
 DATA = ["basemap.js", "cells100.js", "density.js", "series.js", "cellsyears.js"]
 LIMIT = 16 * 1024 * 1024

@@ -1,0 +1,3 @@
+# Review records
+
+- `spb-vs-moscow-report.md`, `spb-vs-moscow-scan-run1.log`: the read-only scan of 23 October 2026 comparing St Petersburg with Moscow under the M6 definitions (three extents, 2014-2025). Test: a revenue-path statistic differs if it departs from Moscow's by more than Moscow's interquartile band in two of 2022-2024 at an extent. Result: none differs in any year at any extent; listed firms' absence after listing is within 0.5 to 6 points; the one standing difference is the baseline share (53-55 percent against 37-44, since 2014). Decision: no St Petersburg sequence; one sentence in the Moscow close (see `../README.md`, round 4).

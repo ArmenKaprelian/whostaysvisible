@@ -3,6 +3,7 @@
 # a fragment after `con` exists (round 3, 23 October 2026); one SQL text, so both passes build the
 # same tables. M6 is never sourced whole: it deletes and rewrites the rasters.
 years <- 2014:2025
+ARGS <- commandArgs(trailingOnly = TRUE)   # [variant] [metric] [look] [scope]; the launcher's unit drops environment variables
 basemap <- motion_read_json("basemap")
 cities <- as.data.frame(basemap$cities, stringsAsFactors = FALSE)
 MX <- cities$x_km[cities$label == "Moscow"]; MY <- cities$y_km[cities$label == "Moscow"]
@@ -17,6 +18,18 @@ EXT <- list(region = list(h = 90, k = 12, mark = list(base = 1, s = 0.2, cap = 3
             downtown = list(h = 12, k = 90, mark = list(base = 3, s = 1.1, cap = 11)))
 for (n in names(EXT)) { e <- EXT[[n]]; e$w <- e$h * 16 / 9; e$xmin <- MX - e$w / 2; e$xmax <- MX + e$w / 2; e$ymin <- MY - e$h / 2; e$ymax <- MY + e$h / 2; EXT[[n]] <- e }
 R <- EXT$region
+# Scope (round 4, 23 October 2026): the fourth trailing argument. "moscow" (the default) builds the tables
+# inside the region rectangle, as M6 and M7 do; "national" builds them inside the national rectangle of
+# the explainer's left framing (k = 0.168 px per km, the map centre at 700/560 on the 1920 x 1080 stage,
+# so one pixel is 1/0.168 = 5.95 km), the rest camera of the national year run (M8). That rectangle
+# contains the basemap's national extent, so every located firm lies inside it, and the yearly median
+# of the relative metric is then the median of the drawn firms on no list nationwide.
+SCOPE <- tolower(if (length(ARGS) >= 4) ARGS[4] else "moscow")
+if (!SCOPE %in% c("moscow", "national")) stop("the scope must be moscow or national")
+NATCAM <- list(cx = mean(basemap$extents$national$x), cy = mean(basemap$extents$national$y), k = 0.168, ox = 700, oy = 560)
+NAT <- list(k = NATCAM$k, w = 1920 / NATCAM$k, h = 1080 / NATCAM$k, xmin = NATCAM$cx - NATCAM$ox / NATCAM$k, xmax = NATCAM$cx + (1920 - NATCAM$ox) / NATCAM$k,
+            ymax = NATCAM$cy + NATCAM$oy / NATCAM$k, ymin = NATCAM$cy - (1080 - NATCAM$oy) / NATCAM$k, mark = list(base = 2, s = 0, cap = 2), camera = NATCAM)
+if (SCOPE == "national") R <- NAT
 
 # ---- deflator (WDI NY.GDP.DEFL.ZS.AD, Russia), rebased to 2021 = 1 -----------------------------
 wdi <- utils::read.csv(lab_source("motion.deflator"), skip = 4, check.names = FALSE, stringsAsFactors = FALSE)
@@ -36,7 +49,9 @@ san_first$countries_all <- vapply(split(san$countries, san$inn)[san_first$inn], 
 DBI::dbWriteTable(con, "san", san_first[, c("inn", "start_year", "inferred", "countries_all")], temporary = TRUE, overwrite = TRUE)
 
 # ---- firm-years inside the region rectangle, 2014-2025 ------------------------------------------
-exec(sprintf("CREATE TEMP TABLE fy_all AS
+# One SQL text per year (the nationwide join of twelve years in one statement exceeds the DuckDB memory
+# grant; the union of the per-year selects is the same table), inserted into fy_all year by year.
+fy_year_sql <- function(y) sprintf("
   WITH r AS (SELECT year, source_row, inn_key, original_available, creation_date_reconciled, industry2, legal_form, ownership_form,
                     coalesce(member_sanctioned, 0) + coalesce(member_putin_decree, 0) + coalesce(member_strateg_government, 0) + coalesce(member_strateg_putin, 0) AS other_lists,
                     coalesce(member_residents, 0) AS residents
@@ -52,7 +67,8 @@ exec(sprintf("CREATE TEMP TABLE fy_all AS
          (other_lists + residents) > 0 AS treated_row, residents > 0 AS residents_row, other_lists > 0 AS other_row,
          geocoding_quality = 'city' AS city_level, industry2, legal_form, ownership_form, creation_date_reconciled
   FROM c JOIN deflator d USING (year)
-  WHERE x_km BETWEEN %.9f AND %.9f AND y_km BETWEEN %.9f AND %.9f", pq(paste0("registry.", years)), pq(paste0("payload.", years)), R$xmin, R$xmax, R$ymin, R$ymax), "firm-years in the region rectangle")
+  WHERE x_km BETWEEN %.9f AND %.9f AND y_km BETWEEN %.9f AND %.9f", pq(paste0("registry.", y)), pq(paste0("payload.", y)), R$xmin, R$xmax, R$ymin, R$ymax)
+for (y in years) exec(paste0(if (y == years[1]) "CREATE TEMP TABLE fy_all AS" else "INSERT INTO fy_all", fy_year_sql(y)), sprintf("firm-years %d in the %s rectangle", y, SCOPE))
 # Firms without an identifier cannot be followed across years or matched to a list; they are counted and left out.
 exec("CREATE TEMP TABLE fy AS SELECT * FROM fy_all WHERE inn_key IS NOT NULL", "firm-years with an identifier")
 no_id <- lab_query(con, "SELECT count(*) AS n, count(*) FILTER (WHERE year = 2021) AS n2021 FROM fy_all WHERE inn_key IS NULL", "firm-years without an identifier")
@@ -101,7 +117,6 @@ CANDIDATES <- list(current = BREAKS, previous = c(-40, -15, 0, 15, 40), c2 = c(-
 # rising with magnitude), written to points-b/ for the author's A/B review. Same breaks in both.
 # The launcher runs the job in a systemd unit with its own environment, so the options travel as the
 # script's trailing arguments: `Rscript --vanilla R/motion/M6-treated.R [a|b] [abs|rel]`.
-ARGS <- commandArgs(trailingOnly = TRUE)
 VARIANT <- tolower(if (length(ARGS) >= 1) ARGS[1] else Sys.getenv("MOTION_VARIANT", "a"))
 if (!VARIANT %in% c("a", "b")) stop("the ramp variant must be a or b")
 # The author's pick (23 October) is ramp A with its dark end lifted to L 0.65 (a clear mid-blue against
@@ -142,3 +157,27 @@ METRIC_TEXT <- list(abs = list(kind = "absolute", legend_title = "Firms on no li
 COL_NONFILER <- "#5A3175"; COL_NEUTRAL <- LOOKS[[LOOK]]$neutral; COL_RED <- "#E31A1C"
 BACKDROP_ALPHA <- 0.25; LAYER_ALPHA <- 0.9   # applied by the page when it composites the rasters
 class_of <- function(p, breaks = BREAKS) ifelse(is.na(p), NA_integer_, 1L + findInterval(p, breaks, left.open = TRUE))
+
+# ---- pixel rasters (the region extent in M6, the national run in M8) -----------------------------------
+hex2rgb <- function(h) t(grDevices::col2rgb(h)) / 255
+block_size <- function(cnt) ifelse(cnt >= 100, 3L, ifelse(cnt >= 10, 2L, 1L))
+draw_region <- function(m, file, colours, cnt, order_by) {
+  # One pixel per mark; piles of 10+ widen to 2x2 and 100+ to 3x3 (centred). Larger piles and stronger
+  # classes are assigned last, so they win where blocks overlap.
+  arr <- array(0, c(1080, 1920, 4))
+  size <- block_size(cnt)
+  o <- order(size, order_by)
+  rgb <- hex2rgb(colours[o]); size <- size[o]; row0 <- m$row[o] + 1L - (size == 3L); col0 <- m$col[o] + 1L - (size == 3L)
+  for (s in 1:3) {
+    sel <- which(size == s); if (!length(sel)) next
+    g <- expand.grid(dr = 0:(s - 1L), dc = 0:(s - 1L))
+    rows <- as.vector(outer(row0[sel], g$dr, "+")); cols <- as.vector(outer(col0[sel], g$dc, "+")); who <- rep(sel, times = nrow(g))
+    ok <- rows >= 1 & rows <= 1080 & cols >= 1 & cols <= 1920
+    for (ch in 1:3) arr[cbind(rows[ok], cols[ok], ch)] <- rgb[who[ok], ch]
+    arr[cbind(rows[ok], cols[ok], 4L)] <- 1
+  }
+  ragg::agg_png(file, width = 1920, height = 1080, units = "px", background = "transparent")
+  grid::grid.newpage(); grid::grid.raster(arr, x = 0, y = 0, width = 1, height = 1, just = c("left", "bottom"), interpolate = FALSE)
+  grDevices::dev.off()
+  invisible(NULL)
+}

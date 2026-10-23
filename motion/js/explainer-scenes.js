@@ -20,7 +20,7 @@
   const HEAD = [['hook', 11], ['archive', 14], ['availability', 16], ['years', 24], ['change', 12], ['zoom', 11]];
   const TAIL = [['groups', 16], ['transitions', 12], ['size', 16], ['lists', 16], ['next', 12], ['credits', 7]];
   const LIST_FULL = HEAD.concat([['moscow250', 20], ['out', 5]], TAIL);
-  const LIST_MOSCOW = HEAD.concat([['section', 108]], TAIL);
+  const LIST_MOSCOW = HEAD.concat([['section', 120]], TAIL);   // round 4: the national year run adds 12 s
   function beatsOf(list) { const B = {}; let t = 0; for (const [id, d] of list) { B[id] = { id, start: t, end: t + d, dur: d }; t += d; } return { B, total: t }; }
 
   // ---- palette (charcoal ground: lightness rises with the value) ---------------------------------
@@ -99,7 +99,7 @@
   function schedulesFor(B, section) {
     const land = [{ start: 0, value: 1 }, { start: B.archive.start, value: 0.3 }, { start: B.availability.start, value: 0.12 }, { start: B.years.start, value: 1 }];
     const dens = [{ start: 0, value: 1 }, { start: B.archive.start, value: 0.22 }, { start: B.availability.start, value: 0.12 }, { start: B.years.start, value: 0 }, { start: B.zoom.start, value: 1 }];
-    if (section) { const s = B.section.start, SEC = section.SEC; land.push({ start: s + SEC.profiles, value: 0, blend: 2 }, { start: s + SEC.back + 2.5, value: 1, blend: 3 }); }
+    if (section) { const s = B.section.start, SEC = section.SEC; land.push({ start: s + SEC.profiles, value: 0, blend: 2 }, { start: s + SEC.back + 2.5, value: 1, blend: 3 }); dens.push({ start: s + SEC.national, value: 0 }); }   // the national run draws firm points, not the density
     land.push({ start: B.groups.start, value: 0.15 }, { start: B.next.start, value: 1 }, { start: B.credits.start, value: 0.3 });
     dens.push({ start: B.groups.start, value: 0.12 }, { start: B.next.start, value: 0 }, { start: B.credits.start, value: 0.12 });
     return { land: Motion.schedule(land, 0.6), dens: Motion.schedule(dens, 0.6) };
@@ -327,24 +327,28 @@
   } };
 
   DEFS.lists = { z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Firms on the sanctions list only fell behind by 2024', l, 0.2, theme);
-    subtitle(ctx, 'Odds of a statement against firms on no supplied list, annual eligible population, two-way 95% intervals', l, 0.6, theme);
+    title(ctx, 'Sanctions-listed firms: lower odds of a statement by 2024', l, 0.2, theme);
+    subtitle(ctx, 'against firms on no list, with 95% intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const ser = [{ label: 'Sanctions list only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
                  { label: 'Government strategic list only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.yearDots(ctx, { x: 170, y: 250, w: 700, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
     ctx.restore();
-    const px = 1300;
+    // One small table (round 4): the four six-year histories by group, percentages only, the
+    // denominators in the column headers (the README keeps the counts).
+    const px = 1230, colsX = [1690, 1860];
     if (l > 6.4) {
       eyebrow(ctx, 'Six-year histories, fixed 2019 cohort', px, 270, theme, step(l, 6.4, 0.5));
       const groups = [['10000', 'Sanctions list only'], ['00000', 'No list']];
-      const bins = [['all_available', 'available all six years'], ['available_then_absent', 'available 2019–21, absent 2022–24'], ['all_absent', 'absent all six years'], ['removed', 'removed from the registry']];
-      groups.forEach(([g, name], gi) => {
-        const y0 = 320 + gi * 290; const d0 = bin(g, 'all_available');
-        Motion.reveal(ctx, `${name}: ${fmt.int(d0.denominator)} firms`, px, y0, l, 6.8 + gi * 0.4, { size: 28, weight: 700, color: theme.ink });
-        const rows = bins.map(([b, lab]) => { const r = bin(g, b); return { label: lab, value: r.share, color: b === 'all_available' ? theme.accent : b === 'removed' ? theme.dim : theme.fall, text: fmt.pct(r.share) + ' (' + fmt.int(r.firms) + ')' }; });
-        CH.bars(ctx, { x: px, y: y0 + 40, w: 340, h: 220 }, rows, { max: 75, progress: step(l, 7.2 + gi * 0.4, 1.4, E.outCubic), theme, barH: 22, gap: 32, size: 22 });
+      const rows = [['all_available', 'all six years available'], ['available_then_absent', 'available, then absent from 2022'], ['all_absent', 'absent all six years'], ['removed', 'removed from the registry']];
+      const ha = step(l, 6.8, 0.5);
+      groups.forEach(([g, name], gi) => { const d = bin(g, 'all_available'); Motion.text(ctx, name, colsX[gi], 318, { size: 24, weight: 700, color: theme.ink, align: 'right', alpha: ha, group: 'lists-head-' + g }); Motion.text(ctx, `${fmt.int(d.denominator)} firms`, colsX[gi], 346, { size: 22, color: theme.muted, align: 'right', alpha: ha, group: 'lists-head-' + g }); });
+      ctx.save(); ctx.globalAlpha *= ha; ctx.strokeStyle = theme.dim; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, 366); ctx.lineTo(1860, 366); ctx.stroke(); ctx.restore();
+      rows.forEach(([b, lab], i) => {
+        const y = 406 + i * 48, a = step(l, 7.2 + i * 0.3, 0.5);
+        Motion.text(ctx, lab, px, y, { size: 22, color: theme.ink, alpha: a });
+        groups.forEach(([g], gi) => Motion.text(ctx, fmt.pct(bin(g, b).share), colsX[gi], y, { size: 26, weight: 600, color: theme.ink, align: 'right', alpha: a, group: 'lists-' + g }));
       });
     }
     Motion.paragraph(ctx, 'Supplied memberships are fixed lists, not dated designations. The odds compare populations, not the same firms.', 170, 960, 1000, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
@@ -443,11 +447,14 @@
   // 46 s teaser with a six-second excerpt of the designation, and the standalone treated cut.
   function makeMoscowCuts(images, opts) {
     const TS = window.TreatedScenes;
+    // The national rasters were built at the left framing; refuse to build if the manifest's camera is not this page's.
+    const c = TS.NATCAM, L = leftK();
+    if (Math.abs(c.k - L.k) > 1e-9 || Math.abs(c.cx - L.cx) > 1e-6 || Math.abs(c.cy - L.cy) > 1e-6 || c.ox !== L.ox || c.oy !== L.oy) throw new Error('the national rasters were built at a different camera than the left framing');
     const fm = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start));
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
     const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
     return { 'full-moscow': fm, 'teaser-moscow': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), treated: TS.standalone(images, opts) };
   }
-  window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts });
+  window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts, frames: { left: leftK(), nat: natK(0.98) } });
 })();

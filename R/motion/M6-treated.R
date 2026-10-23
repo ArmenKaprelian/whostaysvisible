@@ -37,29 +37,7 @@ marks_for <- function(e, year) {
                                  count(*) FILTER (WHERE base IS NOT NULL AND NOT filed) AS nfb, quantile_cont(%s, 0.5) AS med
                           FROM fym WHERE %s GROUP BY %s", key, PCOL, where, grp), sprintf("%s %s marks", names(EXT)[vapply(EXT, function(z) identical(z$k, e$k), NA)], year))
 }
-hex2rgb <- function(h) t(grDevices::col2rgb(h)) / 255
-block_size <- function(cnt) ifelse(cnt >= 100, 3L, ifelse(cnt >= 10, 2L, 1L))
-
-draw_region <- function(m, file, colours, cnt, order_by) {
-  # One pixel per mark; piles of 10+ widen to 2x2 and 100+ to 3x3 (centred). Larger piles and stronger
-  # classes are assigned last, so they win where blocks overlap.
-  arr <- array(0, c(1080, 1920, 4))
-  size <- block_size(cnt)
-  o <- order(size, order_by)
-  rgb <- hex2rgb(colours[o]); size <- size[o]; row0 <- m$row[o] + 1L - (size == 3L); col0 <- m$col[o] + 1L - (size == 3L)
-  for (s in 1:3) {
-    sel <- which(size == s); if (!length(sel)) next
-    g <- expand.grid(dr = 0:(s - 1L), dc = 0:(s - 1L))
-    rows <- as.vector(outer(row0[sel], g$dr, "+")); cols <- as.vector(outer(col0[sel], g$dc, "+")); who <- rep(sel, times = nrow(g))
-    ok <- rows >= 1 & rows <= 1080 & cols >= 1 & cols <= 1920
-    for (ch in 1:3) arr[cbind(rows[ok], cols[ok], ch)] <- rgb[who[ok], ch]
-    arr[cbind(rows[ok], cols[ok], 4L)] <- 1
-  }
-  ragg::agg_png(file, width = 1920, height = 1080, units = "px", background = "transparent")
-  grid::grid.newpage(); grid::grid.raster(arr, x = 0, y = 0, width = 1, height = 1, just = c("left", "bottom"), interpolate = FALSE)
-  grDevices::dev.off()
-  invisible(NULL)
-}
+# hex2rgb, block_size and draw_region come from M6-common.R (shared with M8 since round 4).
 disc_radius_km <- function(e, cnt) pmin(e$mark$cap, e$mark$base + e$mark$s * sqrt(pmax(0, cnt - 1))) / 2 / e$k
 draw_discs <- function(m, e, file, inner, outer, inner_frac, cnt, order_by) {
   r_km <- disc_radius_km(e, cnt)

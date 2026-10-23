@@ -26,6 +26,8 @@
 <script src="data/anchors.js" onerror="this.remove()"></script>
 <script src="data/moscowcells.js" onerror="this.remove()"></script>
 <script src="data/moscowcomparison.js" onerror="this.remove()"></script>
+<script src="data/national.js" onerror="this.remove()"></script>
+<script src="data/treatednational.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>
@@ -96,8 +98,11 @@
     // The treated cut (local data only): decode every raster first, check the page's listed-firm
     // counters against the M6 manifest, then build the cut and switch to it when requested.
     let treated = false;
-    if (D.points && D.treated && D.anchors && D.moscowcells && D.moscowcomparison && window.TreatedScenes) {
-      const images = await TreatedScenes.loadImages('data/', { layers: ['downtown'] });
+    if (D.points && D.treated && D.anchors && D.moscowcells && D.moscowcomparison && D.national && D.treatednational && window.TreatedScenes) {
+      const images = await TreatedScenes.loadImages('data/', { layers: ['downtown', 'national'] });
+      // The national rasters' Moscow pixel must sit where this page projects the Moscow point at the left framing.
+      const mp = D.national.moscow_pixel, [qx, qy] = Motion.project(Object.assign({}, D.national.camera), D.points.anchor.x, D.points.anchor.y);
+      if (Math.abs(qx - mp.px) > 1 || Math.abs(qy - mp.py) > 1) throw new Error(`the national rasters are misaligned: page ${qx.toFixed(1)},${qy.toFixed(1)} manifest ${mp.px},${mp.py}`);
       const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
       for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
       if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
@@ -107,7 +112,7 @@
       Object.assign(CUTS, ExplainerScenes.makeMoscowCuts(images, { align: q.get('__align') === '1' }));
       treated = true;
       if (LOCAL.has(wanted)) build(wanted);
-    } else if (LOCAL.has(wanted)) throw new Error('the cut ' + wanted + ' needs the local M6 and M7 data (points, treated, anchors, moscowcells, moscowcomparison)');
+    } else if (LOCAL.has(wanted)) throw new Error('the cut ' + wanted + ' needs the local M6, M7 and M8 data (points, treated, anchors, moscowcells, moscowcomparison, national, treatednational)');
     const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
     await window.__seek(t0); show(t0);
     return Object.assign({ yearsLayer: !!D.cellsyears, treatedCut: treated, cut: cutName }, window.__videoMeta);

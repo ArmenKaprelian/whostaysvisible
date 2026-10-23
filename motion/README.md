@@ -10,7 +10,7 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 3: `full` 192 s and `teaser` 40 s from the aggregates; `full-moscow` 275 s, `teaser-moscow` 46 s and `treated` 97 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 3: `full` 192 s and `teaser` 40 s from the aggregates; `full-moscow` 287 s, `teaser-moscow` 46 s and `treated` 110 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
 | Teaser | `build/who-stays-visible-teaser.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Treated cut (round 2) | `explainer.html?cut=treated`, `js/treated-scenes.js`, `build/who-stays-visible-treated.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
@@ -290,9 +290,9 @@ inside the lab; nothing firm-level is published.
 |---|---|---|---|---|
 | `full` | `explainer.html` (default) | 192 s | 5,760 | the artifact (no firm-level data); `build/who-stays-visible.mp4` |
 | `teaser` | `?cut=teaser` | 40 s | 1,200 | the artifact; `build/who-stays-visible-teaser.mp4` |
-| `full-moscow` | `?cut=full-moscow` | 275 s | 8,250 | local only; `build/who-stays-visible-moscow.mp4` (720p copy beside it) |
+| `full-moscow` | `?cut=full-moscow` | 287 s (round 4; 275 s in round 3) | 8,610 | local only; `build/who-stays-visible-moscow.mp4` (720p copy beside it) |
 | `teaser-moscow` | `?cut=teaser-moscow` | 46 s | 1,380 | local only; the teaser plus a six-second excerpt of the designation |
-| `treated` | `?cut=treated` | 97 s | 2,910 | local only; the standalone two-firm cut with the comparison beat |
+| `treated` | `?cut=treated` | 110 s (round 4; 97 s in round 3) | 3,300 | local only; the standalone two-firm cut with the comparison beat and the national run |
 
 The page builds `full` and `teaser` from the five aggregate data files; the three local cuts join
 once `data/points.js`, `treated.js`, `anchors.js`, `moscowcells.js`, `moscowcomparison.js` and the
@@ -472,6 +472,131 @@ and no semicolons on screen; each caveat once where it first matters.
 - Determinism: frames 1,500, 3,600 and 5,400 of `full-moscow` captured across three shards and in one process in another order are byte-identical (ImageMagick AE = 0 each), re-run after the last code change.
 - Artifact: the publish set (two pages, four shared scripts, five aggregate files, 5.1 MB) contains no file matching `points|treated|anchors|moscow`; the explainer artifact was republished (v5, then v6 with the legend panel, v7 with the final scripts); it could not be opened from the lab's browser pane (the private page needs the author's claude.ai sign-in), so that check is the author's. The atlas artifact stays at v2.
 - Residuals: the backdrop between k 150 and 260 during the return (138-143 s) is the downtown raster drawn 1.7-2.4 times its size at low alpha for about two seconds (soft grey discs under the arriving markers); the live box covers red marks in the dense years (counted above); the chapter bar of the local cut carries 19 buttons.
+
+## Round 4 (23 October 2026): the national run, the lists table, St Petersburg
+
+Four items from the author's review of the round-3 renders; only the cuts they touch were re-rendered
+(`full-moscow`, `full`, `treated`, `teaser-moscow`; the teaser was re-audited and left as rendered).
+
+### 1. The two-firm section: refinements only
+
+Structure, timing and encodings as built. Two refinements, both fades:
+
+- The downtown backdrop and the red marks dissolve between k 110 and 150 instead of 150 and 260, so
+  the downtown raster is never drawn above 1.7 times its size: the soft grey discs of the return
+  (138-143 s) are gone and the street dissolve is tighter.
+- While the year runs backwards (the 0.8 s rewind before the first downtown run and the three
+  pull-backs) a listing is a plain crossfade: no expanding ring and no flash. The bloom played
+  backwards through every rewind, a contracting ring per firm, conspicuous at the national scale.
+
+No label moved and no pacing changed.
+
+### 2. The national year run
+
+A beat between the region run and the close, section-relative 96-108 (the section is 120 s; `full-moscow`
+is 287 s, 8,610 frames; the standalone `treated` cut carries the same run at 90.5-103 and is 110 s,
+3,300 frames). The pull-back from the region extent to the national framing is two eased segments so
+Moscow stays on screen: zoom out in place from k 12 to 1 over 1.5 s (the region raster and cells leave
+between k 6 and 3, the national raster and marks arrive between 3 and 1, all centred on Moscow, the year
+rewinding to 2019), then the slide to the left framing (k 0.168, map centre at 700/560) over 1 s while
+the zoom completes and the year reaches 2014; the twelve years then run at the region run's dwell
+(0.5 s holds, 0.25 s dissolves), ending at 107.25, and 2025 holds. The close follows at 108-115; the
+pull-out at 115-120 is now the move from the left framing to the chart beats' national framing.
+
+On the stage: the M8 rasters (backdrop at 0.25, outcome layer at 0.9) at the left framing, the listed
+firms nationwide as red vector marks with their rings (radius floor 1.5 px) blooming in their listing
+year, the ticker "Russia / about 6 km per pixel" with the year and the two red counters (nationwide),
+the three-row legend with the line "6 km pixels, median class of firms with a statement". No live box
+(it leaves over the first second of the pull-back) and no anchor markers (they leave with the region run).
+
+What a pixel holds at this scale: at the left framing one pixel is 1/0.168 = 5.95 km square. The
+backdrop holds every located eligible firm on no list below city-level geocodes whose address falls in
+the pixel, neutral; the outcome layer holds the pixels with at least one such firm with a statement and a
+revenue value that year, in the median class of those firms' relative change (own 2019-2021 average,
+minus the year's median of the drawn firms on no list nationwide); pixels with 10 or more firms widen to
+2x2 blocks and 100 or more to 3x3 (2014: 6,100 and 2,425 of 26,576 pixels; 2025: 5,634 and 2,087 of
+25,701). Listed firms are not in the rasters; city-level geocodes are counted and not drawn. The
+largest pixel is central Moscow (column 225, row 488): 85,577 firms in 2023, 25,376 with a value.
+
+Two mark sets: the Moscow set (M6: every listed firm with a row in the region rectangle, at its latest
+coordinates there, 2,220 firms) draws at the Moscow scales; the nationwide set (M8: 4,803 listed firms
+at their latest coordinates anywhere) at the national scale; they cross-fade with the rasters between
+k 3 and 1, and each scale's counters come from its own set and manifest. The sets differ for firms
+that moved out of the rectangle: 2,140 of the 2,220 sit inside it by their latest coordinates, the
+yearly Moscow counters differ by at most 16 firms before 2025 and by none in 2025
+(`national.json`, `moscow_counters_minus_m6`).
+
+M8 (`R/motion/M8-national.R`; `M6-common.R` gained a fourth trailing argument, the scope, and builds
+the firm-year table one year at a time, since the nationwide twelve-year join in one statement exceeded
+the DuckDB grant; the pixel-raster drawing moved into `M6-common.R`, shared with M6). Run under the
+guard in 43 s (`scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800%
+Rscript --vanilla R/motion/M8-national.R a rel charcoal national`, peak 12.9 GB). 74 checks pass: per
+year, firms equal marks + city-level + treated, the drawn firms equal the three states, the outcome
+pixels hold the filers with a value, the class counts sum to the filers, the located eligible firms equal
+M5's located total (4,625,980 in 2014 to 3,062,023 in 2025); the 2021 count equals the density pass
+(3,277,638); the red-from histogram equals an R recomputation from the list file; the Moscow population
+equals M6's treated.json (2,220); the 2025 Moscow counters equal M6's; the largest 2023 pixel is
+reproduced; the Moscow point's pixel agrees with the camera formula (225.7, 488.4 against the pixel
+centre 225.5, 488.5); the rectangle contains the basemap's national extent; 24 rasters written. The
+page checks the national counters against the manifest and the Moscow point's projection against the
+manifest's pixel before building the local cuts, and refuses to build if the manifest's camera is not
+its left framing. The national medians of the relative metric lie within 3.7 points of Moscow's every
+year, so a Moscow pixel keeps its class across the two scales in nearly every case. Class shares of
+the national filers under the breaks, 2022 / 2023 / 2024: 27.0, 11.5, 11.5, 21.7, 16.0, 12.3 /
+31.1, 10.6, 8.3, 15.8, 15.3, 19.0 / 35.4, 8.8, 5.8, 11.7, 13.8, 24.6 percent. Outputs: `data/national.json`
+(manifest, counts, classes, checks), `data/treatednational.json` (4,803 firms, no identifiers), 24 rasters
+under `data/points-national/`; all local, refused by `publish-set.py`.
+
+### 3. The lists scene (all cuts that carry it)
+
+Title "Sanctions-listed firms: lower odds of a statement by 2024", subtitle "against firms on no list,
+with 95% intervals", the chart as before, the eyebrow kept, and one table in place of the two bar
+stacks: the four histories by group, percentages only on screen, the denominators in the column
+headers. The counts:
+
+| Six-year history, fixed 2019 cohort | Sanctions list only (2,784 firms) | No list (3,409,122 firms) |
+|---|---|---|
+| all six years available | 51.3% (1,428) | 36.2% (1,235,180) |
+| available, then absent from 2022 | 3.5% (98) | 1.3% (44,515) |
+| absent all six years | 25.2% (702) | 6.2% (210,236) |
+| removed from the registry | 8.5% (236) | 41.9% (1,428,242) |
+
+The other histories (other patterns, scope changes, unresolved) are not shown.
+
+### 4. St Petersburg: no sequence; the evidence record and one sentence
+
+`motion/review/spb-vs-moscow-report.md` and `spb-vs-moscow-scan-run1.log` (read-only scan of
+23 October, run `20261023T065747Z-ro-zz-spb-scan.R`) compare St Petersburg with Moscow under the M6
+definitions at the three extents, 2014-2025. Test: a revenue-path statistic (the no-list index
+median, the listed-in-2022 index median, the drawn filers' pct median) differs if it departs from
+Moscow's by more than Moscow's interquartile band in two of 2022-2024 at an extent. Result: none
+differs in any year at any extent (departures of 5 to 39 points against bands of 106 to 264);
+listed firms' absence after listing is between 0.5 points lower and 6 points higher; the one standing
+difference is the share of drawn firms with a usable baseline, 53 to 55 percent in St Petersburg
+against 37 to 44 in Moscow, present since 2014. Decision (author, 23 October): no St Petersburg
+sequence, no second anchor pair. The close gains one sentence, its two numbers from the report's
+160 by 90 km tables: absence after listing 60.4 / 50.1 / 47.0 / 48.9 against 54.4 / 49.3 / 45.0 / 47.5
+percent in 2022-2025 (within 6 points), the baseline share 54.2 / 53.8 / 52.8 against 44.1 / 41.1 / 37.9
+in 2022-2024 (53 to 54 against 38 to 44). The sentence: "St Petersburg shows the same pattern at 160 by
+90 km: its listed firms' absence after listing stays within 6 points of Moscow's, and only its share
+of firms with a usable baseline runs higher, 53 to 54 percent against 38 to 44 in 2022 to 2024."
+
+### The close
+
+Over the national map now, so its panel moved to the right column (680 x 560 at 1180, 300, clear of
+the ticker and the legend; the far east lies under it): the count line, the two caveats, the St
+Petersburg sentence, "Paths compared, no effect estimated."
+
+### Round-4 verification
+
+- Data: M8 74 checks pass (listed above); M6 and M7 unchanged and not re-run (the shared code's per-year table build yields the same tables; `M6-treated.R` lost nothing but three function definitions that moved to `M6-common.R`); `check-readonly.sh` reported nothing changed outside the lab; no identifier names in `national.json` or `treatednational.json` (the save helper refuses them); the page's `__ready` checks the national counters against the manifest and the Moscow point's projection against the manifest's pixel before building the local cuts.
+- Page: all five cuts load and seek without exceptions in headless Brave (`--probe`: `problems: []`); the first probe caught one syntax error of the round (a trailing comment that swallowed a one-line block in `drawField`), fixed before any frame was captured.
+- Review frames from the page (`build/r4-a/`, `r4-b/`, `r4-c/`): the street dissolve at k 130 and the return at k 150 under the tighter fade; the pull-back at 184.5, 185, 185.5 and 186 s (the first single-segment move left bare land at 185 s because the camera centre moved east before the national raster had faded in; the two-segment move keeps Moscow on screen); the national run at 2014, 2020, 2025; the close at 199 and 203 s; the lists table at 260 and 261.5 s (the two denominators collided in the first layout; the labels dropped to 22 px and the columns moved apart); the Moscow pull-backs at 161 and 173 s and the national slide at 186 s without the backwards bloom rings. Frames from the finished MP4s (`build/r4-final/`: 93.8, 142, 184.5, 185.5, 186.5, 190, 195.5, 199, 203, 205 and 261.5 s of `full-moscow`, 97 and 105 s of `treated`, 166 s of `full`) were inspected at full size.
+- Text audit (step 6; the teasers at step 3): zero findings on `full`, `teaser-moscow` and `teaser`; `full-moscow` and `treated` carry only the counted `box-over-mark` lines (17 each). The teaser was re-audited and not re-rendered: nothing in its windows changed.
+- Renders (sharded; runs `20261023T083944Z` full-moscow with 8 shards, `084255Z` full, `084609Z` treated, `084827Z` teaser-moscow): `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and 8,610 frames / 286.999 s (157 s of capture, 81.0 MB), 5,760 / 192.000 s (173 s, 45.5 MB), 3,300 / 110.000 s (123 s, 45.2 MB) and 1,380 / 46.000 s (43 s, 17.3 MB) against `__videoMeta`; no page exceptions in any shard log. The 720p preview of the Moscow cut (`build/who-stays-visible-moscow-720p.mp4`, 21.6 MB) was remade.
+- Determinism: frames 1,500, 5,700 (the national run) and 6,000 (the close) of `full-moscow` captured across three shards and in one process in another order are byte-identical (ImageMagick AE = 0 each).
+- Artifact: the publish set (5.1 MB; the refusal pattern now also covers `national`) carries the lists table; the explainer artifact is at v8. The atlas artifact stays at v2.
+- Residuals: the national raster is drawn at 6 to 3 times its size for about a second during the slide (k 1 to 0.3); the live box's mark coverage is counted, not zero; the close panel covers the far east of the national map for the seven seconds of the close.
 
 ## Design decisions
 

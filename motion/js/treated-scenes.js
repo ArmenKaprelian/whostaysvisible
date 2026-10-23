@@ -16,9 +16,13 @@
 (function () {
   'use strict';
   const D = window.MOTION_DATA;
-  if (!D || !D.points || !D.treated || !D.anchors || !D.basemap || !D.moscowcells || !D.moscowcomparison) { window.TreatedScenes = null; return; }
+  if (!D || !D.points || !D.treated || !D.anchors || !D.basemap || !D.moscowcells || !D.moscowcomparison || !D.national || !D.treatednational) { window.TreatedScenes = null; return; }
   const CITY = { P: D.points, TR: D.treated, AN: D.anchors, MC: D.moscowcells, CMP: D.moscowcomparison, name: 'Moscow' };
   const P = CITY.P, TR = CITY.TR, AN = CITY.AN, BM = D.basemap, MC = CITY.MC, CMP = CITY.CMP;
+  // The national year run (M8, round 4): its rasters, counts and camera join the Moscow manifest as a
+  // fourth extent; its listed firms nationwide join the Moscow set as marks outside the region rectangle.
+  const NP = D.national, TRN = D.treatednational, NATCAM = NP.camera;
+  P.extents.national = NP.extent; P.files.national = NP.files; P.counts.national = NP.counts;
   const fmt = Motion.fmt, step = Motion.step, E = Motion.ease, MM = MotionMap, CH = MotionCharts;
   const ramp = (v, a, b) => Motion.clamp((v - a) / (b - a), 0, 1);
   const lerp2 = (p, q, u) => [Motion.lerp(p[0], q[0], u), Motion.lerp(p[1], q[1], u)];
@@ -26,19 +30,26 @@
   const MX = P.anchor.x, MY = P.anchor.y, YEARS = P.years, Y0 = YEARS[0], Y1 = YEARS[YEARS.length - 1];
   const A = AN.a, B = AN.b, AX = A.x_km, AY = A.y_km, BX = B.x_km, BY = B.y_km;
   const BACK_ALPHA = P.backdrop_alpha == null ? 0.25 : P.backdrop_alpha, LAYER_ALPHA = P.layer_alpha == null ? 0.9 : P.layer_alpha;
-  const K = { downtown: P.extents.downtown.k, city: P.extents.city.k, region: P.extents.region.k };
-  const WINDOW = { downtown: { name: 'Central ' + CITY.name, size: '21 by 12 km' }, city: { name: CITY.name, size: '64 by 36 km' }, region: { name: CITY.name + ' and surroundings', size: '160 by 90 km' } };
-  const RING_FLOOR = { downtown: 1.5, city: 2.0, region: 2.5 };   // red marks never shrink below these radii (px)
+  const K = { downtown: P.extents.downtown.k, city: P.extents.city.k, region: P.extents.region.k, national: P.extents.national.k };
+  const NATBASE = { cx: NATCAM.cx, cy: NATCAM.cy, ox: NATCAM.ox, oy: NATCAM.oy };
+  const WINDOW = { downtown: { name: 'Central ' + CITY.name, size: '21 by 12 km' }, city: { name: CITY.name, size: '64 by 36 km' }, region: { name: CITY.name + ' and surroundings', size: '160 by 90 km' }, national: { name: 'Russia', size: 'about 6 km per pixel' } };
+  const RING_FLOOR = { downtown: 1.5, city: 2.0, region: 2.5, national: 1.5 };   // red marks never shrink below these radii (px)
 
   // ---- data preparation (once) ---------------------------------------------------------------
   const bmp = MM.buildBasemap(BM);
-  const extentAlpha = k => ({ region: ramp(k, 3, 6) * (1 - ramp(k, 22, 30)), city: ramp(k, 14, 22) * (1 - ramp(k, 60, 80)), downtown: ramp(k, 60, 80) * (1 - ramp(k, 150, 260)) });
-  const extentOf = k => (k >= 60 ? 'downtown' : k >= 20 ? 'city' : 'region');
+  const extentAlpha = k => ({ national: 1 - ramp(k, 1.0, 3.0), region: ramp(k, 3, 6) * (1 - ramp(k, 22, 30)), city: ramp(k, 14, 22) * (1 - ramp(k, 60, 80)), downtown: ramp(k, 60, 80) * (1 - ramp(k, 110, 150)) });
+  const extentOf = k => (k >= 60 ? 'downtown' : k >= 20 ? 'city' : k >= 2 ? 'region' : 'national');
   const markRadius = (ext, pile) => { const m = P.extents[ext].mark; return Math.min(m.cap, m.base + m.s * Math.sqrt(Math.max(0, pile - 1))) / 2; };
   const inExtent = (ext, x, y) => { const e = P.extents[ext]; return x >= e.xmin && x <= e.xmax && y >= e.ymin && y <= e.ymax; };
   const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : null);   // 'd' (absent) and 'b' are not drawn
+  // Two mark sets: the Moscow set (M6: every listed firm with a row in the region rectangle, at its
+  // latest coordinates there) for the Moscow scales, and the nationwide set (M8: every listed firm at
+  // its latest coordinates anywhere) for the national scale. They cross-fade with the rasters by scale;
+  // each scale's counters come from its own set, as its manifest does.
+  const SETS = { moscow: TR, national: TRN };
+  const setOf = ext => (ext === 'national' ? TRN : TR);
   const redCounts = {};
-  for (const ext of Object.keys(P.extents)) { redCounts[ext] = {}; for (const y of YEARS) { let red = 0, dark = 0; for (let i = 0; i < TR.n; i++) { const ch = TR.filed[i][y - Y0]; if (ch === '-' || TR.red_from[i] > y || !inExtent(ext, TR.x[i], TR.y[i])) continue; red++; if (ch === '0') dark++; } redCounts[ext][y] = { red, dark }; } }
+  for (const ext of Object.keys(P.extents)) { const S = setOf(ext); redCounts[ext] = {}; for (const y of YEARS) { let red = 0, dark = 0; for (let i = 0; i < S.n; i++) { const ch = S.filed[i][y - Y0]; if (ch === '-' || S.red_from[i] > y || !inExtent(ext, S.x[i], S.y[i])) continue; red++; if (ch === '0') dark++; } redCounts[ext][y] = { red, dark }; } }
   const counts = (ext, y) => P.counts[ext][String(y)];
   const breakLabels = P.breaks.map(b => (b > 0 ? '+' : b < 0 ? '−' : '') + Math.abs(b) + '%');
   const money = (mn, exact) => (mn == null ? 'no statement' : mn >= 1000 ? fmt.dec(mn / 1000, 1) + ' bn rubles' : (exact ? '' : 'about ') + fmt.int(mn) + ' mn rubles');
@@ -107,12 +118,13 @@
   function drawField(ctx, cam, v, backAlpha, layerAlpha) {
     if (!IMG) return;
     const ea = extentAlpha(cam.k);
-    for (const ext of ['region', 'city', 'downtown']) {
+    for (const ext of ['national', 'region', 'city', 'downtown']) {
       const a = ea[ext]; if (a <= 0.002) continue;
       const [px, py, w, h] = rasterRect(cam, ext);
       ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       if (backAlpha > 0) { ctx.save(); ctx.globalAlpha *= a * backAlpha; ctx.drawImage(blendYears(OFF[0], ext, 'backdrop', v), px, py, w, h); ctx.restore(); }
-      if (layerAlpha > 0 && ext === 'downtown') { ctx.save(); ctx.globalAlpha *= a * layerAlpha * LAYER_ALPHA; ctx.drawImage(blendYears(OFF[1], ext, 'layer', v), px, py, w, h); ctx.restore(); }
+      // The city and region scales draw cells instead of their outcome layers.
+      if (layerAlpha > 0 && (ext === 'downtown' || ext === 'national')) { ctx.save(); ctx.globalAlpha *= a * layerAlpha * LAYER_ALPHA; ctx.drawImage(blendYears(OFF[1], ext, 'layer', v), px, py, w, h); ctx.restore(); }
       ctx.restore();
     }
   }
@@ -147,18 +159,24 @@
     ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
     if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = Math.max(1.5, Math.min(2.2, rr * 0.5)); ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, rr - ctx.lineWidth / 2), 0, TAU); ctx.stroke(); }
   }
-  function drawTreated(ctx, cam, v, alpha, theme) {
-    alpha *= 1 - ramp(cam.k, 150, 260);
+  // rewind: while the year runs backwards (the pull-backs), a listing is a plain crossfade, not a bloom.
+  function drawTreated(ctx, cam, v, alpha, theme, rewind = false) {
+    alpha *= 1 - ramp(cam.k, 110, 150);
     if (alpha <= 0) return;
+    const wNat = extentAlpha(cam.k).national;
+    if (wNat < 1) drawMarkSet(ctx, cam, v, alpha * (1 - wNat), theme, TR, rewind);
+    if (wNat > 0) drawMarkSet(ctx, cam, v, alpha * wNat, theme, TRN, rewind);
+  }
+  function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind) {
     const [y0, y1, u] = yearPair(v);
     const ext = extentOf(cam.k); const hw = 960 / cam.k + 1, hh = 540 / cam.k + 1, floor = RING_FLOOR[ext];
-    for (let i = 0; i < TR.n; i++) {
-      const x = TR.x[i], y = TR.y[i];
+    for (let i = 0; i < MARKS.n; i++) {
+      const x = MARKS.x[i], y = MARKS.y[i];
       if (x < cam.cx - hw || x > cam.cx + hw || y < cam.cy - hh || y > cam.cy + hh) continue;
-      const s0 = TR.state[i][y0 - Y0], s1 = TR.state[i][y1 - Y0];
+      const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0];
       const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
-      const [px, py] = Motion.project(cam, x, y); const r = markRadius(ext, TR.pile[i]);
-      const bloom = Motion.clamp(v - (TR.red_from[i] - 1), 0, 1);
+      const [px, py] = Motion.project(cam, x, y); const r = markRadius(ext, MARKS.pile[i]);
+      const bloom = Motion.clamp(v - (MARKS.red_from[i] - 1), 0, 1);
       if (bloom < 1) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
         const pre = (1 - E.outCubic(bloom)) * present * alpha;
@@ -166,11 +184,11 @@
         if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
       }
       if (bloom > 0) {
-        const f0 = TR.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = TR.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
-        const grow = E.outCubic(bloom), flash = 1 + 0.9 * Math.sin(Math.PI * bloom), rr = Math.max(floor, r) * flash;
+        const f0 = MARKS.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = MARKS.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
+        const grow = rewind ? bloom : E.outCubic(bloom), flash = rewind ? 1 : 1 + 0.9 * Math.sin(Math.PI * bloom), rr = Math.max(floor, r) * flash;
         if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: rr + 1 });
         redMark(ctx, px, py, rr, fill, alpha * present * grow, theme);
-        if (bloom < 1) { ctx.globalAlpha = alpha * present * (1 - bloom) * 0.9; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rr + 4 + 22 * E.outCubic(bloom), 0, TAU); ctx.stroke(); }
+        if (bloom < 1 && !rewind) { ctx.globalAlpha = alpha * present * (1 - bloom) * 0.9; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rr + 4 + 22 * E.outCubic(bloom), 0, TAU); ctx.stroke(); }
       }
     }
     ctx.globalAlpha = 1;
@@ -193,7 +211,7 @@
   const DISTS = [48, 72, 100, 132, 168];
   function labelBox(px, py, dir, dist, w) { const cx = px + dir[0] * dist, cy = py + dir[1] * dist; const x = dir[0] > 0.3 ? cx : dir[0] < -0.3 ? cx - w : cx - w / 2; return { x: x - 8, y: cy - 22, x1: x + w + 8, y1: cy + 10, tx: x, ty: cy, lx: cx, ly: cy }; }
   const OFFSETS = {};
-  for (const ext of Object.keys(P.extents)) {
+  for (const ext of ['downtown', 'city', 'region']) {   // no markers at the national scale
     const cam = restCam(ext), marks = redMarks2025(ext);
     const pa = Motion.project(cam, AX, AY), pb = Motion.project(cam, BX, BY);
     const wA = measure(LABEL.A, 22, 600), wB = measure(LABEL.B, 22, 600);
@@ -211,7 +229,7 @@
   }
   function offsetAt(k, key) {   // blended between the scales by their alphas, so the label moves continuously during a pull-back
     const ea = extentAlpha(Math.min(k, 90)); let sx = 0, sy = 0, sd = 0, sw = 0;
-    for (const ext of Object.keys(ea)) { const w = ea[ext]; if (w <= 0) continue; const o = OFFSETS[ext][key]; sx += w * o.dir[0] * o.dist; sy += w * o.dir[1] * o.dist; sd += w * o.dist; sw += w; }
+    for (const ext of Object.keys(ea)) { const w = ea[ext]; if (w <= 0 || !OFFSETS[ext]) continue; const o = OFFSETS[ext][key]; sx += w * o.dir[0] * o.dist; sy += w * o.dir[1] * o.dist; sd += w * o.dist; sw += w; }
     if (sw <= 0) { const o = OFFSETS.downtown[key]; return { dx: o.dir[0] * o.dist, dy: o.dir[1] * o.dist, dir: o.dir, dist: o.dist }; }
     const dx = sx / sw, dy = sy / sw, n = Math.hypot(dx, dy) || 1; return { dx, dy, dir: [dx / n, dy / n], dist: sd / sw };
   }
@@ -336,7 +354,7 @@
     Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
     Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
     MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
-    const rule = [['firm marks, sized by firms at the address', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region]];
+    const rule = [['firm marks, sized by firms at the address', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
     for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 950, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
     ctx.save(); ctx.globalAlpha *= alpha;
     ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 987, 9, 0, TAU); ctx.fill();
@@ -352,38 +370,44 @@
     Motion.panel(ctx, 60, 748, w + 48, 44, theme, 0.92 * alpha);
     Motion.text(ctx, s, 84, 777, { size: 22, color: theme.muted, alpha });
   }
-  // The close: the count line, the caveats and the comparison line on one opaque panel (the 5 km cells
-  // behind it are bright), narrow enough to clear the anchor markers at the region scale.
+  // The close: the count line, the caveats, the St Petersburg sentence (round 4; the two numbers checked
+  // against motion/review/spb-vs-moscow-report.md, 160 by 90 km, 2022-2025 and 2022-2024) and the
+  // comparison line, on one opaque panel in the right column, clear of the ticker and the legend.
+  const SPB = 'St Petersburg shows the same pattern at 160 by 90 km: its listed firms’ absence after listing stays within 6 points of Moscow’s, and only its share of firms with a usable baseline runs higher, 53 to 54 percent against 38 to 44 in 2022 to 2024.';
   function closeText(ctx, theme, l, mul = 1) {
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
-    const cr = counts('region', Y1);
-    Motion.panel(ctx, 60, 100, 980, 400, theme, 0.92 * step(l, 0.3, 0.5));
-    Motion.reveal(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, 80, 140, l, 0.5, { size: 30, weight: 700, color: theme.ink });
-    Motion.reveal(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, 80, 182, l, 0.9, { size: 28, weight: 700, color: theme.ink });
-    Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', 80, 236, 940, { size: 25, color: theme.muted, alpha: step(l, 1.8, 0.5) });
-    Motion.paragraph(ctx, `Dated by the supplied sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated list members red throughout. Descriptive, not causal.`, 80, 346, 940, { size: 25, color: theme.muted, alpha: step(l, 3.0, 0.5) });
-    Motion.text(ctx, 'Paths compared, no effect estimated.', 80, 470, { size: 25, color: theme.muted, alpha: step(l, 4.0, 0.5) });
+    const cr = counts('region', Y1), x = 1204, w = 632;
+    Motion.panel(ctx, 1180, 300, 680, 560, theme, 0.92 * step(l, 0.3, 0.5));
+    let y = 346;
+    y = Motion.paragraph(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
+    y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;
+    y = Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', x, y, w, { size: 22, color: theme.muted, alpha: step(l, 1.8, 0.5) }) + 12;
+    y = Motion.paragraph(ctx, `Dated by the supplied sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated list members red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
+    y = Motion.paragraph(ctx, SPB, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 4.0, 0.5) }) + 12;
+    Motion.text(ctx, 'Paths compared, no effect estimated.', x, y + 10, { size: 22, color: theme.muted, alpha: step(l, 5.0, 0.5) });
     ctx.restore();
   }
   const locationAt = (entries, l) => MM.locationAt(entries.map(e => Object.assign({ start: e.start }, WINDOW[e.ext])), l);
 
   // ---- the standalone cut (97 s) ---------------------------------------------------------------
   const T = [['two', 0, 6, 'Two firms'], ['profiles', 6, 22, 'Who are they?'], ['listed', 22, 30, 'Designation'], ['comparison', 30, 42, 'Revenue against comparison group'],
-             ['map', 42, 52, 'The map appears'], ['downtown', 52, 66, 'Central Moscow, 2014–2025'], ['city', 66, 78, 'Moscow'], ['region', 78, 90, 'Moscow and surroundings'], ['close', 90, 97, 'Close']];
+             ['map', 42, 52, 'The map appears'], ['downtown', 52, 66, 'Central Moscow, 2014–2025'], ['city', 66, 78, 'Moscow'], ['region', 78, 90.5, 'Moscow and surroundings'], ['national', 90.5, 103, 'Russia, 2014–2025'], ['close', 103, 110, 'Close']];
   const timeline = {}; T.forEach(([id, start, end, title]) => timeline[id] = { id, start, end, title });
-  const DURATION = 97;
+  const DURATION = 110;
   const REST = { cx: MX, cy: MY, ox: 960, oy: 540 };
   const keyframes = [];
-  const push = (t, k, v, easing) => keyframes.push(Object.assign({ t, k, v }, REST, easing ? { easing } : {}));
+  const push = (t, k, v, easing, base) => keyframes.push(Object.assign({ t, k, v }, base || REST, easing ? { easing } : {}));
   // Year runs: holds and 0.5 s transitions (the ring change and the dissolves share the clock).
-  function runYears(kf, t0, k, hold, trans) { let t = t0; YEARS.forEach((y, i) => { kf.push(Object.assign({ t, k, v: y, easing: E.inOutSine }, REST)); kf.push(Object.assign({ t: t + hold, k, v: y }, REST)); t += hold + (i < YEARS.length - 1 ? trans : 0); }); return t; }
+  function runYears(kf, t0, k, hold, trans, base = REST) { let t = t0; YEARS.forEach((y, i) => { kf.push(Object.assign({ t, k, v: y, easing: E.inOutSine }, base)); kf.push(Object.assign({ t: t + hold, k, v: y }, base)); t += hold + (i < YEARS.length - 1 ? trans : 0); }); return t; }
   const run = (t0, k, hold, trans) => runYears(keyframes, t0, k, hold, trans);
   push(0, 200, 2021); push(42, 200, 2021); push(52, K.downtown, 2021); push(52.2, K.downtown, 2021);
   run(53, K.downtown, 0.6, 0.5); push(66, K.downtown, Y1);
   push(68.5, K.city, Y0); run(68.5, K.city, 0.35, 0.5); push(78.5, K.city, Y1);
-  push(81, K.region, Y0); run(81, K.region, 0.3, 0.5); push(90.5, K.region, Y1); push(DURATION, K.region, Y1);
-  const LOC = [{ start: 42, ext: 'downtown' }, { start: 66.0, ext: 'city' }, { start: 78.5, ext: 'region' }];
+  push(81, K.region, Y0); run(81, K.region, 0.3, 0.5); push(90.5, K.region, Y1);
+  // The national run (round 4): the pull-back to the left framing over 2.5 s while the year rewinds, the same dwell as the region run.
+  push(92, 1.0, 2019, E.inSine); push(93, K.national, Y0, E.outSine, NATBASE); runYears(keyframes, 93, K.national, 0.5, 0.25, NATBASE); push(103, K.national, Y1, undefined, NATBASE); push(DURATION, K.national, Y1, undefined, NATBASE);
+  const LOC = [{ start: 42, ext: 'downtown' }, { start: 66.0, ext: 'city' }, { start: 78.5, ext: 'region' }, { start: 90.5, ext: 'national' }];
 
   function anchorPositionsStandalone(t, cam) {
     const enter = step(t, 0.2, 2.4, E.outCubic);
@@ -400,7 +424,8 @@
     const backAlpha = fieldReveal * (BACK_ALPHA + (0.7 - BACK_ALPHA) * (1 - layerReveal));
     drawField(ctx, cam, v, backAlpha, layerReveal);
     drawCells(ctx, stage, cam, v, layerReveal);
-    drawTreated(ctx, cam, v, layerReveal, theme);
+    const rewind = [[52.2, 53], [66, 68.5], [78.5, 81], [90.5, 93]].some(([a, b]) => t >= a && t < b);
+    drawTreated(ctx, cam, v, layerReveal, theme, rewind);
     // The two anchors: dots through the intro in their own colours, the red listing ring at the designation, then the markers.
     const ap = anchorPositionsStandalone(t, cam); const dotsAlpha = 1 - layerReveal;
     const red = step(t, 22.6, 0.8), pulse = 1 + 0.6 * Math.sin(Math.PI * red);
@@ -413,7 +438,7 @@
     Motion.reveal(ctx, 'a private firm nearby', ap.B[0], 596, t, 3.0, { size: 28, color: theme.anchorB, align: 'center', until: 6.4 });
     Motion.reveal(ctx, 'Aeroflot', ap.A[0], 596, t, 3.3, { size: 30, weight: 700, color: theme.anchorA, align: 'center', until: 6.4 });
     headers(ctx, theme, Motion.plateau(t, 6.8, 42.4, 0.5, 0.4));
-    const markerAlpha = Motion.plateau(t, 46, DURATION + 1, 0.6, 0);
+    const markerAlpha = Motion.plateau(t, 46, 90.5, 0.6, 0.5);   // the markers leave with the region run; none at the national scale
     drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
     const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(t, 47, 53, 0.5, 0.5);
     if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
@@ -422,8 +447,8 @@
     legend(ctx, theme, { alpha: step(t, 53.2, 0.6), k: cam.k });
     disclosure(ctx, theme, Motion.plateau(t, 53.6, 60, 0.5, 0.5));
     // The comparison element, one routine from the full showing (30 s) through the move (42-44 s) into the live box.
-    if (t >= 30) { const l = t - 30; comparisonView(ctx, theme, { u: step(l, 12, 2), alpha: step(l, 0.4, 0.5, E.outCubic), progress: step(l, 1.0, 3.5, E.inOutSine), textAlpha: 1, l, until: 12.4, v }); }
-    if (t >= 89.5) closeText(ctx, theme, t - 90);
+    if (t >= 30) { const l = t - 30; comparisonView(ctx, theme, { u: step(l, 12, 2), alpha: step(l, 0.4, 0.5, E.outCubic) * (1 - step(t, 90.5, 1.0)), progress: step(l, 1.0, 3.5, E.inOutSine), textAlpha: 1, l, until: 12.4, v }); }
+    if (t >= 102.5) closeText(ctx, theme, t - 103);
   } });
   standaloneScenes.push({ id: 'cards', title: 'Profiles', start: 6, end: 30.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, t, theme }) { profiles(ctx, theme, t - 6, { des: 16.6, until: 24 }); } });
 
@@ -432,14 +457,18 @@
   // 36-50, the map returns 50-58 (k 1200 to 90 while the comparison chart shrinks into its box),
   // downtown 58-72, city 72-84, region 84-96, close 96-103, out 103-108 (the camera leaves for the
   // country; the explainer's keyframes continue from the last one here).
-  const SEC = { street: 0, profiles: 12, designation: 28, comparison: 36, back: 50, downtown: 58, city: 72, region: 84, close: 96, out: 103, end: 108 };
+  const SEC = { street: 0, profiles: 12, designation: 28, comparison: 36, back: 50, downtown: 58, city: 72, region: 84, national: 96, close: 108, out: 115, end: 120 };
   const MID = { cx: (AX + BX) / 2, cy: (AY + BY) / 2, ox: 960, oy: 540 };
   function journeyKeyframes(S) {
-    const kf = []; const at = (t, k, v, base) => kf.push(Object.assign({ t: S + t, k, v }, base || REST));
+    const kf = []; const at = (t, k, v, base, easing) => kf.push(Object.assign({ t: S + t, k, v }, base || REST, easing ? { easing } : {}));
     at(SEC.street, K.region, 2021); at(SEC.profiles, 1200, 2021, MID); at(SEC.back, 1200, 2021, MID); at(SEC.back + 5, K.downtown, 2021); at(SEC.downtown, K.downtown, 2021);
     runYears(kf, S + SEC.downtown + 0.8, K.downtown, 0.75, 0.3); at(SEC.city, K.downtown, Y1);
     at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + SEC.city + 2.5, K.city, 0.55, 0.25); at(SEC.region, K.city, Y1);
-    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + SEC.region + 2.5, K.region, 0.5, 0.25); at(SEC.close, K.region, Y1); at(SEC.out, K.region, Y1);
+    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + SEC.region + 2.5, K.region, 0.5, 0.25); at(SEC.national, K.region, Y1);
+    // The national run (round 4): the pull-back to the left framing over 2.5 s while the year rewinds, then the years at the region run's dwell.
+    // Two segments so Moscow stays on screen: zoom out in place to k 1 (the region raster leaves, the national
+    // raster arrives, both centred on Moscow), then slide to the left framing while the zoom completes.
+    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + SEC.national + 2.5, K.national, 0.5, 0.25, NATBASE); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
     return kf;
   }
   // The anchors between their projected positions and the card headers; the dot grows from the mark's
@@ -452,7 +481,7 @@
   }
   function journey(images, S) {
     IMG = images;
-    const LOCJ = [{ start: SEC.back, ext: 'downtown' }, { start: SEC.city, ext: 'city' }, { start: SEC.region, ext: 'region' }];
+    const LOCJ = [{ start: SEC.back, ext: 'downtown' }, { start: SEC.city, ext: 'city' }, { start: SEC.region, ext: 'region' }, { start: SEC.national, ext: 'national' }];
     // Both scenes read their own clock (local), which a re-cut maps through its window; in the full cut local = t - S.
     const field = { id: 'field', title: 'The Moscow field', start: S, end: S + SEC.end, z: 1.5, fadeIn: 0, fadeOut: 0, draw({ ctx, local: l, cam, stage, theme }) {
       const k = cam.k;
@@ -465,7 +494,8 @@
       const backAlpha = (BACK_ALPHA + (0.7 - BACK_ALPHA) * (1 - layerReveal)) * (l < SEC.downtown ? ramp(k, 60, 80) : 1) * marksOut;
       drawField(ctx, cam, v, backAlpha, layerReveal);
       drawCells(ctx, stage, cam, v, layerReveal);
-      drawTreated(ctx, cam, v, layerReveal, theme);
+      const rewind = [[SEC.downtown, SEC.downtown + 0.8], [SEC.city, SEC.city + 2.5], [SEC.region, SEC.region + 2.5], [SEC.national, SEC.national + 2.5]].some(([a, b]) => l >= a && l < b);
+      drawTreated(ctx, cam, v, layerReveal, theme, rewind);
       // The two anchors: vector dots from k 60, the red listing ring at the designation, gliding to
       // the card headers and back, then the fixed-size markers once the field is drawn.
       const ap = anchorPositionsJourney(l, cam); const dotsAlpha = ramp(k, 60, 80) * (1 - layerReveal);
@@ -480,19 +510,19 @@
       Motion.reveal(ctx, 'a private firm nearby', ap.B[0] - 26, ap.B[1], l, 8.0, { size: 28, color: theme.anchorB, align: 'right', baseline: 'middle', until: introUntil });
       Motion.reveal(ctx, 'Aeroflot', ap.A[0] + 26, ap.A[1], l, 8.3, { size: 30, weight: 700, color: theme.anchorA, baseline: 'middle', until: introUntil });
       headers(ctx, theme, Motion.plateau(l, SEC.profiles + 0.8, SEC.back + 0.4, 0.5, 0.4));
-      const markerAlpha = Motion.plateau(l, SEC.back + 2.5, SEC.out, 0.6, 0.5);   // findable to the end of the section
+      const markerAlpha = Motion.plateau(l, SEC.back + 2.5, SEC.national, 0.6, 0.5);   // findable through the Moscow scales; none at the national scale
       drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
       const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(l, SEC.back + 3.5, SEC.downtown + 1, 0.5, 0.5);
       if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
-      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA, progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v, explain2025: false }); }
+      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v, explain2025: false }); }
       if (l >= SEC.close - 0.5) closeText(ctx, theme, l - SEC.close, outA);
     } };
     const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local, theme }) { profiles(ctx, theme, local, { des: 16.6, until: 24 }); } };
     const chapters = [['street', 0, SEC.designation, 'Two firms'], ['designation', SEC.designation, SEC.comparison, 'Designation'], ['comparison', SEC.comparison, SEC.back, 'Revenue against comparison group'],
-                      ['downtown', SEC.back, SEC.city, `Central ${CITY.name}, ${Y0}–${Y1}`], ['city', SEC.city, SEC.region, CITY.name], ['region', SEC.region, SEC.close, `${CITY.name} and surroundings`], ['close', SEC.close, SEC.end, 'Close']];
+                      ['downtown', SEC.back, SEC.city, `Central ${CITY.name}, ${Y0}–${Y1}`], ['city', SEC.city, SEC.region, CITY.name], ['region', SEC.region, SEC.national, `${CITY.name} and surroundings`], ['national', SEC.national, SEC.close, `Russia, ${Y0}–${Y1}`], ['close', SEC.close, SEC.end, 'Close']];
     const timeline = {}; chapters.forEach(([id, a, b, title]) => timeline[id] = { id, start: S + a, end: S + b, title });
     return { scenes: [field, cards], keyframes: journeyKeyframes(S), timeline, rest: REST, SEC, start: S, end: S + SEC.end };
   }
@@ -508,11 +538,11 @@
   }
 
   window.TreatedScenes = {
-    timeline, DURATION, keyframes, redCounts, cellSums, OFFSETS, CITY, SEC, journey,
+    timeline, DURATION, keyframes, redCounts, cellSums, OFFSETS, CITY, SEC, journey, NATCAM, SETS,
     pieces: { drawField, drawCells, drawTreated, drawMarker, headers, profiles, comparisonView, ticker, legend, disclosure, closeText, locationAt, extentAlpha, extentOf, counts, WINDOW, COL, dot, run, yearPair, anchorColour, LABEL },
     make(images, { align = false } = {}) { IMG = images; const sc = standaloneScenes.slice(); if (align) sc.push(alignScene(DURATION)); return { scenes: sc, keyframes, DURATION, timeline }; },
     standalone(images, opts) { return this.make(images, opts); },
-    async loadImages(base, { layers = ['downtown'] } = {}) {
+    async loadImages(base, { layers = ['downtown', 'national'] } = {}) {
       const out = {}; const jobs = [];
       for (const ext of Object.keys(P.files)) {
         out[ext] = {};

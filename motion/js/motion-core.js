@@ -12,7 +12,7 @@
     outCubic: t => 1 - Math.pow(1 - t, 3),
     inCubic: t => t * t * t,
     outQuint: t => 1 - Math.pow(1 - t, 5),
-    inOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2,
+    inOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2, inSine: t => 1 - Math.cos(t * Math.PI / 2), outSine: t => Math.sin(t * Math.PI / 2),
     outExpo: t => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t)),
   };
   Motion.clamp = (v, a, b) => Math.max(a, Math.min(b, v));

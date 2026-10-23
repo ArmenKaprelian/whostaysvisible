@@ -1,0 +1,75 @@
+"check","expected","observed","tolerance","pass"
+"2014: firms equal marks + city-level + treated",4625979,4625979,0,TRUE
+"2014: drawn firms equal the three states",4288612,4288612,0,TRUE
+"2014: outcome marks hold the firms with a statement and a value",559516,559516,0,TRUE
+"2014: class counts sum to the filers",559516,559516,0,TRUE
+"2014: located eligible firms equal M5's located total",4625980,4625980,0,TRUE
+"2015: firms equal marks + city-level + treated",4613156,4613156,0,TRUE
+"2015: drawn firms equal the three states",4291360,4291360,0,TRUE
+"2015: outcome marks hold the firms with a statement and a value",707024,707024,0,TRUE
+"2015: class counts sum to the filers",707024,707024,0,TRUE
+"2015: located eligible firms equal M5's located total",4613157,4613157,0,TRUE
+"2016: firms equal marks + city-level + treated",4812099,4812099,0,TRUE
+"2016: drawn firms equal the three states",4485417,4485417,0,TRUE
+"2016: outcome marks hold the firms with a statement and a value",803731,803731,0,TRUE
+"2016: class counts sum to the filers",803731,803731,0,TRUE
+"2016: located eligible firms equal M5's located total",4812100,4812100,0,TRUE
+"2017: firms equal marks + city-level + treated",4534751,4534751,0,TRUE
+"2017: drawn firms equal the three states",4229900,4229900,0,TRUE
+"2017: outcome marks hold the firms with a statement and a value",917154,917154,0,TRUE
+"2017: class counts sum to the filers",917154,917154,0,TRUE
+"2017: located eligible firms equal M5's located total",4534752,4534752,0,TRUE
+"2018: firms equal marks + city-level + treated",4317454,4317454,0,TRUE
+"2018: drawn firms equal the three states",4027197,4027197,0,TRUE
+"2018: outcome marks hold the firms with a statement and a value",1023529,1023529,0,TRUE
+"2018: class counts sum to the filers",1023529,1023529,0,TRUE
+"2018: located eligible firms equal M5's located total",4317455,4317455,0,TRUE
+"2019: firms equal marks + city-level + treated",3984990,3984990,0,TRUE
+"2019: drawn firms equal the three states",3714907,3714907,0,TRUE
+"2019: outcome marks hold the firms with a statement and a value",1231517,1231517,0,TRUE
+"2019: class counts sum to the filers",1231517,1231517,0,TRUE
+"2019: located eligible firms equal M5's located total",3984991,3984991,0,TRUE
+"2020: firms equal marks + city-level + treated",3574313,3574313,0,TRUE
+"2020: drawn firms equal the three states",3357902,3357902,0,TRUE
+"2020: outcome marks hold the firms with a statement and a value",1420896,1420896,0,TRUE
+"2020: class counts sum to the filers",1420896,1420896,0,TRUE
+"2020: located eligible firms equal M5's located total",3574314,3574314,0,TRUE
+"2021: firms equal marks + city-level + treated",3277637,3277637,0,TRUE
+"2021: drawn firms equal the three states",3078593,3078593,0,TRUE
+"2021: outcome marks hold the firms with a statement and a value",1342207,1342207,0,TRUE
+"2021: class counts sum to the filers",1342207,1342207,0,TRUE
+"2021: located eligible firms equal M5's located total",3277638,3277638,0,TRUE
+"2022: firms equal marks + city-level + treated",3146043,3146043,0,TRUE
+"2022: drawn firms equal the three states",2946625,2946625,0,TRUE
+"2022: outcome marks hold the firms with a statement and a value",1212720,1212720,0,TRUE
+"2022: class counts sum to the filers",1212720,1212720,0,TRUE
+"2022: located eligible firms equal M5's located total",3146043,3146043,0,TRUE
+"2023: firms equal marks + city-level + treated",3102998,3102998,0,TRUE
+"2023: drawn firms equal the three states",2907366,2907366,0,TRUE
+"2023: outcome marks hold the firms with a statement and a value",1121169,1121169,0,TRUE
+"2023: class counts sum to the filers",1121169,1121169,0,TRUE
+"2023: located eligible firms equal M5's located total",3102998,3102998,0,TRUE
+"2024: firms equal marks + city-level + treated",3083823,3083823,0,TRUE
+"2024: drawn firms equal the three states",2884476,2884476,0,TRUE
+"2024: outcome marks hold the firms with a statement and a value",1042702,1042702,0,TRUE
+"2024: class counts sum to the filers",1042702,1042702,0,TRUE
+"2024: located eligible firms equal M5's located total",3083823,3083823,0,TRUE
+"2025: firms equal marks + city-level + treated",3062023,3062023,0,TRUE
+"2025: drawn firms equal the three states",2865746,2865746,0,TRUE
+"2025: outcome marks hold the firms with a statement and a value",953833,953833,0,TRUE
+"2025: class counts sum to the filers",953833,953833,0,TRUE
+"2025: located eligible firms equal M5's located total",3062023,3062023,0,TRUE
+"2021 located firms equal the density pass's national count",3277638,3277638,0,TRUE
+"red-from histogram equals an R recomputation from the list file (max abs diff)",0,0,0,TRUE
+"red-from histogram covers every treated firm",4803,4803,0,TRUE
+"treated firms counted once",4803,4803,0,TRUE
+"listed firms with a row in the Moscow rectangle equal M6's treated.json",2220,2220,0,TRUE
+"Moscow rectangle 2025 red counter equals M6's",1819,1819,0,TRUE
+"Moscow rectangle 2025 red firms without a statement equal M6's",864,864,0,TRUE
+"largest 2023 pixel reproduced in the marks (n)",85577,85577,0,TRUE
+"largest 2023 pixel reproduced (filers with a value)",25376,25376,0,TRUE
+"the Moscow point's pixel agrees with the camera formula (px)",225.716648259804,225.5,1,TRUE
+"the Moscow point's pixel agrees with the camera formula (py)",488.400256658477,488.5,1,TRUE
+"the rectangle contains the basemap's national extent",1,1,0,TRUE
+"24 raster files written (12 years x backdrop and layer)",24,24,0,TRUE
+"deflator 2021 equals 1",1,1,0.000000000001,TRUE
