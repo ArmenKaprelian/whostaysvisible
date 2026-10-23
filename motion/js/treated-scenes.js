@@ -352,15 +352,18 @@
     Motion.panel(ctx, 60, 748, w + 48, 44, theme, 0.92 * alpha);
     Motion.text(ctx, s, 84, 777, { size: 22, color: theme.muted, alpha });
   }
+  // The close: the count line, the caveats and the comparison line on one opaque panel (the 5 km cells
+  // behind it are bright), narrow enough to clear the anchor markers at the region scale.
   function closeText(ctx, theme, l, mul = 1) {
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1);
-    Motion.reveal(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, 80, 140, l, 0.5, { size: 34, weight: 700, color: theme.ink });
-    Motion.reveal(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, 80, 186, l, 0.9, { size: 30, weight: 700, color: theme.ink });
-    Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', 80, 246, 1000, { size: 25, color: theme.muted, alpha: step(l, 1.8, 0.5) });
-    Motion.paragraph(ctx, `Dated by the supplied sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated list members red throughout. Descriptive, not causal.`, 80, 326, 1000, { size: 25, color: theme.muted, alpha: step(l, 3.0, 0.5) });
-    Motion.text(ctx, 'Paths compared, no effect estimated.', 80, 440, { size: 25, color: theme.muted, alpha: step(l, 4.0, 0.5) });
+    Motion.panel(ctx, 60, 100, 980, 400, theme, 0.92 * step(l, 0.3, 0.5));
+    Motion.reveal(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, 80, 140, l, 0.5, { size: 30, weight: 700, color: theme.ink });
+    Motion.reveal(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, 80, 182, l, 0.9, { size: 28, weight: 700, color: theme.ink });
+    Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', 80, 236, 940, { size: 25, color: theme.muted, alpha: step(l, 1.8, 0.5) });
+    Motion.paragraph(ctx, `Dated by the supplied sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated list members red throughout. Descriptive, not causal.`, 80, 346, 940, { size: 25, color: theme.muted, alpha: step(l, 3.0, 0.5) });
+    Motion.text(ctx, 'Paths compared, no effect estimated.', 80, 470, { size: 25, color: theme.muted, alpha: step(l, 4.0, 0.5) });
     ctx.restore();
   }
   const locationAt = (entries, l) => MM.locationAt(entries.map(e => Object.assign({ start: e.start }, WINDOW[e.ext])), l);
@@ -450,8 +453,9 @@
   function journey(images, S) {
     IMG = images;
     const LOCJ = [{ start: SEC.back, ext: 'downtown' }, { start: SEC.city, ext: 'city' }, { start: SEC.region, ext: 'region' }];
-    const field = { id: 'field', title: 'The Moscow field', start: S, end: S + SEC.end, z: 1.5, fadeIn: 0, fadeOut: 0, draw({ ctx, t, cam, stage, theme }) {
-      const l = t - S, k = cam.k;
+    // Both scenes read their own clock (local), which a re-cut maps through its window; in the full cut local = t - S.
+    const field = { id: 'field', title: 'The Moscow field', start: S, end: S + SEC.end, z: 1.5, fadeIn: 0, fadeOut: 0, draw({ ctx, local: l, cam, stage, theme }) {
+      const k = cam.k;
       const v = Motion.clamp(cam.v == null ? 2021 : cam.v, Y0, Y1);
       const outA = 1 - step(l, SEC.out, 1.5), marksOut = 1 - step(l, SEC.out + 0.5, 2);
       const layerReveal = step(l, SEC.downtown + 0.5, 1.5) * marksOut;
@@ -486,7 +490,7 @@
       if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA, progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v, explain2025: false }); }
       if (l >= SEC.close - 0.5) closeText(ctx, theme, l - SEC.close, outA);
     } };
-    const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, t, theme }) { profiles(ctx, theme, t - S - SEC.profiles, { des: 16.6, until: 24 }); } };
+    const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local, theme }) { profiles(ctx, theme, local, { des: 16.6, until: 24 }); } };
     const chapters = [['street', 0, SEC.designation, 'Two firms'], ['designation', SEC.designation, SEC.comparison, 'Designation'], ['comparison', SEC.comparison, SEC.back, 'Revenue against comparison group'],
                       ['downtown', SEC.back, SEC.city, `Central ${CITY.name}, ${Y0}–${Y1}`], ['city', SEC.city, SEC.region, CITY.name], ['region', SEC.region, SEC.close, `${CITY.name} and surroundings`], ['close', SEC.close, SEC.end, 'Close']];
     const timeline = {}; chapters.forEach(([id, a, b, title]) => timeline[id] = { id, start: S + a, end: S + b, title });

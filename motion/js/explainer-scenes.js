@@ -270,7 +270,10 @@
         MM.infoLines(ctx, theme, linesM, pa * (1 - central)); if (central > 0) MM.infoLines(ctx, theme, linesC, pa * central);
       }
       shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, hold + 1.6, legendEnd, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
-      if (published) MM.legendSwatches(ctx, 1420, 320, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: Motion.plateau(l, 14.6, 27.5, 0.6, 0.5), columns: 2, colWidth: 220, swatch: 22, size: 22, rowGap: 10 });
+      if (published) {   // the 250 m count legend under the panel, on its own opaque panel so it reads over the dense field
+        const la = Motion.plateau(l, 14.6, 27.5, 0.6, 0.5);
+        if (la > 0) { Motion.panel(ctx, 1420, 300, 440, 160, theme, 0.92 * la); MM.legendSwatches(ctx, 1436, 322, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: la, columns: 2, colWidth: 210, swatch: 22, size: 22, rowGap: 10 }); }
+      }
     } };
   }
 
@@ -442,7 +445,7 @@
     const TS = window.TreatedScenes;
     const fm = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start));
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
-    const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 8],
+    const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
     return { 'full-moscow': fm, 'teaser-moscow': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), treated: TS.standalone(images, opts) };
   }

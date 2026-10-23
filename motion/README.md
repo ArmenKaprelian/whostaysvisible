@@ -10,8 +10,8 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | 182 s, 12 scenes, 1920x1080 at 30 fps, dark stage; play, pause, scrub, chapter buttons; `?__render=1` capture mode; `?__debug=1` frame counter |
-| Video | `build/who-stays-visible.mp4` | H.264 yuv420p, 5,460 frames, captured frame by frame through headless Brave and ffmpeg |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 3: `full` 192 s and `teaser` 40 s from the aggregates; `full-moscow` 275 s, `teaser-moscow` 46 s and `treated` 97 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
 | Teaser | `build/who-stays-visible-teaser.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Treated cut (round 2) | `explainer.html?cut=treated`, `js/treated-scenes.js`, `build/who-stays-visible-treated.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
 | Atlas | `explorer.html` (+ `js/explorer-app.js`) | six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
@@ -75,8 +75,11 @@ scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
 scripts/motion-capture.sh --out motion/build/who-stays-visible.mp4                       # 4 shards by default
 scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser.mp4
 scripts/motion-capture.sh --page "explainer.html?cut=treated" --out motion/build/who-stays-visible-treated.mp4
+scripts/motion-capture.sh --page "explainer.html?cut=full-moscow" --out motion/build/who-stays-visible-moscow.mp4 --shards 8   # round 3, local
+scripts/motion-capture.sh --page "explainer.html?cut=teaser-moscow" --out motion/build/who-stays-visible-teaser-moscow.mp4
 scripts/motion-capture.sh --audit motion/build/audit-full.json --audit-step 6            # text boxes of every 6th frame
 python3 -I motion/tools/audit.py motion/build/audit-full.json --out motion/build/audit-full.txt
+python3 -I motion/tools/publish-set.py                                                   # motion/publish/: pages, shared scripts, aggregate data only
 ```
 
 The capture drives Brave (`/opt/brave.com/brave/brave --headless=new`) over the DevTools protocol
@@ -264,10 +267,211 @@ A 4 s test across four shards joined to 120 frames, 4.000 s by `ffprobe`; frames
 captured single-process and across three shards are byte-identical (ImageMagick AE = 0 for each).
 Every render from here on is sharded: the audit passes, the three cuts, and the splice if approved.
 
-### Pending the author's review
+### After the author's review
 
-The treated cut itself (second render, chosen breaks) and the splice of the treated cut into the full
-cut after the Moscow zoom (`full-treated`, not built until approved).
+The treated cut was reviewed on 23 October; its approach became round 3 (the journey below), and the
+splice was superseded by the integrated `full-moscow` cut.
+
+## Round 3 (23 October 2026): one continuous journey
+
+The author's review of the treated cut asked for its approach, continuous transitions and a camera
+that zooms in for detail and out for context, applied to the whole presentation; a comparison beat
+after the two profiles; a readable firm field; smaller, more opaque chrome with a location name that
+follows the zoom; and a prose pass. Planning answers: the Moscow sequence is integrated into the full
+presentation as one continuous piece (a local cut; the published artifact keeps a version without
+firm-level data), and the city and region scales show area results. Later picks: ramp A (one blue
+hue, lifted so its dark end sits at L 0.65), no absent-share cue; the relative metric; a charcoal
+ground with the blue scale applied to the whole piece; and five changes (below). Everything stays
+inside the lab; nothing firm-level is published.
+
+### Cuts
+
+| Cut | URL | Length | Frames | Where it goes |
+|---|---|---|---|---|
+| `full` | `explainer.html` (default) | 192 s | 5,760 | the artifact (no firm-level data); `build/who-stays-visible.mp4` |
+| `teaser` | `?cut=teaser` | 40 s | 1,200 | the artifact; `build/who-stays-visible-teaser.mp4` |
+| `full-moscow` | `?cut=full-moscow` | 275 s | 8,250 | local only; `build/who-stays-visible-moscow.mp4` (720p copy beside it) |
+| `teaser-moscow` | `?cut=teaser-moscow` | 46 s | 1,380 | local only; the teaser plus a six-second excerpt of the designation |
+| `treated` | `?cut=treated` | 97 s | 2,910 | local only; the standalone two-firm cut with the comparison beat |
+
+The page builds `full` and `teaser` from the five aggregate data files; the three local cuts join
+once `data/points.js`, `treated.js`, `anchors.js`, `moscowcells.js`, `moscowcomparison.js` and the
+rasters are present and decoded (the cut button cycles through whatever is built). `tools/publish-set.py`
+assembles `motion/publish/` (the two pages, the four shared scripts, the five aggregate files) and
+refuses any name matching `points|treated|anchors|moscow`.
+
+### The journey (`full-moscow`, 275 s; `full` is the same list with a 20 s 250 m leg and a 5 s pull-out in place of the section)
+
+A cut is a list of beats with durations (`explainer-scenes.js`); scenes, the ground schedules and
+the camera keyframes are built from the beat starts. A ground scene (z 0) draws the land and the
+national density under every beat from two schedules (land 1 under maps, 0.3 under the archive,
+0.12 under the availability chart, 0.15 under the chart beats, 0.3 under the credits; density 1
+under maps by scale, 0.22, 0.12, 0, 0.12), so the stage never goes blank between beats; the chart
+beats keep the dimmed map under a slow drift. One camera path: a 4% push-in over the hook and the
+archive, a 15% pull-out under the availability chart and a glide to the left framing as the chart
+leaves, the left framing for the 100 km maps, one eased flight to Moscow at k = 12, the section,
+the national framing again with a drift under the charts, and the left framing for the closing map.
+
+| Time (s) | Beat | Camera | What is on the stage |
+|---|---|---|---|
+| 0-11 | Who stays visible? | national, 0.96 to 0.98 of the full extent | the land fades in, the density blooms by count class, the title, the 3,277,638 counter |
+| 11-25 | The archive | push-in continues | records counter, provider bar (with "2025*: a flagged latest-year extension" once), 2021 nested bars, the definition line; the map at 0.3 |
+| 25-41 | Availability over time | pulls out to 0.85, glides to the left framing in the last 2 s | the chart over the map at 0.12 |
+| 41-65 | The map through time | left framing | 100 km cells by year; the column carries "Russia / 100 km cells" above the year |
+| 65-77 | The change map | left framing | six classes, counts; the same location line |
+| 77-88 | To Moscow | one eased flight to Moscow at k = 12 (arrives at 83) | the national density leaves by scale, the 1 km window arrives by scale (counts, then shares from 84.6), the city label once the camera has nearly arrived, the top-right panel (Moscow, 90 by 90 km, 1 km cells, 2021, the two counts) from 81.6 |
+| 88-100 | Into the street | k 12 to 1,200 on the pair's midpoint | the 250 m density by scale, then the 2021 backdrop of every firm between k 60 and 260, then only the two anchors as dots in amber and mint; "Two firms, 57 m apart in central Moscow" at 94.5, the two names at 96 |
+| 100-116 | Who are they? | hold | the land dims to the stage; the dots glide to the card headers; the profiles row by row |
+| 116-124 | Designation | hold | the pulse, the red ring, the 2022 strip cell, "19 May 2022: listed by the United Kingdom and United States" |
+| 124-138 | Revenue against comparison group | hold | two panels: each firm's real revenue index (own 2019-2021 average = 100, log axis) against the median and interquartile range of its group; the two gap facts and the counts |
+| 138-146 | The map returns | k 1,200 to 90 over 138-143 | the chart shrinks over 2 s into the live box (right edge, under the counters) as the land and the backdrop return; the dots glide to their true positions; the markers from 140.5; the split line (305,780 firms in view in 2021, 129,159 with a usable revenue baseline) |
+| 146-160 | Central Moscow, 2014-2025 | hold k = 90, the year on the camera's clock (0.75 s holds, 0.3 s dissolves) | firm marks in the blue scale, red marks with rings, the ticker (Central Moscow, 21 by 12 km), the three-row legend, the disclosure line once (152.6-159), the live box with the current-year dots |
+| 160-172 | Moscow | pull-back to k = 30 over 2.5 s while the year rewinds; 0.55 s holds | 1 km cells (median of the cell's filers, 20 or more), the backdrop as texture, red points, the location flips to "Moscow, 64 by 36 km" |
+| 172-184 | Moscow and surroundings | pull-back to k = 12; 0.5 s holds | 5 km cells, "Moscow and surroundings, 160 by 90 km" |
+| 184-191 | Close of the Moscow section | hold 2025 | the count line, the three caveats, "Paths compared, no effect estimated." |
+| 191-196 | Out to the country | k 12 to the national framing | the chrome and the marks leave (103-105.5 of the section), the density returns by scale |
+| 196-268 | Groups, absence and removal, size, lists, what comes next | national with a slow drift (0.98 to 0.90, the origin shifting left), the left framing for the closing map | the chart beats over the dimmed map; the cohort map |
+| 268-275 | Sources | hold | credits over the map at 0.3 |
+
+Section-relative clock (`treated-scenes.js`, `SEC`): street 0-12, profiles 12-28, designation
+28-36, comparison 36-50, return 50-58, downtown 58-72, city 72-84, region 84-96, close 96-103, out
+103-108. `TreatedScenes.journey(images, S)` returns the two scenes, the absolute keyframes, the
+chapters and the rest point for a section starting at `S`; `standalone(images)` is the 97 s cut
+(two 0-6, profiles 6-22, designation 22-30, comparison 30-42, the map 42-52, downtown 52-66, city
+66-78, region 78-90, close 90-97). The pieces are parameterised by `CITY` (name, data) so a second
+city's section costs a data pass, not new scene code.
+
+Re-cuts (`makeCut`): entries `[id, title, cutStart, cutEnd, fullStart, fullEnd]` play a window of
+the parent between two cut times; every parent scene meeting the window is cloned with the matching
+start, end, speed and offset (`local = max(0, t - start) * speed + offset`), clipped scenes get a
+0.5 s fade, the ground draws from the parent's clock through the same time map, and map windows
+carry the parent's keyframes compressed by the speed with a hold at each end. `teaser` (40 s): the
+hook, the map through time, the flight to Moscow and the 250 m push-in (19 s of `full`), the groups,
+the credits. `teaser-moscow` (46 s): the same with the flight running into the street zoom and a
+six-second excerpt of the designation (section 26-32 s) in place of the 250 m leg.
+
+### Five changes (author's instruction after the charcoal pick)
+
+1. No purple "statement absent" marks for firms on no list, on the maps or in the legends (the
+   state is still computed; a baseline firm without a statement is simply not drawn in the outcome
+   layer and appears in the backdrop). Listed firms without a statement keep the red ring: stroke at
+   least 1.5 px, radius floors of 1.5 / 2.0 / 2.5 px at the downtown / city / region scales, and the
+   solid-to-ring change fades over 0.5 s with the year dissolve. One disclosure where the blue scale
+   first appears: "The scale covers firms on no list with a statement that year."
+2. The two anchors stay findable from the moment they land on the map to the end of the section:
+   a fixed-size outline marker (circle for Aeroflot, diamond for the private firm, 2 px stroke,
+   constant pixel size at every zoom) with a short leader to a panel-backed label, in two non-data
+   colours: amber `#F2B134` (Aeroflot) and mint `#7CE8C3` (the private firm), 2 px strokes checked
+   on the charcoal ground (contrast 9.9:1 and 12.6:1 against `#22262D`). The same colours identify
+   each firm everywhere: the intro dots, the profile headers, the comparison lines, the live box.
+   The label offsets are chosen per scale by scanning the 2025 red marks (five distances, eight
+   directions, the position covering the fewest marks) and blended between scales by the extent
+   alphas, so a label moves continuously during a pull-back.
+3. Administrative boundaries by zoom: regional borders at the national and region scales, the
+   finer Moscow geometry at the city and downtown scales, cross-faded between k 6 and 12
+   (`drawBasemap` LOD blend), stroke never above 1 px on screen.
+4. Legend: three rows (the bar with its breaks under the two-line title "Firms on no list, real
+   revenue against own 2019-2021 average, relative to the year's median of firms on no list"; one
+   muted line with the mark rule or the cell support at each scale; the red row with a solid and a
+   ring glyph and "solid: statement available that year · ring: absent that year"). The backdrop,
+   outline-only and absent rows are gone (facts below). Cells below support stay faint outlines.
+   The comparison beat's "listed 2022" (foot) and "no 2022 statement" (top) labels no longer collide;
+   2025* is explained once per cut (the archive beat in the journey, the comparison beat in the
+   standalone cut).
+5. The comparison beat and its live version are one element (`comparisonView`): one drawing
+   routine interpolated between the full-screen layout and the corner box (`u`), the panel rectangle
+   interpolated too so it always encloses the chart and its tick labels, the labels and facts leaving
+   in the first half of the 2 s move and the panel (0.92) fading in during the second half. The box
+   arrives before the first year run with 2021 current; each panel keeps the full 2014-2025 lines
+   and bands, years after the current one drawn in place at 0.3 opacity, a dot on each line at the
+   current year, firm lines in the anchor colours, medians and bands in the muted accent
+   `#6FA39A`, red only for the dotted "listed 2022" marker, no text beyond the two group names and
+   the axis. The box never overlaps the legend or the counters (audit rule `box-over-chrome`); the
+   red marks it covers are counted per frame (`box-over-mark`, 1-35 marks in the dense downtown and
+   city years, reported, not zero by design).
+
+### Palette (charcoal ground, applied to the whole piece)
+
+| Token | Value | Use |
+|---|---|---|
+| stage / land / border / graticule | `#121418` / `#22262D` / `#4A515C` / `#1A1D22` | the ground |
+| ink / muted / dim / grid / panel | `#ECEEF1` / `#A3AAB4` / `#6B7380` / `#1D2126` / `#171A1F` | text and chrome (panels at 0.92) |
+| blue scale (six classes, L 0.65-0.96) | `#4A97C9 #67ABD4 #88BEDC #ABCFE5 #CDE0F1 #EAF3FB` | firms on no list by relative real revenue change (breaks -50 / -20 / 0 / +50 / +150 against the year's median); validator: lightness gaps 0.061-0.063, dark end 4.74:1 on the land |
+| red / outline | `#E31A1C` / `#FFD9D9` | listed firms, solid or ring; nothing else |
+| amber / mint | `#F2B134` / `#7CE8C3` | the two anchors only (markers, headers, lines, dots) |
+| accent muted | `#6FA39A` | group medians and bands in the comparison element |
+| YlGnBu / PRGn | as round 2 | the national ordered layers / the signed change maps |
+
+The look was chosen from four Central Moscow renders (the navy field, a grey or cream ground with
+the navy scale, phthalo green, and the proposal: charcoal with the lifted blue scale); the author
+picked the fourth for the whole piece. The relative metric: each firm's index (real revenue against
+its own 2019-2021 average, 100 = the average) minus the median index of the drawn firms on no list in
+that year, classed with the same breaks (`points.json` records the yearly medians).
+
+### Data (M6, M7)
+
+`R/motion/M6-common.R` holds the temp-table SQL shared by M6 and M7 (deflator, sanctions, `fy_all`,
+`fy`, `firms`, `fym` with `pct` and `pct_rel`), the extents, breaks and the run options (variant,
+metric, look as trailing script arguments, since the systemd unit drops environment variables).
+M6 (`a rel charcoal`): 72 rasters (backdrop of every firm and the outcome layer of firms with a
+statement and a value), `points.json` with the manifest (variant, ramp, look, metric kind, legend
+title, yearly medians, red counts from fixed coordinates), `treated.json`, `anchors.json`; 163
+checks. M7 (`R/motion/M7-moscow.R`): 1 km and 5 km cells per year anchored at the rectangle's
+origin (the 1 km grid coincides with M5's Moscow grid shifted 35 columns), the cell's median of
+its filers and the class with 20 or more filers, `n`, `nb`, `f`, `nfb` per cell; the comparison
+groups (firms listed in 2022: 429 members, 60 to 134 with a statement per year; firms on no list
+with a baseline: 335,342, 102,755 to 330,034) with yearly medians and quartiles over members with a
+statement and positive revenue; the two anchors located by coordinates (no identifier leaves
+DuckDB); the gap facts as distances from the median (Aeroflot 15.9 points above before 2022, 18.8
+after; the private firm 4 below, 15 below); 201 checks (cell sums against M6's region counts, the
+city rectangle, the M5 interior cells and window totals 2019-2024, membership, the firms' indices).
+Absence is mapped at the downtown scale only (the ring); the city and region cells carry one
+variable, the median change among the cell's filers; a per-cell absent share was assessed at the
+checkpoint and declined by the author.
+
+### Text audit rules (zero findings is the acceptance rule; `box-over-mark` reports counts)
+
+`overlap` (15% of the smaller box, different groups), `offcanvas`, `small` (under 22 px), `cut-in`
+(absent to 0.95 within one step), `cut-out` (0.9 to absent before the scene's own fade), `panel-clip`
+(a text block inside the panel it was drawn in, 2 px), `label-under-panel`, `label-over-mark`,
+`box-over-chrome` (the live box over another panel), `box-over-mark` (red marks under the live
+box, counted). Block identity: the same string, or the same anchor within 2 px and 14 px.
+
+### Prose pass (every changed on-screen string)
+
+| Where | Before | After |
+|---|---|---|
+| chapter button | Who went dark | Availability by group |
+| groups title and line | Visibility diverged after 2021; Visibility rose among ... | Availability diverged after 2021; Availability rose among ... |
+| availability panel | 2021 → 2024 | 2021 to 2024 |
+| years column | eyebrow "Availability by 100 km cell"; "FNS  ← provider changes" | eyebrow "Availability by cell" with the location line "Russia / 100 km cells"; "FNS, the provider changes" |
+| change column | "Located share 64.0% → 66.5%" | "Located share 64.0% to 66.5%", with the location line |
+| archive | - | "2025*: a flagged latest-year extension" beside the provider bar |
+| zoom captions | two bottom captions ("Moscow, 90 km window at 1 km; n located firms; a with a 2021 statement (pct)", "Central Moscow at 250 m, registered addresses; piles") | the top-right panel: Moscow / 90 by 90 km, 1 km cells / 2021 / n located firms / a with a 2021 statement (pct); Central Moscow / 250 m cells, registered addresses / n firms at the largest address / m at addresses with 100 or more |
+| transitions line | "... reappear with a statement; among prior-available firm-years, x% end in removal." | "Of n firm-years without a statement, ... reappear with a statement. Among firm-years with a statement, x% end in removal." |
+| size title and subtitle | "Larger firms stay visible; the gap widened in 2022"; "... (Q1), adjusted; outcomes 2020–2024" | "Larger firms stay visible, and the gap widened in 2022"; "... (Q1), adjusted, outcomes 2020–2024" |
+| lists title, subtitle, series, groups, caveat | "Sanctioned-only firms became relatively less visible by 2024"; "...no supplied list; annual eligible population..."; "Sanctioned only", "Government strategic only"; "...not dated designations; the odds compare..." | "Firms on the sanctions list only fell behind by 2024"; "...no supplied list, annual eligible population..."; "Sanctions list only", "Government strategic list only"; two sentences |
+| credits | "Descriptive, not causal; dated events are context. Absence ... concealment; supplied lists are fixed lists, not dated designations." | "Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment." (the lists caveat stays on the lists beat) |
+| treated close | "Colours show ... average; no spatial or proximity effect is estimated." "... Descriptive, not causal; 2025* is the flagged latest year." | "Colours show each firm's own real revenue change against its 2019-2021 average, relative to the year's median of firms on no list. No spatial or proximity effect is estimated." "... Descriptive, not causal." then "Paths compared, no effect estimated." |
+| treated legend | six rows (bar, backdrop, outline-only, absent, no-baseline, red) | three rows (see change 4) |
+| location names | - | "Central Moscow, 21 by 12 km", "Moscow, 64 by 36 km", "Moscow and surroundings, 160 by 90 km" (geographic windows, not registry regions: the manuscript's "Moscow city" and "Moscow reg." are registry regions) |
+| atlas | "sanctioned only" (series), "sanctioned-only firms" (provenance) | "sanctions list only", "firms on the sanctions list only" (local copy; the atlas artifact stays at v2) |
+
+Rules applied: available / absent / removed for the three states; "went dark" never names observed
+absence; lists by their printed names; "designation" only for a sender's legal act; no em-dashes
+and no semicolons on screen; each caveat once where it first matters.
+
+### Round-3 verification
+
+- Data: M6 163 checks and M7 201 checks pass; `check-readonly.sh` reported nothing changed outside the lab; no identifier names in any shipped `data/*.js`; the page's `__ready` checks the listed-firm counters and the cell sums against the manifest before any local cut is built.
+- Palette: the lifted blue ramp passes the validator as an ordinal ramp (lightness gaps 0.061-0.063, dark end 4.30:1 on the navy and 4.74:1 on the charcoal land); the anchor colours read on the charcoal ground at 2 px (amber 9.9:1, mint 12.6:1).
+- Page: all five cuts load and seek without exceptions in headless Brave (`--probe`: `problems: []`); the atlas loads without console errors after the shared-script changes (a CDP screenshot was inspected).
+- Text audit (step 6; the teasers at step 3): zero findings on `full`, `teaser`, `teaser-moscow`; `full-moscow` and `treated` carry only the counted `box-over-mark` lines (the live box over 1-35 red marks during the downtown and city year runs, reported by design). Findings fixed on the way: the comparison element's labels, ticks and panel racing each other during the 2 s move (labels and facts now leave in the first half, the panel arrives in the second, the panel rectangle is interpolated too); the Moscow city label flying in from the screen edge during the flight (time-gated to the arrival); a marker label crossing the fading close text (the markers now leave with the section); the live box's "2025*" clipped by its panel (boxes 140 px wide, 1476 and 1690).
+- Review frames: 24 frames of `full-moscow` from the page (`build/r3-g/`, at 5, 20, 33, 50, 70, 80, 86, 90, 95, 99, 110, 120, 130, 141, 150, 158, 165, 178, 188, 194, 205, 230, 262, 272 s) and 14 frames extracted from the finished MP4 (`build/r3-final/`, including the live box at 2016, 2022 and 2025: 149.2, 155.5 and 158.6 s) were inspected at full size; the published cut's 250 m leg (`full` at 86, 95, 107 s) and the designation excerpt of `teaser-moscow` likewise. Two defects found in the MP4 frames and fixed before the final renders: the 250 m count legend sat unbacked on the dense field (now on its own panel at 1420, 300) and the close's caveats sat on the bright 5 km cells (now on a 980 px panel that clears the markers); one defect found in the re-cut: the section's scenes read the stage clock instead of their local clock, so the teaser's designation excerpt showed only the two dots (fixed; the excerpt's street window now ends before the title).
+- Renders (sharded; runs `20261023T073219Z` full-moscow with 8 shards, `072751Z` full, `073103Z` teaser, `073518Z` treated, the teaser-moscow run after the clock fix): `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and exactly 8,250 / 275.000 s (149 s of capture, 80.9 MB), 5,760 / 192.000 s (172 s, 45.6 MB), 1,200 / 40.000 s (39 s, 14.8 MB), 2,910 / 97.000 s (115 s, 40.2 MB) and 1,380 / 46.000 s (run `073808Z`, 43 s, 17.6 MB) against `__videoMeta`; no page exceptions in any shard log. A 720p preview of the Moscow cut (`build/who-stays-visible-moscow-720p.mp4`, 21.4 MB) exists for remote viewing.
+- Determinism: frames 1,500, 3,600 and 5,400 of `full-moscow` captured across three shards and in one process in another order are byte-identical (ImageMagick AE = 0 each), re-run after the last code change.
+- Artifact: the publish set (two pages, four shared scripts, five aggregate files, 5.1 MB) contains no file matching `points|treated|anchors|moscow`; the explainer artifact was republished (v5, then v6 with the legend panel, v7 with the final scripts); it could not be opened from the lab's browser pane (the private page needs the author's claude.ai sign-in), so that check is the author's. The atlas artifact stays at v2.
+- Residuals: the backdrop between k 150 and 260 during the return (138-143 s) is the downtown raster drawn 1.7-2.4 times its size at low alpha for about two seconds (soft grey discs under the arriving markers); the live box covers red marks in the dense years (counted above); the chapter bar of the local cut carries 19 buttons.
 
 ## Design decisions
 
