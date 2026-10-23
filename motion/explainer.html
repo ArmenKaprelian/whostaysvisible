@@ -50,9 +50,10 @@
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
   const CUTS = Object.assign({}, window.ExplainerScenes.cuts);   // full and teaser; the local cuts join once their rasters are decoded
-  const NAMES = { 'full-public': 'Full cut, public', 'teaser-public': 'Teaser, public', 'full-local': 'Full cut, local', 'teaser-local': 'Teaser, local', moscow: 'Moscow' };
-  const LOCAL = new Set(['full-local', 'teaser-local', 'moscow']);
+  const NAMES = { 'full-public': 'Full cut, public', 'teaser-public': 'Teaser, public', 'full-local': 'Full cut, local', 'teaser-local': 'Teaser, local', moscow: 'Moscow', 'maps-firms-local': 'Maps and firms, local', 'maps-firms-local-55': 'Maps and firms, local, 55 s' };
+  const LOCAL = new Set(['full-local', 'teaser-local', 'moscow', 'maps-firms-local', 'maps-firms-local-55']);
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
+  window.__cuts = CUTS;   // the built cuts, for inspection from the DevTools client
   const wanted = q.get('cut');
   let cutName = wanted && CUTS[wanted] ? wanted : 'full-public';
   let X = CUTS[cutName], stage = null;
@@ -109,7 +110,7 @@
       const cs = TreatedScenes.cellSums; const badCells = [];
       for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
       if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));
-      Object.assign(CUTS, ExplainerScenes.makeMoscowCuts(images, { align: q.get('__align') === '1' }));
+      const local = ExplainerScenes.makeMoscowCuts(images, { align: q.get('__align') === '1' }); delete local.kept_years; Object.assign(CUTS, local);
       treated = true;
       if (LOCAL.has(wanted)) build(wanted);
     } else if (LOCAL.has(wanted)) throw new Error('the cut ' + wanted + ' needs the local M6, M7 and M8 data (points, treated, anchors, moscowcells, moscowcomparison, national, treatednational)');

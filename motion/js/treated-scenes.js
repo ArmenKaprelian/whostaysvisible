@@ -106,7 +106,14 @@
 
   // ---- raster and cell compositing ---------------------------------------------------------------
   let IMG = null; const OFF = [0, 1, 2, 3, 4].map(() => { const c = document.createElement('canvas'); c.width = 1920; c.height = 1080; return c; });
-  function yearPair(v) { const y0 = Math.max(Y0, Math.min(Y1, Math.floor(v))), y1 = Math.min(Y1, y0 + 1); return [y0, y1, Motion.clamp(v - y0, 0, 1)]; }
+  // The camera's v is a year; with a kept-year list active (a cut that drops years, author's side project
+  // of 23 October) it is a position in that list, so a dissolve joins two kept years directly. The list is
+  // set by the journey's field scene for its own draw only; every other cut keeps the year semantics.
+  let YL_ACTIVE = null;
+  function yearPair(v) {
+    if (YL_ACTIVE) { const n = YL_ACTIVE.length, i = Math.max(0, Math.min(n - 1, Math.floor(v))), j = Math.min(n - 1, i + 1); return [YL_ACTIVE[i], YL_ACTIVE[j], Motion.clamp(v - i, 0, 1)]; }
+    const y0 = Math.max(Y0, Math.min(Y1, Math.floor(v))), y1 = Math.min(Y1, y0 + 1); return [y0, y1, Motion.clamp(v - y0, 0, 1)];
+  }
   function blendYears(off, ext, which, v) {
     const [y0, y1, u] = yearPair(v);
     const o = off.getContext('2d'); o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, 1920, 1080);
@@ -171,7 +178,7 @@
     if (wNat > 0) drawMarkSet(ctx, cam, v, alpha * wNat, theme, TRN, rewind);
   }
   function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind) {
-    const [y0, y1, u] = yearPair(v);
+    const [y0, y1, u] = yearPair(v); const vy = y0 + (y1 - y0) * u;   // the year value of the pair (equal to v without a kept-year list)
     const ext = extentOf(cam.k); const hw = 960 / cam.k + 1, hh = 540 / cam.k + 1, floor = RING_FLOOR[ext];
     for (let i = 0; i < MARKS.n; i++) {
       const x = MARKS.x[i], y = MARKS.y[i];
@@ -179,7 +186,7 @@
       const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0];
       const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
       const [px, py] = Motion.project(cam, x, y); const r = markRadius(ext, MARKS.pile[i]);
-      const bloom = Motion.clamp(v - (MARKS.red_from[i] - 1), 0, 1);
+      const bloom = Motion.clamp(vy - (MARKS.red_from[i] - 1), 0, 1);
       if (bloom < 1) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
         const pre = (1 - E.outCubic(bloom)) * present * alpha;
@@ -344,7 +351,7 @@
   // Top-right panel: the location (split-flap), its window size, the year, the listed-firm counters.
   function ticker(ctx, theme, { v, ext, alpha, loc }) {
     if (alpha <= 0) return;
-    const [y0, y1, u] = yearPair(v); const yr = Math.round(v); const rc = redCounts[ext][yr];
+    const [y0, y1, u] = yearPair(v); const yr = u < 0.5 ? y0 : y1; const rc = redCounts[ext][yr];
     MM.infoPanel(ctx, theme, { alpha, loc, year: { a: String(y0), b: y1 === y0 ? null : String(y1), u },
       lines: [[`${fmt.int(rc.red)} listed firms shown red`, theme.treated], [`${fmt.int(rc.dark)} without a ${yr} statement`, theme.muted]] });
   }
@@ -402,7 +409,7 @@
   const keyframes = [];
   const push = (t, k, v, easing, base) => keyframes.push(Object.assign({ t, k, v }, base || REST, easing ? { easing } : {}));
   // Year runs: holds and 0.5 s transitions (the ring change and the dissolves share the clock).
-  function runYears(kf, t0, k, hold, trans, base = REST) { let t = t0; YEARS.forEach((y, i) => { kf.push(Object.assign({ t, k, v: y, easing: E.inOutSine }, base)); kf.push(Object.assign({ t: t + hold, k, v: y }, base)); t += hold + (i < YEARS.length - 1 ? trans : 0); }); return t; }
+  function runYears(kf, t0, k, hold, trans, base = REST, list = null) { let t = t0; const ys = list || YEARS; ys.forEach((y, i) => { const v = list ? i : y; kf.push(Object.assign({ t, k, v, easing: E.inOutSine }, base)); kf.push(Object.assign({ t: t + hold, k, v }, base)); t += hold + (i < ys.length - 1 ? trans : 0); }); return t; }
   const run = (t0, k, hold, trans) => runYears(keyframes, t0, k, hold, trans);
   push(0, 200, 2021); push(42, 200, 2021); push(52, K.downtown, 2021); push(52.2, K.downtown, 2021);
   run(53, K.downtown, 0.6, 0.5); push(66, K.downtown, Y1);
@@ -462,16 +469,17 @@
   // country; the explainer's keyframes continue from the last one here).
   const SEC = { street: 0, profiles: 12, designation: 28, comparison: 36, back: 50, downtown: 58, city: 72, region: 84, national: 96, close: 108, out: 115, end: 120 };
   const MID = { cx: (AX + BX) / 2, cy: (AY + BY) / 2, ox: 960, oy: 540 };
-  function journeyKeyframes(S) {
-    const kf = []; const at = (t, k, v, base, easing) => kf.push(Object.assign({ t: S + t, k, v }, base || REST, easing ? { easing } : {}));
+  function journeyKeyframes(S, YL = null) {
+    // With a kept-year list the v channel carries list positions (a year not in the list takes the nearest kept year's position).
+    const pv = y => { if (!YL) return y; let b = 0; YL.forEach((x, j) => { if (Math.abs(x - y) < Math.abs(YL[b] - y)) b = j; }); return b; };
+    const kf = []; const at = (t, k, v, base, easing) => kf.push(Object.assign({ t: S + t, k, v: pv(v) }, base || REST, easing ? { easing } : {}));
     at(SEC.street, K.region, 2021); at(SEC.profiles, 1200, 2021, MID); at(SEC.back, 1200, 2021, MID); at(SEC.back + 5, K.downtown, 2021); at(SEC.downtown, K.downtown, 2021);
-    runYears(kf, S + SEC.downtown + 0.8, K.downtown, 0.75, 0.3); at(SEC.city, K.downtown, Y1);
-    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + SEC.city + 2.5, K.city, 0.55, 0.25); at(SEC.region, K.city, Y1);
-    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + SEC.region + 2.5, K.region, 0.5, 0.25); at(SEC.national, K.region, Y1);
-    // The national run (round 4): the pull-back to the left framing over 2.5 s while the year rewinds, then the years at the region run's dwell.
+    runYears(kf, S + SEC.downtown + 0.8, K.downtown, 0.75, 0.3, REST, YL); at(SEC.city, K.downtown, Y1);
+    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + SEC.city + 2.5, K.city, 0.55, 0.25, REST, YL); at(SEC.region, K.city, Y1);
+    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + SEC.region + 2.5, K.region, 0.5, 0.25, REST, YL); at(SEC.national, K.region, Y1);
     // Two segments so Moscow stays on screen: zoom out in place to k 1 (the region raster leaves, the national
     // raster arrives, both centred on Moscow), then slide to the left framing while the zoom completes.
-    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + SEC.national + 2.5, K.national, 0.5, 0.25, NATBASE); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
+    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + SEC.national + 2.5, K.national, 0.5, 0.25, NATBASE, YL); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
     return kf;
   }
   // The anchors between their projected positions and the card headers; the dot grows from the mark's
@@ -482,13 +490,15 @@
     const r = Motion.lerp(1.5 * cam.k / 90, 14, ramp(cam.k, 150, 400));
     return { A: lerp2(qa, COL.right.dot, w), B: lerp2(qb, COL.left.dot, w), r };
   }
-  function journey(images, S) {
+  function journey(images, S, { years: YL = null } = {}) {   // years: a kept-year list for a cut that drops years (positions in the v channel)
     IMG = images;
     const LOCJ = [{ start: SEC.back, ext: 'downtown' }, { start: SEC.city, ext: 'city' }, { start: SEC.region, ext: 'region' }, { start: SEC.national, ext: 'national' }];
     // Both scenes read their own clock (local), which a re-cut maps through its window; in the full cut local = t - S.
     const field = { id: 'field', title: 'The Moscow field', start: S, end: S + SEC.end, z: 1.5, fadeIn: 0, fadeOut: 0, draw({ ctx, local: l, cam, stage, theme }) {
       const k = cam.k;
-      const v = Motion.clamp(cam.v == null ? 2021 : cam.v, Y0, Y1);
+      YL_ACTIVE = YL;
+      const v = YL ? Motion.clamp(cam.v == null ? 0 : cam.v, 0, YL.length - 1) : Motion.clamp(cam.v == null ? 2021 : cam.v, Y0, Y1);
+      const [vy0, vy1, vu] = yearPair(v), vy = vy0 + (vy1 - vy0) * vu;   // the year value (equal to v without a list)
       const outA = 1 - step(l, SEC.out, 1.5), marksOut = 1 - step(l, SEC.out + 0.5, 2);
       const layerReveal = step(l, SEC.downtown + 0.5, 1.5) * marksOut;
       // The 2021 backdrop: in with the street zoom (k 60-80) and out above k 150-260 (the scale ramps
@@ -520,14 +530,15 @@
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
-      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v, explain2025: false }); }
+      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v: vy, explain2025: false }); }
       if (l >= SEC.close - 0.5) closeText(ctx, theme, l - SEC.close, outA);
+      YL_ACTIVE = null;
     } };
     const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local, theme }) { profiles(ctx, theme, local, { des: 16.6, until: 24 }); } };
     const chapters = [['street', 0, SEC.designation, 'Two firms'], ['designation', SEC.designation, SEC.comparison, 'Designation'], ['comparison', SEC.comparison, SEC.back, 'Revenue against comparison group'],
                       ['downtown', SEC.back, SEC.city, `Central ${CITY.name}, ${Y0}–${Y1}`], ['city', SEC.city, SEC.region, CITY.name], ['region', SEC.region, SEC.national, `${CITY.name} and surroundings`], ['national', SEC.national, SEC.close, `Russia, ${Y0}–${Y1}`], ['close', SEC.close, SEC.end, 'Close']];
     const timeline = {}; chapters.forEach(([id, a, b, title]) => timeline[id] = { id, start: S + a, end: S + b, title });
-    return { scenes: [field, cards], keyframes: journeyKeyframes(S), timeline, rest: REST, SEC, start: S, end: S + SEC.end };
+    return { scenes: [field, cards], keyframes: journeyKeyframes(S, YL), timeline, rest: REST, SEC, start: S, end: S + SEC.end, years: YL };
   }
 
   function alignScene(duration) {

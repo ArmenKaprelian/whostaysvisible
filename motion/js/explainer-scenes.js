@@ -418,26 +418,40 @@
   // where the last map window left it.
   function makeCut(parent, entries, duration, mapWindows) {
     const camFull = Motion.camera(parent.keyframes, 1920, 1080);
-    const tl = {}, sc = [], kf = [], maps = [];
-    for (const [id, title, start, end, fs, fe] of entries) {
+    const tl = {}, sc = [], kf = [], maps = [], spans = [];
+    for (const [id, title, start, end, fs, fe, camEnd] of entries) {
+      if (!(fe > fs) || !(end > start)) throw new Error(`makeCut: the window ${id} is empty or reversed (${fs}-${fe} into ${start}-${end})`);
       const speed = (fe - fs) / (end - start);
       tl[id] = { id, start, end, title }; maps.push({ start, end, fs, speed });
+      // Windows that continue each other in both clocks (no gap, the same speed) form one span: its scenes
+      // are cloned once and the holds and clipping fades sit only at the span's ends, so a chapter boundary
+      // inside a contiguous stretch of the parent leaves no trace.
+      const last = spans[spans.length - 1];
+      // camEnd (parent time, optional): the camera stops following the parent there and holds, while the scenes play on to fe.
+      if (last && Math.abs(last.fe - fs) < 1e-9 && Math.abs(last.end - start) < 1e-9 && Math.abs(last.speed - speed) < 1e-9) { last.fe = fe; last.end = end; last.map = last.map || mapWindows.has(id); last.camEnd = camEnd; }
+      else spans.push({ id, start, end, fs, fe, speed, map: mapWindows.has(id), camEnd });
+    }
+    for (const w of spans) {
+      const { start, end, fs, fe, speed } = w;
       for (const s of parent.scenes) {
         if (s.id === 'ground' || s.end <= fs || s.start >= fe) continue;
         const a = Math.max(s.start, fs), b = Math.min(s.end, fe);
-        sc.push(Object.assign({}, s, { id: s.id + '@' + id, start: start + (a - fs) / speed, end: start + (b - fs) / speed, speed, offset: a - s.start,
+        sc.push(Object.assign({}, s, { id: s.id + '@' + w.id, start: start + (a - fs) / speed, end: start + (b - fs) / speed, speed, offset: a - s.start,
                                        fadeIn: s.start < fs ? 0.5 : s.fadeIn, fadeOut: s.end > fe ? 0.5 : s.fadeOut }));
       }
-      if (!mapWindows.has(id)) continue;
+      if (!w.map) continue;
+      const ce = w.camEnd == null ? fe : w.camEnd;
       kf.push(Object.assign({}, camFull(fs), { t: start }));
-      for (const k of parent.keyframes) if (k.t > fs && k.t < fe) kf.push(Object.assign({}, k, { t: start + (k.t - fs) / speed }));
-      kf.push(Object.assign({}, camFull(fe), { t: end - 0.5 }));
+      for (const k of parent.keyframes) if (k.t > fs && k.t < ce) kf.push(Object.assign({}, k, { t: start + (k.t - fs) / speed }));
+      kf.push(Object.assign({}, camFull(ce), { t: end - 0.5 }));
     }
     const timeMap = t => { let m = maps[0]; for (const x of maps) if (t >= x.start) m = x; return m.fs + Math.min(Math.max(0, t - m.start), m.end - m.start) * m.speed; };
     sc.push(groundScene(parent.sch, duration, timeMap));
     kf.sort((a, b) => a.t - b.t);
     return { scenes: sc, keyframes: kf, DURATION: duration, timeline: tl };
   }
+  // Consecutive windows of a parent played at full speed: [id, title, fs, fe] in order, start times from a running clock.
+  function sequence(items) { let t = 0; return items.map(([id, title, fs, fe, camEnd]) => { const e = [id, title, t, t + (fe - fs), fs, fe, camEnd]; t += fe - fs; return e; }); }
   const full = buildCut(LIST_FULL, null);
   const Bf = full.B;
   const TEASER = [['hook', TITLES.hook, 0, 7.5, 0, Bf.hook.end], ['years', TITLES.years, 7.5, 17.5, Bf.years.start, Bf.years.end], ['zoom', 'Central Moscow', 17.5, 29, Bf.zoom.start, Bf.zoom.start + 19],
@@ -455,7 +469,22 @@
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
     const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
-    return { 'full-local': fm, 'teaser-local': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts) };
+    // Maps and firms (author's side project, 23 October): the map beats and the two-firm section in their order, nothing else; cutting only.
+    const T = fm.timeline, sec = (id, a, b, ce) => [id, T[id].title, S0 + a, S0 + b, ce == null ? undefined : S0 + ce];
+    const MAPS = sequence([['years', TITLES.years, B.years.start, B.years.end], ['change', TITLES.change, B.change.start, B.change.end], ['zoom', TITLES.zoom, B.zoom.start, B.zoom.end],
+      sec('street', 0, SEC.designation), sec('designation', SEC.designation, SEC.comparison), sec('comparison', SEC.comparison, SEC.back), sec('downtown', SEC.back, SEC.city), sec('city', SEC.city, SEC.region),
+      // The close plays 1.5 s past its fade so no text meets the next beat's in the crossfade; the camera holds at the left framing from SEC.out.
+      sec('region', SEC.region, SEC.national), sec('national', SEC.national, SEC.close), sec('close', SEC.close, SEC.out + 1.5, SEC.out), ['next', TITLES.next, B.next.start + 1.5, B.next.end]]);
+    const mapsLen = MAPS[MAPS.length - 1][3];
+    // The 55 s version: the two-firm sequence without the street zoom, then the downtown run over eight kept
+    // years (2015, 2017, 2019 and 2020 dropped), ending on 2025; a parent with the kept-year list supplies the run.
+    const KEPT = [2014, 2016, 2018, 2021, 2022, 2023, 2024, 2025];
+    const fm55 = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start, { years: KEPT }));
+    const S55 = sequence([['profiles', 'Who are they?', S0 + SEC.profiles + 0.4, S0 + SEC.designation], sec('designation', SEC.designation, SEC.comparison), sec('comparison', SEC.comparison, SEC.back),
+      ['back', 'The map returns', S0 + SEC.back, S0 + SEC.downtown], ['downtown', 'Central Moscow, kept years', S0 + SEC.downtown, S0 + SEC.profiles + 0.4 + 55]]);
+    const all = e => new Set(e.map(x => x[0]));
+    return { 'full-local': fm, 'teaser-local': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts),
+             'maps-firms-local': makeCut(fm, MAPS, mapsLen, all(MAPS)), 'maps-firms-local-55': makeCut(fm55, S55, 55, all(S55)), kept_years: KEPT };
   }
   window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts, frames: { left: leftK(), nat: natK(0.98) } });
 })();
