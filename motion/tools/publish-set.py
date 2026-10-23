@@ -24,6 +24,10 @@ META = '<meta name="claude:viewport-fit-sides" content="cover">'
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
 SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "treated-scenes.js", "explorer-app.js"]
 ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
+# The video assets of the explainer artifact (the three 720p cuts under the 15 MB asset cap, uploaded on
+# 23 October 2026): the published page links them; the local page keeps its build/ files instead.
+VIDEOS = [("Teaser, 46 s", "/_blob/565d6fbb4d4aaf8bd1e40bba3f8f8734"), ("Moscow, 110 s", "/_blob/8e65629b41efb469e321e36f12368064"), ("Maps and firms, 55 s", "/_blob/6ef9cdfed63ea5d1e52821213355c6b0")]
+VIDEO_NOTE = '<p class="note">Videos at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) and the 174 s maps-and-firms cut are larger than the asset cap and travel as files.</p>'
 
 def convert(name):
     src = open(os.path.join(MOTION, name), encoding="utf-8").read()
@@ -38,6 +42,8 @@ def convert(name):
     if css_link:
         css = open(os.path.join(MOTION, "css", "theme.css"), encoding="utf-8").read()
         parts.append("<style>\n" + css + "\n</style>")
+    if name == "explainer.html":
+        body = body.replace("</p>\n<script", "</p>\n" + VIDEO_NOTE + "\n<script", 1)
     out = "\n".join(parts) + "\n" + body.strip() + "\n"
     with open(os.path.join(OUT, name), "w", encoding="utf-8") as fh:
         fh.write(out)
