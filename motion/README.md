@@ -754,13 +754,13 @@ and 2,000 px.
 - Cuts: the five cuts probe clean under the new ids; the text audits report only the counted live-box coverage (17 lines each on `full`, `moscow` and `maps-firms-instagram`, 5 on the 55 s cut) and zero findings on the teaser, with the fact line and the longer credits in place; frames of the fact line (full at 150 s, the 55 s cut at 50 s) and the credits (282 s) inspected at full size. Renders (sharded; runs `20261023T105526Z` full with 8 shards, `105850Z` teaser, `105945Z` moscow, `110211Z` maps-firms-instagram with 6 shards, `110439Z` the 55 s cut): `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and exactly 8,610 frames / 286.999 s (154 s of capture, 79.8 MB), 1,380 / 46.000 s (44 s, 17.3 MB), 3,300 / 110.000 s (124 s, 44.1 MB), 5,220 / 174.000 s (117 s, 57.3 MB) and 1,650 / 54.999 s (71 s, 14.8 MB) against `__videoMeta`; 720p copies of every cut (21.2, 4.4, 13.6, 17.1 and 4.7 MB).
 - Atlas: `atlas-audit.py` zero findings over 75 states at three widths; firms mode inspected in screenshots at the Russia, Moscow and Central Moscow presets on the dark theme and at the Russia preset on the light theme, with the hover and the legend; the loader exercised through the local server (a year in 0.14 to 0.31 s, the sentinel checks passing).
 - M9: 173 checks pass; `check-readonly.sh` reported nothing changed outside the lab; `firms.json` carries no identifier names; every year file under 15 MB gzipped (3.8 to 4.1 MB) and under 16 MB as a script (about 5 MB).
-- Publish set: the identifier and neighbour-name guards pass; 109.8 MB in all; the explainer artifact at v12 and the atlas at v7 hold every file; the load on the host could not be checked from the lab (a claude.ai session is needed), so that check is the author's.
+- Publish set: the identifier and neighbour-name guards pass; 109.8 MB in all; the explainer artifact at v13 (v12 declared the assets capability, v13 links the three video assets) and the atlas at v7 hold every file; the load on the host could not be checked from the lab (a claude.ai session is needed), so that check is the author's.
 
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability;
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page;
 atlas artifact: v6 and v7 (two uploads). The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
