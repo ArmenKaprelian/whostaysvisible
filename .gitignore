@@ -10,3 +10,5 @@ gallery/fig28-compare.html
 gallery/fig28-pick.html
 gallery/fig28-final.html
 gallery/fig27.html
+motion/build/
+motion/data/*.js

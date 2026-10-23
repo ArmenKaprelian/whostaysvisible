@@ -1,0 +1,55 @@
+"check","expected","observed","tolerance","pass"
+"Table B.1 eligible share 2012",14.9,14.9,0.000000001,TRUE
+"Table B.1 eligible share 2018",47.4,47.4,0.000000001,TRUE
+"Table B.1 eligible share 2019",50,50,0.000000001,TRUE
+"Table B.1 eligible share 2021",63.4,63.4,0.000000001,TRUE
+"Table B.1 eligible share 2024",66.3,66.3,0.000000001,TRUE
+"Table B.1 eligible share 2025",64.3,64.3,0.000000001,TRUE
+"Table B.1 registered share 2021",71.7,71.7,0.000000001,TRUE
+"Table B.1 registered share 2024",71.2,71.2,0.000000001,TRUE
+"statements 2021",2129509,2129509,0,TRUE
+"statements 2024",2086055,2086055,0,TRUE
+"eligible 2021",3357109,3357109,0,TRUE
+"registered 2021",2959193,2959193,0,TRUE
+"located 2021",3277638,3277638,0,TRUE
+"located with statement 2021",2097055,2097055,0,TRUE
+"distinct locations",727190,727190,0,TRUE
+"largest location",7928,7928,0,TRUE
+"private 2021",64.2,64.2,0.000000001,TRUE
+"private 2024",67.2,67.2,0.000000001,TRUE
+"foreign or joint 2021",56.5,56.5,0.000000001,TRUE
+"foreign or joint 2024",58.1,58.1,0.000000001,TRUE
+"state-related 2021",69.8,69.8,0.000000001,TRUE
+"state-related 2024",61.3,61.3,0.000000001,TRUE
+"unitary 2021",69.2,69.2,0.000000001,TRUE
+"unitary 2024",48.2,48.2,0.000000001,TRUE
+"joint-stock 2021",73,73,0.000000001,TRUE
+"joint-stock 2024",78.2,78.2,0.000000001,TRUE
+"LLC 2021",65.2,65.2,0.000000001,TRUE
+"LLC 2024",68.3,68.3,0.000000001,TRUE
+"Q5 odds ratio 2022",3.835,3.8347,0.0005,TRUE
+"Q5 odds ratio 2021",3.391,3.3913,0.0005,TRUE
+"Q2 odds ratio 2020",1.984,1.984,0.0005,TRUE
+"Q5 2022 vs 2021 ratio",1.131,1.1308,0.0005,TRUE
+"Q5 2022 vs 2021 low",1.062,1.0617,0.0005,TRUE
+"Q5 2022 vs 2021 high",1.204,1.2043,0.0005,TRUE
+"raw Q1 2022",83.9,83.9,0.000000001,TRUE
+"raw Q5 2022",95.1,95.1,0.000000001,TRUE
+"sanctioned only OR 2019 (eligible)",1.47,1.4703,0.0005,TRUE
+"sanctioned only OR 2024 (eligible)",0.57,0.5703,0.0005,TRUE
+"sanctioned only OR 2024 (registered)",0.445,0.4453,0.0005,TRUE
+"administrative_only is Table B.7's government strategic only: OR 2019 (eligible)",0.055,0.0551,0.0005,TRUE
+"administrative_only OR 2024 (eligible)",0.028,0.0281,0.0005,TRUE
+"prior-available transitions 2020-2024",10484716,10484716,0,TRUE
+"prior-available next-year statement",9323396,9323396,0,TRUE
+"prior-available removed",300868,300868,0,TRUE
+"prior-absent transitions",4814211,4814211,0,TRUE
+"prior-absent reappear",462941,462941,0,TRUE
+"prior-absent removed",1401172,1401172,0,TRUE
+"fixed 2019 cohort",3413062,3413062,0,TRUE
+"sanctioned only denominator",2784,2784,0,TRUE
+"AAANNN sanctioned only",98,98,0,TRUE
+"AAANNN sanctioned only share",3.52,3.52,0.000000001,TRUE
+"AAANNN no list share",1.31,1.31,0.000000001,TRUE
+"revenue cohort by cash share",1503198,1503198,0,TRUE
+"margin cohort by inventory share",1178930,1178930,0,TRUE

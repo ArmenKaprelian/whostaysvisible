@@ -1,0 +1,14 @@
+"check","expected","observed","tolerance","pass"
+"polygon parts",1637,1637,0,TRUE
+"rings",1682,1682,0,TRUE
+"vertices in, closing vertices included (file total)",341544,341544,0,TRUE
+"distinct vertices in (closing vertices excluded)",339862,339862,0,TRUE
+"projected rings equal the production reader",1,1,0,TRUE
+"production vertex count agrees",339862,339862,0,TRUE
+"origin projects to (0,0): |x|+|y|",0,0,0.000000001,TRUE
+"Moscow reference point equals the manifest window centre (km)",0,0,0.000001,TRUE
+"LOD0 rings with a dropped vertex farther than the tolerance (count)",0,0,0,TRUE
+"area change LOD0 (percent, abs)",0,0.0026378600506462,0.5,TRUE
+"every LOD0 ring has at least 3 distinct vertices",1,1,0,TRUE
+"Moscow LOD1 window holds Moscow and Moscow Oblast",2,2,0,TRUE
+"St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast",2,2,0,TRUE

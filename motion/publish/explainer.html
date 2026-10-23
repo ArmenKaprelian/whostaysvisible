@@ -1,0 +1,121 @@
+<title>Who stays visible?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+/* Motion pages: one dark stage by choice for the explainer; the explorer adds a light theme.
+   Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
+   code once per theme (getComputedStyle), so every colour lives here. */
+:root {
+  --stage: #0B1A2E;        /* navy ground, deeper than the ramp's end */
+  --land: #1E2E42;         /* slate land */
+  --border: #33475E;       /* region borders */
+  --graticule: #16263A;    /* faint meridians and parallels */
+  --ink: #E8EEF4;          /* text */
+  --muted: #9FB0C2;        /* secondary text */
+  --dim: #5F7389;          /* tertiary text, axes */
+  --grid: #1C2C40;         /* chart grid lines */
+  --panel: #10223A;        /* control bar and cards */
+  --accent: #9CC4E8;       /* pale blue: principal series, density */
+  --accent-strong: #D6E6F5;
+  --brick: #D9906F;        /* comparison: falling, absent */
+  --green: #7FBFA6;        /* second contrast when two cohorts sit side by side */
+  --below: #3C4852;        /* cells below support */
+  --highlight: rgba(156, 196, 232, 0.12);
+  --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0;
+}
+.stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 100%; display: block; background: var(--stage); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; background: var(--panel); border-radius: 6px; padding: 10px 14px; font-size: 14px; }
+.controls button { background: transparent; color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; min-width: 64px; }
+.controls button:hover, .controls button:focus-visible { border-color: var(--accent); outline: none; }
+.controls .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; }
+.controls input[type=range] { flex: 1 1 240px; min-width: 120px; accent-color: var(--accent); }
+.chapters { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.chapters button { font-size: 13px; padding: 4px 10px; min-width: 0; color: var(--muted); }
+.chapters button[aria-current="true"] { color: var(--ink); border-color: var(--accent); }
+.note { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.note a { color: var(--accent); }
+html[data-render] .controls, html[data-render] .note { display: none !important; }
+html[data-render] body { padding: 0; gap: 0; }
+html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none; aspect-ratio: auto; }
+html[data-render] * { transition: none !important; animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .controls button { transition: none; } }
+
+</style>
+<div class="stage-wrap"><canvas class="stage" id="stage" width="1920" height="1080" aria-label="Animated explainer: who stays visible? Financial statements of Russian firms under sanctions"></canvas></div>
+<div class="controls" id="controls">
+  <button id="play" type="button" aria-label="Play or pause">Play</button>
+  <span class="time" id="time">0:00 / 0:00</span>
+  <input id="scrub" type="range" min="0" max="182" step="0.0333" value="0" aria-label="Scrub the timeline">
+  <div class="chapters" id="chapters"></div>
+</div>
+<p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab; descriptive associations, not causal effects.</p>
+<script src="data/basemap.js"></script>
+<script src="data/cells100.js"></script>
+<script src="data/density.js"></script>
+<script src="data/series.js"></script>
+<script src="data/cellsyears.js" onerror="this.remove()"></script>
+<script src="js/motion-core.js"></script>
+<script src="js/map-layers.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/explainer-scenes.js"></script>
+<script>
+(function () {
+  'use strict';
+  const q = new URLSearchParams(location.search);
+  const RENDER = q.get('__render') === '1', DEBUG = q.get('__debug') === '1';
+  if (RENDER) { document.documentElement.setAttribute('data-render', '1'); Math.random = function () { throw new Error('Math.random is not allowed in render mode'); }; }
+  const css = getComputedStyle(document.documentElement);
+  const tok = n => css.getPropertyValue('--' + n).trim();
+  const theme = { stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'),
+                  accent: tok('accent'), accentStrong: tok('accent-strong'), brick: tok('brick'), green: tok('green'), below: tok('below'), highlightBand: tok('highlight'),
+                  tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
+  const canvas = document.getElementById('stage');
+  const X = window.ExplainerScenes;
+  const stage = Motion.createStage({ width: 1920, height: 1080, fps: 30, duration: X.DURATION, canvas, theme, data: window.MOTION_DATA, seed: 20261022 });
+  stage.setCamera(Motion.camera(X.keyframes, 1920, 1080));
+  X.scenes.forEach(s => stage.addScene(s));
+  if (DEBUG) stage.addScene({ id: 'debug', start: 0, end: X.DURATION, z: 99, fadeIn: 0, fadeOut: 0, draw({ ctx, t }) { Motion.text(ctx, 'frame ' + Math.round(t * 30) + '  t=' + t.toFixed(3), 1900, 1060, { size: 22, color: theme.muted, align: 'right' }); } });
+
+  // Live controls (not part of the render path).
+  const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters');
+  scrub.max = String(X.DURATION);
+  const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  let playing = false, raf = 0, startWall = 0, startT = 0;
+  function show(t) { stage.render(t); scrub.value = String(t); timeEl.textContent = fmtTime(t) + ' / ' + fmtTime(X.DURATION); chapters.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', String(t >= +b.dataset.start && t < +b.dataset.end))); }
+  function tick(now) { if (!playing) return; const t = startT + (now - startWall) / 1000; if (t >= X.DURATION) { show(X.DURATION - 1e-3); setPlaying(false); return; } show(t); raf = requestAnimationFrame(tick); }
+  function setPlaying(p) { playing = p; play.textContent = p ? 'Pause' : 'Play'; if (p) { startT = +scrub.value >= X.DURATION - 0.05 ? 0 : +scrub.value; startWall = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf); }
+  play.addEventListener('click', () => setPlaying(!playing));
+  scrub.addEventListener('input', () => { setPlaying(false); show(+scrub.value); });
+  Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
+  document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' && e.key !== ' ') return; if (e.key === ' ') { e.preventDefault(); setPlaying(!playing); } else if (e.key === 'ArrowRight') { setPlaying(false); show(Math.min(X.DURATION - 1e-3, +scrub.value + 1 / 30)); } else if (e.key === 'ArrowLeft') { setPlaying(false); show(Math.max(0, +scrub.value - 1 / 30)); } });
+  window.addEventListener('resize', () => { if (!playing) show(+scrub.value); });
+
+  // Render contract: __seek(t) draws the frame at t and resolves after two compositor ticks.
+  window.__videoMeta = stage.meta();
+  // The frame is drawn synchronously; the promise waits two animation frames for the compositor, with a
+  // timer fallback for a hidden tab, where animation frames stop.
+  window.__seek = function (t) { stage.render(t); return new Promise(res => { let done = false; const ok = () => { if (!done) { done = true; res(t); } }; requestAnimationFrame(() => requestAnimationFrame(ok)); setTimeout(ok, 400); }); };
+  window.__ready = (async () => {
+    await document.fonts.ready;
+    try { await Promise.all([document.fonts.load('400 28px "Nimbus Sans"'), document.fonts.load('700 28px "Nimbus Sans"')]); } catch (e) { /* fallback fonts */ }
+    const D = window.MOTION_DATA; const problems = [];
+    if (D.cells100.avail.year.length !== 7013) problems.push('cells100.avail rows ' + D.cells100.avail.year.length);
+    if (D.density.national.count !== 36585) problems.push('density national cells ' + D.density.national.count);
+    if (D.series.facts.located_2021 !== 3277638) problems.push('facts.located_2021 ' + D.series.facts.located_2021);
+    if (D.basemap.lod0.parts.length !== 1637) problems.push('basemap parts ' + D.basemap.lod0.parts.length);
+    if (problems.length) throw new Error('data checks failed: ' + problems.join('; '));
+    const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
+    await window.__seek(t0); show(t0);
+    return Object.assign({ yearsLayer: !!D.cellsyears }, window.__videoMeta);
+  })();
+  window.__ready.catch(e => { console.error(e); timeEl.textContent = 'Error: ' + e.message; });
+})();
+</script>

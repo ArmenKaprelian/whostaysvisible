@@ -1,14 +1,35 @@
 #!/usr/bin/env bash
 # Guarded launcher for Stage B and C: one job under a cgroup memory cap, inside
 # the read-only sandbox, with a watcher. Modeled on programming/scripts/run-local-data.sh.
+# --max SIZE sets the ceiling: the default 3G, the recorded 4G settings, or a larger value for
+# the motion study (22 October 2026), where the ceiling is a crash guard only: MemoryHigh sits
+# 2 GiB under it, the pre-flight floor stays at the standard value and the watcher still stops
+# a job when the machine runs low. --cpu, --duck-mem, --duck-threads and --duck-temp override
+# the lab.env defaults for one job; the run's env file records what was used.
 set -uo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"; lab_load_env
-usage() { echo 'Usage: scripts/lab-run.sh [--max 4G] COMMAND [ARG ...]' >&2; exit 2; }
+usage() { echo 'Usage: scripts/lab-run.sh [--max SIZE] [--cpu QUOTA] [--duck-mem SIZE] [--duck-threads N] [--duck-temp SIZE] COMMAND [ARG ...]' >&2; exit 2; }
 HIGH=$LAB_MEMORY_HIGH; MAX=$LAB_MEMORY_MAX; FLOOR=$LAB_MEMAVAILABLE_MIN_MIB
-if [[ "${1:-}" == "--max" ]]; then
-  [[ "${2:-}" == "4G" ]] || usage
-  HIGH=$LAB_MEMORY_HIGH_BIG; MAX=$LAB_MEMORY_MAX_BIG; FLOOR=$LAB_MEMAVAILABLE_MIN_MIB_BIG; shift 2
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --max)
+      [[ "${2:-}" =~ ^[0-9]+G$ ]] || usage
+      if [[ "$2" == "4G" ]]; then
+        HIGH=$LAB_MEMORY_HIGH_BIG; MAX=$LAB_MEMORY_MAX_BIG; FLOOR=$LAB_MEMAVAILABLE_MIN_MIB_BIG
+      else
+        n=${2%G}; (( n >= 2 )) || usage
+        MAX=$2; HIGH="$(( n - 2 < 1 ? 1 : n - 2 ))G"; FLOOR=$LAB_MEMAVAILABLE_MIN_MIB
+      fi
+      shift 2;;
+    --cpu) [[ "${2:-}" =~ ^[0-9]+%$ ]] || usage; LAB_CPU_QUOTA=$2; shift 2;;
+    --duck-mem) [[ "${2:-}" =~ ^[0-9]+(MB|GB)$ ]] || usage; LAB_DUCKDB_MEMORY_LIMIT=$2; shift 2;;
+    --duck-threads) [[ "${2:-}" =~ ^[0-9]+$ ]] || usage; LAB_DUCKDB_THREADS=$2; shift 2;;
+    --duck-temp) [[ "${2:-}" =~ ^[0-9]+(MB|GB)$ ]] || usage; LAB_DUCKDB_MAX_TEMP=$2; shift 2;;
+    --) shift; break;;
+    -*) usage;;
+    *) break;;
+  esac
+done
 [[ $# -gt 0 ]] || usage
 
 # Pre-flight refusals, in order.

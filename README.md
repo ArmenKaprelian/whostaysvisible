@@ -92,6 +92,18 @@ and R for two placements. Inputs are pinned as `fig27.*` and `flow.*`. Run
 and `scripts/lab-ro.sh Rscript --vanilla R/fig27/G-gallery.R`. Ranking (provisional until the
 terminology registry is approved): `candidates/fig27-ranking.md`; page: `gallery/fig27.html`.
 
+## Motion study (22 October 2026)
+
+A Claude Motion-style explainer (`motion/explainer.html`, 182 s, captured to `motion/build/who-stays-visible.mp4`)
+and an interactive atlas (`motion/explorer.html`) over the Chapter 2 aggregates, with a new data pass
+`R/motion/M1-M5` (basemap, 100 km cells, density at 5 km / 1 km / 250 m, chart series and facts, and
+availability by cell for every year 2014-2025 from the foundation partitions). Inputs are pinned as
+`motion.*` (`scripts/pin-sources.py --only motion`); outputs sit in `motion/data/` with provenance and
+checks. `scripts/lab-run.sh` now takes `--max SIZE`, `--cpu`, `--duck-mem`, `--duck-threads` and
+`--duck-temp` (the author lifted the small memory cap for this study; the ceiling is a crash guard).
+Capture: `scripts/motion-capture.sh` (host-side, headless Brave over the DevTools protocol, ffmpeg).
+See `motion/README.md` for the storyboard, checks, run order and verification.
+
 ## Decision log
 
 - 2026-10-06: plan approved by the author; firm-level reads allowed including raw
@@ -103,3 +115,4 @@ terminology registry is approved): `candidates/fig27-ranking.md`; page: `gallery
 - 2026-10-18: Figure 2.7 gallery (Points 20, 22, 13) built; labels use the proposed registry names; ranking provisional until the registry is approved. Author picks pending.
 - 2026-10-18 (later): author's picks recorded; Figure 2.7 kept, the change map adopted (layout to Codex, brief in candidates/fig27-change-codex-brief.md), the diagram redone as a flowchart (flow2, `R/flow/F2-flowchart.R`).
 - 2026-10-18 (evening): the flowchart was rejected too (still too dense); Codex makes its own pass from candidates/fig27-flow-codex-brief.md. Gallery phase closed for Points 20, 22 and 13.
+- 2026-10-22: motion study approved from `~/.claude/plans/can-you-within-your-elegant-lantern.md`. Author answers: any data, including new analyses run in the lab, as long as nothing touches the rest of the project; local build, then private claude.ai artifacts; firm-level reads allowed, published pages carry binned aggregates only; length by quality; dark cinematic look held to Tufte principles; no 3 or 4 GB memory cap on local work (crash guard only).

@@ -1,0 +1,45 @@
+/* Motion pages: one dark stage by choice for the explainer; the explorer adds a light theme.
+   Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
+   code once per theme (getComputedStyle), so every colour lives here. */
+:root {
+  --stage: #0B1A2E;        /* navy ground, deeper than the ramp's end */
+  --land: #1E2E42;         /* slate land */
+  --border: #33475E;       /* region borders */
+  --graticule: #16263A;    /* faint meridians and parallels */
+  --ink: #E8EEF4;          /* text */
+  --muted: #9FB0C2;        /* secondary text */
+  --dim: #5F7389;          /* tertiary text, axes */
+  --grid: #1C2C40;         /* chart grid lines */
+  --panel: #10223A;        /* control bar and cards */
+  --accent: #9CC4E8;       /* pale blue: principal series, density */
+  --accent-strong: #D6E6F5;
+  --brick: #D9906F;        /* comparison: falling, absent */
+  --green: #7FBFA6;        /* second contrast when two cohorts sit side by side */
+  --below: #3C4852;        /* cells below support */
+  --highlight: rgba(156, 196, 232, 0.12);
+  --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0;
+}
+.stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 100%; display: block; background: var(--stage); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; background: var(--panel); border-radius: 6px; padding: 10px 14px; font-size: 14px; }
+.controls button { background: transparent; color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; min-width: 64px; }
+.controls button:hover, .controls button:focus-visible { border-color: var(--accent); outline: none; }
+.controls .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; }
+.controls input[type=range] { flex: 1 1 240px; min-width: 120px; accent-color: var(--accent); }
+.chapters { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.chapters button { font-size: 13px; padding: 4px 10px; min-width: 0; color: var(--muted); }
+.chapters button[aria-current="true"] { color: var(--ink); border-color: var(--accent); }
+.note { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.note a { color: var(--accent); }
+html[data-render] .controls, html[data-render] .note { display: none !important; }
+html[data-render] body { padding: 0; gap: 0; }
+html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none; aspect-ratio: auto; }
+html[data-render] * { transition: none !important; animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .controls button { transition: none; } }

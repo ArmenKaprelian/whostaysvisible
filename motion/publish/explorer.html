@@ -1,0 +1,120 @@
+<title>Visibility Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
+<style>
+/* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
+   Dark is the default; the light theme uses the manuscript's production colours. */
+:root {
+  --stage: #0B1A2E; --land: #1E2E42; --border: #33475E; --graticule: #16263A;
+  --ink: #E8EEF4; --muted: #9FB0C2; --dim: #5F7389; --grid: #1C2C40; --panel: #10223A; --panel-2: #152A45;
+  --accent: #9CC4E8; --accent-strong: #D6E6F5; --brick: #D9906F; --green: #7FBFA6; --below: #3C4852; --highlight: rgba(156,196,232,0.12);
+  --control: #16304E; --control-on: #2F6395; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
+  --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
+  --accent: #2166AC; --accent-strong: #0B3D6E; --brick: #B35832; --green: #004B3C; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
+  --control: #E6EBEF; --control-on: #2166AC; color-scheme: light; } }
+:root[data-theme="light"] {
+  --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
+  --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
+  --accent: #2166AC; --accent-strong: #0B3D6E; --brick: #B35832; --green: #004B3C; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
+  --control: #E6EBEF; --control-on: #2166AC; color-scheme: light; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+header h1 { font-size: 22px; margin: 0; font-weight: 700; }
+header .sub { color: var(--muted); flex: 1 1 320px; min-width: 0; }
+button, select { font: inherit; }
+.btn { background: var(--control); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+.btn[aria-pressed="true"], .btn.on { background: var(--control-on); color: #fff; border-color: var(--control-on); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; }
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } .side { max-height: none; } }
+.mapwrap { position: relative; min-height: 360px; background: var(--stage); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#overlay { pointer-events: none; }
+.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--stage) 82%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 24px); }
+.maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
+.maplegend .row { margin: 2px 0; }
+.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--stage) 82%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; }
+.tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: 280px; display: none; z-index: 5; }
+.tooltip b { font-variant-numeric: tabular-nums; }
+.side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
+.card { background: var(--panel); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.card h2 { font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.controls .btn { font-size: 13px; }
+.yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
+.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 48px; font-weight: 600; }
+.presets { display: flex; flex-wrap: wrap; gap: 5px; }
+.presets .btn { font-size: 12px; padding: 3px 8px; }
+canvas.chart { width: 100%; height: 170px; display: block; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; }
+.kv b { font-variant-numeric: tabular-nums; text-align: right; }
+footer { color: var(--dim); font-size: 12px; line-height: 1.4; }
+footer a { color: var(--accent); }
+</style>
+<header>
+  <h1>Visibility atlas</h1>
+  <div class="sub">Where Russian firms file, and where their statements stop appearing: 3.28 million registered addresses, 100 km cells by year, city windows at 1 km and 250 m. RFSD v3.1.0.</div>
+  <button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button>
+</header>
+<main>
+  <div class="mapwrap" id="mapwrap">
+    <canvas id="map" aria-label="Map of Russia with firm cells"></canvas>
+    <canvas id="overlay"></canvas>
+    <div class="maplegend" id="legend"></div>
+    <div class="mapnote" id="mapnote"></div>
+    <div class="tooltip" id="tip"></div>
+  </div>
+  <aside class="side">
+    <section class="card">
+      <h2>Layer</h2>
+      <div class="controls" id="layers"></div>
+      <div class="yearrow" id="yearrow"><span>Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span></div>
+      <div class="prov" id="layerprov"></div>
+    </section>
+    <section class="card">
+      <h2>Go to</h2>
+      <div class="presets" id="presets"></div>
+      <div class="prov">Scroll to zoom, drag to pan. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
+    </section>
+    <section class="card">
+      <h2>Under the cursor</h2>
+      <div class="kv" id="cellinfo"><span class="muted">Hover a cell</span><b></b></div>
+      <canvas class="chart" id="cellchart" aria-label="Share with a statement in the hovered cell, by year"></canvas>
+      <div class="prov" id="cellprov">Cell series: located eligible firms with an original statement, by financial year (M5 pass over the foundation registry and payload; cells with 50 or more firms).</div>
+    </section>
+    <section class="card">
+      <h2>National availability by year</h2>
+      <canvas class="chart" id="natchart" aria-label="Share of firms with a statement by year"></canvas>
+      <div class="prov" id="natprov"></div>
+    </section>
+    <section class="card">
+      <h2>Groups, 2021 to 2024</h2>
+      <canvas class="chart" id="groupchart" aria-label="Share with a statement by ownership and legal form, 2021 and 2024"></canvas>
+      <div class="prov" id="groupprov"></div>
+    </section>
+    <section class="card">
+      <h2>Odds against the comparison group</h2>
+      <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and supplied lists"></canvas>
+      <div class="prov" id="oddsprov"></div>
+    </section>
+  </aside>
+</main>
+<footer id="footer"></footer>
+<script src="data/basemap.js"></script>
+<script src="data/cells100.js"></script>
+<script src="data/density.js"></script>
+<script src="data/series.js"></script>
+<script src="data/cellsyears.js"></script>
+<script src="js/motion-core.js"></script>
+<script src="js/map-layers.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/explorer-app.js"></script>

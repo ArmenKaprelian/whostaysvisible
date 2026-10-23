@@ -2,7 +2,7 @@
  "pinned_utc": "2026-10-18T19:22:42Z",
  "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
  "programming_dirty_files": 8,
- "count": 154,
+ "count": 173,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -1697,6 +1697,244 @@
    "sha256": "9298562cf7c84e661a858d19fd805d2e9c317cfc00034bad823cbdc7d84f5ef0",
    "sha256_source": "computed",
    "stage": "flow"
+  },
+  "motion.change-cells": {
+   "name": "motion.change-cells",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/presentation-finalization-20261019/data/availability-change-cells.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 91919,
+   "mtime": 1792390842,
+   "sha256": "e06d8789efa8962369ccabdcfa77b5052cd7437348d3246aa611f1e2a306c4f6",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.change-class-counts": {
+   "name": "motion.change-class-counts",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/presentation-finalization-20261019/data/availability-change-class-counts.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 229,
+   "mtime": 1792390842,
+   "sha256": "567749d59b0b09ce4d38e53b1546a1678a021e58bfaf009f955c43ca5d1ae5d1",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.annual-cell-totals": {
+   "name": "motion.annual-cell-totals",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/presentation-finalization-20261019/data/annual-cell-totals.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 173,
+   "mtime": 1792390842,
+   "sha256": "f790483241469325230ab39140bc58372d8e4820b5bb3bbc4500e0f77f3a38b3",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.reference-points": {
+   "name": "motion.reference-points",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/metadata/chapter2-reconcile-reference-points.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 436,
+   "mtime": 1791942435,
+   "sha256": "f09ec8de4c7ba284a255f1fa7f146f8fd262c378963875f5ad7e43c59afe5f66",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.printed-names": {
+   "name": "motion.printed-names",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/metadata/chapter2-printed-names.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 331992,
+   "mtime": 1792536715,
+   "sha256": "257c79109661179d97c6a1af782acd516cfbecdb006dec8f159d227bc8d92d2c",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.ownership-year": {
+   "name": "motion.ownership-year",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-ownership-source.csv",
+   "kind": "csv",
+   "generation": "f12a6aa77065",
+   "size": 9861,
+   "mtime": 1791743684,
+   "sha256": "75ae8dc485db13960e8880da091e22aae5c07ec72349699659c1f81e056730e0",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.legal-year": {
+   "name": "motion.legal-year",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-legal-source.csv",
+   "kind": "csv",
+   "generation": "f12a6aa77065",
+   "size": 8122,
+   "mtime": 1791743684,
+   "sha256": "d047c3e75fefb2ec9ddb8abcac444cb02b55d0b41558eb7c697db74c81ee7ecc",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.industry-year": {
+   "name": "motion.industry-year",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-industry-source.csv",
+   "kind": "csv",
+   "generation": "f12a6aa77065",
+   "size": 40082,
+   "mtime": 1791743684,
+   "sha256": "af7df60a7ad89bc0c2cc3ccc0e2a8a48d54074367276004b22a4530cfa5c696a",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.size-odds-ratios": {
+   "name": "motion.size-odds-ratios",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/figure2-5-redesign-20261014/data/saved-adjusted-odds-ratios.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 29663,
+   "mtime": 1792037636,
+   "sha256": "4ff014878b9857d14d2c0951d01d641addd204d12d03cd2f797d46da9c882338",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.size-raw-changes": {
+   "name": "motion.size-raw-changes",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/figure2-5-redesign-20261014/data/raw-2021-2022-changes.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 163,
+   "mtime": 1792037636,
+   "sha256": "b7df4372f1910af34db81c815c02dff1be2a725bf6d418fd66794e5a4307e543",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.size-changes": {
+   "name": "motion.size-changes",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/contrasts/size-changes.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 9111,
+   "mtime": 1792356225,
+   "sha256": "9e975860b3105e100265252957b8fbc0736e6a309d2f47ad2d3a1abded8625b9",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.histories": {
+   "name": "motion.histories",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/history/data/fixed-2019-pattern-histories.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 9311,
+   "mtime": 1792356418,
+   "sha256": "49e3f0387b9604ae5beff0acbb35a3a7db1911f78c1e9295cbf5f67f5608b289",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.history-bins": {
+   "name": "motion.history-bins",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/history/history-with-any-list.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 1373,
+   "mtime": 1792356980,
+   "sha256": "f3a6eedaf19716d35e0693a93dadbf5279ceb242cec53cc0ab2a78888c274379",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.flow-counts": {
+   "name": "motion.flow-counts",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/sample-flow-final-c-spacing-20261019/sources/displayed-counts.csv",
+   "kind": "csv",
+   "generation": null,
+   "size": 842,
+   "mtime": 1792391018,
+   "sha256": "f51411ff14db73b0c95ff811c2cd9a14954337eaf2b4c08225b250e4fd7b953b",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.dot-accounting": {
+   "name": "motion.dot-accounting",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/dot_accounting.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 258,
+   "mtime": 1791947469,
+   "sha256": "6af65f3324289d42e627b3f6853408dd1792824a57101ff6c10befa451ec0811",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.coordinate-piles": {
+   "name": "motion.coordinate-piles",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/coordinate_piles.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 118,
+   "mtime": 1791947469,
+   "sha256": "473fda19aa0446fcc20b05673e19278a9c7093cce3357ea41f5567df4c989c02",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.selection-cells": {
+   "name": "motion.selection-cells",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/selection_cells.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 515173,
+   "mtime": 1791947469,
+   "sha256": "961de75de4d1aa9cdb74e6b48c81c8a2635eb8c2b06747fbf2aa7a69af5c2b6d",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.revenue-change-cells": {
+   "name": "motion.revenue-change-cells",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/data/geo-revenue-change-from-2021-source.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 593388,
+   "mtime": 1791947473,
+   "sha256": "201ad0fe70f90208a147f100cc6f1cdc1ed64b721773b0fe11287694d8a57b2b",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.margin-change-cells": {
+   "name": "motion.margin-change-cells",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/data/geo-margin-change-from-2021-source.csv",
+   "kind": "csv",
+   "generation": "8e559d19ccc1",
+   "size": 625956,
+   "mtime": 1791947473,
+   "sha256": "a6e3d0958910be2f4a6a312620b9e86acdfbaa40c67b92722954dfb9f94c0a33",
+   "sha256_source": "computed",
+   "stage": "motion"
   }
- }
+ },
+ "partial_pins": [
+  {
+   "prefix": "motion",
+   "pinned_utc": "2026-10-23T00:25:00Z",
+   "programming_head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+   "programming_dirty_files": 18,
+   "entries": [
+    "motion.annual-cell-totals",
+    "motion.change-cells",
+    "motion.change-class-counts",
+    "motion.coordinate-piles",
+    "motion.dot-accounting",
+    "motion.flow-counts",
+    "motion.histories",
+    "motion.history-bins",
+    "motion.industry-year",
+    "motion.legal-year",
+    "motion.margin-change-cells",
+    "motion.ownership-year",
+    "motion.printed-names",
+    "motion.reference-points",
+    "motion.revenue-change-cells",
+    "motion.selection-cells",
+    "motion.size-changes",
+    "motion.size-odds-ratios",
+    "motion.size-raw-changes"
+   ]
+  }
+ ]
 }

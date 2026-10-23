@@ -1,0 +1,319 @@
+{
+  "id": "series",
+  "run_id": "20261023T003817Z-ro-M4-series.R",
+  "mode": "ro",
+  "time_utc": "2026-10-23T00:38:17Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M4-series.R",
+    "sha256": "91f2f5424f1a8c17ac83c22806f0a034aaeb0d273f2b86ef4f0f89b71b52f435"
+  },
+  "lab_commit": "21fba8f0a90e879c9a215e9ef8bc8806eb8f630e",
+  "programming": {
+    "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+    "dirty_files": 18,
+    "pinned_utc": "2026-10-18T19:22:42Z"
+  },
+  "sources": [
+    {
+      "name": "t5.ch2-p1-availability-source",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/task5-20261005/exhibits/generation-bb2b915a630c6/ch2-p1-availability-source.csv",
+      "kind": "csv",
+      "generation": "bb2b915a630c6",
+      "size": 3775,
+      "mtime": 1791277613,
+      "sha256": "ac20ab985a393260d59e82793c4f01d64357f4515d1f0baa34d20b8f59fe83bf",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.ownership-year",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-ownership-source.csv",
+      "kind": "csv",
+      "generation": "f12a6aa77065",
+      "size": 9861,
+      "mtime": 1791743684,
+      "sha256": "75ae8dc485db13960e8880da091e22aae5c07ec72349699659c1f81e056730e0",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.legal-year",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-legal-source.csv",
+      "kind": "csv",
+      "generation": "f12a6aa77065",
+      "size": 8122,
+      "mtime": 1791743684,
+      "sha256": "d047c3e75fefb2ec9ddb8abcac444cb02b55d0b41558eb7c697db74c81ee7ecc",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.industry-year",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065/ch2-p2-addendum-industry-source.csv",
+      "kind": "csv",
+      "generation": "f12a6aa77065",
+      "size": 40082,
+      "mtime": 1791743684,
+      "sha256": "af7df60a7ad89bc0c2cc3ccc0e2a8a48d54074367276004b22a4530cfa5c696a",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.size-odds-ratios",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/figure2-5-redesign-20261014/data/saved-adjusted-odds-ratios.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 29663,
+      "mtime": 1792037636,
+      "sha256": "4ff014878b9857d14d2c0951d01d641addd204d12d03cd2f797d46da9c882338",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.size-changes",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/contrasts/size-changes.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 9111,
+      "mtime": 1792356225,
+      "sha256": "9e975860b3105e100265252957b8fbc0736e6a309d2f47ad2d3a1abded8625b9",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.size-raw-changes",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/figure2-5-redesign-20261014/data/raw-2021-2022-changes.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 163,
+      "mtime": 1792037636,
+      "sha256": "b7df4372f1910af34db81c815c02dff1be2a725bf6d418fd66794e5a4307e543",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "t6.ch2-p1-contrasts-source",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/task6-20261006/exhibits/generation-ff2872a31a02b/ch2-p1-contrasts-source.csv",
+      "kind": "csv",
+      "generation": "ff2872a31a02b",
+      "size": 37502,
+      "mtime": 1791321282,
+      "sha256": "f6c1860a82b6e153acb7382e2cb0fe224daa81df95c46ffe1cd6a04b01a7a497",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "acct.transition-denominators",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/accounting/generation-10b9d50c61438/transition-denominators.csv",
+      "kind": "csv",
+      "generation": "10b9d50c61438",
+      "size": 1631,
+      "mtime": 1791234636,
+      "sha256": "6d854cf32fdde2cf97588d8ece82c9881acf916e88fe74261cc8fed4ab9a7635",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.histories",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/history/data/fixed-2019-pattern-histories.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 9311,
+      "mtime": 1792356418,
+      "sha256": "49e3f0387b9604ae5beff0acbb35a3a7db1911f78c1e9295cbf5f67f5608b289",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.history-bins",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/chapter2-author-points-20261018/history/history-with-any-list.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 1373,
+      "mtime": 1792356980,
+      "sha256": "f3a6eedaf19716d35e0693a93dadbf5279ceb242cec53cc0ab2a78888c274379",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.flow-counts",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/sample-flow-final-c-spacing-20261019/sources/displayed-counts.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 842,
+      "mtime": 1792391018,
+      "sha256": "f51411ff14db73b0c95ff811c2cd9a14954337eaf2b4c08225b250e4fd7b953b",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.dot-accounting",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/dot_accounting.csv",
+      "kind": "csv",
+      "generation": "8e559d19ccc1",
+      "size": 258,
+      "mtime": 1791947469,
+      "sha256": "6af65f3324289d42e627b3f6853408dd1792824a57101ff6c10befa451ec0811",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.coordinate-piles",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates/coordinate_piles.csv",
+      "kind": "csv",
+      "generation": "8e559d19ccc1",
+      "size": 118,
+      "mtime": 1791947469,
+      "sha256": "473fda19aa0446fcc20b05673e19278a9c7093cce3357ea41f5567df4c989c02",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 15,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": null,
+  "memory_max": "none",
+  "extra": [],
+  "output": {
+    "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/series.json",
+    "json_sha256": "48790676b1af32d28bed872a848008d4ebe4a6d5767ecf0ffe1217c43a5802d8",
+    "json_bytes": 52980,
+    "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/series.js",
+    "js_sha256": "d79ace4948c38b4a0d159c28ec3e9c3c57b91e6e1ba03336186aacea71d06bf4",
+    "names": ["avail", "groups", "size", "size_changes", "size_raw", "lists", "transitions", "transitions_pooled", "histories", "history_bins", "flow", "events", "facts", "sources", "year", "eligible", "eligible_available", "registered", "registered_available", "eligible_share", "registered_share", "provider", "flagged", "dimension", "group", "label", "order", "n", "a", "share", "era", "quintile", "or", "low", "high", "firm_low", "firm_high", "status", "id", "window", "ratio", "asset_quintile", "share_2021", "share_2022", "change_pp", "model", "contrast", "pattern_a", "pattern_b", "prior_absent", "comparison", "prior", "origin", "A", "N", "X", "S", "U", "history", "firms", "denominator", "bin", "value", "population", "unit", "source", "kind", "records_total", "years", "release", "release_date", "eligible_2021", "registered_2021", "statements_2021", "statements_2024", "eligible_share_2021", "eligible_share_2024", "eligible_share_2025", "registered_share_2021", "registered_share_2024", "eligible_share_2012", "eligible_share_2018", "eligible_share_2019", "located_2021", "eligible_firms_2021", "unlocated_2021", "located_available_2021", "located_absent_2021", "distinct_locations", "largest_location_firms", "firms_at_100plus_locations", "own", "legal", "size_q5_2022_ratio", "size_q5_2022_low", "size_q5_2022_high", "size_raw_q1_2022", "size_raw_q5_2022", "sanctioned_only_or_2019", "sanctioned_only_or_2024", "sanctioned_only_or_2024_low", "sanctioned_only_or_2024_high", "prior_available", "prior_available_A", "prior_available_X", "prior_absent_A", "prior_absent_X", "fixed_2019_cohort", "hist_all_available", "aaannn_sanctioned_only", "aaannn_sanctioned_only_denom", "aaannn_no_list", "aaannn_no_list_denom", "cohorts", "private", "foreign", "state", "unitary", "joint_stock", "llc", "continuing", "assets", "joint", "revenue_cash", "revenue_inventory", "margin_cash", "margin_inventory", "dots"]
+  }
+}

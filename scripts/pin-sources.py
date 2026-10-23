@@ -2,7 +2,8 @@
 """Pin every lab input in config/sources.json: absolute path, generation id,
 size, mtime, and sha256 (computed for small files, copied from the generation's
 stage-manifest.csv or the RFSD manifest for large parquet). Re-run deliberately
-when a selected generation changes; R/lab-sources.R refuses drifted inputs."""
+when a selected generation changes; R/lab-sources.R refuses drifted inputs.
+`--only PREFIX` re-pins just the entries of one prefix (e.g. motion) into the existing file."""
 import csv, glob, hashlib, json, os, re, subprocess, sys, time
 
 ROOT = "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation"
@@ -127,9 +128,53 @@ add_small("flow.tex-appendix-b", f"{tex}/appendices/b-chapter2-evidence.tex", "f
 add_small("flow.fig-cohort-accounting-1", f"{tex}/figures/chapter2/stage3-b-cohort-accounting-1.pdf", "flow", kind="pdf")
 add_small("flow.fig-cohort-accounting-2", f"{tex}/figures/chapter2/stage3-b-cohort-accounting-2.pdf", "flow", kind="pdf")
 
+
+# Motion-style explainer and explorer (22 October 2026). Aggregates the pages draw from, beyond
+# the entries already pinned above (fig27.*, fig28.*, t5/t6 exhibit sources, acct.*, registry/payload).
+fin19 = f"{PROG}/output/presentation-finalization-20261019"
+add_small("motion.change-cells", f"{fin19}/data/availability-change-cells.csv", "motion")
+add_small("motion.change-class-counts", f"{fin19}/data/availability-change-class-counts.csv", "motion")
+add_small("motion.annual-cell-totals", f"{fin19}/data/annual-cell-totals.csv", "motion")
+add_small("motion.reference-points", f"{PROG}/metadata/chapter2-reconcile-reference-points.csv", "motion")
+add_small("motion.printed-names", f"{PROG}/metadata/chapter2-printed-names.csv", "motion")
+addendum = f"{PROG}/output/pass2-addendum-20261011/exhibits/generation-f12a6aa77065"
+for dim in ("ownership", "legal", "industry"):
+    add_small(f"motion.{dim}-year", f"{addendum}/ch2-p2-addendum-{dim}-source.csv", "motion")
+fig25 = f"{PROG}/output/figure2-5-redesign-20261014/data"
+add_small("motion.size-odds-ratios", f"{fig25}/saved-adjusted-odds-ratios.csv", "motion")
+add_small("motion.size-raw-changes", f"{fig25}/raw-2021-2022-changes.csv", "motion")
+ap = f"{PROG}/output/chapter2-author-points-20261018"
+add_small("motion.size-changes", f"{ap}/contrasts/size-changes.csv", "motion")
+add_small("motion.histories", f"{ap}/history/data/fixed-2019-pattern-histories.csv", "motion")
+add_small("motion.history-bins", f"{ap}/history/history-with-any-list.csv", "motion")
+add_small("motion.flow-counts", f"{PROG}/output/sample-flow-final-c-spacing-20261019/sources/displayed-counts.csv", "motion")
+pass2agg = f"{PROG}/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/aggregates"
+pass2data = f"{PROG}/output/pass2-reconcile-20261013/exhibits/generation-8e559d19ccc1/data"
+add_small("motion.dot-accounting", f"{pass2agg}/dot_accounting.csv", "motion")
+add_small("motion.coordinate-piles", f"{pass2agg}/coordinate_piles.csv", "motion")
+add_small("motion.selection-cells", f"{pass2agg}/selection_cells.csv", "motion")
+add_small("motion.revenue-change-cells", f"{pass2data}/geo-revenue-change-from-2021-source.csv", "motion")
+add_small("motion.margin-change-cells", f"{pass2data}/geo-margin-change-from-2021-source.csv", "motion")
+
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 dirty = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "status", "--porcelain"], capture_output=True, text=True).stdout.count("\n")
-doc = {"pinned_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "programming_head": head,
+only = sys.argv[2] if len(sys.argv) >= 3 and sys.argv[1] == "--only" else None
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+if only:
+    with open(OUT) as f:
+        old = json.load(f)
+    added = {k: v for k, v in sources.items() if k.startswith(only + ".")}
+    merged = {k: v for k, v in old["sources"].items() if not k.startswith(only + ".")}
+    merged.update(added)
+    doc = {"pinned_utc": old["pinned_utc"], "programming_head": old["programming_head"],
+           "programming_dirty_files": old["programming_dirty_files"], "count": len(merged), "sources": merged,
+           "partial_pins": old.get("partial_pins", []) + [{"prefix": only, "pinned_utc": now, "programming_head": head,
+                                                           "programming_dirty_files": dirty, "entries": sorted(added)}]}
+    with open(OUT, "w") as f:
+        json.dump(doc, f, indent=1, sort_keys=False)
+    print(f"pinned {len(added)} '{only}.*' sources into {os.path.normpath(OUT)}; {len(merged)} entries in total; other entries untouched")
+    sys.exit(0)
+doc = {"pinned_utc": now, "programming_head": head,
        "programming_dirty_files": dirty, "count": len(sources), "sources": sources}
 with open(OUT, "w") as f:
     json.dump(doc, f, indent=1, sort_keys=False)

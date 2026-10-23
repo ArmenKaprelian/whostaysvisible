@@ -1,0 +1,82 @@
+"check","expected","observed","tolerance","pass"
+"2012 eligible rows equal annual accounting",4991391,4991391,0,TRUE
+"2012 eligible available equal annual accounting",741328,741328,0,TRUE
+"2012 registered equal annual accounting",4417867,4417867,0,TRUE
+"2012 every eligible registry row has a payload row",0,0,0,TRUE
+"2012 located firms equal the cell sum",0,0,0,TRUE
+"2013 eligible rows equal annual accounting",4859020,4859020,0,TRUE
+"2013 eligible available equal annual accounting",1590206,1590206,0,TRUE
+"2013 registered equal annual accounting",4390011,4390011,0,TRUE
+"2013 every eligible registry row has a payload row",0,0,0,TRUE
+"2013 located firms equal the cell sum",0,0,0,TRUE
+"2014 eligible rows equal annual accounting",4837958,4837958,0,TRUE
+"2014 eligible available equal annual accounting",1784527,1784527,0,TRUE
+"2014 registered equal annual accounting",4335669,4335669,0,TRUE
+"2014 every eligible registry row has a payload row",0,0,0,TRUE
+"2014 located firms equal the cell sum",4625980,4625980,0,TRUE
+"2015 eligible rows equal annual accounting",4826487,4826487,0,TRUE
+"2015 eligible available equal annual accounting",2105642,2105642,0,TRUE
+"2015 registered equal annual accounting",4507835,4507835,0,TRUE
+"2015 every eligible registry row has a payload row",0,0,0,TRUE
+"2015 located firms equal the cell sum",4613157,4613157,0,TRUE
+"2016 eligible rows equal annual accounting",4984256,4984256,0,TRUE
+"2016 eligible available equal annual accounting",2135166,2135166,0,TRUE
+"2016 registered equal annual accounting",4243803,4243803,0,TRUE
+"2016 every eligible registry row has a payload row",0,0,0,TRUE
+"2016 located firms equal the cell sum",4812100,4812100,0,TRUE
+"2017 eligible rows equal annual accounting",4672983,4672983,0,TRUE
+"2017 eligible available equal annual accounting",2150696,2150696,0,TRUE
+"2017 registered equal annual accounting",4053052,4053052,0,TRUE
+"2017 every eligible registry row has a payload row",0,0,0,TRUE
+"2017 located firms equal the cell sum",4534752,4534752,0,TRUE
+"2018 eligible rows equal annual accounting",4413656,4413656,0,TRUE
+"2018 eligible available equal annual accounting",2090475,2090475,0,TRUE
+"2018 registered equal annual accounting",3762713,3762713,0,TRUE
+"2018 every eligible registry row has a payload row",0,0,0,TRUE
+"2018 located firms equal the cell sum",4317455,4317455,0,TRUE
+"2019 eligible rows equal annual accounting",4072823,4072823,0,TRUE
+"2019 eligible available equal annual accounting",2035520,2035520,0,TRUE
+"2019 registered equal annual accounting",3413062,3413062,0,TRUE
+"2019 every eligible registry row has a payload row",0,0,0,TRUE
+"2019 located firms equal the cell sum",3984991,3984991,0,TRUE
+"2019 located firms equal the production coverage table",3984991,3984991,0,TRUE
+"2020 eligible rows equal annual accounting",3657017,3657017,0,TRUE
+"2020 eligible available equal annual accounting",2173678,2173678,0,TRUE
+"2020 registered equal annual accounting",3117550,3117550,0,TRUE
+"2020 every eligible registry row has a payload row",0,0,0,TRUE
+"2020 located firms equal the cell sum",3574314,3574314,0,TRUE
+"2020 located firms equal the production coverage table",3574314,3574314,0,TRUE
+"2021 eligible rows equal annual accounting",3357109,3357109,0,TRUE
+"2021 eligible available equal annual accounting",2129509,2129509,0,TRUE
+"2021 registered equal annual accounting",2959193,2959193,0,TRUE
+"2021 every eligible registry row has a payload row",0,0,0,TRUE
+"2021 located firms equal the cell sum",3277638,3277638,0,TRUE
+"2021 located firms equal the production coverage table",3277638,3277638,0,TRUE
+"2021 cells equal the production cells (count)",1154,1154,0,TRUE
+"2021 cells matched both ways",1154,1154,0,TRUE
+"2021 cell firms equal production (max abs diff)",0,0,0,TRUE
+"2021 cell available equal production (max abs diff)",0,0,0,TRUE
+"2021 located available equal dot accounting",2097055,2097055,0,TRUE
+"2022 eligible rows equal annual accounting",3211663,3211663,0,TRUE
+"2022 eligible available equal annual accounting",2084487,2084487,0,TRUE
+"2022 registered equal annual accounting",2909548,2909548,0,TRUE
+"2022 every eligible registry row has a payload row",0,0,0,TRUE
+"2022 located firms equal the cell sum",3146043,3146043,0,TRUE
+"2022 located firms equal the production coverage table",3146043,3146043,0,TRUE
+"2023 eligible rows equal annual accounting",3167848,3167848,0,TRUE
+"2023 eligible available equal annual accounting",2090991,2090991,0,TRUE
+"2023 registered equal annual accounting",2899574,2899574,0,TRUE
+"2023 every eligible registry row has a payload row",0,0,0,TRUE
+"2023 located firms equal the cell sum",3102998,3102998,0,TRUE
+"2023 located firms equal the production coverage table",3102998,3102998,0,TRUE
+"2024 eligible rows equal annual accounting",3147504,3147504,0,TRUE
+"2024 eligible available equal annual accounting",2086055,2086055,0,TRUE
+"2024 registered equal annual accounting",2926282,2926282,0,TRUE
+"2024 every eligible registry row has a payload row",0,0,0,TRUE
+"2024 located firms equal the cell sum",3083823,3083823,0,TRUE
+"2024 located firms equal the production coverage table",3083823,3083823,0,TRUE
+"2025 eligible rows equal annual accounting",3125555,3125555,0,TRUE
+"2025 eligible available equal annual accounting",2009771,2009771,0,TRUE
+"2025 registered equal annual accounting",2747070,2747070,0,TRUE
+"2025 every eligible registry row has a payload row",0,0,0,TRUE
+"2025 located firms equal the cell sum",3062023,3062023,0,TRUE

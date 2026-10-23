@@ -1,0 +1,14 @@
+"check","expected","observed","tolerance","pass"
+"national 5 km cells: firms",3277638,3277638,0,TRUE
+"national 5 km cells: firms with a statement",2097055,2097055,0,TRUE
+"national 5 km cell indices fit int16",1,1,0,TRUE
+"Figure 2.7 Moscow inset: firms with a statement (fitted extent)",459326,459326,0,TRUE
+"Figure 2.7 Moscow inset: firms (fitted extent)",765238,765238,0,TRUE
+"Figure 2.7 St Petersburg inset: firms with a statement (fitted extent)",174063,174063,0,TRUE
+"Figure 2.7 St Petersburg inset: firms (fitted extent)",262680,262680,0,TRUE
+"1 km Moscow window indices within 0..89",1,1,0,TRUE
+"250 m Moscow window indices within 0..95",1,1,0,TRUE
+"1 km windows: 22 cities",22,22,0,TRUE
+"250 m windows: 22 cities",22,22,0,TRUE
+"Moscow 1 km window holds more firms than the 24 km downtown window",1,1,0,TRUE
+"no empty cell",0,0,0,TRUE
