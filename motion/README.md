@@ -12,6 +12,7 @@ time, so any frame can be sought deterministically and captured to MP4.
 |---|---|---|
 | Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | 182 s, 12 scenes, 1920x1080 at 30 fps, dark stage; play, pause, scrub, chapter buttons; `?__render=1` capture mode; `?__debug=1` frame counter |
 | Video | `build/who-stays-visible.mp4` | H.264 yuv420p, 5,460 frames, captured frame by frame through headless Brave and ffmpeg |
+| Teaser | `build/who-stays-visible-teaser.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Atlas | `explorer.html` (+ `js/explorer-app.js`) | six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
 | Data | `data/*.json`, `data/*.js`, `data/*.provenance.json`, `data/*.checks.csv` | the aggregates the pages draw, each with a provenance sidecar and the checks that gated it |
 | Tools | `tools/serve.py`, `tools/cdp.py`, `tools/capture.py`, `../scripts/motion-capture.sh` | static server, a stdlib DevTools client, the frame-exact capture, the host launcher with the lab bracket |
@@ -36,6 +37,18 @@ number is read from `data/series.js` (`facts`) or the cell layers; none is typed
 | 11 | 163-175 s | What comes next | cohort inclusion by cell, four cohort counts, then the descriptive median real revenue change 2024 against 2021 by cell | Figure 2.8 source, `displayed-counts.csv`, `geo-revenue-change-from-2021-source.csv` |
 | 12 | 175-182 s | Sources | credits and the standing caveats | - |
 
+### Teaser cut (40 s)
+
+| # | Time | Scene | Speed | Notes |
+|---|---|---|---|---|
+| 1 | 0-7.5 s | Who stays visible? | 1.47x | title, density bloom, counter |
+| 2 | 7.5-17.5 s | The map through time | 2.4x | 12 annual snapshots, about 0.74 s each |
+| 3 | 17.5-29 s | Moscow | 1.65x | the first 19 s of the full zoom scene: national, Moscow at 1 km, central Moscow at 250 m; St Petersburg is cut |
+| 4 | 29-37.5 s | Who went dark | 1.88x | both slope charts and the reading line |
+| 5 | 37.5-40 s | Sources | 2.8x | the closing card |
+
+A scene's `speed` scales its own clock (`local` and `dur`) while fades stay in real time; the camera keyframes inside each map scene are compressed by the same factor, with holds at the scene's start and 0.5 s before its end so the camera slides only during a crossfade. Chart scenes contribute no keyframes.
+
 ## Data pass (`R/motion/`)
 
 | Script | Mode | Output | Checks |
@@ -59,6 +72,7 @@ scripts/motion-capture.sh --probe                      # headless Brave loads th
 scripts/motion-capture.sh --seconds 3 --out motion/build/smoke.mp4
 scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
 scripts/motion-capture.sh --out motion/build/who-stays-visible.mp4 --preset slow
+scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser.mp4 --preset slow
 ```
 
 The capture drives Brave (`/opt/brave.com/brave/brave --headless=new`) over the DevTools protocol
@@ -74,6 +88,7 @@ Fallbacks in `tools/capture.py`: `--fallback brave-shot` (one process per frame)
 - Determinism: frames 0, 45 and 89 captured in two fresh Brave sessions in different orders are byte-identical (ImageMagick AE = 0); frame 0 differs from frame 45 (AE 938,811).
 - Visual review: 15 frames across the scenes inspected at full size; the fixes (end-label collisions, the 2011 label, slope margins, stacked-bar labels, two overflowing lines, scene crossfades) were re-captured and rechecked.
 - Full render (run `20261023T010225Z-capture`, Chrome/156 engine in Brave): 5,460 frames in 597 s (median 106 ms, max 164 ms per frame), no page exceptions or console errors; `ffprobe` reads 5,460 frames, 30/1, 1920x1080, h264 yuv420p, 182.000 s, 24.5 MB. Nine frames extracted from the MP4 at 8.5, 36, 55, 72, 93, 112, 140, 156 and 170 s were inspected (`build/final-check/`).
+- Teaser render (run `20261023T011918Z-capture`): 1,200 frames in 157 s (median 133 ms per frame), no problems; `ffprobe` reads 1,200 frames, 30/1, 1920x1080, h264 yuv420p, 40.000 s, 10.9 MB. Review frames at 3, 7, 12, 17.3, 18, 21, 24, 27, 28.8, 31, 36 and 39 s were inspected before the render (`build/teaser-review/`); frames at 12, 27 and 36 s were extracted from the MP4 afterwards (`build/teaser-check/`). One defect found and fixed in review: camera holds from the chart scenes had pulled the camera off central Moscow.
 
 ## Design decisions
 

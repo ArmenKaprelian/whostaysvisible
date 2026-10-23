@@ -353,5 +353,30 @@
     for (const [s, size, w, color, t0] of lines) { Motion.reveal(ctx, s, 960, y, l, t0, { size, weight: w, color, align: 'center' }); y += size === 40 ? 90 : 52; }
   } });
 
-  window.ExplainerScenes = { scenes, keyframes, DURATION, timeline };
+  // ---- cuts ------------------------------------------------------------------------------------
+  // The teaser reuses four scenes plus the closing card, each played faster (speed = full length /
+  // teaser length), with the camera keyframes inside each scene compressed by the same factor and a
+  // hold at each scene's start and end so the camera never drifts during a scene it does not belong to.
+  const full = { scenes, keyframes, DURATION, timeline };
+  const camFull = Motion.camera(keyframes, 1920, 1080);
+  const TEASER = [['hook', 0, 7.5, null], ['years', 7.5, 17.5, null], ['zoom', 17.5, 29, 19], ['groups', 29, 37.5, null], ['credits', 37.5, 40, null]];
+  const MAP_SCENES = new Set(['hook', 'archive', 'years', 'change', 'zoom', 'next']);
+  function makeTeaser() {
+    const tl = {}, sc = [], kf = [];
+    for (const [id, start, end, fullLen] of TEASER) {
+      const f = timeline[id], fl = fullLen || (f.end - f.start), speed = fl / (end - start);
+      tl[id] = { id, start, end, title: f.title };
+      const s = scenes.find(x => x.id === id);
+      sc.push(Object.assign({}, s, { start, end, speed }));
+      if (!MAP_SCENES.has(id)) continue;   // chart scenes leave the camera where the last map scene left it
+      // Holds at the scene's start and 0.5 s before its end, so the camera slides to the next map
+      // scene's start only during the crossfade; interior keyframes are compressed by the speed.
+      kf.push(Object.assign({}, camFull(f.start), { t: start }));
+      for (const k of keyframes) if (k.t > f.start && k.t < f.start + fl) kf.push(Object.assign({}, k, { t: start + (k.t - f.start) / speed }));
+      kf.push(Object.assign({}, camFull(f.start + fl), { t: end - 0.5 }));
+    }
+    kf.sort((a, b) => a.t - b.t);
+    return { scenes: sc, keyframes: kf, DURATION: 40, timeline: tl };
+  }
+  window.ExplainerScenes = Object.assign({}, full, { cuts: { full, teaser: makeTeaser() } });
 })();

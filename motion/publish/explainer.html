@@ -52,6 +52,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
 <div class="stage-wrap"><canvas class="stage" id="stage" width="1920" height="1080" aria-label="Animated explainer: who stays visible? Financial statements of Russian firms under sanctions"></canvas></div>
 <div class="controls" id="controls">
   <button id="play" type="button" aria-label="Play or pause">Play</button>
+  <button id="cut" type="button" aria-pressed="false" title="Switch between the full cut and the 40-second teaser">Full cut (3:02)</button>
   <span class="time" id="time">0:00 / 0:00</span>
   <input id="scrub" type="range" min="0" max="182" step="0.0333" value="0" aria-label="Scrub the timeline">
   <div class="chapters" id="chapters"></div>
@@ -78,28 +79,35 @@ html[data-render] * { transition: none !important; animation: none !important; }
                   accent: tok('accent'), accentStrong: tok('accent-strong'), brick: tok('brick'), green: tok('green'), below: tok('below'), highlightBand: tok('highlight'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
-  const X = window.ExplainerScenes;
-  const stage = Motion.createStage({ width: 1920, height: 1080, fps: 30, duration: X.DURATION, canvas, theme, data: window.MOTION_DATA, seed: 20261022 });
-  stage.setCamera(Motion.camera(X.keyframes, 1920, 1080));
-  X.scenes.forEach(s => stage.addScene(s));
-  if (DEBUG) stage.addScene({ id: 'debug', start: 0, end: X.DURATION, z: 99, fadeIn: 0, fadeOut: 0, draw({ ctx, t }) { Motion.text(ctx, 'frame ' + Math.round(t * 30) + '  t=' + t.toFixed(3), 1900, 1060, { size: 22, color: theme.muted, align: 'right' }); } });
-
-  // Live controls (not part of the render path).
-  const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters');
-  scrub.max = String(X.DURATION);
+  const CUTS = window.ExplainerScenes.cuts;
+  let cutName = q.get('cut') === 'teaser' ? 'teaser' : 'full';
+  let X = CUTS[cutName], stage = null;
+  const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters'), cutBtn = document.getElementById('cut');
   const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   let playing = false, raf = 0, startWall = 0, startT = 0;
+  function build(name) {   // (re)creates the stage for a cut; the live controls follow
+    cutName = name; X = CUTS[name];
+    stage = Motion.createStage({ width: 1920, height: 1080, fps: 30, duration: X.DURATION, canvas, theme, data: window.MOTION_DATA, seed: 20261022 });
+    stage.setCamera(Motion.camera(X.keyframes, 1920, 1080));
+    X.scenes.forEach(s => stage.addScene(s));
+    if (DEBUG) stage.addScene({ id: 'debug', start: 0, end: X.DURATION, z: 99, fadeIn: 0, fadeOut: 0, draw({ ctx, t }) { Motion.text(ctx, cutName + ' frame ' + Math.round(t * 30) + '  t=' + t.toFixed(3), 1900, 1060, { size: 22, color: theme.muted, align: 'right' }); } });
+    scrub.max = String(X.DURATION); scrub.value = '0';
+    chapters.innerHTML = '';
+    Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
+    cutBtn.textContent = name === 'full' ? 'Full cut (3:02)' : 'Teaser (0:40)'; cutBtn.setAttribute('aria-pressed', String(name === 'teaser'));
+    window.__videoMeta = Object.assign({ cut: name }, stage.meta());
+  }
   function show(t) { stage.render(t); scrub.value = String(t); timeEl.textContent = fmtTime(t) + ' / ' + fmtTime(X.DURATION); chapters.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', String(t >= +b.dataset.start && t < +b.dataset.end))); }
   function tick(now) { if (!playing) return; const t = startT + (now - startWall) / 1000; if (t >= X.DURATION) { show(X.DURATION - 1e-3); setPlaying(false); return; } show(t); raf = requestAnimationFrame(tick); }
   function setPlaying(p) { playing = p; play.textContent = p ? 'Pause' : 'Play'; if (p) { startT = +scrub.value >= X.DURATION - 0.05 ? 0 : +scrub.value; startWall = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf); }
   play.addEventListener('click', () => setPlaying(!playing));
   scrub.addEventListener('input', () => { setPlaying(false); show(+scrub.value); });
-  Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
+  cutBtn.addEventListener('click', () => { setPlaying(false); build(cutName === 'full' ? 'teaser' : 'full'); show(0); });
   document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' && e.key !== ' ') return; if (e.key === ' ') { e.preventDefault(); setPlaying(!playing); } else if (e.key === 'ArrowRight') { setPlaying(false); show(Math.min(X.DURATION - 1e-3, +scrub.value + 1 / 30)); } else if (e.key === 'ArrowLeft') { setPlaying(false); show(Math.max(0, +scrub.value - 1 / 30)); } });
   window.addEventListener('resize', () => { if (!playing) show(+scrub.value); });
+  build(cutName);
 
   // Render contract: __seek(t) draws the frame at t and resolves after two compositor ticks.
-  window.__videoMeta = stage.meta();
   // The frame is drawn synchronously; the promise waits two animation frames for the compositor, with a
   // timer fallback for a hidden tab, where animation frames stop.
   window.__seek = function (t) { stage.render(t); return new Promise(res => { let done = false; const ok = () => { if (!done) { done = true; res(t); } }; requestAnimationFrame(() => requestAnimationFrame(ok)); setTimeout(ok, 400); }); };
@@ -114,7 +122,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
     if (problems.length) throw new Error('data checks failed: ' + problems.join('; '));
     const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
     await window.__seek(t0); show(t0);
-    return Object.assign({ yearsLayer: !!D.cellsyears }, window.__videoMeta);
+    return Object.assign({ yearsLayer: !!D.cellsyears, cut: cutName }, window.__videoMeta);
   })();
   window.__ready.catch(e => { console.error(e); timeEl.textContent = 'Error: ' + e.message; });
 })();
