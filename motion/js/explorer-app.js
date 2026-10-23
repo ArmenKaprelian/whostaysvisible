@@ -5,6 +5,10 @@
   const D = window.MOTION_DATA, S = D.series, C100 = D.cells100, DEN = D.density, BM = D.basemap, CY = D.cellsyears;
   const F = S.facts, fmt = Motion.fmt, MM = MotionMap, CH = MotionCharts;
   const $ = id => document.getElementById(id);
+  // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
+  // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
+  if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
+  window.__atlasCanvases = {};
 
   // ---- theme -----------------------------------------------------------------------------------
   const root = document.documentElement;
@@ -81,6 +85,7 @@
   function gridAlphas(k) { return { nat: 1 - Motion.step(k, 1.5, 2.5, Motion.ease.linear), one: Math.min(Motion.step(k, 1.5, 2.5, Motion.ease.linear), 1 - Motion.step(k, 24, 16, Motion.ease.linear)), fine: Motion.step(k, 24, 16, Motion.ease.linear) }; }
 
   function drawMap() {
+    Motion.audit.scene = 'map'; { const r = wrap.getBoundingClientRect(); window.__atlasCanvases.map = { w: r.width, h: r.height }; }
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 });
@@ -206,7 +211,7 @@
   wrap.addEventListener('wheel', ev => { ev.preventDefault(); const km = kmAt(ev); const f = Math.exp(-ev.deltaY * 0.0015); const k2 = Motion.clamp(state.cam.k * f, 0.05, 200); state.cam.cx = km.x - (km.px - stage.width / 2) / k2; state.cam.cy = km.y + (km.py - stage.height / 2) / k2; state.cam.k = k2; drawMap(); }, { passive: false });
 
   // ---- side panels -------------------------------------------------------------------------------
-  function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); return { ctx, w: r.width, h: r.height }; }
+  function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); Motion.audit.scene = id; window.__atlasCanvases[id] = { w: r.width, h: r.height }; return { ctx, w: r.width, h: r.height }; }
   function drawCellPanel(h) {
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', h.region]);
@@ -217,21 +222,23 @@
     const key = cellKey(h.ix, h.iy); const pts = [];
     for (const y of years) { const d = yearCells[y].get(key); if (d && d.n >= 50) pts.push({ x: y, y: 100 * d.a / d.n }); }
     if (!pts.length) { Motion.text(ctx, 'Fewer than 50 located firms in every year', 8, 24, { size: 13, color: theme.muted }); return; }
-    CH.lines(ctx, { x: 44, y: 14, w: w - 60, h: hh - 44 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain: [2013.5, 2025.5], yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks: [2014, 2018, 2021, 2025], xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%' });
+    CH.lines(ctx, { x: 44, y: 14, w: w - 100, h: hh - 44 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain: [2013.5, 2025.5], yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks: [2014, 2018, 2021, 2025], xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', axisSize: 12, axisDy: 20 });
     Motion.text(ctx, 'share with a statement, this cell, by year', 44, hh - 2, { size: 11, color: theme.dim });
   }
   function drawNational() {
     const { ctx, w } = chartCtx('natchart'); const hh = $('natchart').getBoundingClientRect().height;
     const el = [], reg = []; S.avail.year.forEach((y, i) => { if (S.avail.eligible_share[i] != null) { el.push({ x: y, y: S.avail.eligible_share[i] }); reg.push({ x: y, y: S.avail.registered_share[i] }); } });
-    const r = CH.lines(ctx, { x: 44, y: 14, w: w - 110, h: hh - 44 }, [{ label: 'registered {y}', color: theme.accentStrong, points: reg, gapAfter: [2018], width: 2 }, { label: 'eligible {y}', color: theme.accent, points: el, gapAfter: [2018], width: 2 }],
-      { xDomain: [2011.5, 2025.5], yDomain: [0, 80], theme, yTicks: [0, 40, 80], xTicks: [2012, 2016, 2020, 2024], labelSize: 12, dots: false, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', labelFmt: v => Motion.fmt.pct(v, 1) });
+    // The right margin fits the longer end label (measured), the axes draw at the panel's 12 px, the two end labels are pushed apart.
+    const margin = Motion.measure(ctx, 'registered ' + Motion.fmt.pct(reg[reg.length - 1].y, 1), 12, 600) + 22;
+    const r = CH.lines(ctx, { x: 44, y: 14, w: w - 44 - margin, h: hh - 44 }, [{ label: 'registered {y}', color: theme.accentStrong, points: reg, gapAfter: [2018], width: 2 }, { label: 'eligible {y}', color: theme.accent, points: el, gapAfter: [2018], width: 2 }],
+      { xDomain: [2011.5, 2025.5], yDomain: [0, 80], theme, yTicks: [0, 40, 80], xTicks: [2012, 2016, 2020, 2024], labelSize: 12, dots: false, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', labelFmt: v => Motion.fmt.pct(v, 1), axisSize: 12, axisDy: 20, spreadLabels: true });
     if (state.layer === 'share') { const x = r.sx(state.year); ctx.strokeStyle = theme.ink; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(x, 14); ctx.lineTo(x, hh - 30); ctx.stroke(); ctx.setLineDash([]); }
     $('natprov').textContent = 'Table B.1: statements over the annual eligible population and over firms registered at year-end; 2011 has no statements, 2025* is flagged. Source ' + S.sources.avail + '.';
   }
   function drawGroups() {
     const { ctx, w } = chartCtx('groupchart'); const hh = $('groupchart').getBoundingClientRect().height;
     const items = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }, { label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Unitary', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.fall }];
-    CH.slopes(ctx, { x: 8, y: 26, w: w - 16, h: hh - 44 }, items, { yDomain: [44, 82], theme, size: 12, leftMargin: 150, rightMargin: 70 });
+    CH.slopes(ctx, { x: 8, y: 30, w: w - 16, h: hh - 48 }, items, { yDomain: [44, 82], theme, size: 12, leftMargin: 150, rightMargin: 70, spread: true });
     $('groupprov').textContent = 'Share of eligible firms with a statement by ownership and legal form (Figures 2.2 and 2.3 sources); population comparisons by year, not the same firms.';
   }
   function drawOdds() {
@@ -239,7 +246,7 @@
     const sz = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz[S.size.quintile[i]] = sz[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
     CH.yearDots(ctx, { x: 40, y: 10, w: w - 150, h: hh - 44 }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz.Q5 || [], whiskers: true, dot: 4, width: 2 }, { label: 'Q2 vs Q1', color: theme.accent, points: sz.Q2 || [], dot: 3, width: 1.5 }, { label: 'sanctions list only', color: theme.fall, points: ls, whiskers: true, dot: 4, width: 2 }],
-      { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: 12 });
+      { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: 12, thinTicks: true, spreadLabels: true });
     $('oddsprov').textContent = `Adjusted odds of a statement: asset quintiles Q5 and Q2 against Q1 (Table B.4; 2022 vs 2021 Q5 ratio ${fmt.dec(F.size_q5_2022_ratio, 3)} [${fmt.dec(F.size_q5_2022_low, 3)}, ${fmt.dec(F.size_q5_2022_high, 3)}], provisional) and firms on the sanctions list only against firms on no list (Table B.7), two-way 95% intervals.`;
   }
   function redrawAll() { sizeCanvases(); drawMap(); drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); }
@@ -256,5 +263,12 @@
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; state.cam = { cx: c.x + 1.5, cy: c.y + 0.5, k: Math.min(stage.width, stage.height) / 20 }; });
   $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; supplied lists are fixed lists, not dated designations.`;
   window.addEventListener('resize', redrawAll);
+  // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes.
+  window.__atlas = {
+    layers: LAYERS.map(L => L.id),
+    layer(id) { const b = layersEl.querySelector(`button[data-id="${id}"]`); if (b) b.click(); },
+    year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
+    redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return Motion.audit.boxes; },
+  };
   document.fonts.ready.then(() => { sizeCanvases(); fitNational(); syncThemeButton(); redrawAll(); });
 })();

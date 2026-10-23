@@ -9,6 +9,15 @@
   const head = (progress, over = 0.4) => Motion.clamp(progress / over, 0, 1);                    // the first part (eased reveals start fast)
 
   C.scale = (domain, range) => v => range[0] + (v - domain[0]) / (domain[1] - domain[0]) * (range[1] - range[0]);
+  // Label positions pushed apart to a minimum gap, in order, inside [lo, hi] (the atlas's narrow panels).
+  C.spread = function (ys, gap, lo, hi) {
+    const idx = ys.map((y, i) => i).sort((a, b) => ys[a] - ys[b]); const out = ys.slice();
+    for (let k = 1; k < idx.length; k++) out[idx[k]] = Math.max(out[idx[k]], out[idx[k - 1]] + gap);
+    const over = out[idx[idx.length - 1]] - hi; if (over > 0) for (const i of idx) out[i] -= over;
+    for (let k = idx.length - 2; k >= 0; k--) out[idx[k]] = Math.min(out[idx[k]], out[idx[k + 1]] - gap);
+    const under = lo - out[idx[0]]; if (under > 0) for (const i of idx) out[i] += under;
+    return out;
+  };
   C.logScale = (domain, range) => v => range[0] + (Math.log(v) - Math.log(domain[0])) / (Math.log(domain[1]) - Math.log(domain[0])) * (range[1] - range[0]);
 
   C.axisLeft = function (ctx, box, scaleY, ticks, theme, { fmt = v => String(v), size = 22, grid = true } = {}) {
@@ -24,13 +33,13 @@
   };
 
   // Line chart of yearly series with era shading and dotted event ticks. series: [{label, color, points: [{x, y}], width}].
-  C.lines = function (ctx, box, series, { xDomain, yDomain, progress = 1, theme, eras = [], events = [], yTicks = [], yFmt = v => v + '%', labelFmt = v => Motion.fmt.pct(v, 1), xTicks = [], xFmt = v => String(v), endLabels = true, labelSize = 24, lineWidth = 3.5, dots = true } = {}) {
+  C.lines = function (ctx, box, series, { xDomain, yDomain, progress = 1, theme, eras = [], events = [], yTicks = [], yFmt = v => v + '%', labelFmt = v => Motion.fmt.pct(v, 1), xTicks = [], xFmt = v => String(v), endLabels = true, labelSize = 24, lineWidth = 3.5, dots = true, axisSize = 22, axisDy = 34, spreadLabels = false } = {}) {
     const sx = C.scale(xDomain, [box.x, box.x + box.w]), sy = C.scale(yDomain, [box.y + box.h, box.y]);
     const xReveal = xDomain[0] + (xDomain[1] - xDomain[0]) * progress;
     // Era bands and event ticks.
     for (const e of eras) { ctx.fillStyle = e.color; ctx.fillRect(sx(Math.max(e.from, xDomain[0])), box.y, sx(Math.min(e.to, xDomain[1])) - sx(Math.max(e.from, xDomain[0])), box.h); if (e.label) T(ctx, e.label, (sx(e.from) + sx(e.to)) / 2, box.y + 30, { size: labelSize, color: theme.muted, align: 'center' }); }
-    C.axisLeft(ctx, box, sy, yTicks, theme, { fmt: yFmt });
-    C.axisBottom(ctx, box, sx, xTicks, theme, { fmt: xFmt });
+    C.axisLeft(ctx, box, sy, yTicks, theme, { fmt: yFmt, size: axisSize });
+    C.axisBottom(ctx, box, sx, xTicks, theme, { fmt: xFmt, size: axisSize, dy: axisDy });
     for (const ev of events) {
       if (ev.x > xReveal) continue;
       const evAlpha = Motion.clamp((xReveal - ev.x) / 0.6, 0, 1);   // over 0.6 years of the reveal
@@ -38,6 +47,7 @@
       if (ev.label) T(ctx, ev.label, x + 8, ev.labelY != null ? ev.labelY : box.y + box.h - 14 - (ev.row || 0) * 28, { size: labelSize - 2, color: theme.muted, alpha: evAlpha });
     }
     // Lines, revealed left to right with linear interpolation of the last visible segment (presentation only).
+    const ends = [];
     for (const s of series) {
       const pts = s.points.filter(p => p.y != null).sort((a, b) => a.x - b.x);
       ctx.strokeStyle = s.color; ctx.lineWidth = s.width || lineWidth; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -51,26 +61,32 @@
       }
       ctx.stroke();
       if (dots) for (const p of pts) { if (p.x > xReveal) break; ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), 4.5, 0, Math.PI * 2); ctx.fill(); }
-      if (endLabels && last && progress >= 0.9) T(ctx, s.label.replace('{y}', labelFmt(last.y)), sx(last.x) + 14, sy(last.y), { size: labelSize, color: s.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) });
+      if (endLabels && last && progress >= 0.9) ends.push({ str: s.label.replace('{y}', labelFmt(last.y)), x: sx(last.x) + 14, y: sy(last.y), color: s.color });
     }
+    const ys = spreadLabels ? C.spread(ends.map(e => e.y), labelSize + 2, box.y + labelSize / 2, box.y + box.h - labelSize / 2) : ends.map(e => e.y);
+    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size: labelSize, color: e.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) }));
     return { sx, sy };
   };
 
   // Slope chart between two columns. items: [{label, a, b, color}]. progress draws the lines from a to b.
-  C.slopes = function (ctx, box, items, { yDomain, progress = 1, theme, leftLabel = '2021', rightLabel = '2024', fmt = v => v.toFixed(1) + '%', size = 26, leftMargin = 330, rightMargin = 130 } = {}) {
+  C.slopes = function (ctx, box, items, { yDomain, progress = 1, theme, leftLabel = '2021', rightLabel = '2024', fmt = v => v.toFixed(1) + '%', size = 26, leftMargin = 330, rightMargin = 130, spread = false } = {}) {
     const sy = C.scale(yDomain, [box.y + box.h, box.y]);
+    // spread: the labels of each column pushed apart (the atlas's narrow panels); the dots stay on their values.
+    const la = spread ? C.spread(items.map(it => sy(it.a)), size + 2, box.y, box.y + box.h) : items.map(it => sy(it.a));
+    const lb = spread ? C.spread(items.map(it => sy(it.b)), size + 2, box.y, box.y + box.h) : items.map(it => sy(it.b));
     const x0 = box.x + leftMargin, x1 = box.x + box.w - rightMargin;
     ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; [x0, x1].forEach(x => { ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); });
-    T(ctx, leftLabel, x0, box.y - 18, { size, color: theme.muted, align: 'center' }); T(ctx, rightLabel, x1, box.y - 18, { size, color: theme.muted, align: 'center' });
-    for (const it of items) {
+    const hy = box.y - (size >= 20 ? 18 : size + 4);   // the column headers sit closer to a small chart's box
+    T(ctx, leftLabel, x0, hy, { size, color: theme.muted, align: 'center' }); T(ctx, rightLabel, x1, hy, { size, color: theme.muted, align: 'center' });
+    items.forEach((it, i) => {
       const ya = sy(it.a), yb = sy(it.b); const u = progress;
       ctx.strokeStyle = it.color; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0, ya); ctx.lineTo(x0 + (x1 - x0) * u, ya + (yb - ya) * u); ctx.stroke();
       ctx.fillStyle = it.color; ctx.beginPath(); ctx.arc(x0, ya, 6, 0, Math.PI * 2); ctx.fill();
-      T(ctx, fmt(it.a), x0 - 16, ya, { size, color: theme.ink, align: 'right', baseline: 'middle' });
-      T(ctx, it.label, x0 - 16 - Motion.measure(ctx, fmt(it.a), size) - 14, ya, { size, color: theme.muted, align: 'right', baseline: 'middle' });
+      T(ctx, fmt(it.a), x0 - 16, la[i], { size, color: theme.ink, align: 'right', baseline: 'middle' });
+      T(ctx, it.label, x0 - 16 - Motion.measure(ctx, fmt(it.a), size) - 14, la[i], { size, color: theme.muted, align: 'right', baseline: 'middle' });
       if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); }
-      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, yb, { size, color: it.color, align: 'left', baseline: 'middle', weight: 600, alpha: tail(u) });
-    }
+      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, lb[i], { size, color: it.color, align: 'left', baseline: 'middle', weight: 600, alpha: tail(u) });
+    });
   };
 
   // 100% stacked horizontal bars. groups: [{label, sub, total, parts: [{label, value, color}]}].
@@ -114,13 +130,17 @@
   };
 
   // Year-by-year dots joined by lines for several series on a log y axis. series: [{label, color, points: [{x, y, low, high}], whiskers}].
-  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null } = {}) {
+  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null, thinTicks = false, spreadLabels = false } = {}) {
     const sx = C.scale(xDomain, [box.x + 40, box.x + box.w - 40]), sy = C.logScale(yDomain, [box.y + box.h, box.y]);
-    for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === 1 ? theme.ink : theme.grid; ctx.lineWidth = t === 1 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(t), box.x - 14, y, { size: size - 2, color: theme.muted, align: 'right', baseline: 'middle' }); }
+    const tickSize = size >= 20 ? size - 2 : size;   // small panels keep their tick labels at the text size
+    for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === 1 ? theme.ink : theme.grid; ctx.lineWidth = t === 1 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(t), box.x - 14, y, { size: tickSize, color: theme.muted, align: 'right', baseline: 'middle' }); }
     const years = []; for (let x = xDomain[0]; x <= xDomain[1]; x++) years.push(x);
-    years.forEach(x => T(ctx, String(x), sx(x), box.y + box.h + 32, { size, color: highlightX === x ? theme.ink : theme.muted, align: 'center', weight: highlightX === x ? 600 : 400 }));
+    // thinTicks: every other year, the last kept, when the year labels would touch (the atlas's narrow panels).
+    const thin = thinTicks && sx(xDomain[0] + 1) - sx(xDomain[0]) < Motion.measure(ctx, String(xDomain[1]), size) + 6;
+    years.filter(x => !thin || (xDomain[1] - x) % 2 === 0).forEach(x => T(ctx, String(x), sx(x), box.y + box.h + (thinTicks ? size + 8 : 32), { size, color: highlightX === x ? theme.ink : theme.muted, align: 'center', weight: highlightX === x ? 600 : 400 }));
     if (highlightX != null) { ctx.fillStyle = theme.highlightBand; ctx.fillRect(sx(highlightX) - 46, box.y, 92, box.h); }
     const xReveal = xDomain[0] + (xDomain[1] - xDomain[0]) * progress;
+    const ends = [];
     for (const s of series) {
       const pts = s.points.filter(p => p.x <= xReveal + 1e-9);
       ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 3; ctx.lineJoin = 'round'; ctx.beginPath(); pts.forEach((p, i) => { if (i === 0) ctx.moveTo(sx(p.x), sy(p.y)); else ctx.lineTo(sx(p.x), sy(p.y)); }); ctx.stroke();
@@ -128,8 +148,10 @@
         if (s.whiskers && p.low != null) { ctx.strokeStyle = s.color; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.low)); ctx.lineTo(sx(p.x), sy(p.high)); ctx.stroke(); }
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), s.dot || 7, 0, Math.PI * 2); ctx.fill();
       }
-      if (pts.length && progress >= 0.9) T(ctx, s.label, sx(pts[pts.length - 1].x) + 22, sy(pts[pts.length - 1].y), { size, color: s.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) });
+      if (pts.length && progress >= 0.9) ends.push({ str: s.label, x: sx(pts[pts.length - 1].x) + 22, y: sy(pts[pts.length - 1].y), color: s.color });
     }
+    const ys = spreadLabels ? C.spread(ends.map(e => e.y), size + 2, box.y + size / 2, box.y + box.h - size / 2) : ends.map(e => e.y);
+    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size, color: e.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) }));
     return { sx, sy };
   };
 
