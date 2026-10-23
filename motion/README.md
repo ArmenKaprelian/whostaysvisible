@@ -633,6 +633,10 @@ At the artifact's 300 px side panel the atlas's charts overlapped and clipped: t
 
 The atlas's dark theme now shares the explainer's round-3 palette: the charcoal ground and land, the pale borders, the ink, muted and dim text, the grid and the panel tokens from `css/theme.css`; the selected control is a teal (`#1F6F80`, 5.8:1 with white) in place of the navy-era blue; the map legend and note sit on the panel colour at 0.92, as the explainer's panels do. The data ramps are unchanged (YlGnBu for ordered layers, PRGn for signed change, the density teal). The light theme keeps the manuscript's production colours. Audited again at three widths (zero findings); both themes inspected in screenshots; the atlas artifact republished as v4.
 
+### Under the cursor: 1 km year series and the empty-cell case (23 October)
+
+The panel's year chart drew only for 100 km cells, although `cellsyears.city_1km` carries 2019 to 2024 series for the 1 km city cells; it now draws those six years for a hovered 1 km cell (cells with 50 or more located firms in a year), names the 250 m and 5 km density cells as 2021-only, and states an empty cell. A cursor in a gap between 1 km cells had resolved to the 100 km cell behind it for the panel while the tooltip reported an empty cell; a gap is now an empty cell of the fine grid for both. `tools/atlas-audit.py` gained six hovered states through `window.__atlas.hoverKm` (the Moscow 100 km cell, two 1 km cells in 2021 and one in 2023, a 5 km density cell, a 250 m cell): 42 states, zero findings. The atlas artifact was republished as v5.
+
 ## Design decisions
 
 - Dark cinematic stage held to Tufte: no glows, gradients or 3D; motion only reveals data or moves the camera; every rate carries its denominator; one message per scene in the title line; the sequential ramp brightens with the value on the dark ground; the change ramp keeps purple for falling shares and green for rising ones with lightness rising with magnitude (round 2; round 1 used brick and blue).

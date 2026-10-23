@@ -158,16 +158,16 @@
   function regionAt(px, py) { const c = cam(); mctx.save(); Motion.camTransform(mctx, stage, c); let name = null; const dx = px * stage.scale, dy = py * stage.scale; for (const p of partPaths) { if (mctx.isPointInPath(p.path, dx, dy, 'evenodd')) { name = p.name; break; } } mctx.restore(); stage.base(); return name; }
   function cellAt(km) {
     const c = cam(); const L = state.layer; const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), key = cellKey(ix, iy);
-    const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py) };
+    const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
     if (L === 'density' || (L === 'share' && c.k >= 1.5)) {
-      const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0];
+      const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0]; out.city = near;
       if (c.k >= 24 && win025[near] && (L === 'density' || state.year === 2021)) { layer = win025[near].d; g = 0.25; origin = layer.origin; }
       else if (c.k >= 1.5 && (L === 'density' ? win1[near] : (state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year])))) { layer = L === 'density' || state.year === 2021 ? win1[near].d : cityYear[near][state.year].d; g = 1; origin = layer.origin; }
       else if (L === 'density') { layer = nat; g = 5; }
       if (!layer) return out;
       const jx = Math.floor((km.x - origin[0]) / g), jy = Math.floor((km.y - origin[1]) / g);
       for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.grid = g; out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; out.fine = true; return out; }
-      out.grid = g; return out;
+      out.grid = g; out.fine = true; out.n = null; out.a = null; return out;   // a gap between cells is an empty cell of this grid, not the 100 km cell behind it
     }
     if (L === 'share') { const d = yearCells[state.year].get(key); if (d) Object.assign(out, { n: d.n, a: d.a, nr: d.nr, ar: d.ar, ns: d.ns }); }
     else if (L === 'change') { const i = chgMap.get(key); if (i != null) Object.assign(out, { n21: chg.n21[i], a21: chg.a21[i], n24: chg.n24[i], a24: chg.a24[i], change: chg.change_pp[i], supported: chg.supported[i] }); }
@@ -180,6 +180,7 @@
   function tipText(h) {
     const L = state.layer; const lines = [];
     if (h.region) lines.push(`<b>${h.region}</b>`);
+    if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
     if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a 2021 statement (${fmt.pct(100 * h.a / h.n)})` : h.n >= 50 ? '' : '; share not shown under 50 firms')); return lines.join('<br>'); }
     if (L === 'share') { if (h.n == null) lines.push('No located firms in this 100 km cell'); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement (${fmt.pct(100 * h.ar / h.nr)})`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members: ${fmt.int(h.ns)}`); } }
     else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)} (${fmt.pct(100 * h.a21 / h.n21)})<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)} (${fmt.pct(100 * h.a24 / h.n24)})<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} points</b>` : 'Fewer than 50 firms in a year: not classed')); }
@@ -215,15 +216,28 @@
   function drawCellPanel(h) {
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', h.region]);
-    if (h && (h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `100 km (${h.ix}, ${h.iy})`]);
+    if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `100 km (${h.ix}, ${h.iy})`]);
     info.innerHTML = rows.length ? rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('') : '<span>Hover a cell</span><b></b>';
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
-    if (!h || h.fine) { Motion.text(ctx, h && h.fine ? 'Year series are kept for 100 km cells' : '', 8, 24, { size: 13, color: theme.muted }); return; }
+    if (!h) return;
+    const note = t => Motion.text(ctx, t, 8, 24, { size: 13, color: theme.muted });
+    const chart = (pts, xDomain, xTicks, eras, caption) => {
+      CH.lines(ctx, { x: 44, y: 14, w: w - 100, h: hh - 52 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain, yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks, xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras, yFmt: v => v + '%', axisSize: 12, axisDy: 20 });
+      Motion.text(ctx, caption, 44, hh - 2, { size: 11, color: theme.dim });
+    };
+    if (h.fine) {
+      // 1 km city cells carry year series for 2019 to 2024 (cellsyears.city_1km); 250 m cells and the 5 km density cells carry 2021 only.
+      if (h.n == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);
+      if (h.grid !== 1 || !cityYear[h.city]) return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');
+      const pts = [];
+      for (const [y, L1] of Object.entries(cityYear[h.city])) { const d = L1.d, jx = Math.floor((h.kmx - d.origin[0]) / 1), jy = Math.floor((h.kmy - d.origin[1]) / 1); for (let i = 0; i < d.count; i++) if (d.ix[i] === jx && d.iy[i] === jy) { if (d.n[i] >= 50 && d.a[i] >= 0) pts.push({ x: +y, y: 100 * d.a[i] / d.n[i] }); break; } }
+      if (!pts.length) return note('Fewer than 50 located firms in every year, 2019 to 2024');
+      return chart(pts.sort((a, b) => a.x - b.x), [2018.5, 2024.5], [2019, 2021, 2024], [], 'share with a statement, this 1 km cell, 2019 to 2024');
+    }
     const key = cellKey(h.ix, h.iy); const pts = [];
     for (const y of years) { const d = yearCells[y].get(key); if (d && d.n >= 50) pts.push({ x: y, y: 100 * d.a / d.n }); }
-    if (!pts.length) { Motion.text(ctx, 'Fewer than 50 located firms in every year', 8, 24, { size: 13, color: theme.muted }); return; }
-    CH.lines(ctx, { x: 44, y: 14, w: w - 100, h: hh - 44 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain: [2013.5, 2025.5], yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks: [2014, 2018, 2021, 2025], xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', axisSize: 12, axisDy: 20 });
-    Motion.text(ctx, 'share with a statement, this cell, by year', 44, hh - 2, { size: 11, color: theme.dim });
+    if (!pts.length) return note('Fewer than 50 located firms in every year');
+    chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], 'share with a statement, this 100 km cell, by year');
   }
   function drawNational() {
     const { ctx, w } = chartCtx('natchart'); const hh = $('natchart').getBoundingClientRect().height;
@@ -269,6 +283,9 @@
     layer(id) { const b = layersEl.querySelector(`button[data-id="${id}"]`); if (b) b.click(); },
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
     redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return Motion.audit.boxes; },
+    preset(label) { for (const b of presets.querySelectorAll('button')) if (b.textContent === label) { b.click(); return true; } return false; },
+    hoverKm(x, y) { const c = cam(); const h = cellAt({ x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }); state.hover = h; return { grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n }; },
+    cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
   };
   document.fonts.ready.then(() => { sizeCanvases(); fitNational(); syncThemeButton(); redrawAll(); });
 })();
