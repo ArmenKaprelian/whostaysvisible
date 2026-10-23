@@ -97,8 +97,11 @@ exec("CREATE TEMP TABLE fym AS
 # baseline is only part of the faint neutral backdrop. A baseline firm that filed without a revenue
 # value is counted (base_filed_novalue) and left to the backdrop.
 dist <- lab_query(con, "SELECT quantile_cont(pct, [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]) AS q FROM fym WHERE NOT treated AND NOT city_level AND year BETWEEN 2022 AND 2024 AND pct IS NOT NULL", "metric quantiles")
-BREAKS <- c(-40, -15, 0, 15, 40)
-CANDIDATES <- list(current = BREAKS, c1 = c(-50, -20, 0, 50, 150), c2 = c(-40, -15, 0, 40, 120), c3 = c(-60, -25, 0, 75, 200))
+# Breaks chosen by the author on 23 October 2026 from the 2022-2024 quantiles (zero stays the midpoint,
+# the upper classes widen); the first set was -40 / -15 / 0 / +15 / +40, which put 69-84% of filers in
+# the two extreme classes. The manifest keeps the class counts under every candidate.
+BREAKS <- c(-50, -20, 0, 50, 150)
+CANDIDATES <- list(current = BREAKS, previous = c(-40, -15, 0, 15, 40), c2 = c(-40, -15, 0, 40, 120), c3 = c(-60, -25, 0, 75, 200))
 CLASS_COLS <- c("#E7D4E8", "#C2A5CF", "#9970AB", "#5AAE61", "#A6DBA0", "#D9F0D3")   # declines then rises (PRGn, lightness rises with magnitude)
 # Dark control: a saturated deep purple, so it separates from the faint backdrop (neutral at 0.35
 # over the land) and from the land by chroma rather than lightness alone (validator, 23 October:

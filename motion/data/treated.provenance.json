@@ -1,13 +1,13 @@
 {
   "id": "treated",
-  "run_id": "20261023T034730Z-run-M6-treated.R",
+  "run_id": "20261023T040306Z-run-M6-treated.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T03:47:55Z",
+  "time_utc": "2026-10-23T04:03:31Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M6-treated.R",
-    "sha256": "b30b1a79b777eb9484a575bb668638da1754e27b889c5d67a7e7a052129f5345"
+    "sha256": "98679a038d53cbbba3b4acfe29a8b5f84f32e909666c7a7ad1b1e1a43505c91d"
   },
-  "lab_commit": "b3748ac487d53761601ee93287c9b7ecc6c1729b",
+  "lab_commit": "bd42572fa69b4455a0479211a8c5f313c6c5c58c",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 18,
@@ -478,7 +478,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-riNZODuB/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-EJkciR1G/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -486,10 +486,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treated.json",
-    "json_sha256": "0aa51edc35def76e00da66e9785cb48a612ad3a3eb20b08f3d15671da519dcea",
+    "json_sha256": "4b0d14f161aeab0c91381678372fcbf8e90df9c9c14514edbea808302e598bfd",
     "json_bytes": 156759,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treated.js",
-    "js_sha256": "05b85f51d2a0c690ded8690e20d90866c0013024c31845fa689f48f966c66c48",
+    "js_sha256": "35952aea6d114251d05a120bc9dd21edfbc6fdbfb8783a728a20e76cad29cf25",
     "names": ["x", "y", "red_from", "undated", "inferred", "filed", "state", "pile", "red_from_counts", "n", "inferred_n", "undated_n", "state_key", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "-", "b", "d", "1-6"]
   }
 }

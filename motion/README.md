@@ -172,8 +172,9 @@ Rules (author's decisions, 23 October):
   backdrop (never an outcome colour). Baseline firms that filed without a revenue value (0.1-2%) stay in
   the backdrop and are counted (`base_filed_novalue`).
 - City-level geocodes are not drawn (6,000-90,000 per year in the downtown rectangle) and are counted.
-- Classes: six, breaks -40 / -15 / 0 / +15 / +40 percent (see the spread below; a change waits for the
-  author's decision).
+- Classes: six, breaks -50 / -20 / 0 / +50 / +150 percent, chosen by the author on 23 October from the
+  2022-2024 quantiles after the first set (-40 / -15 / 0 / +15 / +40) put 69-84% of filers in the two
+  extreme classes (see the spread below).
 
 Outputs (local only, `motion/data/points/` and `motion/data/*.json`): 72 rasters (three 16:9 extents
 centred on the Moscow point: region 160 x 90 km at k = 12, city 64 x 36 km at k = 30, downtown
@@ -217,15 +218,17 @@ have a baseline and no statement. At the mark level the coloured field is dense:
 piles carry at least one filer in 2021-2025 (67-72% at the city extent), so the density-tint fallback
 was not needed.
 
-Class spread of filers (shares in the six classes, declines to rises), downtown: 2022 under the current
-breaks 20.8 / 6.9 / 5.0 / 5.7 / 13.0 / 48.6 (extremes 69%); 2023 20.5 / 5.6 / 3.8 / 4.2 / 8.3 / 57.6
-(78%); 2024 18.9 / 4.7 / 2.9 / 3.0 / 5.6 / 65.0 (84%). The city extent is within one point. The
-distribution is wide and skewed (2023 downtown quantiles 5/10/25/50/75/90/95: -100, -89, -20, +59,
-+166, +421, +828), so the proposal from the quantiles keeps zero as the midpoint and widens the upper
-classes: breaks -50 / -20 / 0 / +50 / +150 give 2022 18.3 / 7.9 / 6.4 / 24.1 / 26.1 / 17.2 (extremes
-36%), 2023 18.5 / 6.4 / 5.0 / 16.7 / 26.0 / 27.4 (46%), 2024 17.1 / 5.5 / 3.9 / 11.1 / 24.5 / 38.0
-(55%); the flatter alternative -60 / -25 / 0 / +75 / +200 gives extremes of 28, 38 and 46%. Nothing
-was changed: the rendered cut uses the current breaks, and the manifest records all three candidates.
+Class spread of filers (shares in the six classes, declines to rises), downtown: under the first
+breaks (-40 / -15 / 0 / +15 / +40) 2022 20.8 / 6.9 / 5.0 / 5.7 / 13.0 / 48.6 (extremes 69%); 2023
+20.5 / 5.6 / 3.8 / 4.2 / 8.3 / 57.6 (78%); 2024 18.9 / 4.7 / 2.9 / 3.0 / 5.6 / 65.0 (84%). The city
+extent is within one point. The distribution is wide and skewed (2023 downtown quantiles
+5/10/25/50/75/90/95: -100, -89, -20, +59, +166, +421, +828), so the proposal from the quantiles kept
+zero as the midpoint and widened the upper classes: breaks -50 / -20 / 0 / +50 / +150 give 2022
+18.3 / 7.9 / 6.4 / 24.1 / 26.1 / 17.2 (extremes 36%), 2023 18.5 / 6.4 / 5.0 / 16.7 / 26.0 / 27.4 (46%),
+2024 17.1 / 5.5 / 3.9 / 11.1 / 24.5 / 38.0 (55%); the flatter alternative -60 / -25 / 0 / +75 / +200
+gives extremes of 28, 38 and 46%. The author chose -50 / -20 / 0 / +50 / +150 (23 October, after the
+first render); M6 was re-run and the treated cut re-rendered with them. The manifest records the class
+counts under the chosen, the previous and the two other candidate sets.
 
 ### The treated cut (storyboard)
 
@@ -253,7 +256,7 @@ scale, so they share one leader label.
 - Text: zero findings on the three cuts (see the audit section); 12 review frames of the treated cut (2.5, 14, 24, 27, 36, 39.5, 45, 52, 60, 72, 80 and 84 s) and the three requested frames (downtown 2022, city 2024, region 2025, `build/treated-review/`) were inspected at full size.
 - M6: 163 checks pass; `check-readonly.sh` reported nothing changed outside the lab; no identifier names in any shipped `data/*.js` (grep for `inn` and `ogrn` tokens).
 - Determinism, treated cut: frames 300, 1500 and 2400 captured across three shards and in one process in another order are byte-identical (AE = 0 each).
-- Renders (sharded, four browsers each; runs `20261023T035339Z`, `035618Z` and `035658Z-capture`): the full cut 5,460 frames in 150 s (597 s single-process in round 1), the teaser 1,200 frames in 36 s, the treated cut 2,550 frames in 106 s; `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and exactly 5,460 / 182.000 s, 1,200 / 40.000 s and 2,550 / 85.000 s against `__videoMeta`; no page exceptions in any shard log; files 24.3 MB, 11.2 MB and 46.9 MB (`build/who-stays-visible*.mp4`). Frames at 26.5, 49.8 and 83 s were extracted from the treated MP4 and inspected (`build/treated-check/`).
+- Renders (sharded, four browsers each; runs `20261023T035339Z`, `035618Z` and `035658Z-capture`): the full cut 5,460 frames in 150 s (597 s single-process in round 1), the teaser 1,200 frames in 36 s, the treated cut 2,550 frames in 106 s; `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and exactly 5,460 / 182.000 s, 1,200 / 40.000 s and 2,550 / 85.000 s against `__videoMeta`; no page exceptions in any shard log; files 24.3 MB, 11.2 MB and 46.9 MB (`build/who-stays-visible*.mp4`). Frames at 26.5, 49.8 and 83 s were extracted from the treated MP4 and inspected (`build/treated-check/`). Second treated render with the chosen breaks (run `20261023T040416Z-capture`): 2,550 frames in 107 s, ffprobe 2,550 / 85.000 s, no problems, 46.7 MB; the text audit on the re-labelled legend reported zero findings; the three review frames (`build/treated-review/`) and the 49.8 s frame from the MP4 were inspected; a 720p preview copy (`build/who-stays-visible-treated-720p.mp4`, 9.4 MB) exists for remote viewing.
 
 ### Sharded capture, verified
 
@@ -263,8 +266,8 @@ Every render from here on is sharded: the audit passes, the three cuts, and the 
 
 ### Pending the author's review
 
-The class breaks (proposal above), the splice of the treated cut into the full cut after the Moscow
-zoom (`full-treated`, not built until approved), and the review of the treated cut itself.
+The treated cut itself (second render, chosen breaks) and the splice of the treated cut into the full
+cut after the Moscow zoom (`full-treated`, not built until approved).
 
 ## Design decisions
 
