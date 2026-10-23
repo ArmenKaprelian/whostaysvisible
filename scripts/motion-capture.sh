@@ -4,7 +4,8 @@
 # a run folder under logs/, the Brave profile under the run's scratch, the read-only check at the end.
 # Usage: scripts/motion-capture.sh [--page PAGE] [capture.py arguments ...]   (--shards N, default 4: parallel browsers)
 #   e.g. --seconds 3 --out motion/build/smoke.mp4
-#        --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser.mp4
+#        --page "explainer.html?cut=teaser-public" --out motion/build/who-stays-visible-teaser-public-40s.mp4
+#        cut ids: full-public, teaser-public (aggregates only, may leave the lab), full-local, teaser-local, moscow (never published)
 set -uo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"; lab_load_env
 PAGE="explainer.html"

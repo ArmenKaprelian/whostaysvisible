@@ -39,6 +39,9 @@
   const bmp = MM.buildBasemap(BM);
   const extentAlpha = k => ({ national: 1 - ramp(k, 1.0, 3.0), region: ramp(k, 3, 6) * (1 - ramp(k, 22, 30)), city: ramp(k, 14, 22) * (1 - ramp(k, 60, 80)), downtown: ramp(k, 60, 80) * (1 - ramp(k, 110, 150)) });
   const extentOf = k => (k >= 60 ? 'downtown' : k >= 20 ? 'city' : k >= 2 ? 'region' : 'national');
+  // The national raster fades in only once it is within 1.3 times its rest size (author, round 4 close); the
+  // marks' two sets still cross-fade between k 3 and 1 (extentAlpha.national), so the pull-back is never bare.
+  const nationalRaster = k => 1 - ramp(k, K.national, K.national * 1.3);
   const markRadius = (ext, pile) => { const m = P.extents[ext].mark; return Math.min(m.cap, m.base + m.s * Math.sqrt(Math.max(0, pile - 1))) / 2; };
   const inExtent = (ext, x, y) => { const e = P.extents[ext]; return x >= e.xmin && x <= e.xmax && y >= e.ymin && y <= e.ymax; };
   const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : null);   // 'd' (absent) and 'b' are not drawn
@@ -119,7 +122,7 @@
     if (!IMG) return;
     const ea = extentAlpha(cam.k);
     for (const ext of ['national', 'region', 'city', 'downtown']) {
-      const a = ea[ext]; if (a <= 0.002) continue;
+      const a = ext === 'national' ? nationalRaster(cam.k) : ea[ext]; if (a <= 0.002) continue;
       const [px, py, w, h] = rasterRect(cam, ext);
       ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       if (backAlpha > 0) { ctx.save(); ctx.globalAlpha *= a * backAlpha; ctx.drawImage(blendYears(OFF[0], ext, 'backdrop', v), px, py, w, h); ctx.restore(); }
@@ -378,7 +381,7 @@
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1), x = 1204, w = 632;
-    Motion.panel(ctx, 1180, 300, 680, 560, theme, 0.92 * step(l, 0.3, 0.5));
+    Motion.panel(ctx, 1180, 300, 680, 560, theme, 0.6 * step(l, 0.3, 0.5));   // dims the map under it (the far east) rather than covering it
     let y = 346;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;

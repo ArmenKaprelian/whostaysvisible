@@ -442,7 +442,8 @@
   const Bf = full.B;
   const TEASER = [['hook', TITLES.hook, 0, 7.5, 0, Bf.hook.end], ['years', TITLES.years, 7.5, 17.5, Bf.years.start, Bf.years.end], ['zoom', 'Central Moscow', 17.5, 29, Bf.zoom.start, Bf.zoom.start + 19],
                   ['groups', TITLES.groups, 29, 37.5, Bf.groups.start, Bf.groups.end], ['credits', TITLES.credits, 37.5, 40, Bf.credits.start, Bf.credits.end]];
-  const cuts = { full, teaser: makeCut(full, TEASER, 40, new Set(['hook', 'years', 'zoom'])) };
+  // Cut ids (round 4 close): 'public' cuts carry aggregates only and may leave the lab; 'local' and 'moscow' never do.
+  const cuts = { 'full-public': full, 'teaser-public': makeCut(full, TEASER, 40, new Set(['hook', 'years', 'zoom'])) };
   // The local cuts, built once the Moscow rasters are decoded: the full cut with the section, a
   // 46 s teaser with a six-second excerpt of the designation, and the standalone treated cut.
   function makeMoscowCuts(images, opts) {
@@ -454,7 +455,7 @@
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
     const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
-    return { 'full-moscow': fm, 'teaser-moscow': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), treated: TS.standalone(images, opts) };
+    return { 'full-local': fm, 'teaser-local': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts) };
   }
   window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts, frames: { left: leftK(), nat: natK(0.98) } });
 })();

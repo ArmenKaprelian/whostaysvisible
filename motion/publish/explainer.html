@@ -60,7 +60,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
 <div class="stage-wrap"><canvas class="stage" id="stage" width="1920" height="1080" aria-label="Animated explainer: who stays visible? Financial statements of Russian firms under sanctions"></canvas></div>
 <div class="controls" id="controls">
   <button id="play" type="button" aria-label="Play or pause">Play</button>
-  <button id="cut" type="button" aria-pressed="false" title="Switch between the cuts">Full cut (3:12)</button>
+  <button id="cut" type="button" aria-pressed="false" title="Switch between the cuts">Full cut, public (3:12)</button>
   <span class="time" id="time">0:00 / 0:00</span>
   <input id="scrub" type="range" min="0" max="192" step="0.0333" value="0" aria-label="Scrub the timeline">
   <div class="chapters" id="chapters"></div>
@@ -100,11 +100,11 @@ html[data-render] * { transition: none !important; animation: none !important; }
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
   const CUTS = Object.assign({}, window.ExplainerScenes.cuts);   // full and teaser; the local cuts join once their rasters are decoded
-  const NAMES = { full: 'Full cut', teaser: 'Teaser', 'full-moscow': 'Full cut, Moscow sequence', 'teaser-moscow': 'Teaser, Moscow sequence', treated: 'Two firms' };
-  const LOCAL = new Set(['full-moscow', 'teaser-moscow', 'treated']);
+  const NAMES = { 'full-public': 'Full cut, public', 'teaser-public': 'Teaser, public', 'full-local': 'Full cut, local', 'teaser-local': 'Teaser, local', moscow: 'Moscow' };
+  const LOCAL = new Set(['full-local', 'teaser-local', 'moscow']);
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   const wanted = q.get('cut');
-  let cutName = wanted && CUTS[wanted] ? wanted : 'full';
+  let cutName = wanted && CUTS[wanted] ? wanted : 'full-public';
   let X = CUTS[cutName], stage = null;
   const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters'), cutBtn = document.getElementById('cut');
   const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
@@ -118,7 +118,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
     scrub.max = String(X.DURATION); scrub.value = '0';
     chapters.innerHTML = '';
     Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
-    cutBtn.textContent = `${NAMES[name] || name} (${fmtTime(X.DURATION)})`; cutBtn.setAttribute('aria-pressed', String(name !== 'full'));
+    cutBtn.textContent = `${NAMES[name] || name} (${fmtTime(X.DURATION)})`; cutBtn.setAttribute('aria-pressed', String(name !== 'full-public'));
     window.__videoMeta = Object.assign({ cut: name }, stage.meta());
   }
   const nextCut = () => { const names = Object.keys(CUTS); return names[(names.indexOf(cutName) + 1) % names.length]; };

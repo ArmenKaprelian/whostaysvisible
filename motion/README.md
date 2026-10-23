@@ -10,10 +10,10 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 3: `full` 192 s and `teaser` 40 s from the aggregates; `full-moscow` 287 s, `teaser-moscow` 46 s and `treated` 110 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 4 names: `full-public` 192 s and `teaser-public` 40 s from the aggregates; `full-local` 287 s, `teaser-local` 46 s and `moscow` 110 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
-| Teaser | `build/who-stays-visible-teaser.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
-| Treated cut (round 2) | `explainer.html?cut=treated`, `js/treated-scenes.js`, `build/who-stays-visible-treated.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
+| Teaser | `build/who-stays-visible-teaser-public-40s.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
+| Treated cut (round 2) | `explainer.html?cut=moscow` (round 2: `treated`), `js/treated-scenes.js`, `build/who-stays-visible-moscow-110s.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
 | Atlas | `explorer.html` (+ `js/explorer-app.js`) | six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
 | Data | `data/*.json`, `data/*.js`, `data/*.provenance.json`, `data/*.checks.csv` | the aggregates the pages draw, each with a provenance sidecar and the checks that gated it |
 | Tools | `tools/serve.py`, `tools/cdp.py`, `tools/capture.py`, `tools/audit.py`, `../scripts/motion-capture.sh` | static server, a stdlib DevTools client, the frame-exact sharded capture, the text audit, the host launcher with the lab bracket |
@@ -72,13 +72,13 @@ python3 -I motion/tools/serve.py --port 8765          # then open http://127.0.0
 scripts/motion-capture.sh --probe --shards 1           # headless Brave loads the page, prints the render metadata
 scripts/motion-capture.sh --seconds 3 --out motion/build/smoke.mp4
 scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
-scripts/motion-capture.sh --out motion/build/who-stays-visible.mp4                       # 4 shards by default
-scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser.mp4
-scripts/motion-capture.sh --page "explainer.html?cut=treated" --out motion/build/who-stays-visible-treated.mp4
-scripts/motion-capture.sh --page "explainer.html?cut=full-moscow" --out motion/build/who-stays-visible-moscow.mp4 --shards 8   # round 3, local
-scripts/motion-capture.sh --page "explainer.html?cut=teaser-moscow" --out motion/build/who-stays-visible-teaser-moscow.mp4
-scripts/motion-capture.sh --audit motion/build/audit-full.json --audit-step 6            # text boxes of every 6th frame
-python3 -I motion/tools/audit.py motion/build/audit-full.json --out motion/build/audit-full.txt
+scripts/motion-capture.sh --out motion/build/who-stays-visible-full-public-192s.mp4      # the default cut, 4 shards
+scripts/motion-capture.sh --page "explainer.html?cut=teaser-public" --out motion/build/who-stays-visible-teaser-public-40s.mp4
+scripts/motion-capture.sh --page "explainer.html?cut=full-local" --out motion/build/who-stays-visible-full-local-287s.mp4 --shards 8   # local only
+scripts/motion-capture.sh --page "explainer.html?cut=teaser-local" --out motion/build/who-stays-visible-teaser-local-46s.mp4
+scripts/motion-capture.sh --page "explainer.html?cut=moscow" --out motion/build/who-stays-visible-moscow-110s.mp4
+scripts/motion-capture.sh --audit motion/build/audit-full-public.json --audit-step 6     # text boxes of every 6th frame
+python3 -I motion/tools/audit.py motion/build/audit-full-public.json --out motion/build/audit-full-public.txt
 python3 -I motion/tools/publish-set.py                                                   # motion/publish/: pages, shared scripts, aggregate data only
 ```
 
@@ -286,13 +286,13 @@ inside the lab; nothing firm-level is published.
 
 ### Cuts
 
-| Cut | URL | Length | Frames | Where it goes |
+| Cut (round-4 name; round-3 name) | URL | Length | Frames | Where it goes |
 |---|---|---|---|---|
-| `full` | `explainer.html` (default) | 192 s | 5,760 | the artifact (no firm-level data); `build/who-stays-visible.mp4` |
-| `teaser` | `?cut=teaser` | 40 s | 1,200 | the artifact; `build/who-stays-visible-teaser.mp4` |
-| `full-moscow` | `?cut=full-moscow` | 287 s (round 4; 275 s in round 3) | 8,610 | local only; `build/who-stays-visible-moscow.mp4` (720p copy beside it) |
-| `teaser-moscow` | `?cut=teaser-moscow` | 46 s | 1,380 | local only; the teaser plus a six-second excerpt of the designation |
-| `treated` | `?cut=treated` | 110 s (round 4; 97 s in round 3) | 3,300 | local only; the standalone two-firm cut with the comparison beat and the national run |
+| `full-public` (`full`) | `explainer.html` (default) | 192 s | 5,760 | the artifact (no firm-level data); `build/who-stays-visible-full-public-192s.mp4` |
+| `teaser-public` (`teaser`) | `?cut=teaser-public` | 40 s | 1,200 | the artifact; `build/who-stays-visible-teaser-public-40s.mp4` |
+| `full-local` (`full-moscow`) | `?cut=full-local` | 287 s (275 s in round 3) | 8,610 | local only; `build/who-stays-visible-full-local-287s.mp4` (`-720p` copy beside it) |
+| `teaser-local` (`teaser-moscow`) | `?cut=teaser-local` | 46 s | 1,380 | local only; `build/who-stays-visible-teaser-local-46s.mp4`; the teaser plus a six-second excerpt of the designation |
+| `moscow` (`treated`) | `?cut=moscow` | 110 s (97 s in round 3) | 3,300 | local only; `build/who-stays-visible-moscow-110s.mp4` (`-720p` copy beside it); the standalone two-firm cut with the comparison beat and the national run |
 
 The page builds `full` and `teaser` from the five aggregate data files; the three local cuts join
 once `data/points.js`, `treated.js`, `anchors.js`, `moscowcells.js`, `moscowcomparison.js` and the
@@ -587,6 +587,31 @@ Over the national map now, so its panel moved to the right column (680 x 560 at 
 the ticker and the legend; the far east lies under it): the count line, the two caveats, the St
 Petersburg sentence, "Paths compared, no effect estimated."
 
+### Closing the round (author's two items)
+
+- Names. The five cuts follow one scheme in which the public/local word marks what may leave the lab:
+  `full-public` (`full`; `build/who-stays-visible-full-public-192s.mp4`), `teaser-public` (`teaser`;
+  `who-stays-visible-teaser-public-40s.mp4`), `full-local` (`full-moscow`; `who-stays-visible-full-local-287s.mp4`),
+  `teaser-local` (`teaser-moscow`; `who-stays-visible-teaser-local-46s.mp4`), `moscow` (`treated`;
+  `who-stays-visible-moscow-110s.mp4`); 720p copies take the suffix `-720p`; the lengths are the rendered
+  ones. The page's cut ids, its labels, the capture script's usage note, the publish set (the page's
+  default cut is `full-public`) and the audit file names use the new names; the run logs under `logs/` keep
+  their run ids, and the verification lines of rounds 1-4 above keep the names of their day. The stale
+  720p copy of the 85 s treated cut was removed.
+- Residuals. The national raster fades in only once it is within 1.3 times its rest size (k 0.168 to
+  0.218), so the slide to the national framing shows the land, the borders and the red marks, and the
+  firm field arrives as the camera settles; the marks' two sets still cross-fade between k 3 and 1, so
+  the pull-back is never bare. The close panel dims the map under it (0.6 instead of 0.92) rather than
+  covering it, so the far east reads through the text.
+- Verification of the close: all five cuts probe clean under the new names; the text audit reports zero
+  findings on `full-public`, `teaser-local` and `teaser-public` and only the counted `box-over-mark`
+  lines (17 each) on `full-local` and `moscow`; `full-local` re-rendered (run `20261023T090103Z`, 8 shards,
+  155 s, 8,610 frames / 286.999 s, 79.7 MB; 720p copy 21.2 MB) and `moscow` (run `090425Z`, 4 shards,
+  130 s, 3,300 frames / 110.000 s, 44.1 MB; 720p copy 13.6 MB), both verified by `ffprobe` against
+  `__videoMeta`; frames 1,500, 5,590 (the slide) and 6,090 (the close) of `full-local` byte-identical
+  across three shards and in one process (AE = 0); frames at 185.5, 186, 186.5 and 203 s of `full-local`
+  and 105 s of `moscow` extracted from the finished files and inspected (`build/r4-close/`).
+
 ### Round-4 verification
 
 - Data: M8 74 checks pass (listed above); M6 and M7 unchanged and not re-run (the shared code's per-year table build yields the same tables; `M6-treated.R` lost nothing but three function definitions that moved to `M6-common.R`); `check-readonly.sh` reported nothing changed outside the lab; no identifier names in `national.json` or `treatednational.json` (the save helper refuses them); the page's `__ready` checks the national counters against the manifest and the Moscow point's projection against the manifest's pixel before building the local cuts.
@@ -595,7 +620,7 @@ Petersburg sentence, "Paths compared, no effect estimated."
 - Text audit (step 6; the teasers at step 3): zero findings on `full`, `teaser-moscow` and `teaser`; `full-moscow` and `treated` carry only the counted `box-over-mark` lines (17 each). The teaser was re-audited and not re-rendered: nothing in its windows changed.
 - Renders (sharded; runs `20261023T083944Z` full-moscow with 8 shards, `084255Z` full, `084609Z` treated, `084827Z` teaser-moscow): `ffprobe` reads 1920x1080, 30/1, h264 yuv420p and 8,610 frames / 286.999 s (157 s of capture, 81.0 MB), 5,760 / 192.000 s (173 s, 45.5 MB), 3,300 / 110.000 s (123 s, 45.2 MB) and 1,380 / 46.000 s (43 s, 17.3 MB) against `__videoMeta`; no page exceptions in any shard log. The 720p preview of the Moscow cut (`build/who-stays-visible-moscow-720p.mp4`, 21.6 MB) was remade.
 - Determinism: frames 1,500, 5,700 (the national run) and 6,000 (the close) of `full-moscow` captured across three shards and in one process in another order are byte-identical (ImageMagick AE = 0 each).
-- Artifact: the publish set (5.1 MB; the refusal pattern now also covers `national`) carries the lists table; the explainer artifact is at v8. The atlas artifact stays at v2.
+- Artifact: the publish set (5.1 MB; the refusal pattern now also covers `national`) carries the lists table and the renamed cut ids; the explainer artifact is at v8 (lists table) and v9 (names). The atlas artifact stays at v2.
 - Residuals: the national raster is drawn at 6 to 3 times its size for about a second during the slide (k 1 to 0.3); the live box's mark coverage is counted, not zero; the close panel covers the far east of the national map for the seven seconds of the close.
 
 ## Design decisions
