@@ -22,8 +22,13 @@
 <script src="data/series.js"></script>
 <script src="data/cellsyears.js" onerror="this.remove()"></script>
 <script src="data/points.js" onerror="this.remove()"></script>
+<script src="data/points-b.js" onerror="this.remove()"></script>
 <script src="data/treated.js" onerror="this.remove()"></script>
 <script src="data/anchors.js" onerror="this.remove()"></script>
+<script src="data/moscowcells.js" onerror="this.remove()"></script>
+<script src="data/moscowcomparison.js" onerror="this.remove()"></script>
+<script>// ?points=b swaps in the A/B ramp variant of the Moscow rasters (local review only)
+if (new URLSearchParams(location.search).get('points') === 'b' && window.MOTION_DATA && MOTION_DATA['points-b']) MOTION_DATA.points = MOTION_DATA['points-b'];</script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>
@@ -45,7 +50,8 @@
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
   const CUTS = window.ExplainerScenes.cuts;
-  const CUT_LABEL = { full: 'Full cut (3:02)', teaser: 'Teaser (0:40)', treated: 'Two firms (1:25)' };
+  const CUT_LABEL = { full: 'Full cut (3:02)', teaser: 'Teaser (0:40)', treated: 'Two firms (1:37)' };
+  window.__panels = () => Motion.audit.panels;
   const wanted = q.get('cut');
   let cutName = wanted === 'teaser' ? 'teaser' : 'full';   // the treated cut is built once its rasters are decoded
   let X = CUTS[cutName], stage = null;
@@ -91,15 +97,18 @@
     // The treated cut (local data only): decode every raster first, check the page's listed-firm
     // counters against the M6 manifest, then build the cut and switch to it when requested.
     let treated = false;
-    if (D.points && D.treated && D.anchors && window.TreatedScenes) {
-      const images = await TreatedScenes.loadImages('data/');
+    if (D.points && D.treated && D.anchors && D.moscowcells && D.moscowcomparison && window.TreatedScenes) {
+      const images = await TreatedScenes.loadImages('data/', { layers: ['downtown'] });
       const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
       for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
       if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
-      CUTS.treated = TreatedScenes.make(images, { align: q.get('__align') === '1' });
+      const cs = TreatedScenes.cellSums; const badCells = [];
+      for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
+      if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));
+      CUTS.treated = TreatedScenes.standalone(images, { align: q.get('__align') === '1' });
       treated = true;
       if (wanted === 'treated') build('treated');
-    } else if (wanted === 'treated') throw new Error('the treated cut needs the local M6 data (points, treated, anchors)');
+    } else if (wanted === 'treated') throw new Error('the treated cut needs the local M6 and M7 data (points, treated, anchors, moscowcells, moscowcomparison)');
     const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
     await window.__seek(t0); show(t0);
     return Object.assign({ yearsLayer: !!D.cellsyears, treatedCut: treated, cut: cutName }, window.__videoMeta);

@@ -1,0 +1,202 @@
+"check","expected","observed","tolerance","pass"
+"1km 2014: cells hold the drawn firms",1230604,1230604,0,TRUE
+"1km 2014: cells hold the baseline firms",153323,153323,0,TRUE
+"1km 2014: cells hold the filers with a value",93627,93627,0,TRUE
+"1km 2014: cells hold the baseline firms without a statement",50306,50306,0,TRUE
+"1km 2015: cells hold the drawn firms",1188819,1188819,0,TRUE
+"1km 2015: cells hold the baseline firms",177754,177754,0,TRUE
+"1km 2015: cells hold the filers with a value",126473,126473,0,TRUE
+"1km 2015: cells hold the baseline firms without a statement",38542,38542,0,TRUE
+"1km 2016: cells hold the drawn firms",1252816,1252816,0,TRUE
+"1km 2016: cells hold the baseline firms",204303,204303,0,TRUE
+"1km 2016: cells hold the filers with a value",147940,147940,0,TRUE
+"1km 2016: cells hold the baseline firms without a statement",43193,43193,0,TRUE
+"1km 2017: cells hold the drawn firms",1106924,1106924,0,TRUE
+"1km 2017: cells hold the baseline firms",231623,231623,0,TRUE
+"1km 2017: cells hold the filers with a value",174181,174181,0,TRUE
+"1km 2017: cells hold the baseline firms without a statement",44489,44489,0,TRUE
+"1km 2018: cells hold the drawn firms",1078859,1078859,0,TRUE
+"1km 2018: cells hold the baseline firms",258818,258818,0,TRUE
+"1km 2018: cells hold the filers with a value",199825,199825,0,TRUE
+"1km 2018: cells hold the baseline firms without a statement",46949,46949,0,TRUE
+"1km 2019: cells hold the drawn firms",945613,945613,0,TRUE
+"1km 2019: cells hold the baseline firms",288593,288593,0,TRUE
+"1km 2019: cells hold the filers with a value",268475,268475,0,TRUE
+"1km 2019: cells hold the baseline firms without a statement",13574,13574,0,TRUE
+"1km 2020: cells hold the drawn firms",838347,838347,0,TRUE
+"1km 2020: cells hold the baseline firms",323191,323191,0,TRUE
+"1km 2020: cells hold the filers with a value",321467,321467,0,TRUE
+"1km 2020: cells hold the baseline firms without a statement",1431,1431,0,TRUE
+"1km 2021: cells hold the drawn firms",745500,745500,0,TRUE
+"1km 2021: cells hold the baseline firms",322173,322173,0,TRUE
+"1km 2021: cells hold the filers with a value",299483,299483,0,TRUE
+"1km 2021: cells hold the baseline firms without a statement",21864,21864,0,TRUE
+"1km 2022: cells hold the drawn firms",717287,717287,0,TRUE
+"1km 2022: cells hold the baseline firms",316676,316676,0,TRUE
+"1km 2022: cells hold the filers with a value",267011,267011,0,TRUE
+"1km 2022: cells hold the baseline firms without a statement",42025,42025,0,TRUE
+"1km 2023: cells hold the drawn firms",743161,743161,0,TRUE
+"1km 2023: cells hold the baseline firms",305129,305129,0,TRUE
+"1km 2023: cells hold the filers with a value",244629,244629,0,TRUE
+"1km 2023: cells hold the baseline firms without a statement",47698,47698,0,TRUE
+"1km 2024: cells hold the drawn firms",763956,763956,0,TRUE
+"1km 2024: cells hold the baseline firms",289480,289480,0,TRUE
+"1km 2024: cells hold the filers with a value",225742,225742,0,TRUE
+"1km 2024: cells hold the baseline firms without a statement",48403,48403,0,TRUE
+"1km 2025: cells hold the drawn firms",768871,768871,0,TRUE
+"1km 2025: cells hold the baseline firms",277073,277073,0,TRUE
+"1km 2025: cells hold the filers with a value",204669,204669,0,TRUE
+"1km 2025: cells hold the baseline firms without a statement",56322,56322,0,TRUE
+"5km 2014: cells hold the drawn firms",1230604,1230604,0,TRUE
+"5km 2014: cells hold the baseline firms",153323,153323,0,TRUE
+"5km 2014: cells hold the filers with a value",93627,93627,0,TRUE
+"5km 2014: cells hold the baseline firms without a statement",50306,50306,0,TRUE
+"5km 2015: cells hold the drawn firms",1188819,1188819,0,TRUE
+"5km 2015: cells hold the baseline firms",177754,177754,0,TRUE
+"5km 2015: cells hold the filers with a value",126473,126473,0,TRUE
+"5km 2015: cells hold the baseline firms without a statement",38542,38542,0,TRUE
+"5km 2016: cells hold the drawn firms",1252816,1252816,0,TRUE
+"5km 2016: cells hold the baseline firms",204303,204303,0,TRUE
+"5km 2016: cells hold the filers with a value",147940,147940,0,TRUE
+"5km 2016: cells hold the baseline firms without a statement",43193,43193,0,TRUE
+"5km 2017: cells hold the drawn firms",1106924,1106924,0,TRUE
+"5km 2017: cells hold the baseline firms",231623,231623,0,TRUE
+"5km 2017: cells hold the filers with a value",174181,174181,0,TRUE
+"5km 2017: cells hold the baseline firms without a statement",44489,44489,0,TRUE
+"5km 2018: cells hold the drawn firms",1078859,1078859,0,TRUE
+"5km 2018: cells hold the baseline firms",258818,258818,0,TRUE
+"5km 2018: cells hold the filers with a value",199825,199825,0,TRUE
+"5km 2018: cells hold the baseline firms without a statement",46949,46949,0,TRUE
+"5km 2019: cells hold the drawn firms",945613,945613,0,TRUE
+"5km 2019: cells hold the baseline firms",288593,288593,0,TRUE
+"5km 2019: cells hold the filers with a value",268475,268475,0,TRUE
+"5km 2019: cells hold the baseline firms without a statement",13574,13574,0,TRUE
+"5km 2020: cells hold the drawn firms",838347,838347,0,TRUE
+"5km 2020: cells hold the baseline firms",323191,323191,0,TRUE
+"5km 2020: cells hold the filers with a value",321467,321467,0,TRUE
+"5km 2020: cells hold the baseline firms without a statement",1431,1431,0,TRUE
+"5km 2021: cells hold the drawn firms",745500,745500,0,TRUE
+"5km 2021: cells hold the baseline firms",322173,322173,0,TRUE
+"5km 2021: cells hold the filers with a value",299483,299483,0,TRUE
+"5km 2021: cells hold the baseline firms without a statement",21864,21864,0,TRUE
+"5km 2022: cells hold the drawn firms",717287,717287,0,TRUE
+"5km 2022: cells hold the baseline firms",316676,316676,0,TRUE
+"5km 2022: cells hold the filers with a value",267011,267011,0,TRUE
+"5km 2022: cells hold the baseline firms without a statement",42025,42025,0,TRUE
+"5km 2023: cells hold the drawn firms",743161,743161,0,TRUE
+"5km 2023: cells hold the baseline firms",305129,305129,0,TRUE
+"5km 2023: cells hold the filers with a value",244629,244629,0,TRUE
+"5km 2023: cells hold the baseline firms without a statement",47698,47698,0,TRUE
+"5km 2024: cells hold the drawn firms",763956,763956,0,TRUE
+"5km 2024: cells hold the baseline firms",289480,289480,0,TRUE
+"5km 2024: cells hold the filers with a value",225742,225742,0,TRUE
+"5km 2024: cells hold the baseline firms without a statement",48403,48403,0,TRUE
+"5km 2025: cells hold the drawn firms",768871,768871,0,TRUE
+"5km 2025: cells hold the baseline firms",277073,277073,0,TRUE
+"5km 2025: cells hold the filers with a value",204669,204669,0,TRUE
+"5km 2025: cells hold the baseline firms without a statement",56322,56322,0,TRUE
+"1 km cells inside the city extent 2014: filers",80827,80827,0,TRUE
+"1 km cells inside the city extent 2014: baseline firms without a statement",42617,42617,0,TRUE
+"1 km cells inside the city extent 2015: filers",109553,109553,0,TRUE
+"1 km cells inside the city extent 2015: baseline firms without a statement",31764,31764,0,TRUE
+"1 km cells inside the city extent 2016: filers",127503,127503,0,TRUE
+"1 km cells inside the city extent 2016: baseline firms without a statement",36058,36058,0,TRUE
+"1 km cells inside the city extent 2017: filers",149336,149336,0,TRUE
+"1 km cells inside the city extent 2017: baseline firms without a statement",37887,37887,0,TRUE
+"1 km cells inside the city extent 2018: filers",171747,171747,0,TRUE
+"1 km cells inside the city extent 2018: baseline firms without a statement",39362,39362,0,TRUE
+"1 km cells inside the city extent 2019: filers",230685,230685,0,TRUE
+"1 km cells inside the city extent 2019: baseline firms without a statement",10739,10739,0,TRUE
+"1 km cells inside the city extent 2020: filers",277358,277358,0,TRUE
+"1 km cells inside the city extent 2020: baseline firms without a statement",1238,1238,0,TRUE
+"1 km cells inside the city extent 2021: filers",257738,257738,0,TRUE
+"1 km cells inside the city extent 2021: baseline firms without a statement",19385,19385,0,TRUE
+"1 km cells inside the city extent 2022: filers",228779,228779,0,TRUE
+"1 km cells inside the city extent 2022: baseline firms without a statement",36992,36992,0,TRUE
+"1 km cells inside the city extent 2023: filers",209136,209136,0,TRUE
+"1 km cells inside the city extent 2023: baseline firms without a statement",41551,41551,0,TRUE
+"1 km cells inside the city extent 2024: filers",192690,192690,0,TRUE
+"1 km cells inside the city extent 2024: baseline firms without a statement",41700,41700,0,TRUE
+"1 km cells inside the city extent 2025: filers",174514,174514,0,TRUE
+"1 km cells inside the city extent 2025: baseline firms without a statement",48498,48498,0,TRUE
+"1km 2014: every supported cell carries a class",0,0,0,TRUE
+"1km 2014: class counts equal the supported cells",970,970,0,TRUE
+"1km 2015: every supported cell carries a class",0,0,0,TRUE
+"1km 2015: class counts equal the supported cells",1086,1086,0,TRUE
+"1km 2016: every supported cell carries a class",0,0,0,TRUE
+"1km 2016: class counts equal the supported cells",1186,1186,0,TRUE
+"1km 2017: every supported cell carries a class",0,0,0,TRUE
+"1km 2017: class counts equal the supported cells",1297,1297,0,TRUE
+"1km 2018: every supported cell carries a class",0,0,0,TRUE
+"1km 2018: class counts equal the supported cells",1382,1382,0,TRUE
+"1km 2019: every supported cell carries a class",0,0,0,TRUE
+"1km 2019: class counts equal the supported cells",1530,1530,0,TRUE
+"1km 2020: every supported cell carries a class",0,0,0,TRUE
+"1km 2020: class counts equal the supported cells",1611,1611,0,TRUE
+"1km 2021: every supported cell carries a class",0,0,0,TRUE
+"1km 2021: class counts equal the supported cells",1573,1573,0,TRUE
+"1km 2022: every supported cell carries a class",0,0,0,TRUE
+"1km 2022: class counts equal the supported cells",1530,1530,0,TRUE
+"1km 2023: every supported cell carries a class",0,0,0,TRUE
+"1km 2023: class counts equal the supported cells",1493,1493,0,TRUE
+"1km 2024: every supported cell carries a class",0,0,0,TRUE
+"1km 2024: class counts equal the supported cells",1464,1464,0,TRUE
+"1km 2025: every supported cell carries a class",0,0,0,TRUE
+"1km 2025: class counts equal the supported cells",1429,1429,0,TRUE
+"5km 2014: every supported cell carries a class",0,0,0,TRUE
+"5km 2014: class counts equal the supported cells",177,177,0,TRUE
+"5km 2015: every supported cell carries a class",0,0,0,TRUE
+"5km 2015: class counts equal the supported cells",192,192,0,TRUE
+"5km 2016: every supported cell carries a class",0,0,0,TRUE
+"5km 2016: class counts equal the supported cells",205,205,0,TRUE
+"5km 2017: every supported cell carries a class",0,0,0,TRUE
+"5km 2017: class counts equal the supported cells",211,211,0,TRUE
+"5km 2018: every supported cell carries a class",0,0,0,TRUE
+"5km 2018: class counts equal the supported cells",220,220,0,TRUE
+"5km 2019: every supported cell carries a class",0,0,0,TRUE
+"5km 2019: class counts equal the supported cells",237,237,0,TRUE
+"5km 2020: every supported cell carries a class",0,0,0,TRUE
+"5km 2020: class counts equal the supported cells",240,240,0,TRUE
+"5km 2021: every supported cell carries a class",0,0,0,TRUE
+"5km 2021: class counts equal the supported cells",236,236,0,TRUE
+"5km 2022: every supported cell carries a class",0,0,0,TRUE
+"5km 2022: class counts equal the supported cells",239,239,0,TRUE
+"5km 2023: every supported cell carries a class",0,0,0,TRUE
+"5km 2023: class counts equal the supported cells",240,240,0,TRUE
+"5km 2024: every supported cell carries a class",0,0,0,TRUE
+"5km 2024: class counts equal the supported cells",235,235,0,TRUE
+"5km 2025: every supported cell carries a class",0,0,0,TRUE
+"5km 2025: class counts equal the supported cells",231,231,0,TRUE
+"M5 Moscow 1 km 2019: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2019: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2019: window total",1010959,1010959,0,TRUE
+"M5 Moscow 1 km 2020: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2020: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2020: window total",862030,862030,0,TRUE
+"M5 Moscow 1 km 2021: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2021: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2021: window total",762760,762760,0,TRUE
+"M5 Moscow 1 km 2022: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2022: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2022: window total",732362,732362,0,TRUE
+"M5 Moscow 1 km 2023: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2023: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2023: window total",756154,756154,0,TRUE
+"M5 Moscow 1 km 2024: max |n difference| over the window",0,0,0,TRUE
+"M5 Moscow 1 km 2024: max |a difference| where M5 shows a",0,0,0,TRUE
+"M5 Moscow 1 km 2024: window total",778102,778102,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2019",0,0,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2020",0,0,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2021",0,0,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2022",0,0,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2023",0,0,0,TRUE
+"1 km grid aligned with M5 (interior cells) 2024",0,0,0,TRUE
+"firms listed in 2022: membership equals treated.json",429,429,0,TRUE
+"firms listed in 2022: every member carries red-from 2022",0,0,0,TRUE
+"firms on no list with a baseline: membership positive",1,1,0,TRUE
+"firms listed in 2022: yearly counts never exceed membership",1,1,0,TRUE
+"firms on no list: yearly counts never exceed membership",1,1,0,TRUE
+"Aeroflot's index equals anchors.json (max abs diff, 1-decimal rounding)",0,0.0468594945104002,0.06,TRUE
+"neighbour's index equals anchors.json (max abs diff, whole-point rounding)",0,0.448438174003414,0.51,TRUE
+"Aeroflot has no 2022 index",0,0,0,TRUE
+"both groups cover every year",24,24,0,TRUE

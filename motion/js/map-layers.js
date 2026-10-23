@@ -60,19 +60,23 @@
   // --- 100 km cell layers ---------------------------------------------------------------------
   // cells: {ix[], iy[], ...}; classOf(i) returns a class index or null (not drawn). Returns a
   // Map class -> Path2D of gapped tiles.
-  M.buildTiles = function (n, ixs, iys, classOf, { sizeKm = 100, gapKm = 15 } = {}) {
+  M.buildTiles = function (n, ixs, iys, classOf, { sizeKm = 100, gapKm = 15, origin = [0, 0] } = {}) {
     const paths = new Map(); const h = gapKm / 2, s = sizeKm - gapKm;
     for (let i = 0; i < n; i++) {
       const c = classOf(i); if (c == null) continue;
       let p = paths.get(c); if (!p) { p = new Path2D(); paths.set(c, p); }
-      p.rect(ixs[i] * sizeKm + h, iys[i] * sizeKm + h, s, s);
+      p.rect(origin[0] + ixs[i] * sizeKm + h, origin[1] + iys[i] * sizeKm + h, s, s);
     }
     return paths;
   };
-  M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null } = {}) {
+  // Classes listed in `stroke` are outlined (strokePx design pixels, strokeAlpha) instead of filled.
+  M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null, stroke = null, strokePx = 1, strokeAlpha = 0.3 } = {}) {
     Motion.camTransform(ctx, stage, cam);
     ctx.save(); ctx.globalAlpha *= alpha;
-    for (const [c, p] of paths) { ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p); }
+    for (const [c, p] of paths) {
+      if (stroke && stroke.has(c)) { ctx.save(); ctx.globalAlpha *= strokeAlpha; ctx.strokeStyle = colorOf(c); ctx.lineWidth = strokePx / cam.k; ctx.stroke(p); ctx.restore(); continue; }
+      ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p);
+    }
     ctx.restore(); stage.base();
   };
 
@@ -138,7 +142,7 @@
     const edge = Math.min(px, 1920 - px, py, 1080 - py); if (edge <= 0) return;
     alpha *= Motion.clamp(edge / 300, 0, 1); if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.ink; ctx.beginPath(); ctx.arc(px, py, dot, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    Motion.text(ctx, city.label, px + dx, py + dy, { size, color: theme.ink, alpha });
+    Motion.text(ctx, city.label, px + dx, py + dy, { size, color: theme.ink, alpha, kind: 'label' });
   };
 
   window.MotionMap = M;

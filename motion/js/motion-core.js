@@ -100,15 +100,16 @@
       stage.resize(); stage.base();
       ctx.fillStyle = theme.stage; ctx.fillRect(0, 0, width, height);
       const cam = cameraFn ? cameraFn(t) : null; stage.cam = cam;
-      const A = Motion.audit; A.boxes = []; A.scale = stage.scale; A.t = t; A.scene = null;
+      const A = Motion.audit; A.boxes = []; A.panels = []; A.seq = 0; A.scale = stage.scale; A.t = t; A.scene = null;
       for (const s of scenes) {
         // A scene fades in over the fadeIn seconds before its start, so consecutive scenes crossfade
         // instead of dipping to the stage colour; its own clock starts at s.start.
         const fin = s.fadeIn == null ? 0.5 : s.fadeIn, fout = s.fadeOut == null ? 0.5 : s.fadeOut;
         if (t < s.start - fin || t >= s.end) continue;
         // speed > 1 plays a scene's content faster than real time (a teaser cut); fades stay in real time.
+        // offset starts the scene's own clock later than zero (an excerpt in a cut).
         const speed = s.speed || 1;
-        const local = Math.max(0, t - s.start) * speed, dur = (s.end - s.start) * speed;
+        const local = Math.max(0, t - s.start) * speed + (s.offset || 0), dur = (s.end - s.start) * speed + (s.offset || 0);
         const alpha = Motion.plateau(t, s.start - fin - 1e-6, s.end, fin, fout);
         ctx.save(); ctx.globalAlpha = alpha; stage.base(); A.scene = s.id;
         s.draw({ t, local, dur, u: local / dur, ctx, cam, stage, theme, data, alpha, W: width, H: height });
@@ -129,28 +130,92 @@
   // effective alpha and its group (a paragraph's lines, or an explicit group for blocks that
   // crossfade in place), so capture.py --audit and audit.py can test overlaps, bounds, sizes and
   // transitions frame by frame. Off by default; the record is a pure function of the frame.
-  Motion.audit = { on: false, boxes: [], scene: null, para: null, seq: 0, scale: 1, t: 0 };
-  Motion.recordText = function (ctx, str, x, y, size, weight, group) {
+  Motion.audit = { on: false, boxes: [], panels: [], scene: null, para: null, seq: 0, paraSeq: 0, scale: 1, t: 0 };
+  Motion.recordText = function (ctx, str, x, y, size, weight, group, kind) {
     const A = Motion.audit; if (!A.on) return;
     const m = ctx.measureText(str), tr = ctx.getTransform(), s = A.scale || 1;
     const x0 = x - m.actualBoundingBoxLeft, x1 = x + m.actualBoundingBoxRight, y0 = y - m.actualBoundingBoxAscent, y1 = y + m.actualBoundingBoxDescent;
     const P = (px, py) => [(tr.a * px + tr.c * py + tr.e) / s, (tr.b * px + tr.d * py + tr.f) / s];
     const c = [P(x0, y0), P(x1, y0), P(x0, y1), P(x1, y1)], xs = c.map(p => p[0]), ys = c.map(p => p[1]), anchor = P(x, y);
-    A.boxes.push({ scene: A.scene, str, size, weight, para: group || A.para, eff: Math.round(ctx.globalAlpha * 1000) / 1000,
+    A.boxes.push({ scene: A.scene, str, size, weight, para: group || A.para, kind: kind || 'text', seq: A.seq++, eff: Math.round(ctx.globalAlpha * 1000) / 1000,
                    x: Math.min(...xs), y: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), ax: anchor[0], ay: anchor[1] });
   };
-  Motion.text = function (ctx, str, x, y, { size = 28, weight = 400, color = '#fff', align = 'left', baseline = 'alphabetic', alpha = 1, letterSpacing = 0, group = null } = {}) {
+  Motion.text = function (ctx, str, x, y, { size = 28, weight = 400, color = '#fff', align = 'left', baseline = 'alphabetic', alpha = 1, letterSpacing = 0, group = null, kind = null } = {}) {
     if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.font = Motion.font(size, weight); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = baseline;
     if (letterSpacing && 'letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
-    Motion.recordText(ctx, str, x, y, size, weight, group);
+    Motion.recordText(ctx, str, x, y, size, weight, group, kind);
     ctx.fillText(str, x, y); ctx.restore();
+  };
+  // A translucent panel in the stage colour behind a block of text; in audit mode its rectangle is
+  // recorded so audit.py can test that the text drawn after it stays inside it (panel-clip).
+  Motion.panel = function (ctx, x, y, w, h, theme, alpha = 0.92) {
+    if (alpha <= 0) return;
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.stage; ctx.fillRect(x, y, w, h);
+    const A = Motion.audit; if (A.on) A.panels.push({ scene: A.scene, x, y, x1: x + w, y1: y + h, eff: Math.round(ctx.globalAlpha * 1000) / 1000, seq: A.seq++ });
+    ctx.restore();
+  };
+  // Split-flap text: from one string to another over u in 0..1. Each glyph has its own window
+  // (staggered by `stagger` of the whole), passes through `steps` intermediate characters chosen by a
+  // hash of the two strings, the glyph index and the stage (never wall time), and slides from its
+  // position in `from` to its position in `to`. One audit box is recorded per call, so the audit sees
+  // one block that changes its text, not a cut.
+  Motion.flipText = function (ctx, from, to, u, { x, y, size = 24, weight = 600, color = '#fff', align = 'right', letterSpacing = 2, steps = 3, stagger = 0.06, group = 'location', alpha = 1 } = {}) {
+    const plain = { size, weight, color, align, letterSpacing, group, alpha };
+    if (alpha <= 0) return;
+    if (from === to || u <= 0) return Motion.text(ctx, from, x, y, plain);
+    if (u >= 1) return Motion.text(ctx, to, x, y, plain);
+    const n = Math.max(from.length, to.length);
+    const pad = s => (align === 'right' ? s.padStart(n, ' ') : align === 'center' ? s.padStart(s.length + Math.floor((n - s.length) / 2), ' ').padEnd(n, ' ') : s.padEnd(n, ' '));
+    const f = pad(from), g = pad(to);
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.font = Motion.font(size, weight); ctx.fillStyle = color; ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = align; if ('letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
+    Motion.recordText(ctx, u < 0.5 ? from : to, x, y, size, weight, group);
+    ctx.textAlign = 'left'; if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    const adv = s => Array.from(s).map(ch => ctx.measureText(ch).width + letterSpacing);
+    const positions = a => { const total = a.reduce((s, w) => s + w, 0); let cx = align === 'right' ? x - total : align === 'center' ? x - total / 2 : x; return a.map(w => { const p = cx; cx += w; return p; }); };
+    const xf = positions(adv(f)), xg = positions(adv(g));
+    const d = 1 / (1 + (n - 1) * stagger), h = Motion.hash(from + '|' + to);
+    const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', LOWER = 'abcdefghijklmnopqrstuvwxyz', DIGITS = '0123456789';
+    for (let i = 0; i < n; i++) {
+      const ui = Motion.clamp((u - i * stagger * d) / d, 0, 1);
+      const a = f[i], b = g[i];
+      let ch, fade = 1;
+      if (ui >= 1) ch = b;
+      else if (ui <= 0) ch = a;
+      else {
+        const j = Math.floor(ui * (steps + 1));
+        if (j === 0) ch = a;
+        else {
+          const target = b === ' ' ? a : b, k = h + 31 * i + 17 * j;
+          ch = DIGITS.includes(target) ? DIGITS[k % 10] : target === target.toUpperCase() && UPPER.includes(target) ? UPPER[k % 26] : LOWER.includes(target.toLowerCase()) ? LOWER[k % 26] : target;
+        }
+        if (a === ' ' && b !== ' ') fade = ui; else if (a !== ' ' && b === ' ') fade = 1 - ui;
+      }
+      if (ch === ' ') continue;
+      ctx.save(); ctx.globalAlpha *= fade; ctx.fillText(ch, Motion.lerp(xf[i], xg[i], ui), y); ctx.restore();
+    }
+    ctx.restore();
+  };
+  // A schedule of values by time: [{start, value}] sorted by start; the value blends from the previous
+  // entry over `blend` seconds (inOutSine). A value may be a number or a function of t.
+  Motion.schedule = function (entries, blend = 0.6) {
+    const es = entries.slice().sort((a, b) => a.start - b.start);
+    const val = (e, t) => (typeof e.value === 'function' ? e.value(t) : e.value);
+    return function (t) {
+      if (!es.length) return 0;
+      let i = 0; while (i < es.length - 1 && t >= es[i + 1].start) i++;
+      const cur = val(es[i], t);
+      if (i === 0 || blend <= 0) return cur;
+      const u = Motion.clamp((t - es[i].start) / blend, 0, 1);
+      return u >= 1 ? cur : Motion.lerp(val(es[i - 1], t), cur, Motion.ease.inOutSine(u));
+    };
   };
   Motion.measure = function (ctx, str, size, weight) { ctx.save(); ctx.font = Motion.font(size, weight); const w = ctx.measureText(str).width; ctx.restore(); return w; };
   // Word-wrapped paragraph; returns the y after the last line.
   Motion.paragraph = function (ctx, str, x, y, maxWidth, { size = 26, weight = 400, color = '#fff', lineHeight = 1.35, alpha = 1, align = 'left', group = null } = {}) {
     if (alpha <= 0) return y;
-    const A = Motion.audit; A.para = group || ('p' + (++A.seq));
+    const A = Motion.audit; A.para = group || ('p' + (++A.paraSeq));
     ctx.save(); ctx.globalAlpha *= alpha; ctx.font = Motion.font(size, weight); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
     const words = str.split(' '); let line = ''; let yy = y;
     const put = (s, yline) => { Motion.recordText(ctx, s, x, yline, size, weight, null); ctx.fillText(s, x, yline); };
