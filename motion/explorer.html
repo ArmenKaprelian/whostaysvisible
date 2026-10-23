@@ -6,12 +6,13 @@
 <title>Visibility Atlas</title>
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
-   Dark is the default; the light theme uses the manuscript's production colours. */
+   Dark is the default and shares the explainer's charcoal ground (round 3, 23 October 2026: css/theme.css);
+   the light theme uses the manuscript's production colours. */
 :root {
-  --stage: #0B1A2E; --land: #1E2E42; --border: #33475E; --graticule: #16263A;
-  --ink: #E8EEF4; --muted: #9FB0C2; --dim: #5F7389; --grid: #1C2C40; --panel: #10223A; --panel-2: #152A45;
+  --stage: #121418; --land: #22262D; --border: #4A515C; --graticule: #1A1D22;
+  --ink: #ECEEF1; --muted: #A3AAB4; --dim: #6B7380; --grid: #1D2126; --panel: #171A1F; --panel-2: #1D2126;
   --accent: #7FCDBB; --accent-strong: #EDF8B1; --fall: #C2A5CF; --rise: #A6DBA0; --below: #3C4852; --highlight: rgba(127,205,187,0.10);
-  --control: #16304E; --control-on: #1D91C0; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --control: #22262D; --control-on: #1F6F80; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
@@ -40,10 +41,10 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap { position: relative; min-height: 360px; background: var(--stage); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #overlay { pointer-events: none; }
-.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--stage) 82%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 24px); }
+.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 24px); }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
 .maplegend .row { margin: 2px 0; }
-.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--stage) 82%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; }
+.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; }
 .tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: 280px; display: none; z-index: 5; }
 .tooltip b { font-variant-numeric: tabular-nums; }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
