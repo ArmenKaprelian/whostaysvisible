@@ -62,13 +62,13 @@ def main():
             layers = cdp.evaluate("window.__atlas.layers", await_promise=False)
             def state(layer, year, setup, tag):
                 nonlocal n_boxes, n_states
-                r = cdp.evaluate("(() => { %s window.__atlas.layer(%r); window.__atlas.year(%d); const boxes = window.__atlas.redraw(); return { boxes, canvases: window.__atlasCanvases }; })()" % (setup, layer, year), await_promise=False)
+                r = cdp.evaluate("(async () => { %s window.__atlas.layer(%r); window.__atlas.year(%d); await window.__atlas.ready(); const boxes = window.__atlas.redraw(); return { boxes, canvases: window.__atlasCanvases }; })()" % (setup, layer, year), await_promise=True, timeout=180)
                 n_boxes += len(r["boxes"]); n_states += 1
                 for kind, scene, key in audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap):
                     findings.append("%-9s width %d  %-7s %-5s %-6s %-10s %s" % (kind, w, layer, year, tag, scene, key))
             for layer in layers:
                 for year in ([2014, 2021, 2025] if layer == "share" else [2021]):
-                    state(layer, year, "window.__atlas.preset('Russia');", "-")
+                    state(layer, year, "window.__atlas.mode('cells'); window.__atlas.preset('Russia');", "-")
             # hovered states: the Moscow 100 km cell at the national view; at the Moscow preset a 1 km cell with firms and a point 300 m north-west of it (a gap or a neighbour); a 5 km density cell
             M = "const m = window.__atlas.cities.Moscow;"
             state("share", 2021, M + "window.__atlas.preset('Russia'); window.__atlas.hoverKm(m[0], m[1]);", "h100")
@@ -77,6 +77,13 @@ def main():
             state("share", 2023, M + "window.__atlas.preset('Moscow'); window.__atlas.hoverKm(m[0], m[1]);", "h1km")
             state("density", 2021, M + "window.__atlas.preset('Russia'); window.__atlas.hoverKm(m[0], m[1]);", "h5km")
             state("density", 2021, M + "window.__atlas.preset('Central Moscow (250 m)'); window.__atlas.hoverKm(m[0], m[1]);", "h250")
+            # firms mode (round 5): the address marks by layer at three presets, and two hovers
+            F = "window.__atlas.mode('firms'); "
+            for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia")]:
+                state(layer, year, F + "window.__atlas.preset(%r);" % preset, "firms")
+            state("share", 2021, F + M + "window.__atlas.preset('Central Moscow (250 m)'); window.__atlas.hoverKm(m[0] + 1.2, m[1] + 0.4);", "fhov")
+            state("fin", 2021, F + M + "window.__atlas.preset('Moscow'); window.__atlas.hoverKm(m[0], m[1]);", "fhov2")
+            state("share", 2021, "window.__atlas.mode('cells'); window.__atlas.preset('Russia');", "-")
         finally:
             proc.terminate()
     head = "atlas audit: %d states, %d boxes, %d finding(s)" % (n_states, n_boxes, len(findings))

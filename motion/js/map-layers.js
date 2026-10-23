@@ -187,6 +187,16 @@
   };
   // Location schedule: entries [{start, name, size}] on the caller's clock; returns the previous
   // and current entries and the flip progress (0.5 s plus 30 ms per extra glyph, a pure function of time).
+  // A listed firm's mark: a pale halo, the land disc, the red fill when a statement is available (fill 1)
+  // and a red ring when it is absent (fill 0); fill between the two fades one into the other.
+  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme) {
+    const TAU = Math.PI * 2; ctx.save();
+    ctx.globalAlpha = alpha; ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, rr + 1, 0, TAU); ctx.fill();
+    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
+    ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
+    if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = Math.max(1.5, Math.min(2.2, rr * 0.5)); ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, rr - ctx.lineWidth / 2), 0, TAU); ctx.stroke(); }
+    ctx.restore();
+  };
   M.locationAt = function (entries, l) {
     let i = 0; while (i < entries.length - 1 && l >= entries[i + 1].start) i++;
     const to = entries[i], from = i > 0 ? entries[i - 1] : to;

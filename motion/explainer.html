@@ -10,12 +10,12 @@
 <div class="stage-wrap"><canvas class="stage" id="stage" width="1920" height="1080" aria-label="Animated explainer: who stays visible? Financial statements of Russian firms under sanctions"></canvas></div>
 <div class="controls" id="controls">
   <button id="play" type="button" aria-label="Play or pause">Play</button>
-  <button id="cut" type="button" aria-pressed="false" title="Switch between the cuts">Full cut, public (3:12)</button>
+  <button id="cut" type="button" aria-pressed="false" title="Switch between the cuts">Full cut (4:47)</button>
   <span class="time" id="time">0:00 / 0:00</span>
-  <input id="scrub" type="range" min="0" max="192" step="0.0333" value="0" aria-label="Scrub the timeline">
+  <input id="scrub" type="range" min="0" max="287" step="0.0333" value="0" aria-label="Scrub the timeline">
   <div class="chapters" id="chapters"></div>
 </div>
-<p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab. Descriptive associations, not causal effects.</p>
+<p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0, CC BY 4.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab. Descriptive associations, not causal effects.</p>
 <script src="data/basemap.js"></script>
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
@@ -49,13 +49,16 @@
                   anchorA: tok('anchor-a'), anchorB: tok('anchor-b'), accentMuted: tok('accent-muted'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
-  const CUTS = Object.assign({}, window.ExplainerScenes.cuts);   // full and teaser; the local cuts join once their rasters are decoded
-  const NAMES = { 'full-public': 'Full cut, public', 'teaser-public': 'Teaser, public', 'full-local': 'Full cut, local', 'teaser-local': 'Teaser, local', moscow: 'Moscow', 'maps-firms-local': 'Maps and firms, local', 'maps-firms-local-55': 'Maps and firms, local, 55 s' };
-  const LOCAL = new Set(['full-local', 'teaser-local', 'moscow', 'maps-firms-local', 'maps-firms-local-55']);
+  // One cut family (round 5): every cut carries the Moscow section, so the firm-level data must be present.
+  // The cuts are built at once without the rasters, which arrive in the background (render mode waits for them).
+  const D0 = window.MOTION_DATA;
+  if (!(D0.points && D0.treated && D0.anchors && D0.moscowcells && D0.moscowcomparison && D0.national && D0.treatednational && window.TreatedScenes)) throw new Error('the explainer needs the firm-level data: points, treated, anchors, moscowcells, moscowcomparison, national, treatednational');
+  const CUTS = ExplainerScenes.makeCuts(null, { align: q.get('__align') === '1' });
+  const NAMES = { full: 'Full cut', teaser: 'Teaser', moscow: 'Moscow', 'maps-firms-instagram': 'Maps and firms', 'maps-firms-instagram-55': 'Maps and firms, 55 s' };
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   window.__cuts = CUTS;   // the built cuts, for inspection from the DevTools client
   const wanted = q.get('cut');
-  let cutName = wanted && CUTS[wanted] ? wanted : 'full-public';
+  let cutName = wanted && CUTS[wanted] ? wanted : 'full';
   let X = CUTS[cutName], stage = null;
   const play = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), chapters = document.getElementById('chapters'), cutBtn = document.getElementById('cut');
   const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
@@ -69,7 +72,7 @@
     scrub.max = String(X.DURATION); scrub.value = '0';
     chapters.innerHTML = '';
     Object.values(X.timeline).forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s.title; b.dataset.start = s.start; b.dataset.end = s.end; b.addEventListener('click', () => { setPlaying(false); show(s.start + 0.01); }); chapters.appendChild(b); });
-    cutBtn.textContent = `${NAMES[name] || name} (${fmtTime(X.DURATION)})`; cutBtn.setAttribute('aria-pressed', String(name !== 'full-public'));
+    cutBtn.textContent = `${NAMES[name] || name} (${fmtTime(X.DURATION)})`; cutBtn.setAttribute('aria-pressed', String(name !== 'full'));
     window.__videoMeta = Object.assign({ cut: name }, stage.meta());
   }
   const nextCut = () => { const names = Object.keys(CUTS); return names[(names.indexOf(cutName) + 1) % names.length]; };
@@ -96,27 +99,23 @@
     if (D.series.facts.located_2021 !== 3277638) problems.push('facts.located_2021 ' + D.series.facts.located_2021);
     if (D.basemap.lod0.parts.length !== 1637) problems.push('basemap parts ' + D.basemap.lod0.parts.length);
     if (problems.length) throw new Error('data checks failed: ' + problems.join('; '));
-    // The treated cut (local data only): decode every raster first, check the page's listed-firm
-    // counters against the M6 manifest, then build the cut and switch to it when requested.
-    let treated = false;
-    if (D.points && D.treated && D.anchors && D.moscowcells && D.moscowcomparison && D.national && D.treatednational && window.TreatedScenes) {
-      const images = await TreatedScenes.loadImages('data/', { layers: ['downtown', 'national'] });
-      // The national rasters' Moscow pixel must sit where this page projects the Moscow point at the left framing.
-      const mp = D.national.moscow_pixel, [qx, qy] = Motion.project(Object.assign({}, D.national.camera), D.points.anchor.x, D.points.anchor.y);
-      if (Math.abs(qx - mp.px) > 1 || Math.abs(qy - mp.py) > 1) throw new Error(`the national rasters are misaligned: page ${qx.toFixed(1)},${qy.toFixed(1)} manifest ${mp.px},${mp.py}`);
-      const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
-      for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
-      if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
-      const cs = TreatedScenes.cellSums; const badCells = [];
-      for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
-      if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));
-      const local = ExplainerScenes.makeMoscowCuts(images, { align: q.get('__align') === '1' }); delete local.kept_years; Object.assign(CUTS, local);
-      treated = true;
-      if (LOCAL.has(wanted)) build(wanted);
-    } else if (LOCAL.has(wanted)) throw new Error('the cut ' + wanted + ' needs the local M6, M7 and M8 data (points, treated, anchors, moscowcells, moscowcomparison, national, treatednational)');
+    // The Moscow section's manifest checks (no rasters needed): the national rasters' Moscow pixel must sit
+    // where this page projects the Moscow point at the left framing; the listed-firm counters and the cell
+    // sums the page computes must equal the manifests'.
+    const mp = D.national.moscow_pixel, [qx, qy] = Motion.project(Object.assign({}, D.national.camera), D.points.anchor.x, D.points.anchor.y);
+    if (Math.abs(qx - mp.px) > 1 || Math.abs(qy - mp.py) > 1) throw new Error(`the national rasters are misaligned: page ${qx.toFixed(1)},${qy.toFixed(1)} manifest ${mp.px},${mp.py}`);
+    const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
+    for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
+    if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
+    const cs = TreatedScenes.cellSums; const badCells = [];
+    for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
+    if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));
+    // The rasters: awaited in render mode (every frame must be complete), streamed in otherwise and shown as they land.
+    const loading = TreatedScenes.loadImages('data/', { layers: ['downtown', 'national'] }).then(images => { TreatedScenes.setImages(images); if (!playing) show(+scrub.value); return images; });
+    if (RENDER) await loading; else loading.catch(e => { console.error(e); timeEl.textContent = 'Error: ' + e.message; });
     const t0 = RENDER ? parseFloat(q.get('t') || '0') : 0;
     await window.__seek(t0); show(t0);
-    return Object.assign({ yearsLayer: !!D.cellsyears, treatedCut: treated, cut: cutName }, window.__videoMeta);
+    return Object.assign({ yearsLayer: !!D.cellsyears, rasters: RENDER ? 'loaded' : 'loading', cut: cutName }, window.__videoMeta);
   })();
   window.__ready.catch(e => { console.error(e); timeEl.textContent = 'Error: ' + e.message; });
 })();

@@ -2,8 +2,9 @@
 // Every number drawn comes from MOTION_DATA (series.facts and the cell layers); nothing is typed in.
 // Round 3 (23 October 2026): one continuous camera journey. A cut is a list of beats; a ground
 // scene draws the land and the national density under every beat from two schedules, the chart
-// beats keep the dimmed map under a slow drift, and the Moscow section (treated-scenes.js) replaces
-// the published cut's 250 m leg when the local firm-level data are present.
+// beats keep the dimmed map under a slow drift, and the Moscow section (treated-scenes.js) follows
+// the flight to Moscow. Round 5 (23 October 2026): one cut family, every cut carrying the section;
+// the cells-only cuts and their beats are gone (the firm-level data are published).
 (function () {
   'use strict';
   const D = window.MOTION_DATA;
@@ -12,15 +13,13 @@
   const MM = MotionMap, CH = MotionCharts;
 
   // ---- beats -----------------------------------------------------------------------------------
-  // Scenes, the ground schedules and the camera keyframes are built from the beat starts, so the
-  // published cut (192 s) and the local cut with the Moscow section (275 s) share one definition.
+  // Scenes, the ground schedules and the camera keyframes are built from the beat starts.
   const TITLES = { hook: 'Who stays visible?', archive: 'The archive', availability: 'Availability over time', years: 'The map through time', change: 'The change map',
-                   zoom: 'To Moscow', moscow250: 'Central Moscow', out: 'Out to the country', groups: 'Availability by group', transitions: 'Absence and removal',
+                   zoom: 'To Moscow', groups: 'Availability by group', transitions: 'Absence and removal',
                    size: 'Firm size', lists: 'Supplied lists', next: 'What comes next', credits: 'Sources' };
   const HEAD = [['hook', 11], ['archive', 14], ['availability', 16], ['years', 24], ['change', 12], ['zoom', 11]];
   const TAIL = [['groups', 16], ['transitions', 12], ['size', 16], ['lists', 16], ['next', 12], ['credits', 7]];
-  const LIST_FULL = HEAD.concat([['moscow250', 20], ['out', 5]], TAIL);
-  const LIST_MOSCOW = HEAD.concat([['section', 120]], TAIL);   // round 4: the national year run adds 12 s
+  const BEATS = HEAD.concat([['section', 120]], TAIL);   // round 4: the national year run adds 12 s
   function beatsOf(list) { const B = {}; let t = 0; for (const [id, d] of list) { B[id] = { id, start: t, end: t + d, dur: d }; t += d; } return { B, total: t }; }
 
   // ---- palette (charcoal ground: lightness rises with the value) ---------------------------------
@@ -86,11 +85,10 @@
   // section, the national framing with a slow drift under the charts, the left framing to close.
   function keyframesFor(B, section) {
     const kf = []; const at = (t, c) => kf.push(Object.assign({ t }, c));
-    const mos = section ? { cx: section.rest.cx, cy: section.rest.cy } : { cx: msk.x, cy: msk.y };
+    const mos = { cx: section.rest.cx, cy: section.rest.cy };
     at(0, natK(0.96)); at(B.archive.start, natK(0.98)); at(B.availability.start, natK(1.0)); at(B.years.start - 2, natK(0.85)); at(B.years.start, leftK());
     at(B.zoom.start, leftK()); at(B.zoom.start + 6, cityK(mos, 12)); at(B.zoom.end, cityK(mos, 12));
-    if (section) section.keyframes.forEach(k => kf.push(k));
-    else { const m = B.moscow250; at(m.start + 3, cityK(mos, 60, 1.5, 0.5)); at(m.end - 5, cityK(mos, 60, 1.5, 0.5)); at(m.end - 2, cityK(mos, 12)); at(m.end, cityK(mos, 12)); }
+    section.keyframes.forEach(k => kf.push(k));
     at(B.groups.start, natK(0.98)); at(B.next.start - 2, natK(0.90, 900)); at(B.next.start + 0.5, leftK()); at(B.credits.end, leftK());
     return kf;
   }
@@ -243,37 +241,25 @@
     Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} to ${fmt.pct(ct.availability_share_percent[1])}`, px, 830, l, 4.8, { size: 24, color: theme.ink });
   } };
 
-  // The flight to Moscow and what follows it. 'published': the Moscow hold, the push-in to 250 m,
-  // the pull-back and the pull-out to the country (36 s). 'moscow': the Moscow hold under the start
-  // of the section's street zoom (23 s); the density windows leave by scale.
-  function zoomScene(mode, len) {
-    const published = mode === 'published', hold = 6;   // the camera reaches Moscow at k 12 six seconds in
-    const MOS = { name: 'Moscow', size: '90 by 90 km, 1 km cells' }, CEN = { name: 'Central Moscow', size: '250 m cells, registered addresses' };
-    const loc = published ? [Object.assign({ start: 0 }, MOS), Object.assign({ start: 11.2 }, CEN), Object.assign({ start: 26.2 }, MOS)] : [Object.assign({ start: 0 }, MOS)];
-    const panelEnd = published ? len - 4.5 : hold + 5.6, eyebrowEnd = published ? len - 3 : hold + 9.5, legendEnd = published ? 11.2 : hold + 6.5;
+  // The flight to Moscow under the start of the section's street zoom (23 s): the Moscow hold with the
+  // 1 km density window (counts, then shares) and the top-right panel; the density windows leave by scale.
+  function zoomScene() {
+    const hold = 6;   // the camera reaches Moscow at k 12 six seconds in
+    const loc = [{ start: 0, name: 'Moscow', size: '90 by 90 km, 1 km cells' }];
+    const panelEnd = hold + 5.6, eyebrowEnd = hold + 9.5, legendEnd = hold + 6.5;
     const linesM = [[`${fmt.int(msk1.sum_n)} located firms`, null], [`${fmt.int(msk1.sum_a)} with a 2021 statement (${fmt.pct(100 * msk1.sum_a / msk1.sum_n)})`, null]];
-    const linesC = [[`${fmt.int(F.largest_location_firms)} firms at the largest address`, null], [`${fmt.int(F.firms_at_100plus_locations)} at addresses with 100 or more`, null]];
     return { z: 1, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local: l, cam, stage, theme }) {
       const k = cam.k, ga = gridAlphas(k), shareMix = step(l, hold + 1.6, 1.2, E.inOutSine);
       if (ga.one > 0) { MM.drawDensityCounts(ctx, stage, cam, dens.one, theme.accent, ga.one * (1 - shareMix)); if (shareMix > 0) MM.drawDensityShares(ctx, stage, cam, dens.one, RAMP5, theme.below, ga.one * shareMix); }
       if (ga.fine > 0) MM.drawDensityCounts(ctx, stage, cam, dens.fine, theme.accent, ga.fine);
       // City labels inside the scale window, and only once the camera has nearly arrived (they would otherwise fly in
-      // from the screen edge faster than any fade); the published cut shows them again after the pull-back.
-      const cityGate = Motion.plateau(l, 5.0, 11.2, 0.6, 0.6) + (published ? Motion.plateau(l, 29.0, 31.4, 0.6, 0.6) : 0);
-      const cityAlpha = step(k, 1.5, 3, E.linear) * (1 - step(k, 12.5, 7.5, E.linear)) * Math.min(1, cityGate);
+      // from the screen edge faster than any fade).
+      const cityAlpha = step(k, 1.5, 3, E.linear) * (1 - step(k, 12.5, 7.5, E.linear)) * Motion.plateau(l, 5.0, 11.2, 0.6, 0.6);
       if (cityAlpha > 0) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: cityAlpha });
       eyebrow(ctx, 'Firm density, 2021', 80, 120, theme, Motion.plateau(l, 0.3, eyebrowEnd, 0.6, 0.5));
       const pa = Motion.plateau(l, hold - 1.4, panelEnd, 0.6, 0.6);
-      if (pa > 0) {
-        const central = published ? Motion.plateau(l, 11.2, 26.2, 0.6, 0.6) : 0;
-        MM.infoPanel(ctx, theme, { alpha: pa, loc: MM.locationAt(loc, l), year: { a: '2021' } });
-        MM.infoLines(ctx, theme, linesM, pa * (1 - central)); if (central > 0) MM.infoLines(ctx, theme, linesC, pa * central);
-      }
+      if (pa > 0) { MM.infoPanel(ctx, theme, { alpha: pa, loc: MM.locationAt(loc, l), year: { a: '2021' } }); MM.infoLines(ctx, theme, linesM, pa); }
       shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, hold + 1.6, legendEnd, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
-      if (published) {   // the 250 m count legend under the panel, on its own opaque panel so it reads over the dense field
-        const la = Motion.plateau(l, 14.6, 27.5, 0.6, 0.5);
-        if (la > 0) { Motion.panel(ctx, 1420, 300, 440, 160, theme, 0.92 * la); MM.legendSwatches(ctx, 1436, 322, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: la, columns: 2, colWidth: 210, swatch: 22, size: 22, rowGap: 10 }); }
-      }
     } };
   }
 
@@ -382,7 +368,7 @@
   DEFS.credits = { z: 1, draw({ ctx, local: l, theme }) {
     const lines = [
       ['Who stays visible?', 40, 700, theme.ink, 0.3],
-      ['Data: RFSD v3.1.0 (Bondarkov et al. 2025), 63,308,662 annual records, financial years 2011–2025', 26, 400, theme.muted, 0.8],
+      ['Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 22, 400, theme.muted, 0.8],
       ['Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 26, 400, theme.muted, 1.1],
       ['Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment.', 24, 400, theme.muted, 1.4],
     ];
@@ -395,16 +381,15 @@
   // spans the Moscow beats), the section's scenes when a factory is given, the chapters, the camera.
   function buildCut(list, sectionFor) {
     const { B, total } = beatsOf(list);
-    const section = sectionFor ? sectionFor(B) : null;
+    const section = sectionFor(B);
     const sch = schedulesFor(B, section);
     const scenes = [groundScene(sch, total, null)], timeline = {};
     for (const [id] of list) {
       const b = B[id];
       if (id === 'section') { section.scenes.forEach(s => scenes.push(s)); Object.assign(timeline, section.timeline); continue; }
       timeline[id] = { id, start: b.start, end: b.end, title: TITLES[id] };
-      if (id === 'moscow250' || id === 'out') continue;   // chapters inside the zoom scene
-      const end = id === 'zoom' ? (section ? B.section.start + section.SEC.profiles : B.out.end) : b.end;
-      const def = id === 'zoom' ? zoomScene(section ? 'moscow' : 'published', end - b.start) : DEFS[id];
+      const end = id === 'zoom' ? B.section.start + section.SEC.profiles : b.end;   // the zoom scene runs under the street zoom's first 12 s
+      const def = id === 'zoom' ? zoomScene() : DEFS[id];
       scenes.push(Object.assign({ id, title: TITLES[id], start: b.start, end }, def));
     }
     return { scenes, keyframes: keyframesFor(B, section), DURATION: total, timeline, B, sch };
@@ -452,20 +437,16 @@
   }
   // Consecutive windows of a parent played at full speed: [id, title, fs, fe] in order, start times from a running clock.
   function sequence(items) { let t = 0; return items.map(([id, title, fs, fe, camEnd]) => { const e = [id, title, t, t + (fe - fs), fs, fe, camEnd]; t += fe - fs; return e; }); }
-  const full = buildCut(LIST_FULL, null);
-  const Bf = full.B;
-  const TEASER = [['hook', TITLES.hook, 0, 7.5, 0, Bf.hook.end], ['years', TITLES.years, 7.5, 17.5, Bf.years.start, Bf.years.end], ['zoom', 'Central Moscow', 17.5, 29, Bf.zoom.start, Bf.zoom.start + 19],
-                  ['groups', TITLES.groups, 29, 37.5, Bf.groups.start, Bf.groups.end], ['credits', TITLES.credits, 37.5, 40, Bf.credits.start, Bf.credits.end]];
-  // Cut ids (round 4 close): 'public' cuts carry aggregates only and may leave the lab; 'local' and 'moscow' never do.
-  const cuts = { 'full-public': full, 'teaser-public': makeCut(full, TEASER, 40, new Set(['hook', 'years', 'zoom'])) };
-  // The local cuts, built once the Moscow rasters are decoded: the full cut with the section, a
-  // 46 s teaser with a six-second excerpt of the designation, and the standalone treated cut.
-  function makeMoscowCuts(images, opts) {
+  // The cuts (round 5: one family, every cut with the Moscow section): the full cut, a 46 s teaser with a
+  // six-second excerpt of the designation, the standalone Moscow cut, and the two maps-and-firms cuts.
+  // images may be null: the scenes draw without the rasters until TreatedScenes.setImages hands them over.
+  const KEPT = [2014, 2016, 2018, 2021, 2022, 2023, 2024, 2025];   // the 55 s cut's downtown run
+  function makeCuts(images, opts) {
     const TS = window.TreatedScenes;
     // The national rasters were built at the left framing; refuse to build if the manifest's camera is not this page's.
     const c = TS.NATCAM, L = leftK();
     if (Math.abs(c.k - L.k) > 1e-9 || Math.abs(c.cx - L.cx) > 1e-6 || Math.abs(c.cy - L.cy) > 1e-6 || c.ox !== L.ox || c.oy !== L.oy) throw new Error('the national rasters were built at a different camera than the left framing');
-    const fm = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start));
+    const fm = buildCut(BEATS, B => TS.journey(images, B.section.start));
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
     const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
@@ -478,13 +459,12 @@
     const mapsLen = MAPS[MAPS.length - 1][3];
     // The 55 s version: the two-firm sequence without the street zoom, then the downtown run over eight kept
     // years (2015, 2017, 2019 and 2020 dropped), ending on 2025; a parent with the kept-year list supplies the run.
-    const KEPT = [2014, 2016, 2018, 2021, 2022, 2023, 2024, 2025];
-    const fm55 = buildCut(LIST_MOSCOW, B => TS.journey(images, B.section.start, { years: KEPT }));
+    const fm55 = buildCut(BEATS, B => TS.journey(images, B.section.start, { years: KEPT }));
     const S55 = sequence([['profiles', 'Who are they?', S0 + SEC.profiles + 0.4, S0 + SEC.designation], sec('designation', SEC.designation, SEC.comparison), sec('comparison', SEC.comparison, SEC.back),
       ['back', 'The map returns', S0 + SEC.back, S0 + SEC.downtown], ['downtown', 'Central Moscow, kept years', S0 + SEC.downtown, S0 + SEC.profiles + 0.4 + 55]]);
     const all = e => new Set(e.map(x => x[0]));
-    return { 'full-local': fm, 'teaser-local': makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts),
-             'maps-firms-local': makeCut(fm, MAPS, mapsLen, all(MAPS)), 'maps-firms-local-55': makeCut(fm55, S55, 55, all(S55)), kept_years: KEPT };
+    return { full: fm, teaser: makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts),
+             'maps-firms-instagram': makeCut(fm, MAPS, mapsLen, all(MAPS)), 'maps-firms-instagram-55': makeCut(fm55, S55, 55, all(S55)) };
   }
-  window.ExplainerScenes = Object.assign({}, full, { cuts, makeMoscowCuts, frames: { left: leftK(), nat: natK(0.98) } });
+  window.ExplainerScenes = { makeCuts, keptYears: KEPT, TITLES, frames: { left: leftK(), nat: natK(0.98) } };
 })();

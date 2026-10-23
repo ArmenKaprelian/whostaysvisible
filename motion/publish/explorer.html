@@ -50,6 +50,8 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 .controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .controls .btn { font-size: 13px; }
+#modes { margin-bottom: 8px; }
+#modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; }
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
 .yearrow .yr { font-variant-numeric: tabular-nums; min-width: 48px; font-weight: 600; }
@@ -63,7 +65,7 @@ footer a { color: var(--accent); }
 </style>
 <header>
   <h1>Visibility atlas</h1>
-  <div class="sub">Where Russian firms file, and where their statements stop appearing: 3.28 million registered addresses, 100 km cells by year, city windows at 1 km and 250 m. RFSD v3.1.0.</div>
+  <div class="sub">Where Russian firms file, and where their statements stop appearing: 3.28 million registered addresses, 100 km cells by year, city windows at 1 km and 250 m. RFSD v3.1.0, CC BY 4.0.</div>
   <button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button>
 </header>
 <main>
@@ -77,6 +79,7 @@ footer a { color: var(--accent); }
   <aside class="side">
     <section class="card">
       <h2>Layer</h2>
+      <div class="controls" id="modes"></div>
       <div class="controls" id="layers"></div>
       <div class="yearrow" id="yearrow"><span>Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span></div>
       <div class="prov" id="layerprov"></div>
@@ -115,6 +118,8 @@ footer a { color: var(--accent); }
 <script src="data/density.js"></script>
 <script src="data/series.js"></script>
 <script src="data/cellsyears.js"></script>
+<script src="data/treatednational.js" onerror="this.remove()"></script>
+<script src="data/firms.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>

@@ -18,7 +18,7 @@
   const D = window.MOTION_DATA;
   if (!D || !D.points || !D.treated || !D.anchors || !D.basemap || !D.moscowcells || !D.moscowcomparison || !D.national || !D.treatednational) { window.TreatedScenes = null; return; }
   const CITY = { P: D.points, TR: D.treated, AN: D.anchors, MC: D.moscowcells, CMP: D.moscowcomparison, name: 'Moscow' };
-  const P = CITY.P, TR = CITY.TR, AN = CITY.AN, BM = D.basemap, MC = CITY.MC, CMP = CITY.CMP;
+  const P = CITY.P, TR = CITY.TR, AN = CITY.AN, BM = D.basemap, MC = CITY.MC, CMP = CITY.CMP, SF = D.series.facts;
   // The national year run (M8, round 4): its rasters, counts and camera join the Moscow manifest as a
   // fourth extent; its listed firms nationwide join the Moscow set as marks outside the region rectangle.
   const NP = D.national, TRN = D.treatednational, NATCAM = NP.camera;
@@ -373,6 +373,14 @@
     Motion.text(ctx, 'on a supplied list, red from its listing year', 146, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
     Motion.text(ctx, 'solid: statement available that year · ring: absent that year', 84, 1022, { size: 22, color: theme.muted, alpha });
   }
+  // The two address-pile facts of the density pass, once in the downtown run where the sized piles are visible
+  // (round 5: they came from the cells-only cut's 250 m leg; same counts, same denominators).
+  function pileFacts(ctx, theme, alpha) {
+    if (alpha <= 0) return;
+    const s = `Across Russia in 2021: ${fmt.int(SF.largest_location_firms)} firms at the largest registered address, ${fmt.int(SF.firms_at_100plus_locations)} at addresses shared by 100 or more.`, w = measure(s, 24, 400);
+    Motion.panel(ctx, 60, 100, w + 48, 56, theme, 0.92 * alpha);
+    Motion.text(ctx, s, 84, 136, { size: 24, color: theme.ink, alpha });
+  }
   // One disclosure where the blue scale first appears: the scale covers firms with a statement that year.
   function disclosure(ctx, theme, alpha) {
     if (alpha <= 0) return;
@@ -453,6 +461,7 @@
     const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(t, 47, 53, 0.5, 0.5);
     if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
     const ext = extentOf(cam.k);
+    pileFacts(ctx, theme, Motion.plateau(t, 53.6, 60, 0.5, 0.5));
     ticker(ctx, theme, { v, ext, alpha: step(t, 53, 0.6), loc: locationAt(LOC, t) });
     legend(ctx, theme, { alpha: step(t, 53.2, 0.6), k: cam.k });
     disclosure(ctx, theme, Motion.plateau(t, 53.6, 60, 0.5, 0.5));
@@ -527,6 +536,7 @@
       drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
       const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(l, SEC.back + 3.5, SEC.downtown + 1, 0.5, 0.5);
       if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
+      pileFacts(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
@@ -554,6 +564,7 @@
   window.TreatedScenes = {
     timeline, DURATION, keyframes, redCounts, cellSums, OFFSETS, CITY, SEC, journey, NATCAM, SETS,
     pieces: { drawField, drawCells, drawTreated, drawMarker, headers, profiles, comparisonView, ticker, legend, disclosure, closeText, locationAt, extentAlpha, extentOf, counts, WINDOW, COL, dot, run, yearPair, anchorColour, LABEL },
+    setImages(images) { IMG = images; },   // the rasters, handed over when they have loaded (the cuts are built before)
     make(images, { align = false } = {}) { IMG = images; const sc = standaloneScenes.slice(); if (align) sc.push(alignScene(DURATION)); return { scenes: sc, keyframes, DURATION, timeline }; },
     standalone(images, opts) { return this.make(images, opts); },
     async loadImages(base, { layers = ['downtown', 'national'] } = {}) {

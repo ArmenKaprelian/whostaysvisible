@@ -10,7 +10,7 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 4 names: `full-public` 192 s and `teaser-public` 40 s from the aggregates; `full-local` 287 s, `teaser-local` 46 s and `moscow` 110 s locally; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 5: one cut family, `full` 287 s, `teaser` 46 s, `moscow` 110 s, `maps-firms-instagram` 174 s and `maps-firms-instagram-55` 55 s, every cut with the Moscow section; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
 | Teaser | `build/who-stays-visible-teaser-public-40s.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Treated cut (round 2) | `explainer.html?cut=moscow` (round 2: `treated`), `js/treated-scenes.js`, `build/who-stays-visible-moscow-110s.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
@@ -72,14 +72,16 @@ python3 -I motion/tools/serve.py --port 8765          # then open http://127.0.0
 scripts/motion-capture.sh --probe --shards 1           # headless Brave loads the page, prints the render metadata
 scripts/motion-capture.sh --seconds 3 --out motion/build/smoke.mp4
 scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
-scripts/motion-capture.sh --out motion/build/who-stays-visible-full-public-192s.mp4      # the default cut, 4 shards
-scripts/motion-capture.sh --page "explainer.html?cut=teaser-public" --out motion/build/who-stays-visible-teaser-public-40s.mp4
-scripts/motion-capture.sh --page "explainer.html?cut=full-local" --out motion/build/who-stays-visible-full-local-287s.mp4 --shards 8   # local only
-scripts/motion-capture.sh --page "explainer.html?cut=teaser-local" --out motion/build/who-stays-visible-teaser-local-46s.mp4
+scripts/motion-capture.sh --out motion/build/who-stays-visible-full-287s.mp4 --shards 8     # the default cut
+scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser-46s.mp4
 scripts/motion-capture.sh --page "explainer.html?cut=moscow" --out motion/build/who-stays-visible-moscow-110s.mp4
-scripts/motion-capture.sh --audit motion/build/audit-full-public.json --audit-step 6     # text boxes of every 6th frame
-python3 -I motion/tools/audit.py motion/build/audit-full-public.json --out motion/build/audit-full-public.txt
-python3 -I motion/tools/publish-set.py                                                   # motion/publish/: pages, shared scripts, aggregate data only
+scripts/motion-capture.sh --page "explainer.html?cut=maps-firms-instagram" --out motion/build/who-stays-visible-maps-firms-instagram-174s.mp4 --shards 6
+scripts/motion-capture.sh --page "explainer.html?cut=maps-firms-instagram-55" --out motion/build/who-stays-visible-maps-firms-instagram-55s.mp4
+scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800% Rscript --vanilla R/motion/M9-firms.R a rel charcoal national   # the atlas's address files
+python3 -I motion/tools/atlas-audit.py --url http://127.0.0.1:8765/explorer.html --out motion/build/audit-atlas.txt
+scripts/motion-capture.sh --audit motion/build/audit-full.json --audit-step 6            # text boxes of every 6th frame
+python3 -I motion/tools/audit.py motion/build/audit-full.json --out motion/build/audit-full.txt
+python3 -I motion/tools/publish-set.py                                                   # motion/publish/: pages, scripts, every data file, the rasters the journey loads, the address scripts
 ```
 
 The capture drives Brave (`/opt/brave.com/brave/brave --headless=new`) over the DevTools protocol
@@ -636,6 +638,124 @@ The atlas's dark theme now shares the explainer's round-3 palette: the charcoal 
 ### Under the cursor: 1 km year series and the empty-cell case (23 October)
 
 The panel's year chart drew only for 100 km cells, although `cellsyears.city_1km` carries 2019 to 2024 series for the 1 km city cells; it now draws those six years for a hovered 1 km cell (cells with 50 or more located firms in a year), names the 250 m and 5 km density cells as 2021-only, and states an empty cell. A cursor in a gap between 1 km cells had resolved to the 100 km cell behind it for the panel while the tooltip reported an empty cell; a gap is now an empty cell of the fine grid for both. `tools/atlas-audit.py` gained six hovered states through `window.__atlas.hoverKm` (the Moscow 100 km cell, two 1 km cells in 2021 and one in 2023, a 5 km density cell, a 250 m cell): 42 states, zero findings. The atlas artifact was republished as v5.
+
+## Round 5 (23 October 2026): firm-level publishing, the firms view, one cut family
+
+### The rule change
+
+Author's decision, 23 October 2026: the motion study's published artifacts may carry firm-level data
+(coordinates, per-firm states and revenue classes) from RFSD, a public dataset cited on every page and
+video under CC BY 4.0; the "aggregates only" constraint and the publish set's refusal of firm-level
+files are withdrawn for the motion study. Two rules stay and are checked at publish time by
+`tools/publish-set.py`: no shipped data file carries an identifier key (`inn`, `ogrn`; the R save
+helper refuses them too) and the neighbour firm (`anchors.b`) carries no name. The citation now reads
+"RFSD v3.1.0, CC BY 4.0" on both pages and "(Bondarkov et al. 2025, CC BY 4.0)" in the atlas footer; the
+video credits line reads "Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual
+records, financial years 2011–2025, values deflated and classed by the author", one line at 22 px.
+
+### Size budget and hosting
+
+Firms mode needs one record per distinct registered address (1 m rounding) of firms on no supplied
+list with below-city-level geocodes, per financial year: 15 bytes (x, y as int32 metres of the km
+plane; n, a, f as uint16 firms, statements, filers with a baseline and a value; cls as uint8 relative
+revenue class). 2021: 692,057 addresses for 3,078,593 firms (727,190 distinct coordinates over every
+located firm, listed and city-level included, the density pass's count exactly), 10.4 MB raw, 3.8 MB
+gzipped; 2014: 727,116 addresses for 4,288,612 firms, 10.9 MB raw, 3.9 MB gzipped; twelve years 44.9 MB
+gzipped. The artifact host serves only listed file types, so each year's gzipped bytes travel as base64
+inside a script (`data/firms/firms-YYYY.js`, about 5 MB, the lab's pattern for binary arrays), 59.9 MB
+in all; the page injects the year's script on demand and inflates it with `DecompressionStream`. The
+artifact's limits (16 MB per page or text file, 15 MB per binary file, 64 MB and 255 files per publish,
+256 MB and 511 files per version) hold everything: the atlas publish set is 68 MB in two uploads, the
+explainer's 49 Moscow rasters the journey loads (41.2 MB) and the 24 national rasters (1.3 MB) two
+uploads. The author chose this over a static site and over firms inside the city windows only.
+
+What every view shows: every firm is in the data at every zoom; nothing is sampled or thinned. Below
+20 px per km (the Moscow region extent's rule) an address is a 1 px mark, 2x2 for 10 or more firms, 3x3
+for 100 or more, with alpha rising by count, so addresses closer than one screen pixel merge into one
+mark whose count the hover reports; at the Russia preset a pixel is about 5 km, as in Figure 2.7's print.
+From 20 px per km every address is its own disc sized by count (the city rule to 60, the downtown rule
+above). Firms at one address are one mark by definition. City-level geocodes (195,010 in 2021) are
+counted in the legend and not drawn, as in the Moscow pass. The Moscow rasters the videos use are
+unchanged; the atlas draws from the address files.
+
+Videos: the 1080p files (14.7 to 79.8 MB) stay files for a video host; the 720p copies under the 15 MB
+asset cap (the teaser, the Moscow cut, the 55 s maps-and-firms cut) are attached to the explainer
+artifact as assets and linked from the page; the full cut (21.2 MB) and the 174 s cut (17.1 MB) do not
+fit at 720p without visible loss.
+
+### One cut family
+
+The public/local split is retired. The two address-pile facts of the cells-only cut's 250 m leg now
+sit in the downtown year run as one line on a 0.92 panel at the top left, from 1.6 to 8 s into the run
+in both the journey and the standalone cut: "Across Russia in 2021: 7,928 firms at the largest registered
+address, 514,368 at addresses shared by 100 or more." (the same counts and denominators). The audit
+reported no finding for it, so the fallback (keeping a cells-only cut) was not needed: the cells-only
+cuts, their beat lists (`LIST_FULL`, the `moscow250` and `out` beats), the zoom scene's published mode
+and the public teaser's windows are deleted, and the page builds one family:
+
+| Cut (round-5 name; round-4 name) | URL | Length | Frames | File |
+|---|---|---|---|---|
+| `full` (`full-local`) | `explainer.html` (default) | 287 s | 8,610 | `build/who-stays-visible-full-287s.mp4`, `-720p` copy |
+| `teaser` (`teaser-local`) | `?cut=teaser` | 46 s | 1,380 | `build/who-stays-visible-teaser-46s.mp4`, `-720p` copy |
+| `moscow` | `?cut=moscow` | 110 s | 3,300 | `build/who-stays-visible-moscow-110s.mp4`, `-720p` copy |
+| `maps-firms-instagram` (`maps-firms-local`) | `?cut=maps-firms-instagram` | 174 s | 5,220 | `build/who-stays-visible-maps-firms-instagram-174s.mp4`, `-720p` copy |
+| `maps-firms-instagram-55` (`maps-firms-local-55`) | `?cut=maps-firms-instagram-55` | 55 s | 1,650 | `build/who-stays-visible-maps-firms-instagram-55s.mp4`, `-720p` copy |
+
+The page builds every cut at once without the rasters and loads the Moscow and national rasters in the
+background, handing them to the scenes through `TreatedScenes.setImages`; in render mode `__ready`
+waits for them, so captures are unchanged. The logs under `logs/` keep the old names as the record.
+
+### M9: registered addresses per year (`R/motion/M9-firms.R`)
+
+National scope through `M6-common.R` (the per-year table build and the national yearly medians of M8).
+Per year, one record per distinct address of firms on no list below city-level geocodes, sorted by x then
+y, written as a 32-byte header (`FRM1`, record count, origin, year, version) and a struct of arrays
+(x i32, y i32, n u16, a u16, f u16, cls u8), gzipped, with a base64 `.js` twin; `data/firms.json` holds
+the layout, the per-year counts and sums, the files and sizes, the mark rules, the breaks and both looks'
+colours. 173 checks pass (`data/firms.checks.csv`): per year the firms at the addresses equal M8's drawn
+firms and the filers equal M8's `filers_base`, an address has a class exactly when it has a filer with a
+value, the read-back header, first and last records and sums match, the raw size is 32 + 15 records and
+the gzipped file is under 15 MB; M6's pile rule reproduced in SQL equals M6's Moscow piles and marks in
+the city and downtown extents for every year, and the file's rounded subset differs from them only at
+the rectangle's edge (at most four addresses); for 2021 the distinct coordinates of all located firms,
+the largest address (7,928 firms) and the firms at addresses with 100 or more (514,368) equal the
+density pass's facts. Run under the guard in 108 s, peak 12.9 GB.
+
+### The atlas's firms view
+
+A "View" row above the layer buttons (Cells, Firms; hidden when the address data or `DecompressionStream`
+is absent); cells mode is the round-4 code untouched. In firms mode the map draws every address of the
+year (the year row applies to every layer): the national blit composites the marks by hand into the
+map's device pixels (every address projected through the sorted x column's visible range, floor, blocks
+scaled by the device pixel ratio, "over" on the opaque canvas), the discs draw one `Path2D` per colour
+class, largest first. Colour by layer: the share layer gives the address's statement share in the six-class
+ramp with the 100 km breaks (one firm: absent or available at the two ends), the revenue layer the
+address's class in the blue ramp (neutral when no firm there has a baseline and a value), every other
+layer the neutral tone; listed firms from `treatednational.js` draw last as vector marks (the Moscow
+`redMark` style, now `MM.listedMark` in `map-layers.js`): red from their listing year, a ring when the
+year's statement is absent, their own state's colour before. Hover gives counts, never a firm: the
+nearest address within its mark radius plus 2 px (found through the sorted x column), "Address: n located
+firms, a with a YEAR statement (share)" and on the revenue layer the filers and the median class, plus
+the listed firms at the address (below 20 px per km, within the mark's radius in km, which the tooltip
+states); the under-the-cursor panel keeps the cursor's cell chart and gains an address row. The legend
+names the layer's ramp, the one-firm reading, the red and ring glyphs, the mark rule at the zoom and the
+year's totals (firms, addresses, city-level geocodes not drawn, listed firms). Light theme: the navy
+ramp and neutral from `M6-common.R`'s light look. Timings in headless Brave at 1,400 by 1,000: a year
+loads in 0.14 to 0.31 s from the local server, the national blit draws in 27 to 34 ms, a city or
+downtown view in 10 to 12 ms.
+
+`tools/atlas-audit.py` awaits the year's data (`__atlas.ready()`) and covers the firms states (share
+2014/2021/2025, revenue 2021, density 2021 and lists 2021 at the Russia, Moscow and Central Moscow
+presets) and two hovers beside the cells states: 75 states, 2,691 boxes, zero findings at 1,200, 1,600
+and 2,000 px.
+
+### Publishing
+
+`tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
+journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability;
+atlas artifact: v6 and v7 (two uploads). The published pages could not be opened from the lab's headless
+browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions
 
