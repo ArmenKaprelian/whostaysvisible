@@ -4,6 +4,9 @@
   'use strict';
   const C = {};
   const T = (ctx, s, x, y, o) => Motion.text(ctx, s, x, y, o);
+  // Labels fade with the chart's progress: a label never appears in one frame (text audit rule).
+  const tail = (progress, from = 0.85) => Motion.clamp((progress - from) / (1 - from), 0, 1);   // the last part of the reveal
+  const head = (progress, over = 0.4) => Motion.clamp(progress / over, 0, 1);                    // the first part (eased reveals start fast)
 
   C.scale = (domain, range) => v => range[0] + (v - domain[0]) / (domain[1] - domain[0]) * (range[1] - range[0]);
   C.logScale = (domain, range) => v => range[0] + (Math.log(v) - Math.log(domain[0])) / (Math.log(domain[1]) - Math.log(domain[0])) * (range[1] - range[0]);
@@ -30,8 +33,9 @@
     C.axisBottom(ctx, box, sx, xTicks, theme, { fmt: xFmt });
     for (const ev of events) {
       if (ev.x > xReveal) continue;
-      const x = sx(ev.x); ctx.save(); ctx.setLineDash([3, 7]); ctx.strokeStyle = theme.tick; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
-      if (ev.label) T(ctx, ev.label, x + 8, ev.labelY != null ? ev.labelY : box.y + box.h - 14 - (ev.row || 0) * 28, { size: labelSize - 2, color: theme.muted });
+      const evAlpha = Motion.clamp((xReveal - ev.x) / 0.6, 0, 1);   // over 0.6 years of the reveal
+      const x = sx(ev.x); ctx.save(); ctx.globalAlpha *= evAlpha; ctx.setLineDash([3, 7]); ctx.strokeStyle = theme.tick; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
+      if (ev.label) T(ctx, ev.label, x + 8, ev.labelY != null ? ev.labelY : box.y + box.h - 14 - (ev.row || 0) * 28, { size: labelSize - 2, color: theme.muted, alpha: evAlpha });
     }
     // Lines, revealed left to right with linear interpolation of the last visible segment (presentation only).
     for (const s of series) {
@@ -47,7 +51,7 @@
       }
       ctx.stroke();
       if (dots) for (const p of pts) { if (p.x > xReveal) break; ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), 4.5, 0, Math.PI * 2); ctx.fill(); }
-      if (endLabels && last && progress >= 1) T(ctx, s.label.replace('{y}', labelFmt(last.y)), sx(last.x) + 14, sy(last.y), { size: labelSize, color: s.color, baseline: 'middle', weight: 600 });
+      if (endLabels && last && progress >= 0.9) T(ctx, s.label.replace('{y}', labelFmt(last.y)), sx(last.x) + 14, sy(last.y), { size: labelSize, color: s.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) });
     }
     return { sx, sy };
   };
@@ -64,7 +68,8 @@
       ctx.fillStyle = it.color; ctx.beginPath(); ctx.arc(x0, ya, 6, 0, Math.PI * 2); ctx.fill();
       T(ctx, fmt(it.a), x0 - 16, ya, { size, color: theme.ink, align: 'right', baseline: 'middle' });
       T(ctx, it.label, x0 - 16 - Motion.measure(ctx, fmt(it.a), size) - 14, ya, { size, color: theme.muted, align: 'right', baseline: 'middle' });
-      if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); T(ctx, fmt(it.b), x1 + 16, yb, { size, color: it.color, align: 'left', baseline: 'middle', weight: 600 }); }
+      if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); }
+      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, yb, { size, color: it.color, align: 'left', baseline: 'middle', weight: 600, alpha: tail(u) });
     }
   };
 
@@ -81,10 +86,10 @@
       let x = box.x; const w = box.w * progress;
       for (const p of g.parts) {
         const pw = w * p.value / g.total; ctx.fillStyle = p.color; ctx.fillRect(x + 1.5, y, Math.max(0, pw - 3), barH);
-        if (progress >= 1) {
-          const label = Motion.fmt.pct(100 * p.value / g.total);
-          if (p.value / g.total >= minLabelFrac) T(ctx, label, x + pw / 2, y + barH / 2 + 1, { size, color: p.textColor || theme.stage, align: 'center', baseline: 'middle', weight: 600 });
-          else T(ctx, label, x + pw / 2, y + barH + 30, { size: size - 2, color: theme.muted, align: 'center' });
+        if (progress >= 0.85) {
+          const label = Motion.fmt.pct(100 * p.value / g.total), la = tail(progress);
+          if (p.value / g.total >= minLabelFrac) T(ctx, label, x + pw / 2, y + barH / 2 + 1, { size, color: p.textColor || theme.stage, align: 'center', baseline: 'middle', weight: 600, alpha: la });
+          else T(ctx, label, x + pw / 2, y + barH + 30, { size: size - 2, color: theme.muted, align: 'center', alpha: la });
         }
         x += pw;
       }
@@ -123,7 +128,7 @@
         if (s.whiskers && p.low != null) { ctx.strokeStyle = s.color; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.low)); ctx.lineTo(sx(p.x), sy(p.high)); ctx.stroke(); }
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), s.dot || 7, 0, Math.PI * 2); ctx.fill();
       }
-      if (pts.length && progress >= 1) T(ctx, s.label, sx(pts[pts.length - 1].x) + 22, sy(pts[pts.length - 1].y), { size, color: s.color, baseline: 'middle', weight: 600 });
+      if (pts.length && progress >= 0.9) T(ctx, s.label, sx(pts[pts.length - 1].x) + 22, sy(pts[pts.length - 1].y), { size, color: s.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) });
     }
     return { sx, sy };
   };
@@ -147,9 +152,9 @@
   C.bars = function (ctx, box, rows, { max, progress = 1, theme, barH = 44, gap = 26, size = 26, fmt = v => Motion.fmt.int(v) } = {}) {
     rows.forEach((r, i) => {
       const y = box.y + i * (barH + gap); const w = box.w * (r.value / max) * progress;
-      T(ctx, r.label, box.x, y - 10, { size, color: theme.muted });
+      T(ctx, r.label, box.x, y - 10, { size, color: theme.muted, alpha: head(progress) });
       ctx.fillStyle = r.color; ctx.fillRect(box.x, y, w, barH);
-      if (progress >= 0.999) T(ctx, r.text || fmt(r.value), box.x + w + 14, y + barH / 2 + 1, { size, color: theme.ink, baseline: 'middle', weight: 600 });
+      if (progress >= 0.85) T(ctx, r.text || fmt(r.value), box.x + box.w * (r.value / max) + 14, y + barH / 2 + 1, { size, color: theme.ink, baseline: 'middle', weight: 600, alpha: tail(progress) });
     });
   };
 

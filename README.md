@@ -101,8 +101,12 @@ availability by cell for every year 2014-2025 from the foundation partitions). I
 `motion.*` (`scripts/pin-sources.py --only motion`); outputs sit in `motion/data/` with provenance and
 checks. `scripts/lab-run.sh` now takes `--max SIZE`, `--cpu`, `--duck-mem`, `--duck-threads` and
 `--duck-temp` (the author lifted the small memory cap for this study; the ceiling is a crash guard).
-Capture: `scripts/motion-capture.sh` (host-side, headless Brave over the DevTools protocol, ffmpeg).
-See `motion/README.md` for the storyboard, checks, run order and verification.
+Capture: `scripts/motion-capture.sh` (host-side, headless Brave over the DevTools protocol, ffmpeg;
+since 23 October sharded across cores with `--shards N`, default 4, joined losslessly and checked with
+ffprobe). Round 2 (23 October) added the ColorBrewer palette (YlGnBu, PRGn, red reserved for listed
+firms), the text audit (`?__audit=1`, `capture.py --audit`, `motion/tools/audit.py`), the firm-level
+Moscow pass `R/motion/M6-treated.R` (rasters and listed-firm data, local only) and the treated cut
+`explainer.html?cut=treated`. See `motion/README.md` for the storyboard, checks, run order and verification.
 
 ## Decision log
 
@@ -116,3 +120,4 @@ See `motion/README.md` for the storyboard, checks, run order and verification.
 - 2026-10-18 (later): author's picks recorded; Figure 2.7 kept, the change map adopted (layout to Codex, brief in candidates/fig27-change-codex-brief.md), the diagram redone as a flowchart (flow2, `R/flow/F2-flowchart.R`).
 - 2026-10-18 (evening): the flowchart was rejected too (still too dense); Codex makes its own pass from candidates/fig27-flow-codex-brief.md. Gallery phase closed for Points 20, 22 and 13.
 - 2026-10-22: motion study approved from `~/.claude/plans/can-you-within-your-elegant-lantern.md`. Author answers: any data, including new analyses run in the lab, as long as nothing touches the rest of the project; local build, then private claude.ai artifacts; firm-level reads allowed, published pages carry binned aggregates only; length by quality; dark cinematic look held to Tufte principles; no 3 or 4 GB memory cap on local work (crash guard only).
+- 2026-10-23: motion round 2 approved (same plan file, round-2 section). Author decisions: Aeroflot anchors the treated-firm sequence; undated list members red from the first frame (residents list from 2020); control metric = each firm's real revenue against its own 2019-2021 average; the sequence is its own cut, rendered for approval, then offered as a splice. Second note: report state shares and class spread, add the causal caveat to the close, keep three dark meanings apart (no-baseline firms as a faint backdrop only, dark reserved for baseline firms without a statement, a pile with any filers takes the filers' colour), ask before changing breaks or what a mark means. Third note: shard the capture across cores before any render. Pending: the class breaks (proposal in `motion/README.md`), the splice.

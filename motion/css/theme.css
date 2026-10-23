@@ -11,12 +11,18 @@
   --dim: #5F7389;          /* tertiary text, axes */
   --grid: #1C2C40;         /* chart grid lines */
   --panel: #10223A;        /* control bar and cards */
-  --accent: #9CC4E8;       /* pale blue: principal series, density */
-  --accent-strong: #D6E6F5;
-  --brick: #D9906F;        /* comparison: falling, absent */
-  --green: #7FBFA6;        /* second contrast when two cohorts sit side by side */
+  /* Data colours sit off the navy chrome (round 2, 23 October 2026): ColorBrewer YlGnBu for ordered
+     quantities, PRGn for signed change, one red reserved for listed (treated) firms. */
+  --accent: #7FCDBB;       /* principal series, density: YlGnBu step 4 */
+  --accent-strong: #EDF8B1;/* second series and emphasis: YlGnBu step 2 */
+  --fall: #C2A5CF;         /* falling, absent: PRGn lilac */
+  --rise: #A6DBA0;         /* rising: PRGn light green */
+  --treated: #E31A1C;      /* listed firms, solid; never used for anything else */
+  --treated-outline: #FFD9D9;
+  --control-dark: #5A3175; --backdrop: #B5C3D1; /* non-treated firm with no statement in the year */
+  --nobase: #55606B; --ramp6: #1D91C0 #38ADC3 #6CC5BE #A2DAB8 #D4EEB3 #FFFFD9;       /* non-treated firm without a revenue baseline */
   --below: #3C4852;        /* cells below support */
-  --highlight: rgba(156, 196, 232, 0.12);
+  --highlight: rgba(127, 205, 187, 0.10);
   --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
   color-scheme: dark;
 }

@@ -18,9 +18,11 @@
   const DURATION = 182;
 
   // ---- palette (dark ground: lightness rises with the value) ----------------------------------
-  const RAMP6 = ['#2A4F78', '#3B6A9A', '#5587B8', '#79A6D0', '#A3C4E3', '#D2E5F4'];   // availability share, 6 fixed classes
+  // Ordered quantities use ColorBrewer YlGnBu (teal to pale yellow), signed change uses PRGn
+  // (purple declines, green rises), both off the navy chrome. Red is reserved for listed firms.
+  const RAMP6 = ['#1D91C0', '#38ADC3', '#6CC5BE', '#A2DAB8', '#D4EEB3', '#FFFFD9'];   // availability share, 6 fixed classes (YlGnBu resampled at even lightness steps)
   const RAMP5 = RAMP6.slice(1);                                                        // 5 classes (fine cells, cohort inclusion)
-  const CHANGE6 = ['#E9B6A0', '#CF9070', '#A86B50', '#4F7FAE', '#7EA9D3', '#B9D5EE']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points
+  const CHANGE6 = ['#E7D4E8', '#C2A5CF', '#9970AB', '#5AAE61', '#A6DBA0', '#D9F0D3']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points
   const YEAR_BREAKS = [20, 35, 50, 60, 70];
   const FINE_BREAKS = [55, 62, 68, 74];
   const FIN_BREAKS = [-20, -10, 0, 10, 20];
@@ -131,34 +133,39 @@
     }
   } });
 
-  scenes.push({ id: 'archive', ...timeline.archive, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
+  scenes.push({ id: 'archive', ...timeline.archive, z: 1, draw({ ctx, local: l, dur, cam, stage, theme }) {
     MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 0.35, borders: false });
     MM.drawDensityCounts(ctx, stage, cam, natPaths, theme.accent, 0.22);
-    eyebrow(ctx, 'The archive', 80, 120, theme, step(l, 0.2, 0.5));
+    const out = 1 - step(l, dur - 1.0, 0.5, E.inOutSine);   // the text leaves before the scene crossfades into the chart
+    eyebrow(ctx, 'The archive', 80, 120, theme, step(l, 0.2, 0.5) * out);
     const v = Motion.counter(l, 0.4, 3.0, F.records_total);
-    Motion.text(ctx, fmt.int(v), 80, 262, { size: 124, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) });
-    Motion.reveal(ctx, `annual records of Russian firms, financial years ${F.years}, ${F.release} (released ${F.release_date})`, 80, 316, l, 1.4, { size: 30, color: theme.muted });
+    Motion.text(ctx, fmt.int(v), 80, 262, { size: 124, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * out });
+    Motion.reveal(ctx, `annual records of Russian firms, financial years ${F.years}, ${F.release} (released ${F.release_date})`, 80, 316, l, 1.4, { size: 30, color: theme.muted, until: dur - 0.5 });
     // Provider bar.
     const u = step(l, 4.2, 2.6, E.inOutSine);
-    if (u > 0) {
+    if (u > 0 && out > 0) {
       const x0 = 80, x1 = 1480, y = 430, years = []; for (let y0 = 2011; y0 <= 2025; y0++) years.push(y0);
       const sx = CH.scale([2011, 2026], [x0, x1]);
-      eyebrow(ctx, 'Two providers, one archive', 80, 392, theme, u);
-      ctx.save(); ctx.globalAlpha *= u;
+      eyebrow(ctx, 'Two providers, one archive', 80, 392, theme, u * out);
+      ctx.save(); ctx.globalAlpha *= u * out;
       const segs = [{ from: 2011, to: 2012, color: theme.below, label: null }, { from: 2012, to: 2019, color: theme.dim, label: 'Rosstat, 2012–2018' }, { from: 2019, to: 2026, color: theme.accent, label: 'Federal Tax Service (FNS), 2019–2025' }];
       for (const s of segs) { const xa = sx(s.from), xb = sx(Math.min(s.to, 2011 + 15 * u)); if (xb <= xa) continue; ctx.fillStyle = s.color; ctx.fillRect(xa + 1, y, xb - xa - 2, 36); }
-      years.forEach(yy => Motion.text(ctx, yy === 2025 ? '2025*' : String(yy), sx(yy + 0.5), y + 68, { size: 22, color: theme.muted, align: 'center', alpha: yy + 1 <= 2011 + 15 * u ? 1 : 0 }));
-      if (u >= 1) { segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 600 }); }); Motion.text(ctx, '2011: imputed records only, no availability rate', sx(2011), y + 100, { size: 22, color: theme.muted }); }
+      const reach = 2011 + 15 * u;   // the bar's right edge in years; each year label fades in over the next two years of growth
+      years.forEach(yy => Motion.text(ctx, yy === 2025 ? '2025*' : String(yy), sx(yy + 0.5), y + 68, { size: 22, color: theme.muted, align: 'center', alpha: Motion.clamp((reach - yy) / 2, 0, 1) }));
+      const labAlpha = Motion.clamp((u - 0.85) / 0.15, 0, 1);
+      if (labAlpha > 0) { segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 600, alpha: labAlpha }); }); Motion.text(ctx, '2011: imputed records only, no availability rate', sx(2011), y + 100, { size: 22, color: theme.muted, alpha: labAlpha }); }
       ctx.restore();
     }
     // 2021 nested bars.
     const u2 = step(l, 8.2, 2.2, E.outCubic);
-    if (u2 > 0) {
-      eyebrow(ctx, 'Financial year 2021', 80, 606, theme, u2);
+    if (u2 > 0 && out > 0) {
+      eyebrow(ctx, 'Financial year 2021', 80, 606, theme, u2 * out);
       const rows = [{ label: 'Eligible to file', value: F.eligible_2021, color: theme.dim }, { label: 'Registered at year-end', value: F.registered_2021, color: theme.muted }, { label: 'With a statement in the release', value: F.statements_2021, color: theme.accent }];
+      ctx.save(); ctx.globalAlpha *= out;
       CH.bars(ctx, { x: 80, y: 650, w: 1000, h: 300 }, rows, { max: F.eligible_2021, progress: u2, theme, barH: 46, gap: 44, size: 26, fmt: v => fmt.int(v) + ' firms' });
+      ctx.restore();
     }
-    Motion.paragraph(ctx, 'A statement is available when the firm’s own filing for the year is in the release: filed, not imputed. Absence is a fact about the public archive, not evidence of concealment.', 80, 1000, 1500, { size: 28, color: theme.ink, alpha: step(l, 11.2, 0.6) });
+    Motion.paragraph(ctx, 'A statement is available when the firm’s own filing for the year is in the release: filed, not imputed.', 80, 1000, 1500, { size: 28, color: theme.ink, alpha: step(l, 11.2, 0.6) * out });
   } });
 
   scenes.push({ id: 'availability', ...timeline.availability, z: 1, draw({ ctx, local: l, theme }) {
@@ -167,7 +174,7 @@
     const box = { x: 170, y: 250, w: 1000, h: 620 };
     const progress = step(l, 1.2, 8.0, E.inOutSine);
     CH.lines(ctx, box, [
-      { label: 'registered {y}', color: theme.green, points: series.reg, gapAfter: [2018] },
+      { label: 'registered {y}', color: theme.accentStrong, points: series.reg, gapAfter: [2018] },
       { label: 'eligible {y}', color: theme.accent, points: series.el, gapAfter: [2018] },
     ], { xDomain: [2011.4, 2025.6], yDomain: [0, 80], progress, theme, yTicks: [0, 20, 40, 60, 80], xTicks: [2012, 2014, 2016, 2018, 2020, 2022, 2024, 2025], xFmt: v => (v === 2025 ? '2025*' : String(v)),
          eras: [{ from: 2018.5, to: 2025.6, color: theme.highlightBand, label: 'FNS era' }, { from: 2011.4, to: 2018.5, color: 'rgba(0,0,0,0)', label: 'Rosstat era' }],
@@ -178,8 +185,7 @@
       Motion.reveal(ctx, '2021 → 2024', px, 346, l, 10.3, { size: 26, color: theme.muted });
       const u = step(l, 10.6, 1.6, E.outCubic);
       CH.bars(ctx, { x: px, y: 400, w: 300, h: 200 }, [{ label: 'Statements 2021', value: F.statements_2021, color: theme.dim }, { label: 'Statements 2024', value: F.statements_2024, color: theme.accent }], { max: F.statements_2021, progress: u, theme, barH: 40, gap: 46, size: 24 });
-      Motion.paragraph(ctx, `${fmt.int(F.statements_2021 - F.statements_2024)} fewer statements, while the eligible-population share rose from ${fmt.pct(F.eligible_share_2021)} to ${fmt.pct(F.eligible_share_2024)}: the archive lost firms faster than it lost accounts.`, px, 620, 400, { size: 26, color: theme.ink, alpha: step(l, 12.4, 0.6) });
-      Motion.paragraph(ctx, 'Dotted dates are context, not causal comparisons. 2025* is the flagged latest year.', px, 840, 400, { size: 22, color: theme.muted, alpha: step(l, 13.4, 0.6) });
+      Motion.paragraph(ctx, `${fmt.int(F.statements_2021 - F.statements_2024)} fewer statements, while the eligible share rose from ${fmt.pct(F.eligible_share_2021)} to ${fmt.pct(F.eligible_share_2024)}.`, px, 620, 400, { size: 26, color: theme.ink, alpha: step(l, 12.4, 0.6) });
     }
   } });
 
@@ -194,7 +200,9 @@
     const yShow = blend > 0.5 ? yearList[i + 1] : yearList[i]; const tot = yearTotals[yShow] || {}; const ytShow = blend > 0.5 ? yearTiles(yShow) : yt;
     const px = 1400;
     eyebrow(ctx, 'Availability by 100 km cell', px, 140, theme, step(l, 0.2, 0.5));
-    Motion.text(ctx, String(yShow) + (yShow === 2025 ? '*' : ''), px, 300, { size: 128, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) });
+    const yearLabel = y => String(y) + (y === 2025 ? '*' : '');
+    Motion.text(ctx, yearLabel(yearList[i]), px, 300, { size: 128, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * (1 - blend), group: 'year' });
+    if (blend > 0) Motion.text(ctx, yearLabel(yearList[i + 1]), px, 300, { size: 128, weight: 700, color: theme.ink, alpha: blend, group: 'year' });
     Motion.text(ctx, providerOf(yShow) + (yShow === 2019 ? '  ← provider changes' : ''), px, 350, { size: 26, color: yShow === 2019 ? theme.accentStrong : theme.muted, alpha: step(l, 0.4, 0.5) });
     if (tot.share != null) {
       Motion.text(ctx, fmt.pct(tot.share), px, 470, { size: 72, weight: 700, color: theme.accentStrong, alpha: step(l, 0.6, 0.5) });
@@ -204,7 +212,6 @@
     Motion.text(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 606, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
     MM.legendBar(ctx, px, 720, 440, RAMP6, YEAR_BREAKS.map(b => b + '%'), theme, { alpha: step(l, 1.0, 0.6), title: 'Share with a statement, located firms in the cell' });
     MM.legendSwatches(ctx, px, 800, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 located firms' }], theme, { alpha: step(l, 1.0, 0.6) });
-    Motion.paragraph(ctx, 'Labelled annual snapshots at registered addresses; the located share differs by year. Rosstat years are lower throughout: the archive itself grew.', px, 900, 440, { size: 22, color: theme.muted, alpha: step(l, 2.0, 0.6) });
   } });
 
   scenes.push({ id: 'change', ...timeline.change, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
@@ -216,24 +223,25 @@
     Motion.text(ctx, '2024 against 2021', px, 230, { size: 54, weight: 700, color: theme.ink, alpha: step(l, 0.3, 0.5) });
     Motion.paragraph(ctx, 'Change in the share of located firms with a statement, by 100 km cell', px, 280, 440, { size: 26, color: theme.muted, alpha: step(l, 0.5, 0.5) });
     const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
-    const items = [6, 5, 4, 3, 2, 1].map(c => ({ color: CHANGE6[c - 1], label: labels[c - 1], right: step(l, waves[c], 0.9) >= 1 ? fmt.int(changeCounts[c]) + ' cells' : '' }));
+    const items = [6, 5, 4, 3, 2, 1].map(c => ({ color: CHANGE6[c - 1], label: labels[c - 1], right: fmt.int(changeCounts[c]) + ' cells', rightAlpha: step(l, waves[c] + 0.9, 0.4) }));
     MM.legendSwatches(ctx, px, 380, items, theme, { alpha: step(l, 0.8, 0.6), colWidth: 440, rowGap: 14 });
     MM.legendSwatches(ctx, px, 620, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 firms in a year', right: '' }], theme, { alpha: step(l, 0.8, 0.6), colWidth: 440 });
     const ct = C100.change_totals;
     Motion.paragraph(ctx, `${fmt.int(C100.change.supported.reduce((s, v) => s + v, 0))} cells with 50 or more located firms in both years`, px, 720, 460, { size: 24, color: theme.ink, alpha: step(l, 4.4, 0.5) });
     Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} → ${fmt.pct(ct.availability_share_percent[1])}`, px, 790, l, 4.8, { size: 24, color: theme.ink });
-    Motion.paragraph(ctx, 'Annual populations at registered addresses, not the same firms. Brick marks a lower share in 2024, blue a higher one; the map carries no regional reading of its own.', px, 860, 440, { size: 22, color: theme.muted, alpha: step(l, 5.6, 0.6) });
   } });
 
   scenes.push({ id: 'zoom', ...timeline.zoom, z: 1, draw({ ctx, local: l, cam, stage, theme }) {
     MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: 1, borderPx: cam.k > 9 ? 1.4 : 0.8 });
     const shareMix = Math.min(step(l, 8.6, 1.2, E.inOutSine), 1 - step(l, 13, 1.0, E.inOutSine)) + step(l, 23.6, 1.0, E.inOutSine);
     drawZoomDensity(ctx, stage, cam, theme, Motion.clamp(shareMix, 0, 1));
-    if (cam.k > 1.5 && cam.k < 20) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: step(cam.k, 1.5, 3, E.linear) });
+    // City labels between the national view and the city windows; held back during the fast Moscow-to-St Petersburg leg.
+    const cityAlpha = step(cam.k, 1.5, 3, E.linear) * (1 - step(cam.k, 12.5, 7.5, E.linear)) * (1 - Motion.plateau(l, 18.9, 21.2, 0.4, 0.4));
+    if (cityAlpha > 0) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: cityAlpha });
     const cap = (y, lines, alpha, width = 900) => { if (alpha <= 0) return; const rows = lines.reduce((s, ln) => s + (ln.lines || 1), 0); panel(ctx, 60, y - 60, width, 40 + rows * 40, theme, 0.78); let yy = y; lines.forEach(s => { if (s.lines > 1) yy = Motion.paragraph(ctx, s.text, 84, yy, width - 48, { size: s.size || 26, weight: s.weight || 400, color: s.color || theme.ink, alpha, lineHeight: 1.45 }) + 4; else { Motion.text(ctx, s.text, 84, yy, { size: s.size || 26, weight: s.weight || 400, color: s.color || theme.ink, alpha }); yy += 40; } }); };
     cap(960, [{ text: 'Moscow, 90 km window at 1 km', size: 32, weight: 700 }, { text: `${fmt.int(msk1.sum_n)} located firms; ${fmt.int(msk1.sum_a)} with a 2021 statement (${fmt.pct(100 * msk1.sum_a / msk1.sum_n)})`, color: theme.muted }], Motion.plateau(l, 4.6, 13.4, 0.5, 0.5));
     shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, 8.6, 13.4, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
-    cap(880, [{ text: 'Central Moscow at 250 m', size: 32, weight: 700 }, { text: 'Registered addresses, not production sites: coincident addresses are counted, not drawn.', color: theme.muted }, { text: `${fmt.int(F.distinct_locations)} distinct coordinates hold ${fmt.int(F.located_2021)} firms; the largest address holds ${fmt.int(F.largest_location_firms)}; ${fmt.int(F.firms_at_100plus_locations)} firms sit at addresses shared by 100 or more.`, lines: 2 }], Motion.plateau(l, 14.2, 20.2, 0.5, 0.5), 1000);
+    cap(920, [{ text: 'Central Moscow at 250 m, registered addresses', size: 32, weight: 700 }, { text: `${fmt.int(F.largest_location_firms)} firms at the largest address; ${fmt.int(F.firms_at_100plus_locations)} at addresses shared by 100 or more`, size: 24, color: theme.muted }], Motion.plateau(l, 14.2, 20.2, 0.5, 0.5), 1000);
     MM.legendSwatches(ctx, 1380, 120, MM.countClassLabels.map((lab, c) => ({ color: theme.accent, alpha: MM.countAlpha[c], label: lab + ' firms' })), theme, { alpha: Motion.plateau(l, 14.6, 20.2, 0.6, 0.5), columns: 2, colWidth: 220, swatch: 22, size: 22, rowGap: 10 });
     cap(960, [{ text: 'St Petersburg, 90 km window at 1 km', size: 32, weight: 700 }, { text: `${fmt.int(spb1.sum_n)} located firms; ${fmt.int(spb1.sum_a)} with a 2021 statement (${fmt.pct(100 * spb1.sum_a / spb1.sum_n)})`, color: theme.muted }], Motion.plateau(l, 22.8, 26.1, 0.5, 0.3));
     shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, 23.6, 26.1, 0.6, 0.3), 'Share with a statement, cells with 50 or more firms');
@@ -244,14 +252,14 @@
     title(ctx, 'Visibility diverged after 2021', l, 0.2, theme);
     subtitle(ctx, 'Share of eligible firms with a statement, 2021 and 2024, by group', l, 0.6, theme);
     const u = step(l, 1.2, 3.0, E.inOutSine);
-    const own = [{ label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Foreign or joint', a: F.own.foreign[0], b: F.own.foreign[1], color: theme.muted }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.brick }];
-    const leg = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'Limited liability', a: F.legal.llc[0], b: F.legal.llc[1], color: theme.muted }, { label: 'Unitary enterprise', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.brick }];
+    const own = [{ label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Foreign or joint', a: F.own.foreign[0], b: F.own.foreign[1], color: theme.muted }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }];
+    const leg = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'Limited liability', a: F.legal.llc[0], b: F.legal.llc[1], color: theme.muted }, { label: 'Unitary enterprise', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.fall }];
     eyebrow(ctx, 'Ownership', 160, 250, theme, step(l, 0.8, 0.5)); eyebrow(ctx, 'Legal form', 1040, 250, theme, step(l, 0.8, 0.5));
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.slopes(ctx, { x: 120, y: 300, w: 760, h: 520 }, own, { yDomain: [44, 82], progress: u, theme });
     CH.slopes(ctx, { x: 1000, y: 300, w: 760, h: 520 }, leg, { yDomain: [44, 82], progress: u, theme });
     ctx.restore();
-    Motion.paragraph(ctx, 'Visibility rose among private firms and joint-stock companies and fell among state-related firms and unitary enterprises. The declines are concentrated in 2024, and these are population comparisons by year, not the same firms followed.', 120, 940, 1660, { size: 27, color: theme.ink, alpha: step(l, 6.0, 0.6) });
+    Motion.paragraph(ctx, 'Visibility rose among private firms and joint-stock companies and fell among state-related firms and unitary enterprises.', 120, 940, 1660, { size: 27, color: theme.ink, alpha: step(l, 6.0, 0.6) });
   } });
 
   scenes.push({ id: 'transitions', ...timeline.transitions, z: 1, draw({ ctx, local: l, theme }) {
@@ -259,14 +267,14 @@
     subtitle(ctx, 'The following year, by the preceding year’s statement: transitions ending 2020–2024, continuing and removed firms', l, 0.6, theme);
     const u = step(l, 1.2, 2.6, E.outCubic);
     const pa = pooled.available, pb = pooled.absent;
-    const parts = (p) => [{ label: 'statement next year', value: p.A, color: theme.accent }, { label: 'no statement, still registered', value: p.N, color: theme.brick }, { label: 'removed from the registry', value: p.X, color: theme.dim, textColor: theme.ink }];
+    const parts = (p) => [{ label: 'statement next year', value: p.A, color: theme.accent }, { label: 'no statement, still registered', value: p.N, color: theme.fall }, { label: 'removed from the registry', value: p.X, color: theme.dim, textColor: theme.ink }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.stackedBars(ctx, { x: 120, y: 360, w: 1680, h: 500 }, [
       { label: 'Firms with a statement the year before', sub: `${fmt.int(pa.origin)} firm-years`, total: pa.origin, parts: parts(pa) },
       { label: 'Firms without a statement the year before', sub: `${fmt.int(pb.origin)} firm-years`, total: pb.origin, parts: parts(pb) },
     ], { progress: u, theme, barH: 90, gap: 140, size: 26 });
     ctx.restore();
-    Motion.paragraph(ctx, `Of ${fmt.int(pb.origin)} prior-absent firm-years, ${fmt.pct(100 * pb.X / pb.origin)} end in a recorded removal and ${fmt.pct(100 * pb.A / pb.origin)} reappear with a statement; among prior-available firm-years, ${fmt.pct(100 * pa.X / pa.origin)} end in removal. Removal takes precedence over a dissolution-year statement; a missing following-year row is not an exit.`, 120, 920, 1660, { size: 27, color: theme.ink, alpha: step(l, 5.4, 0.6) });
+    Motion.paragraph(ctx, `Of ${fmt.int(pb.origin)} prior-absent firm-years, ${fmt.pct(100 * pb.X / pb.origin)} end in a recorded removal and ${fmt.pct(100 * pb.A / pb.origin)} reappear with a statement; among prior-available firm-years, ${fmt.pct(100 * pa.X / pa.origin)} end in removal.`, 120, 920, 1660, { size: 27, color: theme.ink, alpha: step(l, 5.4, 0.6) });
   } });
 
   scenes.push({ id: 'size', ...timeline.size, z: 1, draw({ ctx, local: l, theme }) {
@@ -285,17 +293,16 @@
       Motion.reveal(ctx, fmt.dec(F.size_q5_2022_ratio, 3), px, 404, l, 7.0, { size: 60, weight: 700, color: theme.accentStrong });
       Motion.reveal(ctx, `95% interval ${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`, px, 440, l, 7.3, { size: 26, color: theme.muted });
       Motion.paragraph(ctx, `Raw shares in 2022: Q1 ${fmt.pct(F.size_raw_q1_2022)}, Q5 ${fmt.pct(F.size_raw_q5_2022)}.`, px, 510, 440, { size: 26, color: theme.ink, alpha: step(l, 8.2, 0.6) });
-      Motion.paragraph(ctx, `Provisional: dropping wholesale trade shrinks the later widening, and that industry carries most of the contrast’s influence. Early era (2014–2018) Q5 ratios ranged ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 600, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
-      Motion.paragraph(ctx, 'Whiskers: primary two-way industry and region intervals, Q5 only. Conditional associations by changing annual size, not causal effects.', px, 820, 440, { size: 22, color: theme.muted, alpha: step(l, 10.6, 0.6) });
+      Motion.paragraph(ctx, `Provisional: without wholesale trade the later widening shrinks. Early-era (2014–2018) Q5 ratios: ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 600, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
     }
   } });
 
   scenes.push({ id: 'lists', ...timeline.lists, z: 1, draw({ ctx, local: l, theme }) {
     title(ctx, 'Sanctioned-only firms became relatively less visible by 2024', l, 0.2, theme);
-    subtitle(ctx, 'Odds of a statement against firms on no supplied list, annual eligible population, with two-way 95% intervals', l, 0.6, theme);
+    subtitle(ctx, 'Odds of a statement against firms on no supplied list; annual eligible population, two-way 95% intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const ser = [{ label: 'Sanctioned only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
-                 { label: 'Government strategic only', color: theme.brick, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
+                 { label: 'Government strategic only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.yearDots(ctx, { x: 170, y: 250, w: 700, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
     ctx.restore();
@@ -307,7 +314,7 @@
       groups.forEach(([g, name], gi) => {
         const y0 = 320 + gi * 290; const d0 = bin(g, 'all_available');
         Motion.reveal(ctx, `${name}: ${fmt.int(d0.denominator)} firms`, px, y0, l, 6.8 + gi * 0.4, { size: 28, weight: 700, color: theme.ink });
-        const rows = bins.map(([b, lab]) => { const r = bin(g, b); return { label: lab, value: r.share, color: b === 'all_available' ? theme.accent : b === 'removed' ? theme.dim : theme.brick, text: fmt.pct(r.share) + ' (' + fmt.int(r.firms) + ')' }; });
+        const rows = bins.map(([b, lab]) => { const r = bin(g, b); return { label: lab, value: r.share, color: b === 'all_available' ? theme.accent : b === 'removed' ? theme.dim : theme.fall, text: fmt.pct(r.share) + ' (' + fmt.int(r.firms) + ')' }; });
         CH.bars(ctx, { x: px, y: y0 + 40, w: 340, h: 220 }, rows, { max: 75, progress: step(l, 7.2 + gi * 0.4, 1.4, E.outCubic), theme, barH: 22, gap: 32, size: 22 });
       });
     }
@@ -326,14 +333,13 @@
       Motion.text(ctx, 'firms per cohort', px, 264, { size: 24, color: theme.muted, alpha: step(l, 0.4, 0.5) * (1 - 2 * mix) });
       const rows = [['revenue_cash', 'Revenue cohort by cash share'], ['revenue_inventory', 'Revenue cohort by inventory share'], ['margin_cash', 'Margin cohort by cash share'], ['margin_inventory', 'Margin cohort by inventory share']];
       ctx.save(); ctx.globalAlpha *= (1 - 2 * mix);
-      CH.bars(ctx, { x: px, y: 310, w: 300, h: 300 }, rows.map(([id, lab]) => ({ label: lab, value: flowValue(id), color: id.startsWith('revenue') ? theme.accent : theme.green })), { max: flowValue('revenue_cash'), progress: step(l, 0.8, 1.8, E.outCubic), theme, barH: 28, gap: 44, size: 23 });
-      MM.legendBar(ctx, px, 640, 440, RAMP5, C100.cohort_cutpoints.map(b => Math.round(b) + '%'), theme, { alpha: step(l, 1.4, 0.6), title: 'Revenue cohort by cash share: inclusion per cell' });
-      Motion.paragraph(ctx, `${fmt.int(cohortFirms)} located cohort firms over ${fmt.int(F.located_2021)} located eligible firms; pooled quintile classes of supported cells.`, px, 740, 440, { size: 22, color: theme.muted });
+      CH.bars(ctx, { x: px, y: 310, w: 300, h: 300 }, rows.map(([id, lab]) => ({ label: lab, value: flowValue(id), color: id.startsWith('revenue') ? theme.accent : theme.accentStrong })), { max: flowValue('revenue_cash'), progress: step(l, 0.8, 1.8, E.outCubic), theme, barH: 28, gap: 44, size: 23 });
+      MM.legendBar(ctx, px, 640, 440, RAMP5, C100.cohort_cutpoints.map(b => Math.round(b) + '%'), theme, { alpha: step(l, 1.4, 0.6), title: `Inclusion per cell (${fmt.int(cohortFirms)} cohort firms)` });
       ctx.restore();
     } else {
       ctx.save(); ctx.globalAlpha *= (2 * mix - 1);
-      Motion.text(ctx, 'Median real revenue, 2024 against 2021', px, 230, { size: 36, weight: 700, color: theme.ink });
-      Motion.paragraph(ctx, 'Revenue cohort by cash share: percent change of each cell’s median among the cohort firms observed that year. Descriptive; composition changes with observation.', px, 280, 440, { size: 24, color: theme.muted });
+      Motion.text(ctx, 'Real revenue, 2024 vs 2021', px, 230, { size: 34, weight: 700, color: theme.ink });
+      Motion.paragraph(ctx, 'Revenue cohort by cash share: percent change of each cell’s median among the cohort firms observed that year.', px, 280, 440, { size: 24, color: theme.muted });
       const labels = ['≤ −20%', '−20 to −10', '−10 to 0', '0 to +10', '+10 to +20', '> +20%'];
       MM.legendSwatches(ctx, px, 420, [5, 4, 3, 2, 1, 0].map(c => ({ color: CHANGE6[c], label: labels[c], right: fmt.int(finCounts[c] || 0) + ' cells' })), theme, { colWidth: 440, rowGap: 12 });
       ctx.restore();
@@ -346,8 +352,7 @@
       ['Who stays visible?', 40, 700, theme.ink, 0.3],
       ['Data: RFSD v3.1.0 (Bondarkov et al. 2025), 63,308,662 annual records, financial years 2011–2025', 26, 400, theme.muted, 0.8],
       ['Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 26, 400, theme.muted, 1.1],
-      ['Built as code from checked aggregates: every number is a data value with a provenance record; nothing is generated.', 26, 400, theme.muted, 1.4],
-      ['Descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed lists, not dated designations.', 24, 400, theme.muted, 1.7],
+      ['Descriptive, not causal; dated events are context. Absence from the archive is not withdrawal or concealment; supplied lists are fixed lists, not dated designations.', 24, 400, theme.muted, 1.4],
     ];
     let y = 400;
     for (const [s, size, w, color, t0] of lines) { Motion.reveal(ctx, s, 960, y, l, t0, { size, weight: w, color, align: 'center' }); y += size === 40 ? 90 : 52; }

@@ -155,6 +155,13 @@ add_small("motion.coordinate-piles", f"{pass2agg}/coordinate_piles.csv", "motion
 add_small("motion.selection-cells", f"{pass2agg}/selection_cells.csv", "motion")
 add_small("motion.revenue-change-cells", f"{pass2data}/geo-revenue-change-from-2021-source.csv", "motion")
 add_small("motion.margin-change-cells", f"{pass2data}/geo-margin-change-from-2021-source.csv", "motion")
+# Round 2 (23 October 2026): the supplied sanctions list (dates, names, jurisdictions), the World Bank
+# deflator download, and the archived OKVED name dictionary for the treated-firm sequence.
+add_small("motion.sanctioned-list", f"{PROG}/data/raw_files/sanctioned_strategic/sanctioned/ru_sanctioned.csv", "motion")
+add_small("motion.deflator", f"{PROG}/data/raw_files/RF_GDP_deflator/API_NY.GDP.DEFL.ZS.AD_DS2_en_csv_v2_35893.csv", "motion")
+add_small("motion.okved-names", f"{ROOT}/Claude Code/2026-09-24-before-migration/programming/data/raw_files/okved/okved_names.xlsx", "motion", kind="xlsx")
+add_small("motion.okfs", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okfs.csv", "motion")
+add_small("motion.okopf", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okopf-2012.csv", "motion")
 
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 dirty = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "status", "--porcelain"], capture_output=True, text=True).stdout.count("\n")

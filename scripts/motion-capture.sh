@@ -2,7 +2,7 @@
 # Host launcher for the explainer capture (motion study, 22 October 2026). Runs on the host, not in
 # bubblewrap: Chromium's own sandbox conflicts with a nested namespace. It keeps the lab bracket:
 # a run folder under logs/, the Brave profile under the run's scratch, the read-only check at the end.
-# Usage: scripts/motion-capture.sh [--page PAGE] [capture.py arguments ...]
+# Usage: scripts/motion-capture.sh [--page PAGE] [capture.py arguments ...]   (--shards N, default 4: parallel browsers)
 #   e.g. --seconds 3 --out motion/build/smoke.mp4
 #        --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser.mp4
 set -uo pipefail

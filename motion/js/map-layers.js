@@ -115,7 +115,7 @@
       const xx = x + col * colWidth, yy = y + row * (swatch + rowGap);
       ctx.fillStyle = it.color; if (it.alpha != null) { ctx.save(); ctx.globalAlpha *= it.alpha; ctx.fillRect(xx, yy, swatch, swatch); ctx.restore(); } else ctx.fillRect(xx, yy, swatch, swatch);
       Motion.text(ctx, it.label, xx + swatch + gapPx + 4, yy + swatch * 0.5, { size, color: it.textColor || theme.ink, baseline: 'middle' });
-      if (it.right) Motion.text(ctx, it.right, xx + colWidth - 16, yy + swatch * 0.5, { size, color: theme.muted, baseline: 'middle', align: 'right' });
+      if (it.right) Motion.text(ctx, it.right, xx + colWidth - 16, yy + swatch * 0.5, { size, color: theme.muted, baseline: 'middle', align: 'right', alpha: it.rightAlpha == null ? 1 : it.rightAlpha });
     });
     ctx.restore();
   };
@@ -132,8 +132,11 @@
   };
 
   // City marker and label in design space (after the camera transform is reset).
+  // A label fades over the 300 px nearest the frame edge (a panning camera carries it in and out) and is not drawn outside.
   M.cityLabel = function (ctx, cam, city, theme, { size = 24, dot = 4, alpha = 1, dx = 10, dy = -8 } = {}) {
     const [px, py] = Motion.project(cam, city.x, city.y);
+    const edge = Math.min(px, 1920 - px, py, 1080 - py); if (edge <= 0) return;
+    alpha *= Motion.clamp(edge / 300, 0, 1); if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.ink; ctx.beginPath(); ctx.arc(px, py, dot, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     Motion.text(ctx, city.label, px + dx, py + dy, { size, color: theme.ink, alpha });
   };

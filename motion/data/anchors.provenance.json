@@ -1,0 +1,495 @@
+{
+  "id": "anchors",
+  "run_id": "20261023T034730Z-run-M6-treated.R",
+  "mode": "guarded",
+  "time_utc": "2026-10-23T03:47:55Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M6-treated.R",
+    "sha256": "b30b1a79b777eb9484a575bb668638da1754e27b889c5d67a7e7a052129f5345"
+  },
+  "lab_commit": "b3748ac487d53761601ee93287c9b7ecc6c1729b",
+  "programming": {
+    "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+    "dirty_files": 18,
+    "pinned_utc": "2026-10-18T19:22:42Z"
+  },
+  "sources": [
+    {
+      "name": "motion.deflator",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/RF_GDP_deflator/API_NY.GDP.DEFL.ZS.AD_DS2_en_csv_v2_35893.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 194816,
+      "mtime": 1787992524,
+      "sha256": "a8a6a241f55d00baee7bbdf9b3f26614f9618d1bc2246b750ee6dbf00e3f9d71",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.sanctioned-list",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/sanctioned/ru_sanctioned.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 5157116,
+      "mtime": 1770857578,
+      "sha256": "e5a7440ddfcabee9b3afe03bd7feffbbf7f63f22780477e5147a8f2f8e150eae",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "registry.2014",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2014/generation-10b9d19df45f2/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d19df45f2",
+      "size": 127293275,
+      "mtime": 1791232633,
+      "sha256": "9c12a5c5a57f07df244442a68dcad2b3253bbb6517b7e76a8228b45bd8918bd9",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2015",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2015/generation-10b9d258740eb/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d258740eb",
+      "size": 126311866,
+      "mtime": 1791232718,
+      "sha256": "5a95c4c8693a13f467dcd4e298faf169f551ef0f82ef2ce154934d31f1a9d36d",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2016",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2016/generation-10b9d3e0b028a/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3e0b028a",
+      "size": 129997776,
+      "mtime": 1791232806,
+      "sha256": "b3bddfa39e73f19a83e1d2df5c82af4cb1e7175dce752bd879354bfa804f6656",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2017",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2017/generation-10b9d5641022e/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5641022e",
+      "size": 122753458,
+      "mtime": 1791232889,
+      "sha256": "61f143cee710ac1b980ea230781a5e2d4df3c60a41192ce8ff29b5d17ccc1d0c",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2018",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2018/generation-10b9d3b956b20/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3b956b20",
+      "size": 115305220,
+      "mtime": 1791232968,
+      "sha256": "55d867ce65864552adc1f2507c4a5bc954d998dbeafe799560684931b82f6ca4",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2019",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d382646ef",
+      "size": 109769199,
+      "mtime": 1791233045,
+      "sha256": "622ec3b5f1f5b74c3b47d9f3d18888ba253190f1ffc5bc8408a8678c7e08fbd0",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2020",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2020/generation-10b9d3c8381fa/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3c8381fa",
+      "size": 98479578,
+      "mtime": 1791233116,
+      "sha256": "56a56e5ec00ff037bbd35931f3a2f125e5cd3f1a84432446cc35ab7c4dee093b",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5d363d92",
+      "size": 134403043,
+      "mtime": 1791233185,
+      "sha256": "048f43d8391caf3f87bdcee98e801c58f2fca66675c7c4c0a6362d9ca9fb58e1",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2022",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2022/generation-10b9d826b541/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d826b541",
+      "size": 127525251,
+      "mtime": 1791233252,
+      "sha256": "27286e8c8d8f684482abbf76b2614f82c51025f8bc642da8c3ec04a459417023",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2023",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2023/generation-10b9dafdc90e/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9dafdc90e",
+      "size": 124672335,
+      "mtime": 1791233317,
+      "sha256": "f1e2af758c0f4d82cfe6e423fe6cf40ccfee680a40ef91ccb9a5fca4d265ba81",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1db9b6af",
+      "size": 122521400,
+      "mtime": 1791232284,
+      "sha256": "5969b72b6002f9c425af462033a2c4ef4d6a27289e84f19fc9e0512e0b65b2eb",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2025",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2025/generation-10b9d246463d5/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d246463d5",
+      "size": 119434792,
+      "mtime": 1791233380,
+      "sha256": "19219cbe42284a83390304a5e09057cf4b7bff5f3a76183288d8dad9af93de29",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2014",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2014/generation-10b9d2e10d0fd/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d2e10d0fd",
+      "size": 132498509,
+      "mtime": 1791231675,
+      "sha256": "07508b49eba5839f4a6251e17de240ed68e2b1d4c3c1f50c612e6eb3c13700f1",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2015",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2015/generation-10b9d70347d31/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d70347d31",
+      "size": 135157692,
+      "mtime": 1791231713,
+      "sha256": "1cc469707d826f197fec9cf61097894f644f7a52700adecb9b3e4b0bb03a2097",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2016",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2016/generation-10b9d585b9cba/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d585b9cba",
+      "size": 139336142,
+      "mtime": 1791231751,
+      "sha256": "f0d9672ac08e6f0aebd2e90b2ebfd35680f03bf06da3ef5f17fb2d9695b2baa4",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2017",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2017/generation-10b9d4931784e/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d4931784e",
+      "size": 135495043,
+      "mtime": 1791231788,
+      "sha256": "4e7f3ea9a500098e788b3e630c281c6853f61f32923e2ef47a742a51105770e8",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2018",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2018/generation-10b9d1fe7da8a/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1fe7da8a",
+      "size": 129936550,
+      "mtime": 1791231824,
+      "sha256": "81661beae66d12431a7c50bc3d2f240c24b509b68d8354fbc3ad60a1618f112a",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2019",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2019/generation-10b9d551d3ebc/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d551d3ebc",
+      "size": 123281587,
+      "mtime": 1791231859,
+      "sha256": "979afddab797ce85bb3462b473b119f4e5a6f98930bbf6034c14e188f8c67781",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2020",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2020/generation-10b9d3deefdad/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3deefdad",
+      "size": 116404613,
+      "mtime": 1791231891,
+      "sha256": "e847cb41549d5eafe166b0b7423fcdab7743ad90083fbe81e8c65efefda466d1",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2021/generation-10b9dba7faf9/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9dba7faf9",
+      "size": 111292791,
+      "mtime": 1791231921,
+      "sha256": "57e337a63d63f00011fb0a77fe20879aa3260b23afb897ce6311c09b42fb3127",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2022",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2022/generation-10b9d1883c19f/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1883c19f",
+      "size": 108666601,
+      "mtime": 1791231951,
+      "sha256": "a1dcfe0e6a93d59791289a0fd3f50bfea075a50575e4510ba8a87c2fc8791301",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2023",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2023/generation-10b9d1835ffa4/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1835ffa4",
+      "size": 108528309,
+      "mtime": 1791231980,
+      "sha256": "79bb876a4ef1d5ee049882b66e4bb36aa194012723b2ec876cd8de8cc5caa54b",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2024/generation-10b9d48c4d841/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d48c4d841",
+      "size": 108317556,
+      "mtime": 1791231503,
+      "sha256": "ef7e745004b05b4caa35e252fe428530a7592513ca555102c89d97920ddc40ae",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2025",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2025/generation-10b9d28c7e17e/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d28c7e17e",
+      "size": 106166569,
+      "mtime": 1791231531,
+      "sha256": "9d7c8d04fb4ae3fb3856173938e1e9654d3b0114d922b48908a72dcca1dee847",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "motion.okved-names",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/2026-09-24-before-migration/programming/data/raw_files/okved/okved_names.xlsx",
+      "kind": "xlsx",
+      "generation": null,
+      "size": 110861,
+      "mtime": 1770857578,
+      "sha256": "3013c0a990a7d6e9c29cbfeec5795eae9c83f6f0197b9ed38c65aaf71a6def2c",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "rfsd.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/inputs/RFSD/v3.1.0/year=2021/part-0.parquet",
+      "kind": "parquet",
+      "generation": null,
+      "size": 547323604,
+      "mtime": 1789659635,
+      "sha256": "9c19741d3c85428e79d5f9eedd08aa0422fedfef6bdc0a1c02b70e4d735e6f7f",
+      "sha256_source": "rfsd-manifest"
+    },
+    {
+      "name": "motion.okopf",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/classifier-sources/okopf-2012.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 12027,
+      "mtime": 1791739976,
+      "sha256": "e9e3a8645d0d2c93efc106f32d878d1e7fed7cf098682d55f9e5e80c0331c0d7",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.okfs",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/pass2-addendum-20261011/classifier-sources/okfs.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 3452,
+      "mtime": 1791739977,
+      "sha256": "5a4ef1b23f05fc411689684cf87cc20d80fb1711ba97ecedb7dff3d540145b3b",
+      "sha256_source": "computed"
+    }
+  ],
+  "sql": null,
+  "rows": 2,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cellranger",
+      "version": "1.1.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "readxl",
+      "version": "1.5.0.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": {
+    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_THREADS": "8",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-riNZODuB/duckdb",
+    "LAB_DUCKDB_MAX_TEMP": "5GB",
+    "duckdb_version": "1.5.6"
+  },
+  "memory_max": "14G",
+  "extra": [],
+  "output": {
+    "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/anchors.json",
+    "json_sha256": "c83d739bcc8b1f5eea9f922db38d718d00dd8eef908d170e11b3fd41fd0053af",
+    "json_bytes": 2171,
+    "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/anchors.js",
+    "js_sha256": "b5790b31ce3f44f694b3d9776a2da53d2f3686edd70f542fb6d763360d7eab2e",
+    "names": ["a", "b", "distance_m", "x_km", "y_km", "founded", "industry2", "okved", "okved_text", "legal", "ownership", "years", "label", "label_long", "listed", "code", "en", "ru", "year", "filed", "revenue_mn", "assets_mn", "real_revenue_mn", "pct", "date", "inferred", "jurisdictions", "jurisdiction_names", "programs_in_file", "drift_m", "candidates_within_rule"]
+  }
+}

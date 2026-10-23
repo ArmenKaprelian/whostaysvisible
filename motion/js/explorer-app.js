@@ -11,12 +11,14 @@
   function readTheme() {
     const css = getComputedStyle(root), tok = n => css.getPropertyValue('--' + n).trim();
     const dark = tok('stage').toUpperCase() !== '#FFFFFF';
+    // Dark theme: ColorBrewer YlGnBu for ordered layers and PRGn for signed change, off the navy chrome.
+    // Light theme: the manuscript's navy ramps for ordered layers, PRGn (dark = strong) for signed change.
     return { dark, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'),
-             accent: tok('accent'), accentStrong: tok('accent-strong'), brick: tok('brick'), green: tok('green'), below: tok('below'), highlightBand: tok('highlight'), tick: tok('dim'), axis: tok('dim'), barMuted: tok('border'),
-             ramp6: dark ? ['#2A4F78', '#3B6A9A', '#5587B8', '#79A6D0', '#A3C4E3', '#D2E5F4'] : ['#D9E8F5', '#A9C4DE', '#78A3C9', '#4F84B4', '#2F6395', '#16436E'],
-             ramp5: dark ? ['#3B6A9A', '#5587B8', '#79A6D0', '#A3C4E3', '#D2E5F4'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
-             change6: dark ? ['#E9B6A0', '#CF9070', '#A86B50', '#4F7FAE', '#7EA9D3', '#B9D5EE'] : ['#8D4B30', '#BE856F', '#DCB7A8', '#A9C4DE', '#6E9AC2', '#2F6395'],
-             density: dark ? '#9CC4E8' : '#16436E' };
+             accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), below: tok('below'), highlightBand: tok('highlight'), tick: tok('dim'), axis: tok('dim'), barMuted: tok('border'),
+             ramp6: dark ? ['#1D91C0', '#38ADC3', '#6CC5BE', '#A2DAB8', '#D4EEB3', '#FFFFD9'] : ['#D9E8F5', '#A9C4DE', '#78A3C9', '#4F84B4', '#2F6395', '#16436E'],
+             ramp5: dark ? ['#38ADC3', '#6CC5BE', '#A2DAB8', '#D4EEB3', '#FFFFD9'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
+             change6: dark ? ['#E7D4E8', '#C2A5CF', '#9970AB', '#5AAE61', '#A6DBA0', '#D9F0D3'] : ['#762A83', '#9970AB', '#C2A5CF', '#A6DBA0', '#5AAE61', '#1B7837'],
+             density: dark ? '#7FCDBB' : '#16436E' };
   }
   let theme = readTheme();
   let explicit = null;
@@ -221,14 +223,14 @@
   function drawNational() {
     const { ctx, w } = chartCtx('natchart'); const hh = $('natchart').getBoundingClientRect().height;
     const el = [], reg = []; S.avail.year.forEach((y, i) => { if (S.avail.eligible_share[i] != null) { el.push({ x: y, y: S.avail.eligible_share[i] }); reg.push({ x: y, y: S.avail.registered_share[i] }); } });
-    const r = CH.lines(ctx, { x: 44, y: 14, w: w - 110, h: hh - 44 }, [{ label: 'registered {y}', color: theme.green, points: reg, gapAfter: [2018], width: 2 }, { label: 'eligible {y}', color: theme.accent, points: el, gapAfter: [2018], width: 2 }],
+    const r = CH.lines(ctx, { x: 44, y: 14, w: w - 110, h: hh - 44 }, [{ label: 'registered {y}', color: theme.accentStrong, points: reg, gapAfter: [2018], width: 2 }, { label: 'eligible {y}', color: theme.accent, points: el, gapAfter: [2018], width: 2 }],
       { xDomain: [2011.5, 2025.5], yDomain: [0, 80], theme, yTicks: [0, 40, 80], xTicks: [2012, 2016, 2020, 2024], labelSize: 12, dots: false, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', labelFmt: v => Motion.fmt.pct(v, 1) });
     if (state.layer === 'share') { const x = r.sx(state.year); ctx.strokeStyle = theme.ink; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(x, 14); ctx.lineTo(x, hh - 30); ctx.stroke(); ctx.setLineDash([]); }
     $('natprov').textContent = 'Table B.1: statements over the annual eligible population and over firms registered at year-end; 2011 has no statements, 2025* is flagged. Source ' + S.sources.avail + '.';
   }
   function drawGroups() {
     const { ctx, w } = chartCtx('groupchart'); const hh = $('groupchart').getBoundingClientRect().height;
-    const items = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.brick }, { label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Unitary', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.brick }];
+    const items = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }, { label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Unitary', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.fall }];
     CH.slopes(ctx, { x: 8, y: 26, w: w - 16, h: hh - 44 }, items, { yDomain: [44, 82], theme, size: 12, leftMargin: 150, rightMargin: 70 });
     $('groupprov').textContent = 'Share of eligible firms with a statement by ownership and legal form (Figures 2.2 and 2.3 sources); population comparisons by year, not the same firms.';
   }
@@ -236,7 +238,7 @@
     const { ctx, w } = chartCtx('oddschart'); const hh = $('oddschart').getBoundingClientRect().height;
     const sz = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz[S.size.quintile[i]] = sz[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
-    CH.yearDots(ctx, { x: 40, y: 10, w: w - 150, h: hh - 44 }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz.Q5 || [], whiskers: true, dot: 4, width: 2 }, { label: 'Q2 vs Q1', color: theme.accent, points: sz.Q2 || [], dot: 3, width: 1.5 }, { label: 'sanctioned only', color: theme.brick, points: ls, whiskers: true, dot: 4, width: 2 }],
+    CH.yearDots(ctx, { x: 40, y: 10, w: w - 150, h: hh - 44 }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz.Q5 || [], whiskers: true, dot: 4, width: 2 }, { label: 'Q2 vs Q1', color: theme.accent, points: sz.Q2 || [], dot: 3, width: 1.5 }, { label: 'sanctioned only', color: theme.fall, points: ls, whiskers: true, dot: 4, width: 2 }],
       { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: 12 });
     $('oddsprov').textContent = `Adjusted odds of a statement: asset quintiles Q5 and Q2 against Q1 (Table B.4; 2022 vs 2021 Q5 ratio ${fmt.dec(F.size_q5_2022_ratio, 3)} [${fmt.dec(F.size_q5_2022_low, 3)}, ${fmt.dec(F.size_q5_2022_high, 3)}], provisional) and sanctioned-only firms against no-list firms (Table B.7), two-way 95% intervals.`;
   }
