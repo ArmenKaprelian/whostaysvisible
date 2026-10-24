@@ -475,24 +475,34 @@
   function requestDraw(after) { if (after) drawAfter = after; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(); const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
   function afterCameraMove() { syncZoomButtons(); refreshHover(); }
 
-  // The click ladder: from the country a click on a 100 km cell flies to its preset city's window or to the cell;
-  // at the city scale to the 20 km (250 m-cell) scale on the clicked 1 km cell; elsewhere, and in the firms view,
-  // one step of x2.5 at the point. A click always zooms in; Shift+click steps out; an empty cell does nothing.
+  // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
+  // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
+  // centre. The rung is the zoom for the grid hit: the city window, a 100 km cell at 500 km across, a 25 km cell at
+  // 100 km, a 5 km cell at 100 km as well, a 1 km cell at 20 km. When the rung is deeper than the view the camera flies in and
+  // centres on the subject; when it is not, the view pans to the subject at its zoom, or, when the subject already sits
+  // near the centre, zooms x2.5 on it. Shift+click steps out at the point. From the country an empty cell does nothing.
   function ladderTarget(h, km, shift) {
-    if (shift) return { target: stepAt(km, 1 / 2.5), rung: 'step' };
-    const k = state.cam.k, step = () => ({ target: stepAt(km, 2.5), rung: 'step' });
-    if (state.mode === 'firms') return step();
-    let t = null, rung = 'step';
-    if (k < 1.5 && !(h.fine && h.grid < 5)) {
-      const ix = Math.floor(h.kmx / 100), iy = Math.floor(h.kmy / 100), city = cityInCell(ix, iy);   // the 100 km cell, whatever grid was hit
+    if (shift) return { target: stepAt(km, 1 / 2.5), rung: 'out' };
+    const k = state.cam.k, c = cam(), near = Math.hypot(km.px - c.ox, km.py - c.oy) < 0.15 * minSide();
+    const zoomOn = (x, y) => ({ target: { cx: x, cy: y, k: clampK(k * 2.5) }, rung: 'zoom' });
+    if (state.mode === 'firms') return zoomOn(km.x, km.y);
+    const ix = Math.floor(h.kmx / 100), iy = Math.floor(h.kmy / 100), city = cityInCell(ix, iy);
+    let t;
+    if (k < 1.5) {
       const has = state.layer === 'density' ? yearCells[2021].has(cellKey(ix, iy)) : (h.n != null || h.n21 != null || h.n_base != null || h.sanctioned != null || h.gov != null || h.c != null);
       if (!has) return null;
-      if (city) { t = cityTarget(city); rung = 'city'; } else { t = cellTarget(ix, iy); rung = 'cell'; }
-    } else if (h.fine && h.grid === 1) {
-      if (h.n == null) return null;
-      const o = h.origin || [0, 0]; t = fineTarget(o[0] + Math.floor(h.kmx - o[0]) + 0.5, o[1] + Math.floor(h.kmy - o[1]) + 0.5); rung = 'fine';
-    } else return step();
-    return t.k > k * 1.02 ? { target: t, rung } : step();
+      t = city ? { target: cityTarget(city), rung: 'city' } : { target: cellTarget(ix, iy), rung: 'cell' };
+    } else if (h.fine && h.grid < 5) {
+      const g = h.grid, o = h.origin || [0, 0], cx = o[0] + Math.floor((h.kmx - o[0]) / g) * g + g / 2, cy = o[1] + Math.floor((h.kmy - o[1]) / g) * g + g / 2;
+      t = g === 1 ? { target: fineTarget(cx, cy), rung: 'fine' } : zoomOn(cx, cy);
+    } else {
+      const g = h.grid || 100, cx = Math.floor(h.kmx / g) * g + g / 2, cy = Math.floor(h.kmy / g) * g + g / 2;
+      if (city && Math.abs(city.x - h.kmx) <= 45 && Math.abs(city.y - h.kmy) <= 45) t = { target: cityTarget(city), rung: 'city' };
+      else t = { target: { cx, cy, k: minSide() / (g < 100 ? 100 : 500) }, rung: 'cell' };   // a 25 km or 5 km cell at 100 km across, a 100 km cell at 500
+    }
+    if (t.target.k > k * 1.02) return t;
+    if (!near) return { target: { cx: t.target.cx, cy: t.target.cy, k }, rung: 'pan' };
+    return zoomOn(t.target.cx, t.target.cy);
   }
   const kmFromPx = (x, y) => { const c = cam(); return { x: c.cx + (x - c.ox) / c.k, y: c.cy - (y - c.oy) / c.k, px: x, py: y }; };
   function clickAt(x, y, shift) { const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; const r = ladderTarget(h, km, shift); if (r) flyTo(r.target); return r; }
@@ -505,7 +515,7 @@
   function hideHover() { $('tip').style.display = 'none'; state.hover = null; drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); }
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
-    wrap.classList.toggle('clickable', !!r && r.rung !== 'step'); wrap.classList.toggle('zoomable', !!r && r.rung === 'step');
+    wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
   }
   function showHoverAt(x, y) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;

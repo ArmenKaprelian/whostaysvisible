@@ -1020,12 +1020,31 @@ emulation) hold: the stacked page, the collapsed legend and note, a tap that sel
 to the Moscow preset, a pinch that doubles k. Screenshots in both themes inspected. The atlas artifact is at
 v12.
 
+A click goes to what was clicked (author's observation, 24 October 2026, later): from Chelyabinsk's window a
+click on a cell to the north-north-east used to zoom partway towards a point between the two, because a grid
+without a deeper rung fell back to a zoom step anchored at the cursor. The ladder now names a subject, the city
+whose window holds the point (from the country, the city in the clicked 100 km cell) or else the clicked cell's
+centre, and a rung for the grid hit (the city window; a 100 km cell at 500 km across; a 25 km or 5 km cell at
+100 km; a 1 km cell at 20 km; a 250 m cell zooms on itself). When the rung is deeper than the view the camera
+flies in and centres on the subject; when it is not, the view pans to the subject at its zoom; when the subject
+already sits within 15% of the shorter side from the centre, the view zooms x2.5 on it. Shift+click still steps
+out at the point; from the country an empty cell still does nothing; the firms view zooms on the point. The
+cursor says which (a pointer for a flight or a pan, zoom-in for a zoom). Checked through the API at 1,600 px:
+from the country a click on Chelyabinsk's cell lands on its window (k 9.07); a click 160 km to the
+north-north-east then pans at the same zoom to Yekaterinburg's window, whose square holds the point (the centre
+33 km from the click, on the city); a click on Yekaterinburg's own cell flies to the 20 km scale (k 43.1); a
+click near the centre zooms (k 107.75); from the Moscow preset a click 60 km east pans to that 25 km cell's
+centre at the same zoom; on the density layer a second click after the 500 km rung frames the 5 km cell at
+100 km across. The audit adds the pan state and expects the zoom-and-step-out pair to return to the preset's
+zoom within 2 km of the subject (the step out is anchored at the cursor): 250 states, 8,943 boxes, zero findings.
+The atlas artifact is at v13.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
 key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate. The published pages could not be opened from the lab's headless
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions

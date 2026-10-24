@@ -119,7 +119,9 @@ def main():
             state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0], m[1]); A.hoverKm(m[0], m[1]);", "clk1", cam_is(P["moscow"], "a click on the Moscow cell from Russia lands on the Moscow preset"))
             state("share", 2021, SET + "A.preset('Moscow'); await A.click(m[0], m[1]);", "clk2", cam_k(side / 20, "a click at the Moscow preset lands on the 20 km scale", mx, my))
             state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]);", "clk3", cam_k(min(2.5 * P["cm"]["k"], 200), "a click at Central Moscow steps x2.5"))
-            state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]); await A.click(m[0], m[1], { shift: true });", "clk3b", cam_is(P["cm"], "a step in and a Shift+click out return to the Central Moscow preset", 1e-6, 1e-6))
+            state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]); await A.click(m[0], m[1], { shift: true });", "clk3b", cam_k(P["cm"]["k"], "a zoom on the clicked cell and a Shift+click out return to the preset's zoom near the subject", mx, my, 2.0))   # the step out is anchored at the cursor: 2.5 times the cell centre's offset, at most 1.8 km for a 1 km cell
+            px, py = (int((mx + 60) // 25) + 0.5) * 25, (int(my // 25) + 0.5) * 25
+            state("share", 2021, SET + "A.preset('Moscow'); await A.click(m[0] + 60, m[1]);", "clkpan", cam_k(P["moscow"]["k"], "a click on a 25 km cell outside the window pans to it at the same zoom", px, py, 1e-6))
             cx, cy = (int((mx + 300) // 100) + 0.5) * 100, (int(my // 100) + 0.5) * 100
             state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0] + 300, m[1]);", "clkcell", cam_k(side / 500, "a click on the cell 300 km east of Moscow lands on its centre", cx, cy, 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1);", "zoom3", cam_k(8 * P["kfit"], "three zoom-ins from Russia give 8 x kFit", P["russia"]["cx"], P["russia"]["cy"], 1e-6))
