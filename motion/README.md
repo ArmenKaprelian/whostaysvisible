@@ -1039,12 +1039,50 @@ centre at the same zoom; on the density layer a second click after the 500 km ru
 zoom within 2 km of the subject (the step out is anchored at the cursor): 250 states, 8,943 boxes, zero findings.
 The atlas artifact is at v13.
 
+### Atlas: the trackpad pinch, the zoom floor, and a smoothness audit (author's requests, 24 October 2026)
+
+Pinch. The laptop's pinch, a Ctrl-flagged wheel event with small deltas, now zooms at `PINCH_RATE` 0.018 per
+pixel of delta against the wheel's 0.0015 (it was 0.008), a named constant for further tuning; the phone's
+pinch is a two-finger touch gesture whose ratio is the finger distance itself, a separate path, so the two are
+tuned apart. Zoom floor. Every zoom-out path (the wheel, the trackpad pinch, the touch pinch, the "−" button,
+the "−" key, Shift+click) re-centres the map on the country when it reaches the fitted zoom: steps land on the
+country's camera, a wheel or pinch that reaches the floor settles there with a 300 ms flight; a safe reset of
+the place in view (checked: seven zoom-out steps from the Moscow preset land exactly on the Russia preset).
+
+Smoothness. `window.__atlas.profileFlight(target)` records the intervals between animation frames during a
+real flight (the compositor's cadence, which stretches when a frame paints slowly) and names the zoom of every
+frame over 25 ms; `hoverCost(n)` times a hover. Measured in headless Brave at 1,600 by 1,000 px, device scale
+1, software rendering, on the lab machine (not the author's laptop or phone), for three moves per layer and
+mode (Russia to Moscow, k 0.14 to 9; Moscow to Central Moscow, 9 to 43; a 60 km pan at Moscow) and hovers at
+three presets:
+
+| mode, layer | Russia to Moscow | Moscow to Central | pan at Moscow | hover, mean/max ms |
+|---|---|---|---|---|
+| cells, share 2021 | 60 fps, p95 16.8, one first-flight frame of 50 ms | 60 fps | 60 fps | 0.9 / 2.8 |
+| cells, share 2023 | 58 fps, p95 16.7 | 60 fps | 60 fps | 0.5 / 1.2 |
+| cells, density | 59 fps, p95 16.8 (was 55 fps, p95 33) | 60 fps | 60 fps | 0.5 / 1.5 |
+| cells, change / lists / cohort / revenue | 59 to 60 fps, p95 16.7 | 60 fps | 60 fps | ≤ 0.6 / ≤ 1.2 |
+| firms, share / revenue / density | 46 to 47 fps, p95 33 to 50, a one-time first frame of 167 ms | 38 to 40 fps, p95 67, max 83 | 62 fps | ≤ 0.9 / ≤ 3 |
+
+Three fixes, none changing the picture: the 25 km tiles of the current layer and year are built on the still
+draw after a layer or year choice, not on a flight's first frame (a 67 ms frame became a one-time 50 ms on the
+first flight only); the national 5 km grid (36,585 cells) is split into 500 km blocks so a draw touches only
+the blocks in view and the inside pass of a window crossfade only the blocks under it; and below k 0.5, where a
+5 km cell is under 2.5 px, the density counts come from a picture rendered once per theme at 0.35 px per km
+and drawn scaled (the rasteriser averaged those sub-pixel cells anyway), which took the density layer's flight
+from the country from 55 fps with frames of 33 ms to 60 fps with none. In the firms view the discs' per-frame
+sort became a counting sort by radius in tenths of a pixel (equal radii may draw in any order), which did not
+move the numbers: the slow stretches are the national blit (every address, 24 ms a frame at k 0.14 to 0.2) and
+the disc rendering between k 19 and 43 (up to 42,000 arcs a frame), and they were left as they are pending the
+author's choice among the options reported to them (leave as is; thin or halve the resolution of the field on
+flight frames only; a cached national field picture per year for k under 0.3; WebGL point rendering).
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
 key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked. The published pages could not be opened from the lab's headless
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked, v14 with the pinch rate, the zoom floor and the smoothness fixes. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions
