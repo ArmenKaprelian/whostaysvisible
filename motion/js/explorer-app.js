@@ -53,17 +53,17 @@
   const years = CY.mapped_years;
   const yearIndex = {}; CY.avail.year.forEach((y, i) => { (yearIndex[y] = yearIndex[y] || []).push(i); });
   const cellKey = (ix, iy) => iy * 65536 + ix;
+  const listClass = v => (v == null ? null : v >= 50 ? 3 : v >= 20 ? 2 : v >= 5 ? 1 : 0);
   const yearCells = {};   // year -> Map key -> {n, a, nr, ar, ns}
   for (const y of years) { const m = new Map(); for (const i of yearIndex[y]) m.set(cellKey(CY.avail.ix[i], CY.avail.iy[i]), { n: CY.avail.n[i], a: CY.avail.a[i], nr: CY.avail.nr[i], ar: CY.avail.ar[i], ns: CY.avail.ns[i] }); yearCells[y] = m; }
   const totals = {}; CY.totals.year.forEach((y, i) => totals[y] = { eligible: CY.totals.n[i], located: CY.totals.n_located[i], share: CY.totals.eligible_share[i], located_share: CY.totals.located_share[i] });
   const chg = C100.change, chgMap = new Map(); for (let i = 0; i < chg.ix.length; i++) chgMap.set(cellKey(chg.ix[i], chg.iy[i]), i);
   const coh = C100.cohort, cohIdx = [], cohMap = new Map(); for (let i = 0; i < coh.ix.length; i++) if (coh.outcome[i] === 'revenue' && coh.moderator[i] === 'cash') { cohIdx.push(i); cohMap.set(cellKey(coh.ix[i], coh.iy[i]), i); }
-  const lists = C100.lists, listMap = new Map(); for (let i = 0; i < lists.ix.length; i++) listMap.set(cellKey(lists.ix[i], lists.iy[i]), i);
+  const lists = C100.lists, listMap = new Map(), listClassCounts = [0, 0, 0, 0]; for (let i = 0; i < lists.ix.length; i++) { listMap.set(cellKey(lists.ix[i], lists.iy[i]), i); const cl = listClass(lists.sanctioned[i]); if (cl != null) listClassCounts[cl]++; }
   const fin = C100.fin, finIdx = [], finMap = new Map(); for (let i = 0; i < fin.ix.length; i++) if (fin.outcome[i] === 'revenue' && fin.moderator[i] === 'cash' && fin.year[i] === 2024) { finIdx.push(i); finMap.set(cellKey(fin.ix[i], fin.iy[i]), i); }
   const tileCache = new Map();
   function tiles(key, build) { if (!tileCache.has(key)) tileCache.set(key, build()); return tileCache.get(key); }
   const classOfShare = (n, a, breaks) => { if (n < 50) return 'below'; const s = 100 * a / n; let c = 0; while (c < breaks.length && s >= breaks[c]) c++; return c; };
-  const listClass = v => (v == null ? null : v >= 50 ? 3 : v >= 20 ? 2 : v >= 5 ? 1 : 0);
 
   // ---- state -----------------------------------------------------------------------------------
   const NAT = { cx: (BM.extents.national.x[0] + BM.extents.national.x[1]) / 2, cy: (BM.extents.national.y[0] + BM.extents.national.y[1]) / 2 };
@@ -73,7 +73,7 @@
     { id: 'share', label: 'Statement share by year', prov: 'Share of located eligible firms with an original statement, per 100 km cell, financial years 2014 to 2025 (M5 pass over the foundation registry and payload partitions, production projection and located rule; 2012 and 2013 carry no coordinates). City windows at 1 km for 2019 to 2024.' },
     { id: 'change', label: 'Change, 2024 vs 2021', prov: 'Figure 2.7 lower panel: change in the located share with a statement, 2024 against 2021, 100 km cells with 50 or more located firms in both years; six classes at ±2 and ±5 points (presentation-finalization-20261019/data/availability-change-cells.csv).' },
     { id: 'cohort', label: 'Cohort inclusion', prov: 'Figure 2.8: share of a cell’s located eligible firms (2021) in the revenue cohort by cash share, pooled quintile classes of supported cells (candidate-02-cell-source.csv; cutpoints 33.3, 38.3, 43.0, 47.6%).' },
-    { id: 'lists', label: 'List members, 2021', prov: 'Located members of the sanctions list and the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations.' },
+    { id: 'lists', label: 'List members (treated), 2021', prov: 'Located members of the sanctions list and the government strategic list (treated) per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, resident, government strategic, presidential strategic). The word names the study’s group, not an effect.' },
     { id: 'fin', label: 'Median revenue change (descriptive)', prov: 'Percent change of each cell’s median real revenue among the revenue-by-cash cohort firms observed in 2024, against the cell’s 2021 median; cells with 50 or more observed firms (pass2-reconcile geo-revenue-change-from-2021-source.csv). Descriptive: composition changes with observation; not a Chapter 3 estimate.' },
   ];
 
@@ -86,13 +86,27 @@
     for (const c of [mapC, ovC]) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
   }
   const cam = () => ({ cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k, ox: stage.width / 2, oy: stage.height / 2 });
-  function fitNational() { state.cam = { cx: NAT.cx, cy: NAT.cy, k: Math.min(stage.width / (BM.extents.national.x[1] - BM.extents.national.x[0]), stage.height / (BM.extents.national.y[1] - BM.extents.national.y[0])) * 0.96 }; }
+  // Camera targets (24 October 2026): pure helpers shared by the presets, the click ladder, the zoom buttons, the keys
+  // and the audit API. k is CSS px per km; the floor is the fitted country, the ceiling 200 px per km.
+  const SPAN_X = BM.extents.national.x[1] - BM.extents.national.x[0], SPAN_Y = BM.extents.national.y[1] - BM.extents.national.y[0], K_MAX = 200;
+  const kFit = () => Math.min(stage.width / SPAN_X, stage.height / SPAN_Y) * 0.96;
+  const minSide = () => Math.min(stage.width, stage.height);
+  const clampK = k => Motion.clamp(k, kFit(), K_MAX);
+  const fitTarget = () => ({ cx: NAT.cx, cy: NAT.cy, k: kFit() });
+  const cityTarget = city => ({ cx: city.x, cy: city.y, k: minSide() / 95 });          // the city window: 95 km across the shorter side
+  const fineTarget = (cx, cy) => ({ cx, cy, k: minSide() / 20 });                       // the 250 m cells: 20 km across
+  const cellTarget = (ix, iy) => ({ cx: (ix + 0.5) * 100, cy: (iy + 0.5) * 100, k: minSide() / 500 });   // a 100 km cell without a preset city: 500 km across
+  const stepAt = (km, f) => { const k2 = clampK(state.cam.k * f); return { cx: km.x - (km.px - stage.width / 2) / k2, cy: km.y + (km.py - stage.height / 2) / k2, k: k2 }; };   // the wheel's rule: the point under the cursor stays put
+  const stepCentre = f => ({ cx: state.cam.cx, cy: state.cam.cy, k: clampK(state.cam.k * f) });
+  const cityInCell = (ix, iy) => bmp.cities.find(c => Math.floor(c.x / 100) === ix && Math.floor(c.y / 100) === iy) || null;
+  function fitNational() { state.cam = fitTarget(); }
   function nearestCity(c) { let best = null, bd = Infinity; for (const city of bmp.cities) { const d = Math.hypot(city.x - c.cx, city.y - c.cy); if (d < bd) { bd = d; best = city; } } return { city: best, dist: bd }; }
 
   function gridAlphas(k) { return { nat: 1 - Motion.step(k, 1.5, 2.5, Motion.ease.linear), one: Math.min(Motion.step(k, 1.5, 2.5, Motion.ease.linear), 1 - Motion.step(k, 24, 16, Motion.ease.linear)), fine: Motion.step(k, 24, 16, Motion.ease.linear) }; }
 
-  function drawMap() {
-    Motion.audit.scene = 'map'; { const r = wrap.getBoundingClientRect(); window.__atlasCanvases.map = { w: r.width, h: r.height }; }
+  function drawMap(opts) {
+    const flight = !!(opts && opts.flight);   // a flight frame skips the two DOM touches: the audit box and the legend
+    Motion.audit.scene = 'map'; if (!flight) { const r = wrap.getBoundingClientRect(); window.__atlasCanvases.map = { w: r.width, h: r.height }; }
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 });
@@ -126,7 +140,7 @@
     }
     stage.base();
     if (c.k > 0.6) for (const city of bmp.cities) { const [px, py] = Motion.project(c, city.x, city.y); if (px > -50 && px < stage.width + 50 && py > -20 && py < stage.height + 20) MM.cityLabel(mctx, c, city, theme, { size: 13, dot: 3, dx: 7, dy: -5 }); }
-    drawLegend();
+    if (!flight) { drawLegend(); drawScaleBar(); }
   }
 
   // ---- firms view: loader, renderer, hover ------------------------------------------------------------
@@ -255,45 +269,72 @@
   const hitAt = km => (state.mode === 'firms' ? firmAt(km) : cellAt(km));
   const breakLabels = (breaks, m) => Array.from({ length: m }, (_, i) => i === 0 ? `< ${breaks[0]}%` : i === m - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
 
+  // The legend and the note (24 October 2026): a title row with a toggle and a body, collapsible; collapsed by default
+  // on a narrow map (under 600 px) and remembered per viewer; written only when the text changes.
+  function readPref(key) { try { const v = localStorage.getItem(key); return v === 'open' || v === 'closed' ? v : null; } catch (e) { return null; } }
+  function writePref(key, v) { try { localStorage.setItem(key, v); } catch (e) { /* no storage */ } }
+  const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note') };
+  const legendOpen = () => (ui.legend ? ui.legend === 'open' : stage.width >= 600);
+  const noteOpen = () => (ui.note ? ui.note === 'open' : stage.width >= 600);
+  function applyPanels() {
+    const lo = legendOpen(), no = noteOpen();
+    $('legendbody').hidden = !lo; const lt = $('legendtoggle'); lt.textContent = lo ? '▾' : '▸'; lt.setAttribute('aria-expanded', String(lo)); lt.setAttribute('aria-label', lo ? 'Collapse the legend' : 'Expand the legend');
+    $('notebody').hidden = !no; $('notelabel').hidden = no; const nt = $('notetoggle'); nt.textContent = no ? '▾' : '▸'; nt.setAttribute('aria-expanded', String(no)); nt.setAttribute('aria-label', no ? 'Collapse the note' : 'Expand the note');
+  }
+  // On a narrow map (under 600 px) one panel is open at a time: opening the legend closes the note and the reverse.
+  const narrow = () => stage.width < 600;
+  function setLegend(v) { ui.legend = v; if (v === 'open' && narrow()) ui.note = 'closed'; applyPanels(); }
+  function setNote(v) { ui.note = v; if (v === 'open' && narrow()) ui.legend = 'closed'; applyPanels(); }
+  $('legendtoggle').addEventListener('click', () => { const v = legendOpen() ? 'closed' : 'open'; writePref('atlas-legend', v); setLegend(v); });
+  $('notetoggle').addEventListener('click', () => { const v = noteOpen() ? 'closed' : 'open'; writePref('atlas-note', v); setNote(v); });
+  const lastLegend = { title: null, html: null, note: null };
   function drawLegend() {
     const L = state.layer, c = cam(); const sw = col => `<span class="sw" style="background:${col}"></span>`;
-    let html = '', note = '';
+    let title = '', html = '', note = '';
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const ring = `<span class="sw" style="background:transparent;border:2px solid ${theme.treated};box-sizing:border-box"></span>`;
-      if (L === 'share') html = `<div class="row"><b>Firms at registered addresses, ${ys}</b></div><div class="row">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>';
-      else if (L === 'fin') html = `<div class="row"><b>Firms on no list, ${ys}</b></div><div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a usable baseline</div>`;
-      else html = `<div class="row"><b>Firms at registered addresses, ${ys}</b></div><div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`;
-      html += `<div class="row">${sw(theme.treated)}Firm on one of the five lists, red from its listing year.</div><div class="row">${ring}listed, no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
-      note = firmStatus || `${fmt.int(by.firms)} firms on no list at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists. ${fmt.int(by.city_level)} firms with other geocodes are not drawn.`;
-      $('legend').innerHTML = html; $('mapnote').textContent = note; $('mapnote').hidden = !note; return;
-    }
-    if (L === 'density' || (L === 'share' && c.k >= 1.5 && (state.year === 2021 || c.k >= 24) && L === 'density')) {
-      html = '<div class="row"><b>Firms per cell</b> (' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')</div>' + MM.countClassLabels.map((lab, i) => `<div class="row">${sw(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
+      if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
+      else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a usable baseline</div>`; }
+      else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
+      html += `<div class="row">${sw(theme.treated)}Firm on one of the five lists (treated), red from its listing year.</div><div class="row">${ring}listed (treated), no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
+      note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.`;
+    } else if (L === 'density') {
+      title = '<b>Firms per cell</b> (' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')';
+      html = MM.countClassLabels.map((lab, i) => `<div class="row">${sw(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
       note = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021 (${fmt.int(F.eligible_firms_2021)} eligible); the most shared coordinate pair holds ${fmt.int(F.largest_location_firms)} firms.`;
     } else if (L === 'share') {
       const fine = c.k >= 1.5;
       const breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
       const labels = ramp.map((_, i) => i === 0 ? `< ${breaks[0]}%` : i === ramp.length - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
-      html = `<div class="row"><b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : '100 km'} cells)</div>` + ramp.map((col, i) => `<div class="row">${sw(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
+      title = `<b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : '100 km'} cells)`;
+      html = ramp.map((col, i) => `<div class="row">${sw(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
       const t = totals[state.year]; note = t ? `${state.year}${state.year === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${state.year <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
       if (fine && state.year !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
       const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
-      html = '<div class="row"><b>Change in the share, 2024 against 2021</b></div>' + [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]} (${fmt.int(C100.change_classes.cells[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
+      title = '<b>Change in the share, 2024 against 2021</b>';
+      html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]} (${fmt.int(C100.change_classes.cells[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
       note = `658 supported cells; located share ${fmt.pct(C100.change_totals.availability_share_percent[0])} → ${fmt.pct(C100.change_totals.availability_share_percent[1])}. Annual populations at registered addresses, not the same firms.`;
     } else if (L === 'cohort') {
-      html = '<div class="row"><b>Revenue cohort by cash share: inclusion per cell</b></div>' + theme.ramp5.map((col, i) => `<div class="row">${sw(col)}${C100.cohort_class_labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 eligible firms</div>`;
+      title = '<b>Revenue cohort by cash share: inclusion per cell</b>';
+      html = theme.ramp5.map((col, i) => `<div class="row">${sw(col)}${C100.cohort_class_labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 eligible firms</div>`;
       note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.`;
     } else if (L === 'lists') {
-      html = '<div class="row"><b>Sanctions-list members per 100 km cell, 2021</b></div>' + ['5–19', '20–49', '50–199', '≥ 200'].map((lab, i) => `<div class="row">${sw(theme.ramp5[i + 1])}${lab} located members</div>`).join('');
-      note = 'List memberships are fixed. Cells with 1 to 4 members show no count. The hover gives the government strategic list separately.';
+      // Three classes, the ones listClass draws (ramp5[2], [3], [4]), each with its cell count; 1 to 4 members show no count.
+      title = '<b>Sanctions-list members (treated) per 100 km cell, 2021</b>';
+      html = ['5–19', '20–49', '≥ 50'].map((lab, i) => `<div class="row">${sw(theme.ramp5[i + 2])}${lab} located members (${fmt.int(listClassCounts[i + 1])} cells)</div>`).join('');
+      note = 'Memberships are fixed. Cells with 1 to 4 members show no count. The hover gives the government strategic list (treated) separately.';
     } else if (L === 'fin') {
       const labels = ['≤ −20%', '−20 to −10%', '−10 to 0%', '0 to +10%', '+10 to +20%', '> +20%'];
-      html = '<div class="row"><b>Median real revenue, 2024 against 2021 (descriptive)</b></div>' + [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]}</div>`).join('');
+      title = '<b>Median real revenue, 2024 against 2021 (descriptive)</b>';
+      html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]}</div>`).join('');
       note = 'Revenue cohort by cash share; cells with 50 or more observed firms; composition changes with observation.';
     }
-    $('legend').innerHTML = html; $('mapnote').textContent = note; $('mapnote').hidden = !note;
+    if (title !== lastLegend.title) { $('legendtitle').innerHTML = title; lastLegend.title = title; }
+    if (html !== lastLegend.html) { $('legendbody').innerHTML = html; lastLegend.html = html; }
+    if (note !== lastLegend.note) { $('notebody').textContent = note; $('mapnote').hidden = !note; lastLegend.note = note; }
+    applyPanels();
   }
   function hexAlpha(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
 
@@ -304,14 +345,15 @@
     const c = cam(); const L = state.layer; const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), key = cellKey(ix, iy);
     const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
     if (L === 'density' || (L === 'share' && c.k >= 1.5)) {
-      const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0]; out.city = near;
+      const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0], yearShown = 2021; out.city = near;
       if (c.k >= 24 && win025[near] && (L === 'density' || state.year === 2021)) { layer = win025[near].d; g = 0.25; origin = layer.origin; }
-      else if (c.k >= 1.5 && (L === 'density' ? win1[near] : (state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year])))) { layer = L === 'density' || state.year === 2021 ? win1[near].d : cityYear[near][state.year].d; g = 1; origin = layer.origin; }
+      else if (c.k >= 1.5 && (L === 'density' ? win1[near] : (state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year])))) { if (L === 'density' || state.year === 2021) layer = win1[near].d; else { layer = cityYear[near][state.year].d; yearShown = state.year; } g = 1; origin = layer.origin; }
       else if (L === 'density') { layer = nat; g = 5; }
       if (!layer) return out;
       const jx = Math.floor((km.x - origin[0]) / g), jy = Math.floor((km.y - origin[1]) / g);
-      for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.grid = g; out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; out.fine = true; return out; }
-      out.grid = g; out.fine = true; out.n = null; out.a = null; return out;   // a gap between cells is an empty cell of this grid, not the 100 km cell behind it
+      out.grid = g; out.fine = true; out.origin = origin; out.yearShown = yearShown;
+      for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; return out; }
+      out.n = null; out.a = null; return out;   // a gap between cells is an empty cell of this grid, not the 100 km cell behind it
     }
     if (L === 'share') { const d = yearCells[state.year].get(key); if (d) Object.assign(out, { n: d.n, a: d.a, nr: d.nr, ar: d.ar, ns: d.ns }); }
     else if (L === 'change') { const i = chgMap.get(key); if (i != null) Object.assign(out, { n21: chg.n21[i], a21: chg.a21[i], n24: chg.n24[i], a24: chg.a24[i], change: chg.change_pp[i], supported: chg.supported[i] }); }
@@ -329,15 +371,15 @@
         lines.push(`Coordinate pair: ${fmt.int(h.n)} located firm${h.n === 1 ? '' : 's'}, ${fmt.int(h.a)} with a ${state.year} statement` + (h.n > 1 ? ` (${fmt.pct(100 * h.a / h.n)})` : ''));
         if (state.layer === 'fin') lines.push(h.f ? `${fmt.int(h.f)} with a baseline and a value; median change ${CLASS_LABELS[h.cls - 1]}` : 'No firm with a usable baseline and a value');
       }
-      if (h.listed) lines.push(`${fmt.int(h.listed.n)} firm${h.listed.n === 1 ? '' : 's'} on one of the five lists ${h.listed.within_km ? `within ${h.listed.within_km < 1 ? Math.round(h.listed.within_km * 1000) + ' m' : fmt.dec(h.listed.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair'}: ${fmt.int(h.listed.red)} red this year` + (h.listed.ring ? `, ${fmt.int(h.listed.ring)} without a ${state.year} statement` : ''));
+      if (h.listed) lines.push(`${fmt.int(h.listed.n)} firm${h.listed.n === 1 ? '' : 's'} on one of the five lists (treated) ${h.listed.within_km ? `within ${h.listed.within_km < 1 ? Math.round(h.listed.within_km * 1000) + ' m' : fmt.dec(h.listed.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair'}: ${fmt.int(h.listed.red)} red this year` + (h.listed.ring ? `, ${fmt.int(h.listed.ring)} without a ${state.year} statement` : ''));
       return lines.join('<br>');
     }
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
-    if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a 2021 statement (${fmt.pct(100 * h.a / h.n)})` : h.n >= 50 ? '' : '; share not shown under 50 firms')); return lines.join('<br>'); }
-    if (L === 'share') { if (h.n == null) lines.push('No located firms in this 100 km cell'); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement (${fmt.pct(100 * h.ar / h.nr)})`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members: ${fmt.int(h.ns)}`); } }
+    if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a ${h.yearShown || 2021} statement (${fmt.pct(100 * h.a / h.n)})` : h.n >= 50 ? '' : '; share not shown under 50 firms')); return lines.join('<br>'); }
+    if (L === 'share') { if (h.n == null) lines.push('No located firms in this 100 km cell'); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement (${fmt.pct(100 * h.ar / h.nr)})`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members (treated): ${fmt.int(h.ns)}`); } }
     else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)} (${fmt.pct(100 * h.a21 / h.n21)})<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)} (${fmt.pct(100 * h.a24 / h.n24)})<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} points</b>` : 'Fewer than 50 firms in a year: not classed')); }
     else if (L === 'cohort') { if (h.n == null) lines.push('No located firms'); else lines.push(`${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms in the revenue cohort by cash share` + (h.supported ? ` (<b>${fmt.pct(h.pct)}</b>)` : ' (fewer than 50 eligible: not classed)')); }
-    else if (L === 'lists') { if (h.n == null) lines.push('No listed members shown'); else lines.push(`${fmt.int(h.n)} located eligible firms<br>Sanctions list: ${h.sanctioned == null ? 'under 5 or none' : fmt.int(h.sanctioned)}<br>Government strategic list: ${h.gov == null ? 'under 5 or none' : fmt.int(h.gov)}`); }
+    else if (L === 'lists') { if (h.n == null) lines.push('No list members shown'); else lines.push(`${fmt.int(h.n)} located eligible firms<br>Sanctions list (treated): ${h.sanctioned == null ? 'under 5 or none' : fmt.int(h.sanctioned)}<br>Government strategic list (treated): ${h.gov == null ? 'under 5 or none' : fmt.int(h.gov)}`); }
     else if (L === 'fin') { if (h.n_base == null) lines.push('No supported cohort cell'); else lines.push(`${fmt.int(h.n_obs)} of ${fmt.int(h.n_base)} cohort firms observed in 2024<br>Median real revenue <b>${fmt.signed(h.change)}%</b> against the cell’s 2021 median`); }
     else lines.push(`100 km cell ${h.ix}, ${h.iy}`);
     return lines.join('<br>');
@@ -352,18 +394,155 @@
     const [px, py] = Motion.project(c, x0, y0 + g); const s = g * c.k;
     octx.strokeStyle = theme.ink; octx.lineWidth = 2; octx.strokeRect(px, py, s, s);
   }
-  wrap.addEventListener('mousemove', ev => {
-    if (dragging) { const r = wrap.getBoundingClientRect(); const c = cam(); state.cam.cx -= (ev.clientX - r.left - dragLast.x) / c.k; state.cam.cy += (ev.clientY - r.top - dragLast.y) / c.k; dragLast = { x: ev.clientX - r.left, y: ev.clientY - r.top }; drawMap(); return; }
-    const km = kmAt(ev); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; state.hover = h;
+  // ---- camera flights (24 October 2026) ---------------------------------------------------------------
+  // One animation for cell clicks, presets, the zoom buttons and the keys: the explainer's Motion.camera path
+  // (cubic position, log-k zoom) run on requestAnimationFrame. The audit API jumps, so it stays deterministic;
+  // a viewer who prefers reduced motion jumps too.
+  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let flight = null;
+  function cancelFlight() { if (!flight) return; const f = flight; flight = null; cancelAnimationFrame(f.raf); f.resolve({ done: false, frames: f.frames, ms: performance.now() - f.t0 }); }
+  function flyTo(target, { instant = false, duration = null } = {}) {
+    cancelFlight();
+    const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) };
+    const dk = Math.abs(Math.log2(to.k / from.k)), dist = Math.hypot(to.cx - from.cx, to.cy - from.cy), dpx = dist * Math.min(from.k, to.k);
+    if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
+    const ms = duration || Motion.clamp(600 + 250 * dk, 400, 1400), W = stage.width, H = stage.height;
+    const kf = [Object.assign({ t: 0 }, from), Object.assign({ t: ms }, to)];
+    // A long pan (the centre moving more than two viewport diagonals at the smaller k) pulls out and back in.
+    if (dpx > 2 * Math.hypot(W, H)) kf.splice(1, 0, { t: ms / 2, cx: (from.cx + to.cx) / 2, cy: (from.cy + to.cy) / 2, k: Math.max(kFit(), Math.min(from.k, to.k, 0.8 * minSide() / dist)) });
+    const path = Motion.camera(kf, W, H);
+    hideHover();
+    return new Promise(resolve => {
+      const f = flight = { raf: 0, t0: performance.now(), frames: 0, resolve };
+      const step = now => {
+        if (flight !== f) return;
+        const t = now - f.t0;
+        if (t >= ms) { flight = null; state.cam = to; drawMap(); afterCameraMove(); resolve({ done: true, frames: f.frames + 1, ms: t }); return; }
+        const p = path(t); state.cam = { cx: p.cx, cy: p.cy, k: p.k }; f.frames++; drawMap({ flight: true });
+        f.raf = requestAnimationFrame(step);
+      };
+      f.raf = requestAnimationFrame(step);
+    });
+  }
+  // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
+  let drawQueued = false, drawAfter = null;
+  function requestDraw(after) { if (after) drawAfter = after; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(); const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
+  function afterCameraMove() { syncZoomButtons(); refreshHover(); }
+
+  // The click ladder: from the country a click on a 100 km cell flies to its preset city's window or to the cell;
+  // at the city scale to the 20 km (250 m-cell) scale on the clicked 1 km cell; elsewhere, and in the firms view,
+  // one step of x2.5 at the point. A click always zooms in; Shift+click steps out; an empty cell does nothing.
+  function ladderTarget(h, km, shift) {
+    if (shift) return { target: stepAt(km, 1 / 2.5), rung: 'step' };
+    const k = state.cam.k, step = () => ({ target: stepAt(km, 2.5), rung: 'step' });
+    if (state.mode === 'firms') return step();
+    let t = null, rung = 'step';
+    if (k < 1.5 && (!h.fine || h.grid === 5)) {
+      const has = h.n != null || h.n21 != null || h.n_base != null || h.sanctioned != null || h.gov != null || h.c != null;
+      if (!has) return null;
+      const city = cityInCell(h.ix, h.iy);
+      if (city) { t = cityTarget(city); rung = 'city'; } else { t = cellTarget(h.ix, h.iy); rung = 'cell'; }
+    } else if (h.fine && h.grid === 1) {
+      if (h.n == null) return null;
+      const o = h.origin || [0, 0]; t = fineTarget(o[0] + Math.floor(h.kmx - o[0]) + 0.5, o[1] + Math.floor(h.kmy - o[1]) + 0.5); rung = 'fine';
+    } else return step();
+    return t.k > k * 1.02 ? { target: t, rung } : step();
+  }
+  const kmFromPx = (x, y) => { const c = cam(); return { x: c.cx + (x - c.ox) / c.k, y: c.cy - (y - c.oy) / c.k, px: x, py: y }; };
+  function clickAt(x, y, shift) { const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; const r = ladderTarget(h, km, shift); if (r) flyTo(r.target); return r; }
+
+  // ---- pointer input: hover, drag, pinch, click and tap --------------------------------------------------
+  const PRESS_PX = 5, PRESS_MS = 300, TAP_MS = 450, TAP_PX = 20;
+  const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
+  const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
+  function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+  function hideHover() { $('tip').style.display = 'none'; state.hover = null; drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); }
+  function syncCursor(h) {
+    const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
+    wrap.classList.toggle('clickable', !!r && r.rung !== 'step'); wrap.classList.toggle('zoomable', !!r && r.rung === 'step');
+  }
+  function showHoverAt(x, y) {
+    const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     const tip = $('tip'); tip.innerHTML = tipText(h); tip.style.display = 'block';
-    const r = wrap.getBoundingClientRect(); tip.style.left = Math.min(km.px + 14, r.width - 290) + 'px'; tip.style.top = Math.max(0, km.py - 10) + 'px';
-    drawOverlay(h); drawCellPanel(h);
+    // to the right of the cursor, or to its left when that would reach the zoom column at the right edge
+    const tw = tip.offsetWidth, th = tip.offsetHeight; let left = x + 14; if (left + tw > stage.width - 72) left = Math.max(0, x - 14 - tw);
+    tip.style.left = left + 'px'; tip.style.top = Math.max(0, Math.min(y - 10, stage.height - th - 4)) + 'px';
+    drawOverlay(h); drawCellPanel(h); syncCursor(h);
+    return h;
+  }
+  function refreshHover() { if (press || pinch || flight || !lastPointer || !lastPointer.inside) return; showHoverAt(lastPointer.x, lastPointer.y); }
+  function startPinch() { const [p, q] = [...pointers.values()]; const c = cam(); const mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }; return { d0: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), k0: c.k, km: { x: c.cx + (mid.x - c.ox) / c.k, y: c.cy - (mid.y - c.oy) / c.k } }; }
+  function movePinch() { const [p, q] = [...pointers.values()]; const d = Math.hypot(p.x - q.x, p.y - q.y), mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }; const k2 = clampK(pinch.k0 * d / pinch.d0); state.cam = { cx: pinch.km.x - (mid.x - stage.width / 2) / k2, cy: pinch.km.y + (mid.y - stage.height / 2) / k2, k: k2 }; requestDraw(); }
+  wrap.addEventListener('pointerdown', ev => {
+    if (overControl(ev, '.zoombox, .toggle') || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+    cancelFlight(); try { wrap.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
+    const p = localXY(ev); pointers.set(ev.pointerId, p);
+    if (pointers.size === 1) press = { id: ev.pointerId, x: p.x, y: p.y, t: performance.now(), moved: false, shift: ev.shiftKey, type: ev.pointerType, last: p };
+    else if (pointers.size === 2) { press = null; wrap.classList.remove('dragging'); pinch = startPinch(); hideHover(); }
   });
-  wrap.addEventListener('mouseleave', () => { $('tip').style.display = 'none'; state.hover = null; drawOverlay(null); });
-  let dragging = false, dragLast = null;
-  wrap.addEventListener('mousedown', ev => { dragging = true; const r = wrap.getBoundingClientRect(); dragLast = { x: ev.clientX - r.left, y: ev.clientY - r.top }; });
-  window.addEventListener('mouseup', () => { dragging = false; });
-  wrap.addEventListener('wheel', ev => { ev.preventDefault(); const km = kmAt(ev); const f = Math.exp(-ev.deltaY * 0.0015); const k2 = Motion.clamp(state.cam.k * f, 0.05, 200); state.cam.cx = km.x - (km.px - stage.width / 2) / k2; state.cam.cy = km.y + (km.py - stage.height / 2) / k2; state.cam.k = k2; drawMap(); }, { passive: false });
+  wrap.addEventListener('pointermove', ev => {
+    const p = localXY(ev);
+    if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, p);
+    if (pinch) { if (pointers.size === 2) movePinch(); return; }
+    if (press && press.id === ev.pointerId) {
+      if (!press.moved && Math.hypot(p.x - press.x, p.y - press.y) > PRESS_PX) { press.moved = true; wrap.classList.add('dragging'); hideHover(); }
+      if (press.moved) { const c = cam(); state.cam.cx -= (p.x - press.last.x) / c.k; state.cam.cy += (p.y - press.last.y) / c.k; press.last = p; requestDraw(); }
+      return;
+    }
+    if (ev.pointerType !== 'touch') { lastPointer = { x: p.x, y: p.y, inside: true }; if (!flight && !overControl(ev, '.zoombox, .toggle')) showHoverAt(p.x, p.y); }
+  });
+  function endPointer(ev) {
+    const p = localXY(ev); pointers.delete(ev.pointerId);
+    if (pinch) { if (pointers.size < 2) { pinch = null; requestDraw(afterCameraMove); } return; }
+    if (!press || press.id !== ev.pointerId) return;
+    const pr = press; press = null; wrap.classList.remove('dragging');
+    if (pr.moved) { requestDraw(afterCameraMove); return; }
+    if (ev.type !== 'pointerup' || performance.now() - pr.t > PRESS_MS) return;
+    if (pr.type === 'mouse') { clickAt(p.x, p.y, pr.shift); return; }
+    // a touch or pen tap selects the cell; a second tap within 350 ms flies the ladder
+    const now = performance.now();
+    if (lastTap && now - lastTap.t <= TAP_MS && Math.hypot(p.x - lastTap.x, p.y - lastTap.y) <= TAP_PX) { lastTap = null; clickAt(p.x, p.y, false); return; }
+    lastTap = { x: p.x, y: p.y, t: now }; lastPointer = { x: p.x, y: p.y, inside: true }; showHoverAt(p.x, p.y);
+  }
+  wrap.addEventListener('pointerup', endPointer);
+  wrap.addEventListener('pointercancel', endPointer);
+  wrap.addEventListener('pointerleave', ev => { if (ev.pointerType !== 'touch' && !press && !pinch) { lastPointer = lastPointer ? { x: lastPointer.x, y: lastPointer.y, inside: false } : null; hideHover(); } });
+  wrap.addEventListener('wheel', ev => {
+    if (overControl(ev, '.zoombox')) return;
+    ev.preventDefault(); cancelFlight();
+    const km = kmAt(ev); const f = Math.exp(-ev.deltaY * 0.0015); const k2 = clampK(state.cam.k * f);
+    state.cam.cx = km.x - (km.px - stage.width / 2) / k2; state.cam.cy = km.y + (km.py - stage.height / 2) / k2; state.cam.k = k2;
+    if (ev.pointerType !== 'touch') lastPointer = { x: km.px, y: km.py, inside: true };
+    hideHover(); requestDraw(afterCameraMove);
+  }, { passive: false });
+  // Keys, when the map has focus: + and − zoom one step, 0 fits the country, the arrows pan (Shift: a small step).
+  wrap.addEventListener('keydown', ev => {
+    if (ev.target !== wrap) return;
+    const panPx = Math.round(minSide() * (ev.shiftKey ? 0.05 : 0.2));
+    const pan = (dx, dy) => flyTo({ cx: state.cam.cx + dx / state.cam.k, cy: state.cam.cy - dy / state.cam.k, k: state.cam.k }, { duration: 250 });
+    switch (ev.key) {
+      case '+': case '=': flyTo(stepCentre(2)); break;
+      case '-': case '_': flyTo(stepCentre(0.5)); break;
+      case '0': flyTo(fitTarget()); break;
+      case 'ArrowLeft': pan(-panPx, 0); break; case 'ArrowRight': pan(panPx, 0); break;
+      case 'ArrowUp': pan(0, -panPx); break; case 'ArrowDown': pan(0, panPx); break;
+      default: return;
+    }
+    ev.preventDefault();
+  });
+  // The zoom box (bottom right) and the scale bar beside it.
+  $('zoom-in').addEventListener('click', () => flyTo(stepCentre(2)));
+  $('zoom-out').addEventListener('click', () => flyTo(stepCentre(0.5)));
+  $('zoom-fit').addEventListener('click', () => flyTo(fitTarget()));
+  function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFit() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
+  const SCALE_STEPS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.25, 0.1];
+  let lastScale = '';
+  function drawScaleBar() {
+    const k = state.cam.k; let len = SCALE_STEPS[0]; for (const s of SCALE_STEPS) { len = s; if (s * k <= 84) break; }   // at most 84 px: the bar stays inside the right-hand column
+    const px = Math.round(len * k * 10) / 10, label = len >= 1 ? `${fmt.int(len)} km` : `${Math.round(len * 1000)} m`, key = px + label;
+    if (key === lastScale) return; lastScale = key;
+    $('scalebar').querySelector('.bar').style.width = px + 'px'; $('scalebar').querySelector('.lab').textContent = label;
+  }
 
   // ---- side panels -------------------------------------------------------------------------------
   function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); Motion.audit.scene = id; window.__atlasCanvases[id] = { w: r.width, h: r.height }; return { ctx, w: r.width, h: r.height }; }
@@ -414,16 +593,18 @@
     const { ctx, w } = chartCtx('oddschart'); const hh = $('oddschart').getBoundingClientRect().height;
     const sz = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz[S.size.quintile[i]] = sz[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
-    CH.yearDots(ctx, { x: 40, y: 10, w: w - 150, h: hh - 44 }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz.Q5 || [], whiskers: true, dot: 4, width: 2 }, { label: 'Q2 vs Q1', color: theme.accent, points: sz.Q2 || [], dot: 3, width: 1.5 }, { label: 'sanctions list only', color: theme.fall, points: ls, whiskers: true, dot: 4, width: 2 }],
+    // The right margin fits the longest end label (measured, as drawNational does): the label starts 22 px past the last point and ends 8 px inside the canvas.
+    const listLabel = 'sanctions list (treated)', right = Motion.measure(ctx, listLabel, 12, 600) + 30;
+    CH.yearDots(ctx, { x: 40, y: 10, w: w - right, h: hh - 44 }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz.Q5 || [], whiskers: true, dot: 4, width: 2 }, { label: 'Q2 vs Q1', color: theme.accent, points: sz.Q2 || [], dot: 3, width: 1.5 }, { label: listLabel, color: theme.fall, points: ls, whiskers: true, dot: 4, width: 2 }],
       { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: 12, thinTicks: true, spreadLabels: true });
-    $('oddsprov').textContent = `Adjusted odds of a statement: asset quintiles Q5 and Q2 against Q1 (Table B.4; 2022 vs 2021 Q5 ratio ${fmt.dec(F.size_q5_2022_ratio, 3)} [${fmt.dec(F.size_q5_2022_low, 3)}, ${fmt.dec(F.size_q5_2022_high, 3)}], provisional) and firms on the sanctions list only against firms on no list (Table B.7), two-way 95% intervals.`;
+    $('oddsprov').textContent = `Adjusted odds of a statement: asset quintiles Q5 and Q2 against Q1 (Table B.4; 2022 vs 2021 Q5 ratio ${fmt.dec(F.size_q5_2022_ratio, 3)} [${fmt.dec(F.size_q5_2022_low, 3)}, ${fmt.dec(F.size_q5_2022_high, 3)}], provisional) and firms on the sanctions list only (treated) against firms on no list (comparison group) (Table B.7), two-way 95% intervals.`;
   }
-  function redrawAll() { sizeCanvases(); drawMap(); drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); }
+  function redrawAll() { sizeCanvases(); drawMap(); drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); syncZoomButtons(); }
 
   // ---- controls -------------------------------------------------------------------------------------
   const layersEl = $('layers');
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
-  const FIRMS_PROV = 'Firms view: every located eligible firm on no list with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists from the national pass (M8), red from their listing year. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
+  const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
   LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncProv(); drawMap(); drawNational(); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share'); }
@@ -431,28 +612,54 @@
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); state.hover = null; drawOverlay(null); $('tip').style.display = 'none'; syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   $('layerprov').textContent = LAYERS[1].prov;
   $('year').addEventListener('input', () => { state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); drawMap(); drawNational(); });
   const presets = $('presets');
-  const addPreset = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.addEventListener('click', () => { fn(); drawMap(); }); presets.appendChild(b); };
-  addPreset('Russia', () => fitNational());
-  for (const city of bmp.cities) addPreset(city.label, () => { state.cam = { cx: city.x, cy: city.y, k: Math.min(stage.width, stage.height) / 95 }; });
-  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; state.cam = { cx: c.x + 1.5, cy: c.y + 0.5, k: Math.min(stage.width, stage.height) / 20 }; });
-  $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; the lists are fixed memberships, not dated designations.`;
-  window.addEventListener('resize', redrawAll);
-  // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes.
+  // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
+  const PRESETS = [];
+  const slugOf = label => label.replace(/\s*\(.*\)$/, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.addEventListener('click', () => flyTo(target())); presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
+  addPreset('Russia', fitTarget);
+  for (const city of bmp.cities) addPreset(city.label, () => cityTarget(city));
+  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); });
+  function presetFromHash() {
+    const raw = decodeURIComponent(location.hash.slice(1)).trim(); if (!raw || !/^[A-Za-z0-9_-]+$/.test(raw)) return null;
+    let s = raw.toLowerCase(), firms = false; if (s.endsWith('-firms')) { firms = true; s = s.slice(0, -6); }
+    const p = PRESETS.find(p => p.slug.toLowerCase() === s || p.slug.toLowerCase().replace(/-/g, '_') === s); return p ? { preset: p, firms } : null;
+  }
+  window.addEventListener('hashchange', () => { const hp = presetFromHash(); if (hp) flyTo(hp.preset.target()); });
+  $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; the lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, resident, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the firms view).`;
+  // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
+  function onResize() { const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); }
+  window.addEventListener('resize', onResize);
+  // The overlays' boxes relative to the map, for the audit's DOM check.
+  function domBoxes() {
+    const m = wrap.getBoundingClientRect();
+    const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
+    return { map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip') };
+  }
+  // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
+  // boxes and the camera; the camera moves here are instant.
   window.__atlas = {
     layers: LAYERS.map(L => L.id),
     layer(id) { const b = layersEl.querySelector(`button[data-id="${id}"]`); if (b) b.click(); },
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
-    redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return Motion.audit.boxes; },
-    preset(label) { for (const b of presets.querySelectorAll('button')) if (b.textContent === label) { b.click(); return true; } return false; },
-    hoverKm(x, y) { const c = cam(); const km = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
+    redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return { boxes: Motion.audit.boxes, dom: domBoxes() }; },
+    camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
+    kFit() { return kFit(); },
+    preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
+    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
+    click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
+    zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
+    fly(target) { return flyTo(target); },
+    legend(open) { setLegend(open == null ? null : open ? 'open' : 'closed'); },   // null: back to the width rule
+    note(open) { setNote(open == null ? null : open ? 'open' : 'closed'); },
+    frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
     ready() { return state.mode === 'firms' ? ensureYear(state.year).then(() => {}) : Promise.resolve(); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
   };
-  document.fonts.ready.then(() => { sizeCanvases(); fitNational(); syncThemeButton(); redrawAll(); });
+  document.fonts.ready.then(() => { sizeCanvases(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); });
 })();

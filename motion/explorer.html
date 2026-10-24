@@ -37,14 +37,33 @@ button, select { font: inherit; }
 .btn[aria-pressed="true"], .btn.on { background: var(--control-on); color: #fff; border-color: var(--control-on); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; }
-@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } .side { max-height: none; } }
-.mapwrap { position: relative; min-height: 360px; background: var(--stage); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+/* Below 900 px the page scrolls: the map is a fixed-height block and the panels stack under it (the earlier
+   viewport-locked layout squeezed the panels into a strip on a phone). */
+@media (max-width: 900px) { html, body { height: auto; min-height: 100%; } main { display: block; } .mapwrap { height: 62vh; min-height: 360px; max-height: 560px; margin-bottom: 12px; } .side { overflow: visible; } header .sub { font-size: 14px; } }
+.mapwrap { position: relative; min-height: 360px; background: var(--stage); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mapwrap.dragging { cursor: grabbing; }
+.mapwrap.clickable { cursor: pointer; }
+.mapwrap.zoomable { cursor: zoom-in; }
+.mapwrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #overlay { pointer-events: none; }
-.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 24px); }
+.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 136px); box-sizing: border-box; }   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
+.lhead { display: flex; align-items: center; gap: 6px; }
+.lhead .ltitle { flex: 1 1 auto; min-width: 0; }
+.toggle { background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 4px; width: 24px; height: 22px; padding: 0; cursor: pointer; font-size: 12px; line-height: 1; flex: 0 0 auto; }
+.toggle:hover { border-color: var(--border); color: var(--ink); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
 .maplegend .row { margin: 2px 0; }
-.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; }
+.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }
+.mapnote .nlabel { color: var(--muted); align-self: center; }
+.zoombox { position: absolute; right: 12px; bottom: 12px; z-index: 4; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 6px; background: color-mix(in srgb, var(--panel) 92%, transparent); }
+.zoombox .btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; font-size: 22px; line-height: 1; font-weight: 600; }
+.zoombox .btn svg { width: 18px; height: 18px; }
+.zoombox .btn:disabled { opacity: 0.4; cursor: default; }
+.scalebar { position: absolute; right: 12px; bottom: 156px; max-width: 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--panel) 85%, transparent); font-size: 11px; color: var(--muted); pointer-events: none; }
+.scalebar .bar { display: block; height: 6px; box-sizing: border-box; border: 2px solid var(--ink); border-top: 0; }
+@media (pointer: coarse) { .zoombox .btn { width: 44px; height: 44px; } .scalebar { bottom: 168px; } }
 .tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: 280px; display: none; z-index: 5; }
 .tooltip b { font-variant-numeric: tabular-nums; }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
@@ -74,11 +93,17 @@ footer a { color: var(--accent); }
   <button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button>
 </header>
 <main>
-  <div class="mapwrap" id="mapwrap">
+  <div class="mapwrap" id="mapwrap" tabindex="0" role="group" aria-label="Map of Russia. Plus and minus zoom, 0 fits the whole country, the arrow keys pan; click a cell to zoom to it.">
     <canvas id="map" aria-label="Map of Russia with firm cells"></canvas>
     <canvas id="overlay"></canvas>
-    <div class="maplegend" id="legend"></div>
-    <div class="mapnote" id="mapnote"></div>
+    <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend">▾</button></div><div class="lbody" id="legendbody"></div></div>
+    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
+    <div class="scalebar" id="scalebar" aria-hidden="true"><span class="bar"></span><span class="lab"></span></div>
+    <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
+      <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+      <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
+      <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="Fit the whole country (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    </div>
     <div class="tooltip" id="tip"></div>
   </div>
   <aside class="side">
@@ -92,7 +117,7 @@ footer a { color: var(--accent); }
     <section class="card">
       <h2>Go to</h2>
       <div class="presets" id="presets"></div>
-      <div class="prov">Scroll to zoom, drag to pan. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
+      <div class="prov">Scroll or the + and − buttons zoom, drag pans, a click on a cell zooms to it (Shift+click zooms out). On a touch screen: drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
     </section>
     <section class="card">
       <h2>Under the cursor</h2>
@@ -112,7 +137,7 @@ footer a { color: var(--accent); }
     </section>
     <section class="card">
       <h2>Odds against the comparison group</h2>
-      <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and list members"></canvas>
+      <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and the sanctions list (treated)"></canvas>
       <div class="prov" id="oddsprov"></div>
     </section>
   </aside>

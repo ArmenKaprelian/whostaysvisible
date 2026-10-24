@@ -14,7 +14,7 @@ time, so any frame can be sought deterministically and captured to MP4.
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
 | Teaser | `build/who-stays-visible-teaser-46s.mp4` (`-720p` copy beside it) | 46 s, 1,380 frames since round 4 (round 1: 40 s, 1,200 frames): the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Treated cut (round 2; retired as a standalone cut on 24 October 2026, the sequence lives inside the full cut) | `js/treated-scenes.js` (the journey section; `?cut=moscow` and its file are gone) | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
-| Atlas | `explorer.html` (+ `js/explorer-app.js`) | six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
+| Atlas | `explorer.html` (+ `js/explorer-app.js`) | click-to-zoom flights, a zoom box with a scale bar, keyboard and touch input and a phone layout (24 October 2026); six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
 | Data | `data/*.json`, `data/*.js`, `data/*.provenance.json`, `data/*.checks.csv` | the aggregates the pages draw, each with a provenance sidecar and the checks that gated it |
 | Tools | `tools/serve.py`, `tools/cdp.py`, `tools/capture.py`, `tools/audit.py`, `../scripts/motion-capture.sh` | static server, a stdlib DevTools client, the frame-exact sharded capture, the text audit, the host launcher with the lab bracket |
 
@@ -861,12 +861,90 @@ none); frames 4,560, 4,740, 6,000 and 7,920 of `full` and 300, 700 and 1,300 of 
 and after the change are byte-identical, so the video files were not re-rendered. The video deliverables are
 `full` and `teaser`, each with a 720p copy.
 
+### Atlas: the treated gloss, click-to-zoom, zoom controls, a phone layout (author's requests, 24 October 2026)
+
+Wording. The atlas, and the atlas alone, carries a viewer-facing gloss after its list terms: "(treated)" after
+every string that names the five-list union or one of its lists, and "(comparison group)" after "firms on no
+list" (an atlas-only exception to the morning's rule against "treatment group" on screen, at the author's
+request; "(designated)" was offered and declined, because four of the five lists are undated administrative
+memberships and the page itself says "fixed memberships, not dated designations"). The word is defined once,
+in the footer and in the lists layer's provenance: "Treated: a firm on at least one of the five lists (sanctions,
+decree, resident, government strategic, presidential strategic). The word names the study's group, not an
+effect." The footer adds "Comparison group: firms on none of the five lists." The strings: the firms legend's
+red row "Firm on one of the five lists (treated), red from its listing year." and ring row "listed (treated), no
+statement that year", the revenue-layer title "Firms on no list (comparison group), YEAR", the firms note
+("... firms on no list (comparison group) at ... distinct coordinate pairs; ... firms on these lists (treated)
+..."), the firms tooltip ("... on one of the five lists (treated) ..."), the firms-view provenance, the lists
+layer "List members (treated), 2021" with its provenance, legend title "Sanctions-list members (treated) per
+100 km cell, 2021" and note ("The hover gives the government strategic list (treated) separately."), the share
+tooltip "Sanctions-list members (treated): n", the lists tooltip ("Sanctions list (treated)", "Government
+strategic list (treated)"), the odds chart's series label "sanctions list (treated)" (its right margin is now
+measured, as the national chart's is, since the glossed label is 128 px wide against the 128 px the fixed
+margin left) and provenance ("... firms on the sanctions list only (treated) against firms on no list
+(comparison group) ..."), and the odds canvas's aria-label. Two defects found on the way were fixed: the lists
+legend showed four classes coloured one step off the three the map draws (now 5–19, 20–49 and ≥ 50 members at
+the map's colours, with the cell counts 68, 12 and 5; three cells with 1 to 4 members show no count), and the
+fine-cell tooltip said "with a 2021 statement" whatever the year (it now names the year of the grid it reads).
+
+Interaction. One camera animation, `flyTo`, built on the explainer's `Motion.camera` (cubic position, log-k
+zoom; about 600 ms plus 250 ms per doubling, at most 1.4 s; a long pan pulls out and back in through a middle
+keyframe), serves cell clicks, the preset buttons, the zoom buttons, the keys and a double tap; a flight frame
+skips the legend rewrite and the audit record, the last frame draws fully and refreshes the hover. The click
+ladder: from the country a click on a 100 km cell flies to its preset city's window (95 km across the shorter
+side, as the city presets) or, for a cell without one, to the cell at 500 km across; at the city scale to the
+20 km scale (the 250 m cells) on the clicked 1 km cell; at the fine scale and in the firms view one step of
+x2.5 at the point; a click always zooms in (past a rung it steps), Shift+click steps out, an empty cell does
+nothing. A click is a press and release within 5 px and 300 ms; anything longer or farther is a drag. Pointer
+events replace the mouse handlers: one finger drags, two fingers pinch (the wheel's cursor-anchor rule at the
+midpoint), a tap on a touch screen selects the cell (tooltip, outline, the under-the-cursor panel) and a second
+tap within 450 ms flies the ladder. Keys, when the map has focus: + and − zoom one step, 0 fits the country,
+the arrows pan (Shift: a small step). The zoom floor is the fitted country for the wheel, the buttons and the
+keys alike (the wheel's floor was 0.05 px per km). Cursors: grab, grabbing, pointer over a cell that would fly,
+zoom-in where a click steps. The hover outline and tooltip are recomputed after every camera move (they went
+stale after a wheel or a preset before), and the tooltip flips to the cursor's left near the right edge rather
+than covering the zoom buttons. A zoom box sits at the bottom right (zoom in, zoom out, fit the country; 40 px,
+44 px on a coarse pointer; "−" disabled at the fitted country, "+" at the 200 px per km ceiling) with a scale
+bar above it (the largest round length at most 84 px wide, 1,000 km down to 100 m). `prefers-reduced-motion:
+reduce` makes every flight a jump. A plain anchor opens the atlas at a preset, `#Moscow`, `#St-Petersburg`,
+`#Central-Moscow` (a label without its parenthesis, non-alphanumerics as hyphens, case-insensitive), with a
+`-firms` suffix for the firms view; the page never writes the hash.
+
+Phone layout. Below 900 px the page scrolls: `html, body` take `min-height: 100%` instead of a fixed height,
+`main` is a block, the map a fixed-height block (62vh, between 360 and 560 px) and the side cards stack under
+it (the earlier viewport-locked layout squeezed the panels into a 98 px strip with 1,837 px of content
+scrolling inside it, verified at 390 by 844 px). The legend and the note have a toggle in their head row,
+start collapsed when the map is narrower than 600 px, remember the choice per viewer (localStorage, in
+try/catch), and on a narrow map open one at a time. The legend's width clears the right-hand column (the zoom
+box and the scale bar, 100 px); the panels size border-box. A resize keeps the centre and the span across the
+width.
+
+Audit. `tools/atlas-audit.py` now also reads the overlays' boxes (`window.__atlas.redraw()` returns `{boxes,
+dom}`) and the camera, checks that the legend, note, zoom box and scale bar lie inside the map and never
+intersect one another (the tooltip follows the cursor and sits above the panels, so it is held inside the map
+but not counted against them), asserts the camera after the ladder, the zoom buttons and the presets through
+the page's instant API (`preset`, `click`, `zoom`, `legend`, `note`, `camera`, `kFit`, `fly`, `frameCost`), and
+runs at 400, 768, 1,200, 1,600 and 2,000 px: 190 states, 7,321 boxes, zero findings. Other checks (read-only
+scripts in the session's scratchpad, not kept): real flights at 1,600 px run at 59, 60 and 56 fps in cells mode
+(share and density layers, Russia to Moscow and Moscow to Central Moscow) and at 50 and 39 fps in firms mode
+(the national blit costs about 35 ms of script time per frame; the loop is time-based, so a flight's length
+holds); at 390 by 844 px with touch emulation the page is 2,872 px tall with the panels stacked, the legend and
+note collapsed and 44 px buttons, a tap shows the tooltip and the panel without moving, a double tap flies to
+the Moscow preset, a pinch to twice the finger distance doubles k (ratio 2.000); `#Moscow` opens at the Moscow
+preset, `#St-Petersburg-firms` in the firms view at St Petersburg, an unknown anchor at the country; with
+reduced motion emulated a flight resolves in 0 frames; a grep of the page and script finds no "supplied list",
+"treatment group", "sanctioned or strategic", "designated" or "control" on screen (only the CSS tokens
+`--control`); screenshots at 1,600 px (both themes) and on the phone were inspected. Left as they are, noted:
+the hit test switches grids at k 1.5 and 24 while the drawing crossfades over 1.5–4 and 24–40, and the share
+layer's hover shows no values at the city scale for years without a 1 km grid (2014 to 2018 and 2025). The
+atlas artifact is at v10; `js/motion-core.js`, `js/map-layers.js` and `js/charts.js` are untouched, so the
+explainer's frames are unchanged and no cut was re-rendered.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
 key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction. The published pages could not be opened from the lab's headless
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions
