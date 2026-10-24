@@ -61,6 +61,16 @@
   const coh = C100.cohort, cohIdx = [], cohMap = new Map(); for (let i = 0; i < coh.ix.length; i++) if (coh.outcome[i] === 'revenue' && coh.moderator[i] === 'cash') { cohIdx.push(i); cohMap.set(cellKey(coh.ix[i], coh.iy[i]), i); }
   const lists = C100.lists, listMap = new Map(), listClassCounts = [0, 0, 0, 0]; for (let i = 0; i < lists.ix.length; i++) { listMap.set(cellKey(lists.ix[i], lists.iy[i]), i); const cl = listClass(lists.sanctioned[i]); if (cl != null) listClassCounts[cl]++; }
   const fin = C100.fin, finIdx = [], finMap = new Map(); for (let i = 0; i < fin.ix.length; i++) if (fin.outcome[i] === 'revenue' && fin.moderator[i] === 'cash' && fin.year[i] === 2024) { finIdx.push(i); finMap.set(cellKey(fin.ix[i], fin.iy[i]), i); }
+  // 25 km cells by year (M10, 24 October 2026): the step between the 100 km cells and the city windows, so a zoom
+  // refines the cells across the country; without the file (older data) the 100 km cells simply stay.
+  const C25 = D.cells25 || null, c25 = {}, G25 = C25 ? C25.grid_km : 25;
+  const decode25 = (r, cols) => { const d = { count: r.count, ix: MM.b64Int16(r.ix), iy: MM.b64Int16(r.iy), map: new Map() }; for (const [k, src, wide] of cols) d[k] = r[src] == null ? null : (wide ? MM.b64Int32(r[src]) : MM.b64Int16(r[src])); for (let i = 0; i < d.count; i++) d.map.set(cellKey(d.ix[i], d.iy[i]), i); return d; };
+  if (C25) for (const [y, r] of Object.entries(C25.by_year)) c25[+y] = decode25(r, [['n', 'n', true], ['a', 'a', true], ['ns', 'ns', true], ['ng', 'ng', true]]);
+  const chg25 = C25 && C25.change ? decode25(C25.change, [['n21', 'n21', true], ['a21', 'a21', true], ['n24', 'n24', true], ['a24', 'a24', true], ['cls', 'class', false], ['pp', 'change_pp_x1000', true]]) : null;
+  const list25Counts = [0, 0, 0, 0]; if (c25[2021]) { const d = c25[2021]; for (let i = 0; i < d.count; i++) if (d.ns[i] >= 5) list25Counts[listClass(d.ns[i])]++; }
+  // The 25 km grid fades in as a 100 km cell passes 45 px (k 0.45 to 0.8); the 2021 national 5 km shares take over from k 1.5.
+  const alpha25 = k => (C25 ? Motion.step(k, 0.45, 0.35, Motion.ease.linear) : 0);
+  const alpha5 = k => Motion.step(k, 1.5, 1.0, Motion.ease.linear);
   const tileCache = new Map();
   function tiles(key, build) { if (!tileCache.has(key)) tileCache.set(key, build()); return tileCache.get(key); }
   const classOfShare = (n, a, breaks) => { if (n < 50) return 'below'; const s = 100 * a / n; let c = 0; while (c < breaks.length && s >= breaks[c]) c++; return c; };
@@ -102,7 +112,18 @@
   function fitNational() { state.cam = fitTarget(); }
   function nearestCity(c) { let best = null, bd = Infinity; for (const city of bmp.cities) { const d = Math.hypot(city.x - c.cx, city.y - c.cy); if (d < bd) { bd = d; best = city; } } return { city: best, dist: bd }; }
 
-  function gridAlphas(k) { return { nat: 1 - Motion.step(k, 1.5, 2.5, Motion.ease.linear), one: Math.min(Motion.step(k, 1.5, 2.5, Motion.ease.linear), 1 - Motion.step(k, 24, 16, Motion.ease.linear)), fine: Motion.step(k, 24, 16, Motion.ease.linear) }; }
+  // The city windows fade in over k 1.5 to 4 (1 km) and 24 to 40 (250 m); each coarser grid stays drawn around them.
+  function gridAlphas(k) { return { one: Motion.step(k, 1.5, 2.5, Motion.ease.linear), fine: Motion.step(k, 24, 16, Motion.ease.linear) }; }
+  const winRect = (d, size) => ({ origin: d.origin, size });
+  // Draws a coarser layer around a finer window: at full alpha outside the window's square and, while the window fades
+  // in, at (1 - w) inside it, so a zoom into open country never leaves blank ground (hand-over fix, 24 October 2026).
+  function drawAround(c, win, w, draw) {
+    if (!win || w <= 0) { draw(1); return; }
+    const [px, py] = Motion.project(c, win.origin[0], win.origin[1] + win.size), s = win.size * c.k;
+    mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(0, 0, stage.width, stage.height); mctx.rect(px, py, s, s); mctx.clip('evenodd'); draw(1); mctx.restore();
+    if (w < 1) { mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(px, py, s, s); mctx.clip(); draw(1 - w); mctx.restore(); }
+    stage.base();
+  }
 
   function drawMap(opts) {
     const flight = !!(opts && opts.flight);   // a flight frame skips the two DOM touches: the audit box and the legend
@@ -112,28 +133,34 @@
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 });
     const L = state.layer;
     if (state.mode === 'firms') drawFirms(c);
-    else if (L === 'density' || (L === 'share' && c.k >= 1.5 && (state.year === 2021 || c.k >= 24))) {
-      // Density counts nationally and in windows; at city zoom with the share layer, 2021 fine cells show the share.
-      const ga = gridAlphas(c.k); const shareMode = L === 'share';
-      if (ga.nat > 0) { if (shareMode) MM.drawDensityShares(mctx, stage, c, natPaths, theme.ramp5, theme.below, ga.nat); else MM.drawDensityCounts(mctx, stage, c, natPaths, theme.density, ga.nat); }
-      const near = nearestCity(c).city.label;
-      if (ga.one > 0 && win1[near]) { const p = win1[near].paths; if (shareMode) MM.drawDensityShares(mctx, stage, c, p, theme.ramp5, theme.below, ga.one); else MM.drawDensityCounts(mctx, stage, c, p, theme.density, ga.one); }
-      if (ga.fine > 0 && win025[near]) { const p = win025[near].paths; if (shareMode) MM.drawDensityShares(mctx, stage, c, p, theme.ramp5, theme.below, ga.fine); else MM.drawDensityCounts(mctx, stage, c, p, theme.density, ga.fine); }
+    else if (L === 'density') {
+      const ga = gridAlphas(c.k), near = nearestCity(c).city.label, w1 = win1[near] ? winRect(win1[near].d, 90) : null, w025 = win025[near] ? winRect(win025[near].d, 24) : null;
+      drawAround(c, w1, ga.one, a => MM.drawDensityCounts(mctx, stage, c, natPaths, theme.density, a));
+      if (ga.one > 0 && win1[near]) drawAround(c, w025, ga.fine, a => MM.drawDensityCounts(mctx, stage, c, win1[near].paths, theme.density, a * ga.one));
+      if (ga.fine > 0 && win025[near]) MM.drawDensityCounts(mctx, stage, c, win025[near].paths, theme.density, ga.fine);
     } else if (L === 'share') {
-      const y = state.year;
-      const paths = tiles('share' + y, () => { const idx = yearIndex[y]; return MM.buildTiles(idx.length, idx.map(i => CY.avail.ix[i]), idx.map(i => CY.avail.iy[i]), j => classOfShare(CY.avail.n[idx[j]], CY.avail.a[idx[j]], YEAR_BREAKS), { gapKm: 15 }); });
-      MM.drawTiles(mctx, stage, c, paths, cl => (cl === 'below' ? theme.below : theme.ramp6[cl]), { alphaOf: cl => (cl === 'below' ? 0.5 : 1) });
-      const near = nearestCity(c);
-      if (c.k >= 1.5 && cityYear[near.city.label] && cityYear[near.city.label][y]) { const ga = gridAlphas(Math.min(c.k, 20)); MM.drawDensityShares(mctx, stage, c, cityYear[near.city.label][y].paths, theme.ramp5, theme.below, ga.one); }
+      // 100 km cells, then the 25 km cells, the national 5 km shares (2021), the city 1 km window of the year and the 250 m window (2021).
+      const y = state.year, ga = gridAlphas(c.k), near = nearestCity(c).city.label, a25 = c25[y] ? alpha25(c.k) : 0, a5 = y === 2021 ? alpha5(c.k) : 0;
+      const win = y === 2021 ? (win1[near] || null) : (cityYear[near] && cityYear[near][y] ? cityYear[near][y] : null);
+      const w1 = win ? winRect(win.d, 90) : null, w025 = y === 2021 && win025[near] ? winRect(win025[near].d, 24) : null;
+      const shareColour = cl => (cl === 'below' ? theme.below : theme.ramp6[cl]), shareAlpha = cl => (cl === 'below' ? 0.5 : 1);
+      if (a25 < 1) { const paths = tiles('share' + y, () => { const idx = yearIndex[y]; return MM.buildTiles(idx.length, idx.map(i => CY.avail.ix[i]), idx.map(i => CY.avail.iy[i]), j => classOfShare(CY.avail.n[idx[j]], CY.avail.a[idx[j]], YEAR_BREAKS), { gapKm: 15 }); }); MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: 1 - a25, alphaOf: shareAlpha }); }
+      const a25e = a25 * (1 - a5);
+      if (a25e > 0) { const d = c25[y], paths = tiles('share25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfShare(d.n[i], d.a[i], YEAR_BREAKS), { sizeKm: G25, gapKm: G25 * 0.12 })); drawAround(c, w1, ga.one, a => MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: a * a25e, alphaOf: shareAlpha })); }
+      if (a5 > 0) drawAround(c, w1, ga.one, a => MM.drawDensityShares(mctx, stage, c, natPaths, theme.ramp5, theme.below, a * a5));
+      if (ga.one > 0 && win) drawAround(c, w025, ga.fine, a => MM.drawDensityShares(mctx, stage, c, win.paths, theme.ramp5, theme.below, a * ga.one));
+      if (ga.fine > 0 && w025) MM.drawDensityShares(mctx, stage, c, win025[near].paths, theme.ramp5, theme.below, ga.fine);
     } else if (L === 'change') {
-      const paths = tiles('change', () => MM.buildTiles(chg.ix.length, chg.ix, chg.iy, i => (chg.supported[i] ? chg.class[i] : 'below'), { gapKm: 15 }));
-      MM.drawTiles(mctx, stage, c, paths, cl => (cl === 'below' ? theme.below : theme.change6[cl - 1]), { alphaOf: cl => (cl === 'below' ? 0.5 : 1) });
+      const a25 = chg25 ? alpha25(c.k) : 0, colour = cl => (cl === 'below' ? theme.below : theme.change6[cl - 1]), alphaOf = cl => (cl === 'below' ? 0.5 : 1);
+      if (a25 < 1) { const paths = tiles('change', () => MM.buildTiles(chg.ix.length, chg.ix, chg.iy, i => (chg.supported[i] ? chg.class[i] : 'below'), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, colour, { alpha: 1 - a25, alphaOf }); }
+      if (a25 > 0) { const paths = tiles('change25', () => MM.buildTiles(chg25.count, chg25.ix, chg25.iy, i => (chg25.cls[i] > 0 ? chg25.cls[i] : 'below'), { sizeKm: G25, gapKm: G25 * 0.12 })); MM.drawTiles(mctx, stage, c, paths, colour, { alpha: a25, alphaOf }); }
     } else if (L === 'cohort') {
       const paths = tiles('cohort', () => MM.buildTiles(cohIdx.length, cohIdx.map(i => coh.ix[i]), cohIdx.map(i => coh.iy[i]), j => (coh.supported[cohIdx[j]] ? coh.class[cohIdx[j]] : 'below'), { gapKm: 15 }));
       MM.drawTiles(mctx, stage, c, paths, cl => (cl === 'below' ? theme.below : theme.ramp5[cl - 1]), { alphaOf: cl => (cl === 'below' ? 0.5 : 1) });
     } else if (L === 'lists') {
-      const paths = tiles('lists', () => MM.buildTiles(lists.ix.length, lists.ix, lists.iy, i => listClass(lists.sanctioned[i]), { gapKm: 15 }));
-      MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1]);
+      const a25 = c25[2021] ? alpha25(c.k) : 0;
+      if (a25 < 1) { const paths = tiles('lists', () => MM.buildTiles(lists.ix.length, lists.ix, lists.iy, i => listClass(lists.sanctioned[i]), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1], { alpha: 1 - a25 }); }
+      if (a25 > 0) { const d = c25[2021], paths = tiles('lists25', () => MM.buildTiles(d.count, d.ix, d.iy, i => (d.ns[i] >= 5 ? listClass(d.ns[i]) : null), { sizeKm: G25, gapKm: G25 * 0.12 })); MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1], { alpha: a25 }); }
     } else if (L === 'fin') {
       const paths = tiles('fin', () => MM.buildTiles(finIdx.length, finIdx.map(i => fin.ix[i]), finIdx.map(i => fin.iy[i]), j => { const v = fin.change_pct[finIdx[j]]; let cl = 0; while (cl < FIN_BREAKS.length && v >= FIN_BREAKS[cl]) cl++; return cl; }, { gapKm: 15 }));
       MM.drawTiles(mctx, stage, c, paths, cl => theme.change6[cl]);
@@ -304,32 +331,35 @@
       html = MM.countClassLabels.map((lab, i) => `<div class="row">${sw(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
       note = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021 (${fmt.int(F.eligible_firms_2021)} eligible); the most shared coordinate pair holds ${fmt.int(F.largest_location_firms)} firms.`;
     } else if (L === 'share') {
-      const fine = c.k >= 1.5;
+      const near = nearestCity(c).city.label, hasWin = state.year === 2021 ? !!win1[near] : !!(cityYear[near] && cityYear[near][state.year]);
+      const fine = c.k >= 1.5 && hasWin, grid25 = alpha25(c.k) >= 0.5 && !!c25[state.year];
       const breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
       const labels = ramp.map((_, i) => i === 0 ? `< ${breaks[0]}%` : i === ramp.length - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
-      title = `<b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : '100 km'} cells)`;
+      title = `<b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : grid25 ? '25 km' : '100 km'} cells)`;
       html = ramp.map((col, i) => `<div class="row">${sw(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
       const t = totals[state.year]; note = t ? `${state.year}${state.year === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${state.year <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
       if (fine && state.year !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
       const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
-      title = '<b>Change in the share, 2024 against 2021</b>';
-      html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]} (${fmt.int(C100.change_classes.cells[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
-      note = `658 supported cells; located share ${fmt.pct(C100.change_totals.availability_share_percent[0])} → ${fmt.pct(C100.change_totals.availability_share_percent[1])}. Annual populations at registered addresses, not the same firms.`;
+      const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? C25.change.class_cells : C100.change_classes.cells;
+      title = `<b>Change in the share, 2024 against 2021</b> (${grid25 ? '25' : '100'} km cells)`;
+      html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]} (${fmt.int(counts[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
+      note = `${fmt.int(grid25 ? C25.change.supported : 658)} supported cells; located share ${fmt.pct(C100.change_totals.availability_share_percent[0])} → ${fmt.pct(C100.change_totals.availability_share_percent[1])}. Annual populations at registered addresses, not the same firms.`;
     } else if (L === 'cohort') {
       title = '<b>Revenue cohort by cash share: inclusion per cell</b>';
       html = theme.ramp5.map((col, i) => `<div class="row">${sw(col)}${C100.cohort_class_labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 eligible firms</div>`;
-      note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.`;
+      note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.` + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     } else if (L === 'lists') {
       // Three classes, the ones listClass draws (ramp5[2], [3], [4]), each with its cell count; 1 to 4 members show no count.
-      title = '<b>Sanctions-list members (treated) per 100 km cell, 2021</b>';
-      html = ['5–19', '20–49', '≥ 50'].map((lab, i) => `<div class="row">${sw(theme.ramp5[i + 2])}${lab} located members (${fmt.int(listClassCounts[i + 1])} cells)</div>`).join('');
+      const grid25 = c25[2021] && alpha25(c.k) >= 0.5, counts = grid25 ? list25Counts : listClassCounts;
+      title = `<b>Sanctions-list members (treated) per ${grid25 ? '25' : '100'} km cell, 2021</b>`;
+      html = ['5–19', '20–49', '≥ 50'].map((lab, i) => `<div class="row">${sw(theme.ramp5[i + 2])}${lab} located members (${fmt.int(counts[i + 1])} cells)</div>`).join('');
       note = 'Memberships are fixed. Cells with 1 to 4 members show no count. The hover gives the government strategic list (treated) separately.';
     } else if (L === 'fin') {
       const labels = ['≤ −20%', '−20 to −10%', '−10 to 0%', '0 to +10%', '+10 to +20%', '> +20%'];
       title = '<b>Median real revenue, 2024 against 2021 (descriptive)</b>';
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]}</div>`).join('');
-      note = 'Revenue cohort by cash share; cells with 50 or more observed firms; composition changes with observation.';
+      note = 'Revenue cohort by cash share; cells with 50 or more observed firms; composition changes with observation.' + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     }
     if (title !== lastLegend.title) { $('legendtitle').innerHTML = title; lastLegend.title = title; }
     if (html !== lastLegend.html) { $('legendbody').innerHTML = html; lastLegend.html = html; }
@@ -346,14 +376,25 @@
     const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
     if (L === 'density' || (L === 'share' && c.k >= 1.5)) {
       const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0], yearShown = 2021; out.city = near;
-      if (c.k >= 24 && win025[near] && (L === 'density' || state.year === 2021)) { layer = win025[near].d; g = 0.25; origin = layer.origin; }
-      else if (c.k >= 1.5 && (L === 'density' ? win1[near] : (state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year])))) { if (L === 'density' || state.year === 2021) layer = win1[near].d; else { layer = cityYear[near][state.year].d; yearShown = state.year; } g = 1; origin = layer.origin; }
+      const inWin = (d, size) => km.x >= d.origin[0] && km.x < d.origin[0] + size && km.y >= d.origin[1] && km.y < d.origin[1] + size;
+      const w1 = L === 'density' || state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year]);
+      if (c.k >= 24 && win025[near] && (L === 'density' || state.year === 2021) && inWin(win025[near].d, 24)) { layer = win025[near].d; g = 0.25; origin = layer.origin; }
+      else if (c.k >= 1.5 && w1 && inWin(w1.d, 90)) { layer = w1.d; g = 1; origin = layer.origin; if (!(L === 'density' || state.year === 2021)) yearShown = state.year; }
       else if (L === 'density') { layer = nat; g = 5; }
-      if (!layer) return out;
-      const jx = Math.floor((km.x - origin[0]) / g), jy = Math.floor((km.y - origin[1]) / g);
-      out.grid = g; out.fine = true; out.origin = origin; out.yearShown = yearShown;
-      for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; return out; }
-      out.n = null; out.a = null; return out;   // a gap between cells is an empty cell of this grid, not the 100 km cell behind it
+      if (layer) {   // no window here: the national grids below answer instead
+        const jx = Math.floor((km.x - origin[0]) / g), jy = Math.floor((km.y - origin[1]) / g);
+        out.grid = g; out.fine = true; out.origin = origin; out.yearShown = yearShown;
+        for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; return out; }
+        out.n = null; out.a = null; return out;
+      }
+    }
+    if (alpha25(c.k) >= 0.5 && (L === 'share' || L === 'change' || L === 'lists')) {   // the 25 km cells (M10)
+      const jx = Math.floor(km.x / G25), jy = Math.floor(km.y / G25), k25 = cellKey(jx, jy);
+      out.grid = G25; out.ix = jx; out.iy = jy;
+      if (L === 'share') { const d = c25[state.year]; if (d) { const i = d.map.get(k25); if (i != null) Object.assign(out, { n: d.n[i], a: d.a[i], ns: d.ns[i] > 0 ? d.ns[i] : null }); } }
+      else if (L === 'change') { if (chg25) { const i = chg25.map.get(k25); if (i != null) Object.assign(out, { n21: chg25.n21[i], a21: chg25.a21[i], n24: chg25.n24[i], a24: chg25.a24[i], change: chg25.pp[i] / 1000, supported: chg25.cls[i] > 0 }); } }
+      else { const d = c25[2021]; if (d) { const i = d.map.get(k25); if (i != null) Object.assign(out, { n: d.n[i], sanctioned: d.ns[i] >= 5 ? d.ns[i] : null, gov: d.ng && d.ng[i] >= 5 ? d.ng[i] : null }); } }
+      return out;
     }
     if (L === 'share') { const d = yearCells[state.year].get(key); if (d) Object.assign(out, { n: d.n, a: d.a, nr: d.nr, ar: d.ar, ns: d.ns }); }
     else if (L === 'change') { const i = chgMap.get(key); if (i != null) Object.assign(out, { n21: chg.n21[i], a21: chg.a21[i], n24: chg.n24[i], a24: chg.a24[i], change: chg.change_pp[i], supported: chg.supported[i] }); }
@@ -389,8 +430,8 @@
     if (!h) return; const c = cam();
     if (h.kind === 'firm' || h.kind === 'listed') { octx.strokeStyle = theme.ink; octx.lineWidth = 2; octx.beginPath(); octx.arc(h.px, h.py, h.r + 3, 0, Math.PI * 2); octx.stroke(); return; }
     if (h.kind === 'none') return;
-    const g = h.grid, ox = h.fine && g !== 5 ? (g === 1 ? win1[nearestCity(c).city.label].d.origin : win025[nearestCity(c).city.label].d.origin) : [0, 0];
-    const x0 = h.fine ? ox[0] + Math.floor((h.kmx - ox[0]) / g) * g : h.ix * 100, y0 = h.fine ? ox[1] + Math.floor((h.kmy - ox[1]) / g) * g : h.iy * 100;
+    const g = h.grid, o = h.origin || [0, 0];
+    const x0 = o[0] + Math.floor((h.kmx - o[0]) / g) * g, y0 = o[1] + Math.floor((h.kmy - o[1]) / g) * g;
     const [px, py] = Motion.project(c, x0, y0 + g); const s = g * c.k;
     octx.strokeStyle = theme.ink; octx.lineWidth = 2; octx.strokeRect(px, py, s, s);
   }
@@ -413,7 +454,7 @@
     cancelFlight();
     const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) };
     const dk = Math.abs(Math.log2(to.k / from.k)), dpx = Math.hypot(to.cx - from.cx, to.cy - from.cy) * Math.min(from.k, to.k);
-    if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
+    if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { hideHover(); state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
     const ms = duration || Motion.clamp(600 + 250 * dk, 400, 1400);
     const path = flightPath(from, to, ms);
     hideHover();
@@ -442,11 +483,11 @@
     const k = state.cam.k, step = () => ({ target: stepAt(km, 2.5), rung: 'step' });
     if (state.mode === 'firms') return step();
     let t = null, rung = 'step';
-    if (k < 1.5 && (!h.fine || h.grid === 5)) {
-      const has = h.n != null || h.n21 != null || h.n_base != null || h.sanctioned != null || h.gov != null || h.c != null;
+    if (k < 1.5 && !(h.fine && h.grid < 5)) {
+      const ix = Math.floor(h.kmx / 100), iy = Math.floor(h.kmy / 100), city = cityInCell(ix, iy);   // the 100 km cell, whatever grid was hit
+      const has = state.layer === 'density' ? yearCells[2021].has(cellKey(ix, iy)) : (h.n != null || h.n21 != null || h.n_base != null || h.sanctioned != null || h.gov != null || h.c != null);
       if (!has) return null;
-      const city = cityInCell(h.ix, h.iy);
-      if (city) { t = cityTarget(city); rung = 'city'; } else { t = cellTarget(h.ix, h.iy); rung = 'cell'; }
+      if (city) { t = cityTarget(city); rung = 'city'; } else { t = cellTarget(ix, iy); rung = 'cell'; }
     } else if (h.fine && h.grid === 1) {
       if (h.n == null) return null;
       const o = h.origin || [0, 0]; t = fineTarget(o[0] + Math.floor(h.kmx - o[0]) + 0.5, o[1] + Math.floor(h.kmy - o[1]) + 0.5); rung = 'fine';
@@ -470,7 +511,8 @@
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     const tip = $('tip'); tip.innerHTML = tipText(h); tip.style.display = 'block';
     // to the right of the cursor, or to its left when that would reach the zoom column at the right edge
-    const tw = tip.offsetWidth, th = tip.offsetHeight; let left = x + 14; if (left + tw > stage.width - 72) left = Math.max(0, x - 14 - tw);
+    const tw = tip.offsetWidth, th = tip.offsetHeight; let left = x + 14; if (left + tw > stage.width - 72) left = x - 14 - tw;
+    left = Math.max(0, Math.min(left, stage.width - tw - 1));
     tip.style.left = left + 'px'; tip.style.top = Math.max(0, Math.min(y - 10, stage.height - th - 4)) + 'px';
     drawOverlay(h); drawCellPanel(h); syncCursor(h);
     return h;
@@ -515,7 +557,10 @@
   wrap.addEventListener('wheel', ev => {
     if (overControl(ev, '.zoombox')) return;
     ev.preventDefault(); cancelFlight();
-    const km = kmAt(ev); const f = Math.exp(-ev.deltaY * 0.0015); const k2 = clampK(state.cam.k * f);
+    // A trackpad pinch arrives as a wheel with the Ctrl flag and small deltas, so it takes about five times the wheel's
+    // rate (the ratio map libraries use); line- and page-based wheels are scaled to pixels first.
+    const dy = ev.deltaY * (ev.deltaMode === 1 ? 20 : ev.deltaMode === 2 ? 400 : 1);
+    const km = kmAt(ev); const f = Math.exp(-dy * (ev.ctrlKey ? 0.008 : 0.0015)); const k2 = clampK(state.cam.k * f);
     state.cam.cx = km.x - (km.px - stage.width / 2) / k2; state.cam.cy = km.y + (km.py - stage.height / 2) / k2; state.cam.k = k2;
     if (ev.pointerType !== 'touch') lastPointer = { x: km.px, y: km.py, inside: true };
     hideHover(); requestDraw(afterCameraMove);
@@ -555,7 +600,7 @@
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', h.region]);
     if (h && h.kind === 'firm') rows.push(['Coordinate pair', `${fmt.int(h.n)} firm${h.n === 1 ? '' : 's'}`]);
-    if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `100 km (${h.ix}, ${h.iy})`]);
+    if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `${h.grid} km (${h.ix}, ${h.iy})`]);
     info.innerHTML = rows.length ? rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('') : '<span>Hover a cell</span><b></b>';
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
     if (!h) return;
@@ -574,9 +619,10 @@
       return chart(pts.sort((a, b) => a.x - b.x), [2018.5, 2024.5], [2019, 2021, 2024], [], 'share with a statement, this 1 km cell, 2019 to 2024');
     }
     const key = cellKey(h.ix, h.iy); const pts = [];
-    for (const y of years) { const d = yearCells[y].get(key); if (d && d.n >= 50) pts.push({ x: y, y: 100 * d.a / d.n }); }
+    if (h.grid === G25 && C25) { for (const y of years) { const d = c25[y]; if (!d) continue; const i = d.map.get(key); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); } }
+    else for (const y of years) { const d = yearCells[y].get(key); if (d && d.n >= 50) pts.push({ x: y, y: 100 * d.a / d.n }); }
     if (!pts.length) return note('Fewer than 50 located firms in every year');
-    chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], 'share with a statement, this 100 km cell, by year');
+    chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], `share with a statement, this ${h.grid} km cell, by year`);
   }
   function drawNational() {
     const { ctx, w } = chartCtx('natchart'); const hh = $('natchart').getBoundingClientRect().height;
@@ -655,7 +701,7 @@
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
-    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
+    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
     fly(target) { return flyTo(target); },

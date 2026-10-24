@@ -961,12 +961,71 @@ flight to Moscow (78 to 92 s), the street zoom (93 to 99 s) and the pull-back to
 Moscow across the screen in a straight line (766, 366, 226 px) to its place in the national framing. The
 explainer artifact is at v19 with the new teaser asset, the atlas at v11.
 
+### Atlas: pinch zoom, the hand-over between grids, and 25 km cells (author's requests, 24 October 2026)
+
+Two observations from the author's laptop and phone. A trackpad pinch was too slow: it arrives as a wheel event
+with the Ctrl flag and small deltas, which the handler treated at the mouse wheel's rate; a pinch now takes
+about five times that rate (the ratio map libraries use), and line- and page-based wheels are scaled to pixels
+first. On the phone a pinch enlarged the same cells into a few giant squares. Two causes. The national 5 km
+grid (the density layer, and the share layer's 2021 shares) faded out between k 1.5 and 4 everywhere, not only
+where a city window took over, so a zoom into open country ended on blank ground, and at street zoom the 1 km
+cells vanished outside the 24 km square of the 250 m cells; each coarser grid is now drawn around the window
+that replaces it (`drawAround`: full alpha outside the window's square and, while the window fades in, 1 minus
+its alpha inside it). And for the share layer in years without city grids, the change layer and the lists
+layer, 100 km cells were the finest data outside the 22 city windows, so a zoom could only enlarge them; the
+firms view behaves differently because it has a point for every firm. The author chose a 25 km national grid
+over leaving 100 km as the finest step and over adding a 5 km share grid for every year (mostly below support
+outside cities).
+
+M10 (`R/motion/M10-cells25.R`, run `20261024T225231Z`, 4 s, peak 1.2 GB under the guard): the M5 rules
+(the production projection and located rule, eligible firms, the original statement, the sanctions-list and
+government-strategic-list memberships) binned at 25 km on the plane's origin, so every 100 km cell of
+`cellsyears` holds exactly sixteen children. Per year: located firms (n), with a statement (a) and
+sanctions-list members (ns); 2021 adds the government strategic list (ng); list counts of 1 to 4 are
+suppressed (-1). The change layer compares 2024 with 2021 under the 100 km rule (50 or more firms in both
+years, six classes at -5, -2, 0, +2, +5 points). Output `data/cells25.json` and its `.js` twin (2.4 MB, base64
+typed arrays): 7,702 to 8,031 cells a year (2,031 to 2,483 with 50 or more firms), 94,335 cell-years, the
+change layer 8,019 cells of which 1,975 are supported. Checks (103, all pass): per year the located firms and
+the statements equal M5's totals, the parents of the 25 km cells are exactly M5's 100 km cells and the
+children's sums reproduce every 100 km cell's firms and statements, the sanctions members (a suppressed
+parent's children hold 1 to 4), and for 2021 the shown 100 km government-strategic counts; the change rows
+carry both years' totals and every supported cell has a class.
+
+Atlas: the 25 km grid fades in as a 100 km cell passes 45 px (k 0.45 to 0.8) on the share layer (every year),
+the change layer and the lists layer, and stays; on the share layer for 2021 the national 5 km shares take over
+from k 1.5 to 2.5; the city 1 km windows (2019 to 2024) and the 250 m windows (2021) sit on top of whichever
+national grid is shown, each coarser grid drawn around them. The hover reads the finest grid at the point (the
+window's cell where a window is in view, else the 25 km cell, else the 100 km cell) and the share layer at the
+city scale now answers for years without a 1 km grid (it used to show nothing); the under-the-cursor panel
+names the grid and charts the 25 km cell's share by year; the legend names the grid shown and, on the change
+and lists layers, gives the 25 km class counts; the cohort and revenue layers say "100 km cells are this
+layer's finest resolution" once zoomed past k 1.5. The audit adds the 25 km states (three and four zoom steps
+in from the country on the share, change, lists and density layers, two of them with a hover).
+
+Verification: the atlas audit reports 245 states, 8,729 boxes and no finding at 400, 768, 1,200, 1,600 and 2,000
+px (the canvas text, the overlays, the camera landings and the flight paths). Read back from the page at 1,600
+px: at three zoom steps from the country (k 1.09) the share layer's legend says "(25 km cells)" and the Moscow
+hover reads "2021: 444,908 located eligible firms, 261,835 with a statement (58.9%) | Sanctions-list members
+(treated): 1,069" with the cursor panel "25 km (-133, 49)"; the change layer at 25 km gives 1,975 supported
+cells and the Moscow cell "2021: 261,835 of 444,908 (58.9%), 2024: 261,682 of 446,076 (58.7%), change -0.2
+points"; the lists layer "Sanctions list (treated): 1,069, Government strategic list (treated): 181"; the share
+layer for 2025 at the Moscow preset, which used to show nothing, reads the 25 km cell (446,941 firms, 56.6%).
+Hand-over: on the density layer at k 6 on the west edge of Moscow's 1 km window the national 5 km grid is drawn
+up to the window's square and a hover 7 km outside it reads a 5 km cell; on the share layer for 2021 at k 30 on
+the east edge of the 250 m window the 1 km cells continue outside the square and a hover there reads a 1 km
+cell; for 2023 at k 6 the 25 km cells surround the 1 km window and a hover outside reads the 25 km cell with its
+yearly series. A click on open country from the national view on the density layer flies to the 100 km cell
+(it used to do nothing when the 5 km cell under the cursor was empty). The phone checks (390 by 844, touch
+emulation) hold: the stacked page, the collapsed legend and note, a tap that selects, a double tap that flies
+to the Moscow preset, a pinch that doubles k. Screenshots in both themes inspected. The atlas artifact is at
+v12.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
 key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights. The published pages could not be opened from the lab's headless
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions

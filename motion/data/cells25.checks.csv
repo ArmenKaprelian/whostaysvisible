@@ -1,0 +1,104 @@
+"check","expected","observed","tolerance","pass"
+"2014: located firms equal M5's total",4625980,4625980,0,TRUE
+"2014: located firms with a statement equal M5's total",1750217,1750217,0,TRUE
+"2014: the parents of the 25 km cells are exactly M5's 100 km cells",1168,1168,0,TRUE
+"2014: no parent without a 100 km cell and no 100 km cell without children",1168,1168,0,TRUE
+"2014: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2014: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2014: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2014: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2015: located firms equal M5's total",4613157,4613157,0,TRUE
+"2015: located firms with a statement equal M5's total",2068729,2068729,0,TRUE
+"2015: the parents of the 25 km cells are exactly M5's 100 km cells",1167,1167,0,TRUE
+"2015: no parent without a 100 km cell and no 100 km cell without children",1167,1167,0,TRUE
+"2015: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2015: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2015: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2015: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2016: located firms equal M5's total",4812100,4812100,0,TRUE
+"2016: located firms with a statement equal M5's total",2102609,2102609,0,TRUE
+"2016: the parents of the 25 km cells are exactly M5's 100 km cells",1164,1164,0,TRUE
+"2016: no parent without a 100 km cell and no 100 km cell without children",1164,1164,0,TRUE
+"2016: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2016: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2016: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2016: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2017: located firms equal M5's total",4534752,4534752,0,TRUE
+"2017: located firms with a statement equal M5's total",2118834,2118834,0,TRUE
+"2017: the parents of the 25 km cells are exactly M5's 100 km cells",1162,1162,0,TRUE
+"2017: no parent without a 100 km cell and no 100 km cell without children",1162,1162,0,TRUE
+"2017: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2017: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2017: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2017: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2018: located firms equal M5's total",4317455,4317455,0,TRUE
+"2018: located firms with a statement equal M5's total",2060078,2060078,0,TRUE
+"2018: the parents of the 25 km cells are exactly M5's 100 km cells",1164,1164,0,TRUE
+"2018: no parent without a 100 km cell and no 100 km cell without children",1164,1164,0,TRUE
+"2018: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2018: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2018: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2018: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2019: located firms equal M5's total",3984991,3984991,0,TRUE
+"2019: located firms with a statement equal M5's total",2006147,2006147,0,TRUE
+"2019: the parents of the 25 km cells are exactly M5's 100 km cells",1160,1160,0,TRUE
+"2019: no parent without a 100 km cell and no 100 km cell without children",1160,1160,0,TRUE
+"2019: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2019: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2019: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2019: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2020: located firms equal M5's total",3574314,3574314,0,TRUE
+"2020: located firms with a statement equal M5's total",2140293,2140293,0,TRUE
+"2020: the parents of the 25 km cells are exactly M5's 100 km cells",1157,1157,0,TRUE
+"2020: no parent without a 100 km cell and no 100 km cell without children",1157,1157,0,TRUE
+"2020: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2020: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2020: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2020: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2021: located firms equal M5's total",3277638,3277638,0,TRUE
+"2021: located firms with a statement equal M5's total",2097055,2097055,0,TRUE
+"2021: the parents of the 25 km cells are exactly M5's 100 km cells",1154,1154,0,TRUE
+"2021: no parent without a 100 km cell and no 100 km cell without children",1154,1154,0,TRUE
+"2021: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2021: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2021: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2021: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2021: every shown 100 km government-strategic count has children",63,63,0,TRUE
+"2021: children sums reproduce the shown 100 km government-strategic members (max abs diff)",0,0,0,TRUE
+"2022: located firms equal M5's total",3146043,3146043,0,TRUE
+"2022: located firms with a statement equal M5's total",2056084,2056084,0,TRUE
+"2022: the parents of the 25 km cells are exactly M5's 100 km cells",1180,1180,0,TRUE
+"2022: no parent without a 100 km cell and no 100 km cell without children",1180,1180,0,TRUE
+"2022: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2022: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2022: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2022: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2023: located firms equal M5's total",3102998,3102998,0,TRUE
+"2023: located firms with a statement equal M5's total",2056619,2056619,0,TRUE
+"2023: the parents of the 25 km cells are exactly M5's 100 km cells",1180,1180,0,TRUE
+"2023: no parent without a 100 km cell and no 100 km cell without children",1180,1180,0,TRUE
+"2023: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2023: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2023: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2023: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2024: located firms equal M5's total",3083823,3083823,0,TRUE
+"2024: located firms with a statement equal M5's total",2051002,2051002,0,TRUE
+"2024: the parents of the 25 km cells are exactly M5's 100 km cells",1182,1182,0,TRUE
+"2024: no parent without a 100 km cell and no 100 km cell without children",1182,1182,0,TRUE
+"2024: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2024: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2024: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2024: every cell has 1 to 65535 firms",1,1,0,TRUE
+"2025: located firms equal M5's total",3062023,3062023,0,TRUE
+"2025: located firms with a statement equal M5's total",1975143,1975143,0,TRUE
+"2025: the parents of the 25 km cells are exactly M5's 100 km cells",1184,1184,0,TRUE
+"2025: no parent without a 100 km cell and no 100 km cell without children",1184,1184,0,TRUE
+"2025: children sums reproduce the 100 km firms (max abs diff)",0,0,0,TRUE
+"2025: children sums reproduce the 100 km statements (max abs diff)",0,0,0,TRUE
+"2025: children sums reproduce the 100 km sanctions members (a suppressed parent holds 1 to 4)",0,0,0,TRUE
+"2025: every cell has 1 to 65535 firms",1,1,0,TRUE
+"change: supported cells have 50 or more firms in both years",1,1,0,TRUE
+"change: every supported cell has a class 1 to 6 and no other cell has one",0,0,0,TRUE
+"change: class counts sum to the supported cells",1975,1975,0,TRUE
+"change: 2021 firms over the change rows equal the 2021 total",3277638,3277638,0,TRUE
+"change: 2024 firms over the change rows equal the 2024 total",3083823,3083823,0,TRUE
