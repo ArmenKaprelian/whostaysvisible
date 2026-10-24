@@ -26,7 +26,7 @@ SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js"
 ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
 # The video assets of the explainer artifact (the three 720p cuts under the 15 MB asset cap, uploaded on
 # 23 October 2026): the published page links them; the local page keeps its build/ files instead.
-VIDEOS = [("Teaser, 46 s", "/_blob/565d6fbb4d4aaf8bd1e40bba3f8f8734"), ("Moscow, 110 s", "/_blob/8e65629b41efb469e321e36f12368064"), ("Maps and firms, 55 s", "/_blob/6ef9cdfed63ea5d1e52821213355c6b0")]
+VIDEOS = [("Teaser, 46 s", "/_blob/736f29f07f3b4f219b71928cc7852c06"), ("Moscow, 110 s", "/_blob/5cad6fae05cb42ba961b2f51ff37e6cc"), ("Maps and firms, 55 s", "/_blob/a71b038a88a257227159c56f2039907e")]
 VIDEO_NOTE = '<p class="note">Videos at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) and the 174 s maps-and-firms cut are larger than the asset cap and travel as files.</p>'
 
 def convert(name):

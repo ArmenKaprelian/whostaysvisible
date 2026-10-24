@@ -73,7 +73,7 @@
     { id: 'share', label: 'Statement share by year', prov: 'Share of located eligible firms with an original statement, per 100 km cell, financial years 2014 to 2025 (M5 pass over the foundation registry and payload partitions, production projection and located rule; 2012 and 2013 carry no coordinates). City windows at 1 km for 2019 to 2024.' },
     { id: 'change', label: 'Change, 2024 vs 2021', prov: 'Figure 2.7 lower panel: change in the located share with a statement, 2024 against 2021, 100 km cells with 50 or more located firms in both years; six classes at ±2 and ±5 points (presentation-finalization-20261019/data/availability-change-cells.csv).' },
     { id: 'cohort', label: 'Cohort inclusion', prov: 'Figure 2.8: share of a cell’s located eligible firms (2021) in the revenue cohort by cash share, pooled quintile classes of supported cells (candidate-02-cell-source.csv; cutpoints 33.3, 38.3, 43.0, 47.6%).' },
-    { id: 'lists', label: 'Supplied-list members, 2021', prov: 'Located members of the sanctions list and the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. Supplied lists are fixed memberships, not dated designations.' },
+    { id: 'lists', label: 'Listed firms, 2021', prov: 'Located members of the sanctions list and the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations.' },
     { id: 'fin', label: 'Median revenue change (descriptive)', prov: 'Percent change of each cell’s median real revenue among the revenue-by-cash cohort firms observed in 2024, against the cell’s 2021 median; cells with 50 or more observed firms (pass2-reconcile geo-revenue-change-from-2021-source.csv). Descriptive: composition changes with observation; not a Chapter 3 estimate.' },
   ];
 
@@ -261,11 +261,11 @@
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const ring = `<span class="sw" style="background:transparent;border:2px solid ${theme.treated};box-sizing:border-box"></span>`;
-      if (L === 'share') html = `<div class="row"><b>Firms at registered addresses, ${ys}: share with a statement at the address</b></div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">one firm: absent (first class) or available (last class)</div>';
-      else if (L === 'fin') html = `<div class="row"><b>Firms on no list, ${ys}: real revenue against own 2019–2021 average, relative to the year’s median of firms on no list</b></div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm with a usable baseline and a value at the address</div>`;
-      else html = `<div class="row"><b>Firms at registered addresses, ${ys}</b></div><div class="row">${sw(theme.neutral)}every address (this layer is a cell layer)</div>`;
-      html += `<div class="row">${sw(theme.treated)}${ring}on a supplied list, red from its listing year; ring: no statement that year</div><div class="row">${c.k >= 20 ? 'discs sized by firms at the address' : '1 px marks; 2x2 and 3x3 blocks for 10 and 100 or more firms'}</div>`;
-      note = firmStatus || `${fmt.int(by.firms)} firms at ${fmt.int(by.addresses)} addresses; ${fmt.int(by.city_level)} city-level geocodes not drawn; ${fmt.int(by.listed)} listed firms.`;
+      if (L === 'share') html = `<div class="row"><b>Firms by registered address, ${ys}</b></div><div class="row">Colour: share of the firms at the address with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>';
+      else if (L === 'fin') html = `<div class="row"><b>Firms on no list, ${ys}</b></div><div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the address has a usable baseline</div>`;
+      else html = `<div class="row"><b>Firms by registered address, ${ys}</b></div><div class="row">${sw(theme.neutral)}every address (this layer is a cell layer)</div>`;
+      html += `<div class="row">${sw(theme.treated)}Sanctioned or strategic firm, red from its listing year.</div><div class="row">${ring}listed, no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one address. Larger dots hold more firms.' : 'Each dot is one address. Dots widen at 10 and 100 or more firms.'}</div>`;
+      note = firmStatus || `${fmt.int(by.firms)} firms at ${fmt.int(by.addresses)} addresses. ${fmt.int(by.city_level)} firms located only to a city centre are not drawn. ${fmt.int(by.listed)} listed firms.`;
       $('legend').innerHTML = html; $('mapnote').textContent = note; $('mapnote').hidden = !note; return;
     }
     if (L === 'density' || (L === 'share' && c.k >= 1.5 && (state.year === 2021 || c.k >= 24) && L === 'density')) {
@@ -275,7 +275,7 @@
       const fine = c.k >= 1.5;
       const breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
       const labels = ramp.map((_, i) => i === 0 ? `< ${breaks[0]}%` : i === ramp.length - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
-      html = `<div class="row"><b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : '100 km'} cells)</div>` + ramp.map((col, i) => `<div class="row">${sw(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 located firms</div>`;
+      html = `<div class="row"><b>Share with a statement, ${state.year}</b> (${fine ? (c.k < 24 ? '1 km' : '250 m') : '100 km'} cells)</div>` + ramp.map((col, i) => `<div class="row">${sw(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
       const t = totals[state.year]; note = t ? `${state.year}${state.year === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${state.year <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
       if (fine && state.year !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
@@ -287,7 +287,7 @@
       note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.`;
     } else if (L === 'lists') {
       html = '<div class="row"><b>Sanctions-list members per 100 km cell, 2021</b></div>' + ['5–19', '20–49', '50–199', '≥ 200'].map((lab, i) => `<div class="row">${sw(theme.ramp5[i + 1])}${lab} located members</div>`).join('');
-      note = 'Fixed supplied memberships; cells with 1 to 4 members show no count. A separate hover value gives the government strategic list.';
+      note = 'List memberships are fixed. Cells with 1 to 4 members show no count. The hover gives the government strategic list separately.';
     } else if (L === 'fin') {
       const labels = ['≤ −20%', '−20 to −10%', '−10 to 0%', '0 to +10%', '+10 to +20%', '> +20%'];
       html = '<div class="row"><b>Median real revenue, 2024 against 2021 (descriptive)</b></div>' + [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${sw(theme.change6[i])}${labels[i]}</div>`).join('');
@@ -437,7 +437,7 @@
   addPreset('Russia', () => fitNational());
   for (const city of bmp.cities) addPreset(city.label, () => { state.cam = { cx: city.x, cy: city.y, k: Math.min(stage.width, stage.height) / 95 }; });
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; state.cam = { cx: c.x + 1.5, cy: c.y + 0.5, k: Math.min(stage.width, stage.height) / 20 }; });
-  $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; supplied lists are fixed lists, not dated designations.`;
+  $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; the lists are fixed memberships, not dated designations.`;
   window.addEventListener('resize', redrawAll);
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes.
   window.__atlas = {

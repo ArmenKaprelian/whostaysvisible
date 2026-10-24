@@ -364,14 +364,14 @@
     Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
     Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
     MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
-    const rule = [['firm marks, sized by firms at the address', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
+    const rule = [['Each mark is one address. Larger marks hold more firms.', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
     for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 950, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
     ctx.save(); ctx.globalAlpha *= alpha;
     ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 987, 9, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(122, 987, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(122, 987, 8, 0, TAU); ctx.stroke();
+    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1022, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1022, 8, 0, TAU); ctx.stroke();
     ctx.restore();
-    Motion.text(ctx, 'on a supplied list, red from its listing year', 146, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'solid: statement available that year · ring: absent that year', 84, 1022, { size: 22, color: theme.muted, alpha });
+    Motion.text(ctx, 'Sanctioned or strategic firm, red from its listing year.', 118, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'listed, no statement that year', 118, 1022, { size: 22, color: theme.muted, baseline: 'middle', alpha });
   }
   // The two address-pile facts of the density pass, once in the downtown run where the sized piles are visible
   // (round 5: they came from the cells-only cut's 250 m leg; same counts, same denominators).
@@ -401,7 +401,7 @@
     y = Motion.paragraph(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;
     y = Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', x, y, w, { size: 22, color: theme.muted, alpha: step(l, 1.8, 0.5) }) + 12;
-    y = Motion.paragraph(ctx, `Dated by the supplied sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated list members red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
+    y = Motion.paragraph(ctx, `Dated by the sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated listed firms red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
     y = Motion.paragraph(ctx, SPB, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 4.0, 0.5) }) + 12;
     Motion.text(ctx, 'Paths compared, no effect estimated.', x, y + 10, { size: 22, color: theme.muted, alpha: step(l, 5.0, 0.5) });
     ctx.restore();

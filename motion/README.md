@@ -756,12 +756,56 @@ and 2,000 px.
 - M9: 173 checks pass; `check-readonly.sh` reported nothing changed outside the lab; `firms.json` carries no identifier names; every year file under 15 MB gzipped (3.8 to 4.1 MB) and under 16 MB as a script (about 5 MB).
 - Publish set: the identifier and neighbour-name guards pass; 109.8 MB in all; the explainer artifact at v13 (v12 declared the assets capability, v13 links the three video assets) and the atlas at v7 hold every file; the load on the host could not be checked from the lab (a claude.ai session is needed), so that check is the author's.
 
+### Wording on screen (author's decisions, 24 October 2026)
+
+The screens say "listed firms" and "firms on no list"; "supplied list" and "treatment group" appear
+nowhere on screen (the provenance word stays in this README and in the credits' caveat, which now reads
+"Supplied lists are fixed memberships, not dated designations."). Legends, atlas and video: the red row
+"Sanctioned or strategic firm, red from its listing year." with the solid glyph, the ring row "listed, no
+statement that year" with the ring glyph, and the size rule in dot language ("Each dot is one address.
+Larger dots hold more firms." in the city windows, "Each dot is one address. Dots widen at 10 and 100 or
+more firms." zoomed out; "Each mark is one address. Larger marks hold more firms." in the video's downtown
+run). Atlas firms legend: the title "Firms by registered address, YEAR" with a colour line ("Colour:
+share of the firms at the address with a YEAR statement", or on the revenue layer "Firms on no list, YEAR"
+and "Colour: real revenue change since the firm's own 2019–2021 average, minus the year's median change"),
+"A single firm shows the first colour (no statement) or the last (statement available).", the neutral
+row "no firm at the address has a usable baseline", and the note "N firms at M addresses. C firms located
+only to a city centre are not drawn. L listed firms." Atlas cells legends: "fewer than 50 firms, share not
+shown"; the lists layer is "Listed firms, 2021" with "List memberships are fixed. Cells with 1 to 4
+members show no count. The hover gives the government strategic list separately."; the footer says "the
+lists are fixed memberships, not dated designations." Video: the chapter "Listed firms" with the caveat
+"List memberships are fixed, not dated designations. The odds compare populations, not the same firms.";
+the Moscow close "Dated by the sanctions list (1,003 of 2,220 dates inferred). 200 undated listed firms
+red throughout. Descriptive, not causal."; the ticker unchanged ("listed firms shown red"); the comparison
+beat keeps "firms listed in 2022" and "firms on no list". The credits caveat moved to 22 px to hold the
+extra sentence. All five cuts were re-rendered: the legend changes reach the four with the Moscow section
+and the credits caveat reaches the teaser as well.
+
+Verification of the wording (24 October): the atlas audit reports 75 states, 2,691 boxes and no finding at
+1,200, 1,600 and 2,000 px; the text audits report only the counted `box-over-mark` lines (`full` 17 over
+1,435 frames at step 6, `moscow` 17 over 550, `maps-firms-instagram` 17 over 870, `maps-firms-instagram-55`
+5 over 550 at step 3, `teaser` none over 460 at step 3). The lists caveat then moved from a 1,000 px box,
+where it wrapped with one word on a second line, to 1,160 px (nothing else sits at that height), and
+`full` was audited again (1,435 frames, 28,871 boxes, the same 17 lines) and rendered again. Renders
+(sharded, `ffprobe` against `__videoMeta`): `full` run `20261024T053603Z-capture`, 8 shards, 169 s,
+8,610 frames / 286.999 s, 79.8 MB, 720p copy 21.2 MB (the earlier run `052603Z` of this wording was
+replaced by it); `teaser` run `052906Z`, 4 shards, 47 s, 1,380 / 46.000 s, 17.3 MB, 720p 4.4 MB;
+`moscow` run `052957Z`, 4 shards, 128 s, 3,300 / 110.000 s, 44.1 MB, 720p 13.6 MB; `maps-firms-instagram`
+run `053212Z`, 6 shards, 126 s, 5,220 / 174.000 s, 57.3 MB, 720p 17.1 MB; `maps-firms-instagram-55` run
+`053428Z`, 4 shards, 71 s, 1,650 / 54.999 s, 14.8 MB, 720p 4.7 MB. Frames checked at full size: the Moscow
+legend rows at 152 s of `full` (`build/r5-c/f04560.png`), the lists beat at 254 and 264 s (`f07620.png`,
+`f07920.png`, the caveat on one line), the credits at 282 s (`f08460.png`), and frames extracted from the
+finished files (the Moscow legend at 62 s of `moscow`, the credits at 44.8 s of `teaser`, the comparison
+beat at 30 s of the 55 s cut, the caveat at 264 s of `full`). The three 720p assets on the explainer
+artifact were replaced by the new teaser, Moscow and 55 s files and the old assets deleted (v16); the
+atlas is at v8.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page;
-atlas artifact: v6 and v7 (two uploads). The published pages could not be opened from the lab's headless
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording;
+atlas artifact: v6 and v7 (two uploads), v8 with the wording. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions

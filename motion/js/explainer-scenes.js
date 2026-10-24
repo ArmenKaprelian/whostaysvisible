@@ -16,7 +16,7 @@
   // Scenes, the ground schedules and the camera keyframes are built from the beat starts.
   const TITLES = { hook: 'Who stays visible?', archive: 'The archive', availability: 'Availability over time', years: 'The map through time', change: 'The change map',
                    zoom: 'To Moscow', groups: 'Availability by group', transitions: 'Absence and removal',
-                   size: 'Firm size', lists: 'Supplied lists', next: 'What comes next', credits: 'Sources' };
+                   size: 'Firm size', lists: 'Listed firms', next: 'What comes next', credits: 'Sources' };
   const HEAD = [['hook', 11], ['archive', 14], ['availability', 16], ['years', 24], ['change', 12], ['zoom', 11]];
   const TAIL = [['groups', 16], ['transitions', 12], ['size', 16], ['lists', 16], ['next', 12], ['credits', 7]];
   const BEATS = HEAD.concat([['section', 120]], TAIL);   // round 4: the national year run adds 12 s
@@ -337,7 +337,7 @@
         groups.forEach(([g], gi) => Motion.text(ctx, fmt.pct(bin(g, b).share), colsX[gi], y, { size: 26, weight: 600, color: theme.ink, align: 'right', alpha: a, group: 'lists-' + g }));
       });
     }
-    Motion.paragraph(ctx, 'Supplied memberships are fixed lists, not dated designations. The odds compare populations, not the same firms.', 170, 960, 1000, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
+    Motion.paragraph(ctx, 'List memberships are fixed, not dated designations. The odds compare populations, not the same firms.', 170, 960, 1160, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
   } };
 
   DEFS.next = { z: 1, draw({ ctx, local: l, cam, stage, theme }) {
@@ -370,7 +370,7 @@
       ['Who stays visible?', 40, 700, theme.ink, 0.3],
       ['Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 22, 400, theme.muted, 0.8],
       ['Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 26, 400, theme.muted, 1.1],
-      ['Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment.', 24, 400, theme.muted, 1.4],
+      ['Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed memberships, not dated designations.', 22, 400, theme.muted, 1.4],
     ];
     let y = 400;
     for (const [s, size, w, color, t0] of lines) { Motion.reveal(ctx, s, 960, y, l, t0, { size, weight: w, color, align: 'center' }); y += size === 40 ? 90 : 52; }
