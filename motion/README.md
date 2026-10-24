@@ -800,6 +800,13 @@ beat at 30 s of the 55 s cut, the caveat at 264 s of `full`). The three 720p ass
 artifact were replaced by the new teaser, Moscow and 55 s files and the old assets deleted (v16); the
 atlas is at v8.
 
+Clearing of `build/` (author's decision, 24 October 2026): the working frame folders of rounds 3 to 5 (57
+folders, 263 PNG frames and the three JPG review sheets of rounds 3 and 4, 194 MB) and the audit JSON files
+(31 files, 184 MB, regenerable with `capture.py --audit`) were deleted to save space. The frame paths named
+above and in the round sections no longer exist; the frames had been inspected at the time, and the record
+of what was checked stands in this README. Kept: the ten current videos, `smoke.mp4`, the six `audit-*.txt`
+summaries and `logs/`.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
