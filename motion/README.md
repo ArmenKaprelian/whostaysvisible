@@ -176,7 +176,7 @@ Rules (author's decisions, 23 October):
   outcome, in the dark control colour; a firm without a usable baseline is only part of the faint neutral
   backdrop (never an outcome colour). Baseline firms that filed without a revenue value (0.1-2%) stay in
   the backdrop and are counted (`base_filed_novalue`).
-- City-level geocodes are not drawn (6,000-90,000 per year in the downtown rectangle) and are counted.
+- Other geocodes (RFSD geocoding quality 'city': coordinates without a verified house or street match) are not drawn (6,000-90,000 per year in the downtown rectangle) and are counted.
 - Classes: six, breaks -50 / -20 / 0 / +50 / +150 percent, chosen by the author on 23 October from the
   2022-2024 quantiles after the first set (-40 / -15 / 0 / +15 / +40) put 69-84% of filers in the two
   extreme classes (see the spread below).
@@ -195,7 +195,7 @@ px with (2, 0.6, 8) at the city extent and (3, 1.1, 14) downtown; the outcome di
 baseline firms, a dark disc for the non-filers with an inner disc scaled by `sqrt(filers / baseline firms)`
 in the filers' median class; the region rasters are pixel blocks (2 x 2 for 10+, 3 x 3 for 100+ firms).
 
-Checks (163, all pass): per extent and year, firms = marks + city-level + treated, drawn firms = the three
+Checks (163, all pass): per extent and year, firms = marks + other geocodes + treated, drawn firms = the three
 states, outcome marks hold the baseline firms, class counts sum to the filers; the 2021 inscribed 90 km
 square equals the density pass's Moscow window (762,760); the red-from histogram equals an R
 recomputation from the list file with `match()`; the largest 2023 pile (2,765 firms, 906 with a
@@ -514,12 +514,12 @@ the three-row legend with the line "6 km pixels, median class of firms with a st
 (it leaves over the first second of the pull-back) and no anchor markers (they leave with the region run).
 
 What a pixel holds at this scale: at the left framing one pixel is 1/0.168 = 5.95 km square. The
-backdrop holds every located eligible firm on no list below city-level geocodes whose address falls in
+backdrop holds every located eligible firm on no list with a house- or street-level geocode whose address falls in
 the pixel, neutral; the outcome layer holds the pixels with at least one such firm with a statement and a
 revenue value that year, in the median class of those firms' relative change (own 2019-2021 average,
 minus the year's median of the drawn firms on no list nationwide); pixels with 10 or more firms widen to
 2x2 blocks and 100 or more to 3x3 (2014: 6,100 and 2,425 of 26,576 pixels; 2025: 5,634 and 2,087 of
-25,701). Listed firms are not in the rasters; city-level geocodes are counted and not drawn. The
+25,701). Listed firms are not in the rasters; other geocodes are counted and not drawn. The
 largest pixel is central Moscow (column 225, row 488): 85,577 firms in 2023, 25,376 with a value.
 
 Two mark sets: the Moscow set (M6: every listed firm with a row in the region rectangle, at its latest
@@ -535,7 +535,7 @@ the firm-year table one year at a time, since the nationwide twelve-year join in
 the DuckDB grant; the pixel-raster drawing moved into `M6-common.R`, shared with M6). Run under the
 guard in 43 s (`scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800%
 Rscript --vanilla R/motion/M8-national.R a rel charcoal national`, peak 12.9 GB). 74 checks pass: per
-year, firms equal marks + city-level + treated, the drawn firms equal the three states, the outcome
+year, firms equal marks + other geocodes + treated, the drawn firms equal the three states, the outcome
 pixels hold the filers with a value, the class counts sum to the filers, the located eligible firms equal
 M5's located total (4,625,980 in 2014 to 3,062,023 in 2025); the 2021 count equals the density pass
 (3,277,638); the red-from histogram equals an R recomputation from the list file; the Moscow population
@@ -656,10 +656,10 @@ records, financial years 2011–2025, values deflated and classed by the author"
 ### Size budget and hosting
 
 Firms mode needs one record per distinct registered address (1 m rounding) of firms on no supplied
-list with below-city-level geocodes, per financial year: 15 bytes (x, y as int32 metres of the km
+list with house- or street-level geocodes, per financial year: 15 bytes (x, y as int32 metres of the km
 plane; n, a, f as uint16 firms, statements, filers with a baseline and a value; cls as uint8 relative
-revenue class). 2021: 692,057 addresses for 3,078,593 firms (727,190 distinct coordinates over every
-located firm, listed and city-level included, the density pass's count exactly), 10.4 MB raw, 3.8 MB
+revenue class). 2021: 692,057 distinct coordinate pairs for 3,078,593 firms (727,190 distinct coordinate pairs over every
+located firm, listed and other geocodes included, the density pass's count exactly), 10.4 MB raw, 3.8 MB
 gzipped; 2014: 727,116 addresses for 4,288,612 firms, 10.9 MB raw, 3.9 MB gzipped; twelve years 44.9 MB
 gzipped. The artifact host serves only listed file types, so each year's gzipped bytes travel as base64
 inside a script (`data/firms/firms-YYYY.js`, about 5 MB, the lab's pattern for binary arrays), 59.9 MB
@@ -674,7 +674,7 @@ What every view shows: every firm is in the data at every zoom; nothing is sampl
 for 100 or more, with alpha rising by count, so addresses closer than one screen pixel merge into one
 mark whose count the hover reports; at the Russia preset a pixel is about 5 km, as in Figure 2.7's print.
 From 20 px per km every address is its own disc sized by count (the city rule to 60, the downtown rule
-above). Firms at one address are one mark by definition. City-level geocodes (195,010 in 2021) are
+above). Firms at one coordinate pair are one mark by definition. Other geocodes (195,010 in 2021) are
 counted in the legend and not drawn, as in the Moscow pass. The Moscow rasters the videos use are
 unchanged; the atlas draws from the address files.
 
@@ -708,7 +708,7 @@ waits for them, so captures are unchanged. The logs under `logs/` keep the old n
 ### M9: registered addresses per year (`R/motion/M9-firms.R`)
 
 National scope through `M6-common.R` (the per-year table build and the national yearly medians of M8).
-Per year, one record per distinct address of firms on no list below city-level geocodes, sorted by x then
+Per year, one record per distinct coordinate pair of firms on no list with house- or street-level geocodes, sorted by x then
 y, written as a 32-byte header (`FRM1`, record count, origin, year, version) and a struct of arrays
 (x i32, y i32, n u16, a u16, f u16, cls u8), gzipped, with a base64 `.js` twin; `data/firms.json` holds
 the layout, the per-year counts and sums, the files and sizes, the mark rules, the breaks and both looks'
@@ -717,7 +717,7 @@ firms and the filers equal M8's `filers_base`, an address has a class exactly wh
 value, the read-back header, first and last records and sums match, the raw size is 32 + 15 records and
 the gzipped file is under 15 MB; M6's pile rule reproduced in SQL equals M6's Moscow piles and marks in
 the city and downtown extents for every year, and the file's rounded subset differs from them only at
-the rectangle's edge (at most four addresses); for 2021 the distinct coordinates of all located firms,
+the rectangle's edge (at most four coordinate pairs); for 2021 the distinct coordinate pairs of all located firms,
 the largest address (7,928 firms) and the firms at addresses with 100 or more (514,368) equal the
 density pass's facts. Run under the guard in 108 s, peak 12.9 GB.
 
@@ -739,7 +739,7 @@ firms, a with a YEAR statement (share)" and on the revenue layer the filers and 
 the listed firms at the address (below 20 px per km, within the mark's radius in km, which the tooltip
 states); the under-the-cursor panel keeps the cursor's cell chart and gains an address row. The legend
 names the layer's ramp, the one-firm reading, the red and ring glyphs, the mark rule at the zoom and the
-year's totals (firms, addresses, city-level geocodes not drawn, listed firms). Light theme: the navy
+year's totals (firms, coordinate pairs, other geocodes not drawn, firms on these lists). Light theme: the navy
 ramp and neutral from `M6-common.R`'s light look. Timings in headless Brave at 1,400 by 1,000: a year
 loads in 0.14 to 0.31 s from the local server, the national blit draws in 27 to 34 ms, a city or
 downtown view in 10 to 12 ms.
@@ -807,12 +807,55 @@ above and in the round sections no longer exist; the frames had been inspected a
 of what was checked stands in this README. Kept: the ten current videos, `smoke.mp4`, the six `audit-*.txt`
 summaries and `logs/`.
 
+Correction to the wording standard (author, 24 October 2026, superseding the items above where they
+conflict). (a) The five-list union is "firms on at least one of the five lists", shortened to "firms on
+these lists", never "sanctioned or strategic firms"; the red row reads "Firm on one of the five lists, red
+from its listing year." in the atlas and the video; the ring row and the ticker ("listed firms shown red")
+stand; the close reads "N firms on at least one of the five lists red by 2025 within 160 by 90 km of
+Moscow" and "200 undated firms on these lists red throughout", the St Petersburg sentence "the absence of
+its firms on these lists after listing"; the lists chapter is "The lists" with the title "Firms on the
+sanctions list: lower odds of a statement by 2024"; the atlas lists layer is "List members, 2021" (its two
+lists named in the provenance and the hover). (b) "Decree list" keeps its name (it was never renamed on
+screen). (c) Geocoding categories are house-level, street-level and other geocodes, defined once in the
+atlas firms-view provenance as "coordinates without a verified house or street match", with the line "Most
+located firms have a house- or street-level address match. The remaining geocodes have unverified
+precision."; "city-level geocodes" is retired in this README as well. The mapping is exact: RFSD's
+geocoding quality among the 3,277,638 located eligible firms of 2021 takes three values, house (2,441,054),
+street (641,375) and city (195,209), so the passes' quality-city flag is the other-geocodes category
+(read-only query of 24 October, run `20261024T203404Z`). (d) Pile counts say "coordinate pairs", not
+addresses: the atlas header "3,277,638 located eligible firms at 727,190 distinct coordinate pairs in
+2021", the density note "the most shared coordinate pair holds 7,928 firms", the firms note "3,078,593
+firms on no list at 692,057 distinct coordinate pairs; 4,034 firms on these lists. 195,010 firms with other
+geocodes are not drawn.", the legends "Each dot is one coordinate pair." and "Each mark is one coordinate
+pair.", the tooltip and the under-the-cursor row "Coordinate pair"; "registered address" stays where it
+names the legal address at which a firm is drawn. (e) Shared registrations are explained in the author's
+sentences, with "can", not "often": all three in the atlas firms-view provenance, the first two in the
+video's downtown run, where the facts panel now reads "Across Russia in 2021: 7,928 firms at the most
+shared coordinate pair, 514,368 at coordinate pairs shared by 100 or more firms." over them and stays for
+the whole run (1.6 to 13.8 s of the run in the journey, 53.6 to 65.8 s of the standalone cut); the 55 s
+cut, whose run is shorter, shows the facts alone. The transitions title "Absence often precedes removal"
+is a different claim and keeps its word. The teaser carries none of these strings and was not re-rendered.
+
+Verification of the correction: all five cuts probe clean; the atlas audit reports 75 states, 2,691 boxes
+and no finding at 1,200, 1,600 and 2,000 px; the text audits report only the counted `box-over-mark` lines
+(`full` 17 over 1,435 frames at step 6, `moscow` 17 over 550, `maps-firms-instagram` 17 over 870,
+`maps-firms-instagram-55` 5 over 550 at step 3, `teaser` none over 460). Renders (sharded, `ffprobe`
+against `__videoMeta`): `full` run `20261024T204123Z-capture`, 8 shards, 189 s, 8,610 frames / 286.999 s,
+79.5 MB, 720p copy 21.1 MB; `moscow` run `204453Z`, 4 shards, 147 s, 3,300 / 110.000 s, 43.7 MB, 720p
+13.5 MB; `maps-firms-instagram` run `204728Z`, 6 shards, 139 s, 5,220 / 174.000 s, 57.0 MB, 720p 17.0 MB;
+`maps-firms-instagram-55` run `205002Z`, 4 shards, 83 s, 1,650 / 54.999 s, 14.5 MB, 720p 4.6 MB. Frames
+checked at full size before the renders (`full` at 152, 158, 200 and 264 s, the 55 s cut at 50 s) and from
+the finished files (the close at 203 s of `full`, the downtown run at 64 s of `moscow`); the atlas firms
+view screenshotted at 1,600 px with its legend, note, provenance and header read back. Artifacts: atlas
+v9, explainer v17 with the Moscow and 55 s 720p assets replaced and the old ones deleted (the teaser asset
+is unchanged).
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording. The published pages could not be opened from the lab's headless
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction;
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions

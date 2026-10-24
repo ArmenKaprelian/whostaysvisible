@@ -73,7 +73,7 @@
     { id: 'share', label: 'Statement share by year', prov: 'Share of located eligible firms with an original statement, per 100 km cell, financial years 2014 to 2025 (M5 pass over the foundation registry and payload partitions, production projection and located rule; 2012 and 2013 carry no coordinates). City windows at 1 km for 2019 to 2024.' },
     { id: 'change', label: 'Change, 2024 vs 2021', prov: 'Figure 2.7 lower panel: change in the located share with a statement, 2024 against 2021, 100 km cells with 50 or more located firms in both years; six classes at ±2 and ±5 points (presentation-finalization-20261019/data/availability-change-cells.csv).' },
     { id: 'cohort', label: 'Cohort inclusion', prov: 'Figure 2.8: share of a cell’s located eligible firms (2021) in the revenue cohort by cash share, pooled quintile classes of supported cells (candidate-02-cell-source.csv; cutpoints 33.3, 38.3, 43.0, 47.6%).' },
-    { id: 'lists', label: 'Listed firms, 2021', prov: 'Located members of the sanctions list and the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations.' },
+    { id: 'lists', label: 'List members, 2021', prov: 'Located members of the sanctions list and the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells); cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations.' },
     { id: 'fin', label: 'Median revenue change (descriptive)', prov: 'Percent change of each cell’s median real revenue among the revenue-by-cash cohort firms observed in 2024, against the cell’s 2021 median; cells with 50 or more observed firms (pass2-reconcile geo-revenue-change-from-2021-source.csv). Descriptive: composition changes with observation; not a Chapter 3 estimate.' },
   ];
 
@@ -261,16 +261,16 @@
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const ring = `<span class="sw" style="background:transparent;border:2px solid ${theme.treated};box-sizing:border-box"></span>`;
-      if (L === 'share') html = `<div class="row"><b>Firms by registered address, ${ys}</b></div><div class="row">Colour: share of the firms at the address with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>';
-      else if (L === 'fin') html = `<div class="row"><b>Firms on no list, ${ys}</b></div><div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the address has a usable baseline</div>`;
-      else html = `<div class="row"><b>Firms by registered address, ${ys}</b></div><div class="row">${sw(theme.neutral)}every address (this layer is a cell layer)</div>`;
-      html += `<div class="row">${sw(theme.treated)}Sanctioned or strategic firm, red from its listing year.</div><div class="row">${ring}listed, no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one address. Larger dots hold more firms.' : 'Each dot is one address. Dots widen at 10 and 100 or more firms.'}</div>`;
-      note = firmStatus || `${fmt.int(by.firms)} firms at ${fmt.int(by.addresses)} addresses. ${fmt.int(by.city_level)} firms located only to a city centre are not drawn. ${fmt.int(by.listed)} listed firms.`;
+      if (L === 'share') html = `<div class="row"><b>Firms at registered addresses, ${ys}</b></div><div class="row">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>';
+      else if (L === 'fin') html = `<div class="row"><b>Firms on no list, ${ys}</b></div><div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a usable baseline</div>`;
+      else html = `<div class="row"><b>Firms at registered addresses, ${ys}</b></div><div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`;
+      html += `<div class="row">${sw(theme.treated)}Firm on one of the five lists, red from its listing year.</div><div class="row">${ring}listed, no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
+      note = firmStatus || `${fmt.int(by.firms)} firms on no list at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists. ${fmt.int(by.city_level)} firms with other geocodes are not drawn.`;
       $('legend').innerHTML = html; $('mapnote').textContent = note; $('mapnote').hidden = !note; return;
     }
     if (L === 'density' || (L === 'share' && c.k >= 1.5 && (state.year === 2021 || c.k >= 24) && L === 'density')) {
       html = '<div class="row"><b>Firms per cell</b> (' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')</div>' + MM.countClassLabels.map((lab, i) => `<div class="row">${sw(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
-      note = `${fmt.int(F.located_2021)} located firms of ${fmt.int(F.eligible_firms_2021)} eligible in 2021; ${fmt.int(F.distinct_locations)} distinct coordinates; the largest address holds ${fmt.int(F.largest_location_firms)} firms.`;
+      note = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021 (${fmt.int(F.eligible_firms_2021)} eligible); the most shared coordinate pair holds ${fmt.int(F.largest_location_firms)} firms.`;
     } else if (L === 'share') {
       const fine = c.k >= 1.5;
       const breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
@@ -326,10 +326,10 @@
     if (h.region) lines.push(`<b>${h.region}</b>`);
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none') {
       if (h.kind === 'firm') {
-        lines.push(`Address: ${fmt.int(h.n)} located firm${h.n === 1 ? '' : 's'}, ${fmt.int(h.a)} with a ${state.year} statement` + (h.n > 1 ? ` (${fmt.pct(100 * h.a / h.n)})` : ''));
+        lines.push(`Coordinate pair: ${fmt.int(h.n)} located firm${h.n === 1 ? '' : 's'}, ${fmt.int(h.a)} with a ${state.year} statement` + (h.n > 1 ? ` (${fmt.pct(100 * h.a / h.n)})` : ''));
         if (state.layer === 'fin') lines.push(h.f ? `${fmt.int(h.f)} with a baseline and a value; median change ${CLASS_LABELS[h.cls - 1]}` : 'No firm with a usable baseline and a value');
       }
-      if (h.listed) lines.push(`${fmt.int(h.listed.n)} listed firm${h.listed.n === 1 ? '' : 's'} ${h.listed.within_km ? `within ${h.listed.within_km < 1 ? Math.round(h.listed.within_km * 1000) + ' m' : fmt.dec(h.listed.within_km, 1) + ' km'} of the cursor` : 'at this address'}: ${fmt.int(h.listed.red)} red this year` + (h.listed.ring ? `, ${fmt.int(h.listed.ring)} without a ${state.year} statement` : ''));
+      if (h.listed) lines.push(`${fmt.int(h.listed.n)} firm${h.listed.n === 1 ? '' : 's'} on one of the five lists ${h.listed.within_km ? `within ${h.listed.within_km < 1 ? Math.round(h.listed.within_km * 1000) + ' m' : fmt.dec(h.listed.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair'}: ${fmt.int(h.listed.red)} red this year` + (h.listed.ring ? `, ${fmt.int(h.listed.ring)} without a ${state.year} statement` : ''));
       return lines.join('<br>');
     }
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
@@ -370,7 +370,7 @@
   function drawCellPanel(h) {
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', h.region]);
-    if (h && h.kind === 'firm') rows.push(['Address', `${fmt.int(h.n)} firm${h.n === 1 ? '' : 's'}`]);
+    if (h && h.kind === 'firm') rows.push(['Coordinate pair', `${fmt.int(h.n)} firm${h.n === 1 ? '' : 's'}`]);
     if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `100 km (${h.ix}, ${h.iy})`]);
     info.innerHTML = rows.length ? rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('') : '<span>Hover a cell</span><b></b>';
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
@@ -422,13 +422,16 @@
 
   // ---- controls -------------------------------------------------------------------------------------
   const layersEl = $('layers');
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); $('layerprov').textContent = L.prov; drawMap(); drawNational(); }); layersEl.appendChild(b); });
+  // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
+  const FIRMS_PROV = 'Firms view: every located eligible firm on no list with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists from the national pass (M8), red from their listing year. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
+  const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncProv(); drawMap(); drawNational(); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share'); }
   // The view switch (round 5): cells as before, or every registered address as a mark.
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); state.hover = null; drawOverlay(null); $('tip').style.display = 'none'; syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); state.hover = null; drawOverlay(null); $('tip').style.display = 'none'; syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   $('layerprov').textContent = LAYERS[1].prov;
   $('year').addEventListener('input', () => { state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); drawMap(); drawNational(); });

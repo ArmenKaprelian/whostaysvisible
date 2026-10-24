@@ -16,7 +16,7 @@
   // Scenes, the ground schedules and the camera keyframes are built from the beat starts.
   const TITLES = { hook: 'Who stays visible?', archive: 'The archive', availability: 'Availability over time', years: 'The map through time', change: 'The change map',
                    zoom: 'To Moscow', groups: 'Availability by group', transitions: 'Absence and removal',
-                   size: 'Firm size', lists: 'Listed firms', next: 'What comes next', credits: 'Sources' };
+                   size: 'Firm size', lists: 'The lists', next: 'What comes next', credits: 'Sources' };
   const HEAD = [['hook', 11], ['archive', 14], ['availability', 16], ['years', 24], ['change', 12], ['zoom', 11]];
   const TAIL = [['groups', 16], ['transitions', 12], ['size', 16], ['lists', 16], ['next', 12], ['credits', 7]];
   const BEATS = HEAD.concat([['section', 120]], TAIL);   // round 4: the national year run adds 12 s
@@ -313,7 +313,7 @@
   } };
 
   DEFS.lists = { z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Sanctions-listed firms: lower odds of a statement by 2024', l, 0.2, theme);
+    title(ctx, 'Firms on the sanctions list: lower odds of a statement by 2024', l, 0.2, theme);
     subtitle(ctx, 'against firms on no list, with 95% intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const ser = [{ label: 'Sanctions list only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },

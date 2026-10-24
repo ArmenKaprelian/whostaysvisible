@@ -364,22 +364,27 @@
     Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
     Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
     MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
-    const rule = [['Each mark is one address. Larger marks hold more firms.', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
+    const rule = [['Each mark is one coordinate pair. Larger marks hold more firms.', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
     for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 950, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
     ctx.save(); ctx.globalAlpha *= alpha;
     ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 987, 9, 0, TAU); ctx.fill();
     ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1022, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1022, 8, 0, TAU); ctx.stroke();
     ctx.restore();
-    Motion.text(ctx, 'Sanctioned or strategic firm, red from its listing year.', 118, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Firm on one of the five lists, red from its listing year.', 118, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
     Motion.text(ctx, 'listed, no statement that year', 118, 1022, { size: 22, color: theme.muted, baseline: 'middle', alpha });
   }
-  // The two address-pile facts of the density pass, once in the downtown run where the sized piles are visible
-  // (round 5: they came from the cells-only cut's 250 m leg; same counts, same denominators).
-  function pileFacts(ctx, theme, alpha) {
+  // The two shared-registration facts of the density pass, once in the downtown run where the sized piles are
+  // visible (round 5; same counts, same denominators), with the author's standard explanation of shared
+  // registrations (24 October 2026). The kept-years cut shows the facts alone (brief): its run is shorter.
+  const lineCount = (s, size, weight, maxWidth) => { let n = 0, line = ''; for (const w of s.split(' ')) { const t = line ? line + ' ' + w : w; if (measure(t, size, weight) > maxWidth && line) { n++; line = w; } else line = t; } return n + (line ? 1 : 0); };
+  function pileFacts(ctx, theme, alpha, brief) {
     if (alpha <= 0) return;
-    const s = `Across Russia in 2021: ${fmt.int(SF.largest_location_firms)} firms at the largest registered address, ${fmt.int(SF.firms_at_100plus_locations)} at addresses shared by 100 or more.`, w = measure(s, 24, 400);
-    Motion.panel(ctx, 60, 100, w + 48, 56, theme, 0.92 * alpha);
-    Motion.text(ctx, s, 84, 136, { size: 24, color: theme.ink, alpha });
+    const facts = `Across Russia in 2021: ${fmt.int(SF.largest_location_firms)} firms at the most shared coordinate pair, ${fmt.int(SF.firms_at_100plus_locations)} at coordinate pairs shared by 100 or more firms.`;
+    const why = 'Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address.';
+    const W = 1160, h1 = lineCount(facts, 24, 400, W) * 24 * 1.35, h2 = brief ? 0 : 8 + lineCount(why, 22, 400, W) * 22 * 1.35;
+    Motion.panel(ctx, 60, 100, W + 48, h1 + h2 + 40, theme, 0.92 * alpha);
+    const y = Motion.paragraph(ctx, facts, 84, 136, W, { size: 24, color: theme.ink, alpha });
+    if (!brief) Motion.paragraph(ctx, why, 84, y + 8, W, { size: 22, color: theme.muted, alpha });
   }
   // One disclosure where the blue scale first appears: the scale covers firms with a statement that year.
   function disclosure(ctx, theme, alpha) {
@@ -391,17 +396,17 @@
   // The close: the count line, the caveats, the St Petersburg sentence (round 4; the two numbers checked
   // against motion/review/spb-vs-moscow-report.md, 160 by 90 km, 2022-2025 and 2022-2024) and the
   // comparison line, on one opaque panel in the right column, clear of the ticker and the legend.
-  const SPB = 'St Petersburg shows the same pattern at 160 by 90 km: its listed firms’ absence after listing stays within 6 points of Moscow’s, and only its share of firms with a usable baseline runs higher, 53 to 54 percent against 38 to 44 in 2022 to 2024.';
+  const SPB = 'St Petersburg shows the same pattern at 160 by 90 km: the absence of its firms on these lists after listing stays within 6 points of Moscow’s, and only its share of firms with a usable baseline runs higher, 53 to 54 percent against 38 to 44 in 2022 to 2024.';
   function closeText(ctx, theme, l, mul = 1) {
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1), x = 1204, w = 632;
     Motion.panel(ctx, 1180, 300, 680, 560, theme, 0.6 * step(l, 0.3, 0.5));   // dims the map under it (the far east) rather than covering it
     let y = 346;
-    y = Motion.paragraph(ctx, `${fmt.int(cr.red)} listed firms red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
+    y = Motion.paragraph(ctx, `${fmt.int(cr.red)} firms on at least one of the five lists red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;
     y = Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', x, y, w, { size: 22, color: theme.muted, alpha: step(l, 1.8, 0.5) }) + 12;
-    y = Motion.paragraph(ctx, `Dated by the sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated listed firms red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
+    y = Motion.paragraph(ctx, `Dated by the sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated firms on these lists red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
     y = Motion.paragraph(ctx, SPB, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 4.0, 0.5) }) + 12;
     Motion.text(ctx, 'Paths compared, no effect estimated.', x, y + 10, { size: 22, color: theme.muted, alpha: step(l, 5.0, 0.5) });
     ctx.restore();
@@ -461,7 +466,7 @@
     const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(t, 47, 53, 0.5, 0.5);
     if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
     const ext = extentOf(cam.k);
-    pileFacts(ctx, theme, Motion.plateau(t, 53.6, 60, 0.5, 0.5));
+    pileFacts(ctx, theme, Motion.plateau(t, 53.6, 65.8, 0.5, 0.5));
     ticker(ctx, theme, { v, ext, alpha: step(t, 53, 0.6), loc: locationAt(LOC, t) });
     legend(ctx, theme, { alpha: step(t, 53.2, 0.6), k: cam.k });
     disclosure(ctx, theme, Motion.plateau(t, 53.6, 60, 0.5, 0.5));
@@ -536,7 +541,7 @@
       drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
       const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(l, SEC.back + 3.5, SEC.downtown + 1, 0.5, 0.5);
       if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
-      pileFacts(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
+      pileFacts(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 13.8, 0.5, 0.5), !!YL);
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
