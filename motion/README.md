@@ -10,10 +10,10 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 5: one cut family, `full` 287 s, `teaser` 46 s, `moscow` 110 s, `maps-firms-instagram` 174 s and `maps-firms-instagram-55` 55 s, every cut with the Moscow section; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 5: one cut family, `full` 287 s and `teaser` 46 s (the Moscow standalone and the two maps-and-firms cuts were retired on 24 October 2026), each cut with the Moscow section; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
-| Teaser | `build/who-stays-visible-teaser-public-40s.mp4` | 40 s, 1,200 frames: the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
-| Treated cut (round 2) | `explainer.html?cut=moscow` (round 2: `treated`), `js/treated-scenes.js`, `build/who-stays-visible-moscow-110s.mp4` | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
+| Teaser | `build/who-stays-visible-teaser-46s.mp4` (`-720p` copy beside it) | 46 s, 1,380 frames since round 4 (round 1: 40 s, 1,200 frames): the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
+| Treated cut (round 2; retired as a standalone cut on 24 October 2026, the sequence lives inside the full cut) | `js/treated-scenes.js` (the journey section; `?cut=moscow` and its file are gone) | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
 | Atlas | `explorer.html` (+ `js/explorer-app.js`) | six map layers, a 2014-2025 year slider, zoom from the country to 250 m cells, hover tooltips with counts and denominators, side charts, a provenance line on every panel, dark and light themes |
 | Data | `data/*.json`, `data/*.js`, `data/*.provenance.json`, `data/*.checks.csv` | the aggregates the pages draw, each with a provenance sidecar and the checks that gated it |
 | Tools | `tools/serve.py`, `tools/cdp.py`, `tools/capture.py`, `tools/audit.py`, `../scripts/motion-capture.sh` | static server, a stdlib DevTools client, the frame-exact sharded capture, the text audit, the host launcher with the lab bracket |
@@ -74,9 +74,6 @@ scripts/motion-capture.sh --seconds 3 --out motion/build/smoke.mp4
 scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
 scripts/motion-capture.sh --out motion/build/who-stays-visible-full-287s.mp4 --shards 8     # the default cut
 scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser-46s.mp4
-scripts/motion-capture.sh --page "explainer.html?cut=moscow" --out motion/build/who-stays-visible-moscow-110s.mp4
-scripts/motion-capture.sh --page "explainer.html?cut=maps-firms-instagram" --out motion/build/who-stays-visible-maps-firms-instagram-174s.mp4 --shards 6
-scripts/motion-capture.sh --page "explainer.html?cut=maps-firms-instagram-55" --out motion/build/who-stays-visible-maps-firms-instagram-55s.mp4
 scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800% Rscript --vanilla R/motion/M9-firms.R a rel charcoal national   # the atlas's address files
 python3 -I motion/tools/atlas-audit.py --url http://127.0.0.1:8765/explorer.html --out motion/build/audit-atlas.txt
 scripts/motion-capture.sh --audit motion/build/audit-full.json --audit-step 6            # text boxes of every 6th frame
@@ -697,9 +694,9 @@ and the public teaser's windows are deleted, and the page builds one family:
 |---|---|---|---|---|
 | `full` (`full-local`) | `explainer.html` (default) | 287 s | 8,610 | `build/who-stays-visible-full-287s.mp4`, `-720p` copy |
 | `teaser` (`teaser-local`) | `?cut=teaser` | 46 s | 1,380 | `build/who-stays-visible-teaser-46s.mp4`, `-720p` copy |
-| `moscow` | `?cut=moscow` | 110 s | 3,300 | `build/who-stays-visible-moscow-110s.mp4`, `-720p` copy |
-| `maps-firms-instagram` (`maps-firms-local`) | `?cut=maps-firms-instagram` | 174 s | 5,220 | `build/who-stays-visible-maps-firms-instagram-174s.mp4`, `-720p` copy |
-| `maps-firms-instagram-55` (`maps-firms-local-55`) | `?cut=maps-firms-instagram-55` | 55 s | 1,650 | `build/who-stays-visible-maps-firms-instagram-55s.mp4`, `-720p` copy |
+| `moscow` (retired 24 October 2026) | `?cut=moscow` | 110 s | 3,300 | `build/who-stays-visible-moscow-110s.mp4`, `-720p` copy |
+| `maps-firms-instagram` (`maps-firms-local`; retired 24 October 2026) | `?cut=maps-firms-instagram` | 174 s | 5,220 | `build/who-stays-visible-maps-firms-instagram-174s.mp4`, `-720p` copy |
+| `maps-firms-instagram-55` (`maps-firms-local-55`; retired 24 October 2026) | `?cut=maps-firms-instagram-55` | 55 s | 1,650 | `build/who-stays-visible-maps-firms-instagram-55s.mp4`, `-720p` copy |
 
 The page builds every cut at once without the rasters and loads the Moscow and national rasters in the
 background, handing them to the scenes through `TreatedScenes.setImages`; in render mode `__ready`
@@ -850,11 +847,25 @@ view screenshotted at 1,600 px with its legend, note, provenance and header read
 v9, explainer v17 with the Moscow and 55 s 720p assets replaced and the old ones deleted (the teaser asset
 is unchanged).
 
+Cuts retired (author's decision, 24 October 2026; no video versions tagged "instagram" or "moscow"): the
+Moscow standalone (`moscow`, 110 s) and the two maps-and-firms cuts (`maps-firms-instagram`, 174 s;
+`maps-firms-instagram-55`, 55 s) are gone. Their six files (1080p and 720p) were deleted from `build/`; the
+builders were removed from `js/explainer-scenes.js` (the `sequence` helper, the kept-year list and the two
+cut specs) and `js/treated-scenes.js` (the standalone timeline, keyframes, scenes and the `make` and
+`standalone` exports; the camera rest, the year-run helper and the journey's kept-year option stay, and the
+alignment probe is exported for a future cut); the page's cut button offers `full` and `teaser`, and a
+`?cut=` request for a retired id falls back to `full`; the publish set links the teaser asset only, and the
+Moscow and 55 s assets were deleted from the explainer artifact (v18). Verification: both cuts probe clean;
+the audits are unchanged (`full` 1,435 frames, 29,129 boxes, the 17 counted lines; `teaser` 460 frames,
+none); frames 4,560, 4,740, 6,000 and 7,920 of `full` and 300, 700 and 1,300 of `teaser` captured before
+and after the change are byte-identical, so the video files were not re-rendered. The video deliverables are
+`full` and `teaser`, each with a 720p copy.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction;
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired;
 atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 

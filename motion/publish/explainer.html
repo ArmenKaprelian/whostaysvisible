@@ -66,7 +66,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
   <div class="chapters" id="chapters"></div>
 </div>
 <p class="note">A code-driven animation of the dissertation's Chapter 2 aggregates (RFSD v3.1.0, CC BY 4.0; geoBoundaries gbOpen, OpenStreetMap). Space plays and pauses; the left and right arrows step one frame; chapters jump. Every number is a data value with a provenance record in the lab. Descriptive associations, not causal effects.</p>
-<p class="note">Videos at 720p: <a href="/_blob/736f29f07f3b4f219b71928cc7852c06">Teaser, 46 s</a>, <a href="/_blob/23b9d860599ec5bb979b816cd8775581">Moscow, 110 s</a>, <a href="/_blob/2d85c0cc9475a5f65277244e5ebb2bc4">Maps and firms, 55 s</a>. The full cut (4:47) and the 174 s maps-and-firms cut are larger than the asset cap and travel as files.</p>
+<p class="note">Video at 720p: <a href="/_blob/736f29f07f3b4f219b71928cc7852c06">Teaser, 46 s</a>. The full cut (4:47) is larger than the asset cap and travels as a file.</p>
 <script src="data/basemap.js"></script>
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
@@ -100,12 +100,12 @@ html[data-render] * { transition: none !important; animation: none !important; }
                   anchorA: tok('anchor-a'), anchorB: tok('anchor-b'), accentMuted: tok('accent-muted'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
-  // One cut family (round 5): every cut carries the Moscow section, so the firm-level data must be present.
+  // One cut family (round 5; the side cuts retired 24 October 2026): both cuts carry the Moscow section, so the firm-level data must be present.
   // The cuts are built at once without the rasters, which arrive in the background (render mode waits for them).
   const D0 = window.MOTION_DATA;
   if (!(D0.points && D0.treated && D0.anchors && D0.moscowcells && D0.moscowcomparison && D0.national && D0.treatednational && window.TreatedScenes)) throw new Error('the explainer needs the firm-level data: points, treated, anchors, moscowcells, moscowcomparison, national, treatednational');
   const CUTS = ExplainerScenes.makeCuts(null, { align: q.get('__align') === '1' });
-  const NAMES = { full: 'Full cut', teaser: 'Teaser', moscow: 'Moscow', 'maps-firms-instagram': 'Maps and firms', 'maps-firms-instagram-55': 'Maps and firms, 55 s' };
+  const NAMES = { full: 'Full cut', teaser: 'Teaser' };
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   window.__cuts = CUTS;   // the built cuts, for inspection from the DevTools client
   const wanted = q.get('cut');

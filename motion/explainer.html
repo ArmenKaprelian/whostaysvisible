@@ -49,12 +49,12 @@
                   anchorA: tok('anchor-a'), anchorB: tok('anchor-b'), accentMuted: tok('accent-muted'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
   const canvas = document.getElementById('stage');
-  // One cut family (round 5): every cut carries the Moscow section, so the firm-level data must be present.
+  // One cut family (round 5; the side cuts retired 24 October 2026): both cuts carry the Moscow section, so the firm-level data must be present.
   // The cuts are built at once without the rasters, which arrive in the background (render mode waits for them).
   const D0 = window.MOTION_DATA;
   if (!(D0.points && D0.treated && D0.anchors && D0.moscowcells && D0.moscowcomparison && D0.national && D0.treatednational && window.TreatedScenes)) throw new Error('the explainer needs the firm-level data: points, treated, anchors, moscowcells, moscowcomparison, national, treatednational');
   const CUTS = ExplainerScenes.makeCuts(null, { align: q.get('__align') === '1' });
-  const NAMES = { full: 'Full cut', teaser: 'Teaser', moscow: 'Moscow', 'maps-firms-instagram': 'Maps and firms', 'maps-firms-instagram-55': 'Maps and firms, 55 s' };
+  const NAMES = { full: 'Full cut', teaser: 'Teaser' };
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   window.__cuts = CUTS;   // the built cuts, for inspection from the DevTools client
   const wanted = q.get('cut');

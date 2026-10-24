@@ -436,11 +436,9 @@
     return { scenes: sc, keyframes: kf, DURATION: duration, timeline: tl };
   }
   // Consecutive windows of a parent played at full speed: [id, title, fs, fe] in order, start times from a running clock.
-  function sequence(items) { let t = 0; return items.map(([id, title, fs, fe, camEnd]) => { const e = [id, title, t, t + (fe - fs), fs, fe, camEnd]; t += fe - fs; return e; }); }
-  // The cuts (round 5: one family, every cut with the Moscow section): the full cut, a 46 s teaser with a
-  // six-second excerpt of the designation, the standalone Moscow cut, and the two maps-and-firms cuts.
+  // The cuts (one family since round 5; the Moscow standalone and the two maps-and-firms cuts were retired by the
+  // author on 24 October 2026): the full cut and a 46 s teaser with a six-second excerpt of the designation.
   // images may be null: the scenes draw without the rasters until TreatedScenes.setImages hands them over.
-  const KEPT = [2014, 2016, 2018, 2021, 2022, 2023, 2024, 2025];   // the 55 s cut's downtown run
   function makeCuts(images, opts) {
     const TS = window.TreatedScenes;
     // The national rasters were built at the left framing; refuse to build if the manifest's camera is not this page's.
@@ -450,21 +448,7 @@
     const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
     const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
                   ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
-    // Maps and firms (author's side project, 23 October): the map beats and the two-firm section in their order, nothing else; cutting only.
-    const T = fm.timeline, sec = (id, a, b, ce) => [id, T[id].title, S0 + a, S0 + b, ce == null ? undefined : S0 + ce];
-    const MAPS = sequence([['years', TITLES.years, B.years.start, B.years.end], ['change', TITLES.change, B.change.start, B.change.end], ['zoom', TITLES.zoom, B.zoom.start, B.zoom.end],
-      sec('street', 0, SEC.designation), sec('designation', SEC.designation, SEC.comparison), sec('comparison', SEC.comparison, SEC.back), sec('downtown', SEC.back, SEC.city), sec('city', SEC.city, SEC.region),
-      // The close plays 1.5 s past its fade so no text meets the next beat's in the crossfade; the camera holds at the left framing from SEC.out.
-      sec('region', SEC.region, SEC.national), sec('national', SEC.national, SEC.close), sec('close', SEC.close, SEC.out + 1.5, SEC.out), ['next', TITLES.next, B.next.start + 1.5, B.next.end]]);
-    const mapsLen = MAPS[MAPS.length - 1][3];
-    // The 55 s version: the two-firm sequence without the street zoom, then the downtown run over eight kept
-    // years (2015, 2017, 2019 and 2020 dropped), ending on 2025; a parent with the kept-year list supplies the run.
-    const fm55 = buildCut(BEATS, B => TS.journey(images, B.section.start, { years: KEPT }));
-    const S55 = sequence([['profiles', 'Who are they?', S0 + SEC.profiles + 0.4, S0 + SEC.designation], sec('designation', SEC.designation, SEC.comparison), sec('comparison', SEC.comparison, SEC.back),
-      ['back', 'The map returns', S0 + SEC.back, S0 + SEC.downtown], ['downtown', 'Central Moscow, kept years', S0 + SEC.downtown, S0 + SEC.profiles + 0.4 + 55]]);
-    const all = e => new Set(e.map(x => x[0]));
-    return { full: fm, teaser: makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])), moscow: TS.standalone(images, opts),
-             'maps-firms-instagram': makeCut(fm, MAPS, mapsLen, all(MAPS)), 'maps-firms-instagram-55': makeCut(fm55, S55, 55, all(S55)) };
+    return { full: fm, teaser: makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])) };
   }
-  window.ExplainerScenes = { makeCuts, keptYears: KEPT, TITLES, frames: { left: leftK(), nat: natK(0.98) } };
+  window.ExplainerScenes = { makeCuts, TITLES, frames: { left: leftK(), nat: natK(0.98) } };
 })();
