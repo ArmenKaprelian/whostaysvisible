@@ -401,16 +401,21 @@
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let flight = null;
   function cancelFlight() { if (!flight) return; const f = flight; flight = null; cancelAnimationFrame(f.raf); f.resolve({ done: false, frames: f.frames, ms: performance.now() - f.t0 }); }
+  // The flight's path: Motion.camera's directed interpolation over one segment, or two for a long pan (the centre moving
+  // more than two viewport diagonals at the smaller k), which pulls out and back in through a middle keyframe.
+  function flightPath(from, to, ms) {
+    const W = stage.width, H = stage.height, dist = Math.hypot(to.cx - from.cx, to.cy - from.cy), dpx = dist * Math.min(from.k, to.k);
+    const kf = [Object.assign({ t: 0 }, from), Object.assign({ t: ms }, to)];
+    if (dpx > 2 * Math.hypot(W, H)) kf.splice(1, 0, { t: ms / 2, cx: (from.cx + to.cx) / 2, cy: (from.cy + to.cy) / 2, k: Math.max(kFit(), Math.min(from.k, to.k, 0.8 * minSide() / dist)) });
+    return Motion.camera(kf, W, H);
+  }
   function flyTo(target, { instant = false, duration = null } = {}) {
     cancelFlight();
     const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) };
-    const dk = Math.abs(Math.log2(to.k / from.k)), dist = Math.hypot(to.cx - from.cx, to.cy - from.cy), dpx = dist * Math.min(from.k, to.k);
+    const dk = Math.abs(Math.log2(to.k / from.k)), dpx = Math.hypot(to.cx - from.cx, to.cy - from.cy) * Math.min(from.k, to.k);
     if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
-    const ms = duration || Motion.clamp(600 + 250 * dk, 400, 1400), W = stage.width, H = stage.height;
-    const kf = [Object.assign({ t: 0 }, from), Object.assign({ t: ms }, to)];
-    // A long pan (the centre moving more than two viewport diagonals at the smaller k) pulls out and back in.
-    if (dpx > 2 * Math.hypot(W, H)) kf.splice(1, 0, { t: ms / 2, cx: (from.cx + to.cx) / 2, cy: (from.cy + to.cy) / 2, k: Math.max(kFit(), Math.min(from.k, to.k, 0.8 * minSide() / dist)) });
-    const path = Motion.camera(kf, W, H);
+    const ms = duration || Motion.clamp(600 + 250 * dk, 400, 1400);
+    const path = flightPath(from, to, ms);
     hideHover();
     return new Promise(resolve => {
       const f = flight = { raf: 0, t0: performance.now(), frames: 0, resolve };
@@ -654,6 +659,8 @@
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
     fly(target) { return flyTo(target); },
+    // the subject's screen distance from the centre along the flight that fly(target) would take, at n + 1 samples
+    pathPreview(target, n = 20) { const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) }; const ms = 1000, path = flightPath(from, to, ms); const out = []; for (let i = 0; i <= n; i++) { const p = path(ms * i / n); out.push(Math.hypot((to.cx - p.cx) * p.k, (to.cy - p.cy) * p.k)); } return out; },
     legend(open) { setLegend(open == null ? null : open ? 'open' : 'closed'); },   // null: back to the width rule
     note(open) { setNote(open == null ? null : open ? 'open' : 'closed'); },
     frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },

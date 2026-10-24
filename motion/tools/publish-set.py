@@ -26,7 +26,7 @@ SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js"
 ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
 # The video assets of the explainer artifact (the three 720p cuts under the 15 MB asset cap, uploaded on
 # 23 October 2026): the published page links them; the local page keeps its build/ files instead.
-VIDEOS = [("Teaser, 46 s", "/_blob/736f29f07f3b4f219b71928cc7852c06")]
+VIDEOS = [("Teaser, 46 s", "/_blob/f71de2a3518ffc6beb175c3ef4adcbd0")]
 VIDEO_NOTE = '<p class="note">Video at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) is larger than the asset cap and travels as a file.</p>'
 
 def convert(name):

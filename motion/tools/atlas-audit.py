@@ -124,6 +124,12 @@ def main():
             state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0] + 300, m[1]);", "clkcell", cam_k(side / 500, "a click on the cell 300 km east of Moscow lands on its centre", cx, cy, 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1);", "zoom3", cam_k(8 * P["kfit"], "three zoom-ins from Russia give 8 x kFit", P["russia"]["cx"], P["russia"]["cy"], 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(-1); await A.zoom(-1); await A.zoom(-1); await A.zoom(0);", "zoomfit", cam_is(P["russia"], "zooming in, out past the floor and fitting returns the Russia preset", 1e-6, 1e-6))
+            # a zoom-in flight keeps its subject converging on the centre from the first frame (24 October 2026)
+            for tag, setup, target in [("path1", "A.preset('Russia');", "{ cx: m[0], cy: m[1], k: %r }" % P["moscow"]["k"]), ("path2", "A.preset('Moscow');", "{ cx: m[0] + 1.5, cy: m[1] + 0.5, k: %r }" % P["cm"]["k"]), ("path3", "A.preset('Russia');", "{ cx: m[0] + 300, cy: m[1], k: %r }" % (side / 500))]:
+                d = cdp.evaluate("(() => { const A = window.__atlas, m = A.cities.Moscow; A.mode('cells'); %s return A.pathPreview(%s, 40); })()" % (setup, target), await_promise=False)
+                bad = [i for i in range(1, len(d)) if d[i] > d[i - 1] + 0.5]
+                n_states += 1
+                if bad or d[-1] > 0.5: findings.append("%-11s width %d  %-7s %-5s %-8s %-10s %s" % ("path", w, "share", 2021, tag, "flight", "the subject moved away from the centre at samples %s; end offset %.2f px" % (bad[:5], d[-1])))
             # firms mode (round 5): the address marks by layer at three presets, two hovers, and a ladder step
             F = "A.mode('firms'); "
             for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia")]:

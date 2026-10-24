@@ -939,12 +939,34 @@ layer's hover shows no values at the city scale for years without a 1 km grid (2
 atlas artifact is at v10; `js/motion-core.js`, `js/map-layers.js` and `js/charts.js` are untouched, so the
 explainer's frames are unchanged and no cut was re-rendered.
 
+Directed flights (author's request, 24 October 2026, later the same evening): a zoom-in used to zoom into the
+middle of the current view and pan to its subject in the last moments, because the camera's centre moved at a
+steady pace in kilometres while the zoom grew exponentially, so the subject drifted outward on screen before
+snapping to the centre. `Motion.camera` (shared by the explainer's keyframes and the atlas's flights) now
+directs every segment at its subject: zooming in, the end centre's screen position moves linearly from where
+it starts to its final place, so the zoom is aimed at it from the first frame; zooming out, the start centre's
+screen position drifts linearly from the middle to where it ends up, so the view widens around the current
+spot; a pan at a fixed zoom is the linear path. The author chose this over a two-phase pan-then-zoom, and asked
+for the video as well as the atlas. Atlas: `window.__atlas.pathPreview(target, n)` returns the subject's
+screen distance from the centre along the flight `fly(target)` would take, and the audit asserts that it never
+grows and ends at 0 for Russia to Moscow, Moscow to Central Moscow and Russia to the cell 300 km east of
+Moscow (205 states, 7,321 boxes, zero findings at the five widths); from the country Moscow's distance falls
+389, 387, 377, 347, 289, 195, 100, 42, 12, 2, 0 px over a flight, and a Moscow to Vladivostok flight pulls out
+and brings the destination on screen before settling. Video: the full cut and the teaser probe clean, their
+text audits are unchanged (`full` 17 counted lines over 1,435 frames, `teaser` none over 460) and both were
+re-rendered: `full` run `20261024T223650Z-capture`, 8 shards, 174 s, 8,610 frames / 286.999 s, 82.2 MB, 720p
+copy 21.6 MB; `teaser` run `224003Z`, 4 shards, 47 s, 1,380 / 46.000 s, 19.4 MB, 720p 5.0 MB. Frames of the
+flight to Moscow (78 to 92 s), the street zoom (93 to 99 s) and the pull-back to the national framing (184 to
+186.5 s) were inspected; a camera trace confirms the pull-back zooms out in place to k 1 and then slides
+Moscow across the screen in a straight line (766, 366, 226 px) to its place in the national framing. The
+explainer artifact is at v19 with the new teaser asset, the atlas at v11.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout. The published pages could not be opened from the lab's headless
+key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights. The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions

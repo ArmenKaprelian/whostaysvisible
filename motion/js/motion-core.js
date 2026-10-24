@@ -67,8 +67,21 @@
       let i = 0; while (i < kf.length - 1 && t > kf[i + 1].t) i++;
       const a = kf[i], b = kf[i + 1];
       const u = b.easing((t - a.t) / (b.t - a.t));
-      return { t, cx: Motion.lerp(a.cx, b.cx, u), cy: Motion.lerp(a.cy, b.cy, u), k: Math.exp(Motion.lerp(Math.log(a.k), Math.log(b.k), u)),
-               ox: Motion.lerp(a.ox, b.ox, u), oy: Motion.lerp(a.oy, b.oy, u), v: a.v == null || b.v == null ? (b.v == null ? a.v : b.v) : Motion.lerp(a.v, b.v, u) };
+      const k = Math.exp(Motion.lerp(Math.log(a.k), Math.log(b.k), u)), ox = Motion.lerp(a.ox, b.ox, u), oy = Motion.lerp(a.oy, b.oy, u);
+      // The centre is directed at the subject (author's request, 24 October 2026). A centre interpolated linearly in km
+      // while the zoom grows exponentially lets the destination drift outward on screen and snap to the centre at the end.
+      // Zooming in: the end centre's screen position moves linearly from where it starts to its final place, so the zoom is
+      // aimed at it from the first frame. Zooming out: the start centre's screen position drifts linearly from the middle
+      // to where it ends up, so the view widens around the current spot. A pan with a fixed zoom is the linear path.
+      let cx, cy;
+      if (b.k >= a.k) {
+        const px = Motion.lerp(a.ox + (b.cx - a.cx) * a.k, b.ox, u), py = Motion.lerp(a.oy - (b.cy - a.cy) * a.k, b.oy, u);
+        cx = b.cx - (px - ox) / k; cy = b.cy + (py - oy) / k;
+      } else {
+        const px = Motion.lerp(a.ox, b.ox + (a.cx - b.cx) * b.k, u), py = Motion.lerp(a.oy, b.oy - (a.cy - b.cy) * b.k, u);
+        cx = a.cx - (px - ox) / k; cy = a.cy + (py - oy) / k;
+      }
+      return { t, cx, cy, k, ox, oy, v: a.v == null || b.v == null ? (b.v == null ? a.v : b.v) : Motion.lerp(a.v, b.v, u) };
     };
   };
 
