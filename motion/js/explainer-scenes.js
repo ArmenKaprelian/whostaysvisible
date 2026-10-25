@@ -114,11 +114,11 @@
   const groundScene = (sch, duration, timeMap) => ({ id: 'ground', title: 'Ground', start: 0, end: duration, z: 0, fadeIn: 0, fadeOut: 0, draw({ ctx, t, cam, stage, theme }) { drawGround(ctx, stage, cam, theme, timeMap ? timeMap(t) : t, sch); } });
 
   // ---- helpers ---------------------------------------------------------------------------------
-  const title = (ctx, s, t, t0, theme, y = 118, size = 54) => Motion.reveal(ctx, s, 80, y, t, t0, { size, weight: 700, color: theme.ink });
-  const subtitle = (ctx, s, t, t0, theme, y = 164) => Motion.reveal(ctx, s, 80, y, t, t0, { size: 28, color: theme.muted });
-  const eyebrow = (ctx, s, x, y, theme, alpha = 1) => Motion.text(ctx, s.toUpperCase(), x, y, { size: 22, weight: 600, color: theme.muted, alpha, letterSpacing: 1.5 });
+  const title = (ctx, s, t, t0, theme, y = 118, size = 54) => Motion.reveal(ctx, s.toUpperCase(), 80, y, t, t0, { size, weight: 700, color: theme.ink });   // scene titles in capitals (round 10)
+  const subtitle = (ctx, s, t, t0, theme, y = 164) => Motion.revealParagraph(ctx, s, 80, y, 1760, t, t0, { size: 28, color: theme.muted, lineHeight: 1.35 });   // wrapped inside 1,760 px (round 10)
+  const eyebrow = (ctx, s, x, y, theme, alpha = 1) => Motion.text(ctx, s.toUpperCase(), x, y, { size: 22, weight: 500, color: theme.muted, alpha, letterSpacing: 22 * 0.08 });
   // The location line of a map beat without a panel: the name and the window under it.
-  const locationLine = (ctx, theme, name, sub, x, y, alpha) => { if (alpha <= 0) return; Motion.text(ctx, name, x, y, { size: 24, weight: 600, color: theme.muted, letterSpacing: 2, alpha, group: 'location' }); Motion.text(ctx, sub, x, y + 30, { size: 22, color: theme.dim, letterSpacing: 1, alpha, group: 'location-size' }); };
+  const locationLine = (ctx, theme, name, sub, x, y, alpha) => { if (alpha <= 0) return; Motion.text(ctx, name.toUpperCase(), x, y, { size: 24, weight: 500, color: theme.muted, letterSpacing: 24 * 0.08, alpha, group: 'location' }); Motion.text(ctx, sub, x, y + 30, { size: 22, color: theme.dim, letterSpacing: 1, alpha, group: 'location-size' }); };
   function drawYearTiles(ctx, stage, cam, y, theme, alpha) {
     const yt = yearTiles(y);
     MM.drawTiles(ctx, stage, cam, yt.paths, c => (c === 'below' ? theme.below : RAMP6[c]), { alpha, alphaOf: c => (c === 'below' ? 0.45 : 1) });
@@ -132,7 +132,7 @@
   // ---- scenes (beat-local time l) --------------------------------------------------------------
   const DEFS = {};
   DEFS.hook = { z: 1, fadeIn: 0, draw({ ctx, local: l, theme }) {
-    Motion.reveal(ctx, 'Who stays visible?', 80, 128, l, 0.9, { size: 78, weight: 700, color: theme.ink });
+    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 80, 128, l, 0.9, { size: 78, weight: 700, color: theme.ink });
     Motion.reveal(ctx, 'Financial statements of Russian firms under sanctions, 2012–2025', 80, 184, l, 1.8, { size: 30, color: theme.muted });
     if (l > 5.2) {
       const v = Motion.counter(l, 5.2, 3.2, F.located_2021);
@@ -160,7 +160,7 @@
       years.forEach(yy => Motion.text(ctx, yy === 2025 ? '2025*' : String(yy), sx(yy + 0.5), y + 68, { size: 22, color: theme.muted, align: 'center', alpha: Motion.clamp((reach - yy) / 2, 0, 1) }));
       const labAlpha = Motion.clamp((u - 0.85) / 0.15, 0, 1);
       if (labAlpha > 0) {
-        segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 600, alpha: labAlpha }); });
+        segs.forEach(s => { if (s.label) Motion.text(ctx, s.label, sx(s.from) + 8, y - 12, { size: 24, color: s.color, weight: 500, alpha: labAlpha }); });
         Motion.text(ctx, '2011: imputed records only, no availability rate', sx(2011), y + 100, { size: 22, color: theme.muted, alpha: labAlpha });
         Motion.text(ctx, '2025*: a flagged latest-year extension', sx(2026), y + 100, { size: 22, color: theme.muted, align: 'right', alpha: labAlpha });
       }
@@ -216,12 +216,12 @@
     Motion.text(ctx, yShow === 2019 ? 'FNS, the provider changes' : providerOf(yShow), px, 380, { size: 26, color: yShow === 2019 ? theme.accentStrong : theme.muted, alpha: step(l, 0.4, 0.5) });
     if (tot.share != null) {
       Motion.text(ctx, fmt.pct(tot.share), px, 500, { size: 72, weight: 700, color: theme.accentStrong, alpha: step(l, 0.6, 0.5) });
-      Motion.text(ctx, 'of eligible firms have a statement', px, 542, { size: 26, color: theme.muted, alpha: step(l, 0.6, 0.5) });
+      Motion.text(ctx, 'of eligible firms have a statement', px, 542, { size: 24, color: theme.muted, alpha: step(l, 0.6, 0.5) });
     }
-    if (tot.located != null) Motion.text(ctx, `${fmt.pct(tot.located)} of ${fmt.int(tot.n)} eligible firms located`, px, 600, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
-    Motion.text(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 636, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5) });
-    MM.legendBar(ctx, px, 740, 440, RAMP6, YEAR_BREAKS.map(b => b + '%'), theme, { alpha: step(l, 1.0, 0.6), title: 'Share with a statement, located firms in the cell' });
-    MM.legendSwatches(ctx, px, 820, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 located firms' }], theme, { alpha: step(l, 1.0, 0.6) });
+    if (tot.located != null) Motion.paragraph(ctx, `${fmt.pct(tot.located)} of ${fmt.int(tot.n)} eligible firms located`, px, 600, 500, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5), group: 'years-located' });
+    Motion.paragraph(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 664, 500, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5), group: 'years-cells' });
+    MM.legendBar(ctx, px, 780, 440, RAMP6, YEAR_BREAKS.map(b => b + '%'), theme, { alpha: step(l, 1.0, 0.6), title: ['Share with a statement,', 'located firms in the cell'] });
+    MM.legendSwatches(ctx, px, 860, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 located firms' }], theme, { alpha: step(l, 1.0, 0.6) });
   } };
 
   DEFS.change = { z: 1, draw({ ctx, local: l, cam, stage, theme }) {
@@ -230,7 +230,7 @@
     const px = 1400;
     eyebrow(ctx, 'The change map', px, 140, theme, step(l, 0.2, 0.5));
     locationLine(ctx, theme, 'Russia', '100 km cells', px, 196, step(l, 0.2, 0.5));
-    Motion.text(ctx, '2024 against 2021', px, 276, { size: 54, weight: 700, color: theme.ink, alpha: step(l, 0.3, 0.5) });
+    Motion.text(ctx, '2024 against 2021', px, 276, { size: 44, weight: 700, color: theme.ink, alpha: step(l, 0.3, 0.5) });
     Motion.paragraph(ctx, 'Change in the share of located firms with a statement, by 100 km cell', px, 326, 440, { size: 26, color: theme.muted, alpha: step(l, 0.5, 0.5) });
     const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
     const items = [6, 5, 4, 3, 2, 1].map(c => ({ color: CHANGE6[c - 1], label: labels[c - 1], right: fmt.int(changeCounts[c]) + ' cells', rightAlpha: step(l, waves[c] + 0.9, 0.4) }));
@@ -258,8 +258,8 @@
       if (cityAlpha > 0) for (const c of [msk, spb]) MM.cityLabel(ctx, cam, c, theme, { size: 28, alpha: cityAlpha });
       eyebrow(ctx, 'Firm density, 2021', 80, 120, theme, Motion.plateau(l, 0.3, eyebrowEnd, 0.6, 0.5));
       const pa = Motion.plateau(l, hold - 1.4, panelEnd, 0.6, 0.6);
-      if (pa > 0) { MM.infoPanel(ctx, theme, { alpha: pa, loc: MM.locationAt(loc, l), year: { a: '2021' } }); MM.infoLines(ctx, theme, linesM, pa); }
-      shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, hold + 1.6, legendEnd, 0.6, 0.5), 'Share with a statement, cells with 50 or more firms');
+      if (pa > 0) { MM.infoPanel(ctx, theme, { alpha: pa, loc: MM.locationAt(loc, l), year: { a: '2021' }, w: 520 }); MM.infoLines(ctx, theme, linesM, pa); }
+      shareLegend(ctx, 1380, 900, 440, theme, Motion.plateau(l, hold + 1.6, legendEnd, 0.6, 0.5), ['Share with a statement,', 'cells with 50 or more firms']);
     } };
   }
 
@@ -313,17 +313,17 @@
   } };
 
   DEFS.lists = { z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Firms on the sanctions list: lower odds of a statement by 2024', l, 0.2, theme);
+    title(ctx, 'Firms on the sanctions list: lower odds of a statement by 2024', l, 0.2, theme, 118, 46);
     subtitle(ctx, 'against firms on no list, with 95% intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const ser = [{ label: 'Sanctions list only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
                  { label: 'Government strategic list only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
-    CH.yearDots(ctx, { x: 170, y: 250, w: 700, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
+    CH.yearDots(ctx, { x: 170, y: 250, w: 620, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
     ctx.restore();
     // One small table (round 4): the four six-year histories by group, percentages only, the
     // denominators in the column headers (the README keeps the counts).
-    const px = 1230, colsX = [1690, 1860];
+    const px = 1130, colsX = [1650, 1860];   // round 10: the monospace heads and denominators need the columns 210 px apart and the labels to end before 1,572
     if (l > 6.4) {
       eyebrow(ctx, 'Six-year histories, fixed 2019 cohort', px, 270, theme, step(l, 6.4, 0.5));
       const groups = [['10000', 'Sanctions list only'], ['00000', 'No list']];
@@ -334,7 +334,7 @@
       rows.forEach(([b, lab], i) => {
         const y = 406 + i * 48, a = step(l, 7.2 + i * 0.3, 0.5);
         Motion.text(ctx, lab, px, y, { size: 22, color: theme.ink, alpha: a });
-        groups.forEach(([g], gi) => Motion.text(ctx, fmt.pct(bin(g, b).share), colsX[gi], y, { size: 26, weight: 600, color: theme.ink, align: 'right', alpha: a, group: 'lists-' + g }));
+        groups.forEach(([g], gi) => Motion.text(ctx, fmt.pct(bin(g, b).share), colsX[gi], y, { size: 26, weight: 500, color: theme.ink, align: 'right', alpha: a, group: 'lists-' + g }));
       });
     }
     Motion.paragraph(ctx, 'List memberships are fixed, not dated designations. The odds compare populations, not the same firms.', 170, 960, 1160, { size: 22, color: theme.muted, alpha: step(l, 9.6, 0.6) });
@@ -347,33 +347,29 @@
     const px = 1400;
     eyebrow(ctx, 'What comes next', px, 140, theme, step(l, 0.2, 0.5));
     if (mix < 0.5) {
-      Motion.text(ctx, 'Four fixed 2021 cohorts', px, 230, { size: 44, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * (1 - 2 * mix) });
+      Motion.text(ctx, 'Four fixed 2021 cohorts', px, 230, { size: 32, weight: 700, color: theme.ink, alpha: step(l, 0.4, 0.5) * (1 - 2 * mix) });
       Motion.text(ctx, 'firms per cohort', px, 264, { size: 24, color: theme.muted, alpha: step(l, 0.4, 0.5) * (1 - 2 * mix) });
       const rows = [['revenue_cash', 'Revenue cohort by cash share'], ['revenue_inventory', 'Revenue cohort by inventory share'], ['margin_cash', 'Margin cohort by cash share'], ['margin_inventory', 'Margin cohort by inventory share']];
       ctx.save(); ctx.globalAlpha *= (1 - 2 * mix);
       CH.bars(ctx, { x: px, y: 310, w: 300, h: 300 }, rows.map(([id, lab]) => ({ label: lab, value: flowValue(id), color: id.startsWith('revenue') ? theme.accent : theme.accentStrong })), { max: flowValue('revenue_cash'), progress: step(l, 0.8, 1.8, E.outCubic), theme, barH: 28, gap: 44, size: 23 });
-      MM.legendBar(ctx, px, 640, 440, RAMP5, C100.cohort_cutpoints.map(b => Math.round(b) + '%'), theme, { alpha: step(l, 1.4, 0.6), title: `Inclusion per cell (${fmt.int(cohortFirms)} cohort firms)` });
+      MM.legendBar(ctx, px, 640, 440, RAMP5, C100.cohort_cutpoints.map(b => Math.round(b) + '%'), theme, { alpha: step(l, 1.4, 0.6), title: ['Inclusion per cell', `(${fmt.int(cohortFirms)} cohort firms)`] });
       ctx.restore();
     } else {
       ctx.save(); ctx.globalAlpha *= (2 * mix - 1);
-      Motion.text(ctx, 'Real revenue, 2024 vs 2021', px, 230, { size: 34, weight: 700, color: theme.ink });
+      Motion.text(ctx, 'Real revenue, 2024 vs 2021', px, 230, { size: 28, weight: 700, color: theme.ink });
       Motion.paragraph(ctx, 'Revenue cohort by cash share: percent change of each cell’s median among the cohort firms observed that year.', px, 280, 440, { size: 24, color: theme.muted });
       const labels = ['≤ −20%', '−20 to −10', '−10 to 0', '0 to +10', '+10 to +20', '> +20%'];
       MM.legendSwatches(ctx, px, 420, [5, 4, 3, 2, 1, 0].map(c => ({ color: CHANGE6[c], label: labels[c], right: fmt.int(finCounts[c] || 0) + ' cells' })), theme, { colWidth: 440, rowGap: 12 });
       ctx.restore();
     }
-    Motion.paragraph(ctx, 'Chapter 3 asks whether the cash and inventories firms held in 2021 predicted their revenue and operating margins in 2022–2024: import substitution, or scarring?', px, 900, 440, { size: 26, color: theme.ink, alpha: step(l, 8.8, 0.6) });
+    Motion.paragraph(ctx, 'Chapter 3 asks whether the cash and inventories firms held in 2021 predicted their revenue and operating margins in 2022–2024: import substitution, or scarring?', px, 870, 500, { size: 24, color: theme.ink, alpha: step(l, 8.8, 0.6) });
   } };
 
   DEFS.credits = { z: 1, draw({ ctx, local: l, theme }) {
-    const lines = [
-      ['Who stays visible?', 40, 700, theme.ink, 0.3],
-      ['Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 22, 400, theme.muted, 0.8],
-      ['Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 26, 400, theme.muted, 1.1],
-      ['Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed memberships, not dated designations.', 22, 400, theme.muted, 1.4],
-    ];
-    let y = 400;
-    for (const [s, size, w, color, t0] of lines) { Motion.reveal(ctx, s, 960, y, l, t0, { size, weight: w, color, align: 'center' }); y += size === 40 ? 90 : 52; }
+    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 960, 400, l, 0.3, { size: 40, weight: 700, color: theme.ink, align: 'center' });
+    Motion.revealParagraph(ctx, 'Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 960, 490, 1760, l, 0.8, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-data' });
+    Motion.reveal(ctx, 'Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 960, 572, l, 1.1, { size: 22, color: theme.muted, align: 'center' });
+    Motion.revealParagraph(ctx, 'Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed memberships, not dated designations.', 960, 624, 1760, l, 1.4, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-caveat' });
   } };
 
   // ---- cuts ------------------------------------------------------------------------------------

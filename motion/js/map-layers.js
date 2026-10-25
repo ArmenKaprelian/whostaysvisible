@@ -136,18 +136,20 @@
     items.forEach((it, i) => {
       const col = i % columns, row = Math.floor(i / columns);
       const xx = x + col * colWidth, yy = y + row * (swatch + rowGap);
-      ctx.fillStyle = it.color; if (it.alpha != null) { ctx.save(); ctx.globalAlpha *= it.alpha; ctx.fillRect(xx, yy, swatch, swatch); ctx.restore(); } else ctx.fillRect(xx, yy, swatch, swatch);
+      if (it.alpha != null) { ctx.save(); ctx.globalAlpha *= it.alpha; M.barSwatch(ctx, xx, yy + 1, swatch, swatch - 3, it.color); ctx.restore(); } else M.barSwatch(ctx, xx, yy + 1, swatch, swatch - 3, it.color);
       Motion.text(ctx, it.label, xx + swatch + gapPx + 4, yy + swatch * 0.5, { size, color: it.textColor || theme.ink, baseline: 'middle' });
       if (it.right) Motion.text(ctx, it.right, xx + colWidth - 16, yy + swatch * 0.5, { size, color: theme.muted, baseline: 'middle', align: 'right', alpha: it.rightAlpha == null ? 1 : it.rightAlpha });
     });
     ctx.restore();
   };
-  // Horizontal classed bar legend: touching swatches with boundary values printed between them.
-  M.legendBar = function (ctx, x, y, w, colors, boundaries, theme, { height = 22, size = 22, alpha = 1, left = '', right = '', title = null } = {}) {
+  // A ramp swatch as horizontal bars with hairline gaps (round 10): bars 2 px, gaps 1 px, eight where the swatch is 23 px or taller, fewer where not.
+  M.barSwatch = function (ctx, x, y, w, h, colour) { const n = Math.max(1, Math.min(8, Math.floor((h + 1) / 3))), bh = (h - (n - 1)) / n; ctx.fillStyle = colour; for (let i = 0; i < n; i++) ctx.fillRect(x, y + i * (bh + 1), w, bh); };
+  // Horizontal classed bar legend: swatches of bars with boundary values printed between them; a one- or two-line title above.
+  M.legendBar = function (ctx, x, y, w, colors, boundaries, theme, { height = 23, size = 22, alpha = 1, left = '', right = '', title = null } = {}) {
     ctx.save(); ctx.globalAlpha *= alpha;
     const n = colors.length, sw = w / n;
-    if (title) Motion.text(ctx, title, x, y - 14, { size, color: theme.muted });
-    colors.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(x + i * sw + 1.5, y, sw - 3, height); });
+    if (title) (Array.isArray(title) ? title : [title]).forEach((ln, i, arr) => Motion.text(ctx, ln, x, y - 14 - 28 * (arr.length - 1 - i), { size, color: theme.muted, group: 'legend-title' }));
+    colors.forEach((c, i) => M.barSwatch(ctx, x + i * sw + 1.5, y, sw - 3, height, c));
     boundaries.forEach((b, i) => Motion.text(ctx, b, x + (i + 1) * sw, y + height + 26, { size, color: theme.ink, align: 'center' }));
     if (left) Motion.text(ctx, left, x, y + height + 26, { size, color: theme.muted, align: 'left' });
     if (right) Motion.text(ctx, right, x + w, y + height + 26, { size, color: theme.muted, align: 'right' });
@@ -156,12 +158,12 @@
 
   // City marker and label in design space (after the camera transform is reset).
   // A label fades over the 300 px nearest the frame edge (a panning camera carries it in and out) and is not drawn outside.
-  M.cityLabel = function (ctx, cam, city, theme, { size = 24, dot = 4, alpha = 1, dx = 10, dy = -8 } = {}) {
+  M.cityLabel = function (ctx, cam, city, theme, { size = 24, dot = 4, alpha = 1, dx = 10, dy = -8 } = {}) {   // the label in tracked capitals at 500 (round 10)
     const [px, py] = Motion.project(cam, city.x, city.y);
     const edge = Math.min(px, 1920 - px, py, 1080 - py); if (edge <= 0) return;
     alpha *= Motion.clamp(edge / 300, 0, 1); if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = theme.ink; ctx.beginPath(); ctx.arc(px, py, dot, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    Motion.text(ctx, city.label, px + dx, py + dy, { size, color: theme.ink, alpha, kind: 'label' });
+    Motion.text(ctx, city.label.toUpperCase(), px + dx, py + dy, { size, weight: 500, color: theme.ink, alpha, kind: 'label', letterSpacing: size * 0.08 });
   };
 
   window.MotionMap = M;
@@ -175,11 +177,11 @@
     const three = lines.length > 2, y0 = three ? 240 : 244, dy = three ? 26 : 28;
     lines.forEach(([s, color], i) => Motion.text(ctx, s, 1836, y0 + dy * i, { size: i === 0 ? 24 : 22, color: color || (i === 0 ? theme.ink : theme.muted), align: 'right', alpha, group: 'counters-' + i }));
   };
-  M.infoPanel = function (ctx, theme, { alpha = 1, loc = null, year = null, lines = [] } = {}) {
+  M.infoPanel = function (ctx, theme, { alpha = 1, loc = null, year = null, lines = [], w = 440 } = {}) {   // w: wider where a line needs it (round 10)
     if (alpha <= 0) return;
-    Motion.panel(ctx, 1420, 70, 440, lines.length > 2 ? 230 : 210, theme, 0.92 * alpha);
+    Motion.panel(ctx, 1860 - w, 70, w, lines.length > 2 ? 230 : 210, theme, 0.92 * alpha);
     if (loc) {
-      Motion.flipText(ctx, loc.from.name, loc.to.name, loc.u, { x: 1836, y: 108, size: 24, weight: 600, color: theme.muted, align: 'right', letterSpacing: 2, group: 'location', alpha });
+      Motion.flipText(ctx, loc.from.name.toUpperCase(), loc.to.name.toUpperCase(), loc.u, { x: 1836, y: 108, size: 24, weight: 500, color: theme.muted, align: 'right', letterSpacing: 24 * 0.08, group: 'location', alpha });   // the place name in tracked capitals; the size line below stays mixed (round 10)
       Motion.flipText(ctx, loc.from.size, loc.to.size, loc.u, { x: 1836, y: 138, size: 22, weight: 400, color: theme.dim, align: 'right', letterSpacing: 1, group: 'location-size', alpha });
     }
     if (year) {

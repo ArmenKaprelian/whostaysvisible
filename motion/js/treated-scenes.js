@@ -253,10 +253,12 @@
   const DISTS = [48, 72, 100, 132, 168];
   function labelBox(px, py, dir, dist, w) { const cx = px + dir[0] * dist, cy = py + dir[1] * dist; const x = dir[0] > 0.3 ? cx : dir[0] < -0.3 ? cx - w : cx - w / 2; return { x: x - 8, y: cy - 22, x1: x + w + 8, y1: cy + 10, tx: x, ty: cy, lx: cx, ly: cy }; }
   const OFFSETS = {};
+  const LIVE_CLEAR = { x: 1300, y: 320, x1: 1880, y1: 650 };   // the live box's panel (1320, 340, 540 x 290) with a 20 px margin: no anchor label inside it (round 10)
+  function computeOffsets() {   // measured with the face in force; __ready calls remeasure() once the typeface has loaded (round 10)
   for (const ext of ['downtown', 'city', 'region']) {   // no markers at the national scale
     const cam = restCam(ext), marks = redMarks2025(ext);
     const pa = Motion.project(cam, AX, AY), pb = Motion.project(cam, BX, BY);
-    const wA = measure(LABEL.A, 22, 600), wB = measure(LABEL.B, 22, 600);
+    const wA = measure(LABEL.A, 22, 500), wB = measure(LABEL.B, 22, 500);
     let best = null;
     for (const da of DIRS) for (const dA of DISTS) for (const db of DIRS) for (const dB of DISTS) {
       const bA = labelBox(pa[0], pa[1], da, dA, wA), bB = labelBox(pb[0], pb[1], db, dB, wB);
@@ -264,11 +266,14 @@
       const inside = b => b.x >= 20 && b.y >= 20 && b.x1 <= 1900 && b.y1 <= 1060; if (!inside(bA) || !inside(bB)) continue;
       const symA = { x: pa[0] - 14, y: pa[1] - 14, x1: pa[0] + 14, y1: pa[1] + 14 }, symB = { x: pb[0] - 14, y: pb[1] - 14, x1: pb[0] + 14, y1: pb[1] + 14 };
       if (overlapsBox(bA, symB) || overlapsBox(bB, symA) || overlapsBox(bA, symA) || overlapsBox(bB, symB)) continue;
+      if (overlapsBox(bA, LIVE_CLEAR) || overlapsBox(bB, LIVE_CLEAR)) continue;
       const score = hits(bA, marks) + hits(bB, marks) + 0.001 * (dA + dB);
       if (!best || score < best.score) best = { score, A: { dir: da, dist: dA }, B: { dir: db, dist: dB }, covered: hits(bA, marks) + hits(bB, marks) };
     }
     OFFSETS[ext] = best || { A: { dir: DIRS[1], dist: 72 }, B: { dir: DIRS[5], dist: 72 }, covered: -1 };
   }
+  }
+  computeOffsets();
   function offsetAt(k, key) {   // blended between the scales by their alphas, so the label moves continuously during a pull-back
     const ea = extentAlpha(Math.min(k, 90)); let sx = 0, sy = 0, sd = 0, sw = 0;
     for (const ext of Object.keys(ea)) { const w = ea[ext]; if (w <= 0 || !OFFSETS[ext]) continue; const o = OFFSETS[ext][key]; sx += w * o.dir[0] * o.dist; sy += w * o.dir[1] * o.dist; sd += w * o.dist; sw += w; }
@@ -278,7 +283,7 @@
   function drawMarker(ctx, cam, theme, key, alpha) {
     if (alpha <= 0) return;
     const colour = anchorColour(theme, key), [px, py] = key === 'A' ? Motion.project(cam, AX, AY) : Motion.project(cam, BX, BY);
-    const o = offsetAt(cam.k, key), w = measure(LABEL[key], 22, 600), b = labelBox(px, py, o.dir, o.dist, w);
+    const o = offsetAt(cam.k, key), w = measure(LABEL[key], 22, 500), b = labelBox(px, py, o.dir, o.dist, w);
     ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.lineJoin = 'round';
     ctx.beginPath();
     if (key === 'A') ctx.arc(px, py, 9, 0, TAU); else { ctx.moveTo(px, py - 11); ctx.lineTo(px + 11, py); ctx.lineTo(px, py + 11); ctx.lineTo(px - 11, py); ctx.closePath(); }
@@ -287,7 +292,7 @@
     ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(start[0], start[1]); ctx.lineTo(end[0], end[1]); ctx.stroke();
     ctx.restore();
     Motion.panel(ctx, b.x, b.y, b.x1 - b.x, b.y1 - b.y, theme, 0.92 * alpha);
-    Motion.text(ctx, LABEL[key], b.tx, b.ty, { size: 22, weight: 600, color: colour, alpha, group: 'anchor-' + key });
+    Motion.text(ctx, LABEL[key], b.tx, b.ty, { size: 22, weight: 500, color: colour, alpha, group: 'anchor-' + key });
   }
 
   // ---- drawing pieces (beat-relative clocks) ----------------------------------------------------
@@ -339,7 +344,7 @@
   // The panel rectangles enclose their boxes with the tick-label margins at both ends, so every
   // interpolated panel encloses the interpolated boxes and their labels.
   const BIG = { panel: { x: 84, y: 352, w: 1626, h: 450 }, left: { x: 140, y: 400, w: 630, h: 330 }, right: { x: 1050, y: 400, w: 630, h: 330 } };
-  const SMALL = { panel: { x: 1420, y: 340, w: 440, h: 290 }, left: { x: 1476, y: 388, w: 140, h: 170 }, right: { x: 1690, y: 388, w: 140, h: 170 } };
+  const SMALL = { panel: { x: 1320, y: 340, w: 540, h: 290 }, left: { x: 1376, y: 388, w: 150, h: 170 }, right: { x: 1650, y: 388, w: 150, h: 170 } };   // 540 wide since round 10 (the monospace group labels)
   const lerpBox = (a, b, u) => ({ x: Motion.lerp(a.x, b.x, u), y: Motion.lerp(a.y, b.y, u), w: Motion.lerp(a.w, b.w, u), h: Motion.lerp(a.h, b.h, u) });
   function comparisonView(ctx, theme, { u, alpha, progress = 1, textAlpha = 1, v = null, l = 0, until = 12, explain2025 = true }) {
     if (alpha <= 0) return;
@@ -356,7 +361,7 @@
     panels.forEach(([side, s, key, firmLabel, groupLabel], i) => {
       const box = lerpBox(BIG[side], SMALL[side], u), colour = anchorColour(theme, key);
       const nameA = pa;   // the group names of the live box arrive with its panel
-      if (nameA > 0) Motion.text(ctx, groupLabel, box.x - 40, Motion.lerp(BIG.panel.y, SMALL.panel.y, u) + 30, { size: 22, color: theme.muted, alpha: nameA, group: 'livebox-' + key });   // rides with the box, so it stays inside the interpolated panel
+      if (nameA > 0) Motion.text(ctx, side === 'right' ? 'listed in 2022' : groupLabel, box.x - 40, Motion.lerp(BIG.panel.y, SMALL.panel.y, u) + 30, { size: 22, color: theme.muted, alpha: nameA, group: 'livebox-' + key });   // rides with the box, so it stays inside the interpolated panel
       ctx.save();
       CH.bandLines(ctx, box, { firm: s.firm, band: s.band }, { yDomain: yDomainCmp, yTicks: [25, 50, 100, 200, 400], xTicks: [2014, 2025], xTicksMinor: [2018, 2022], minorAlpha: gone, progress: live ? 1 : progress, theme,
         colors: { firm: colour, median: theme.accentMuted, band: theme.accentMuted, marker: theme.treated }, labels: { firm: firmLabel, median: 'median' }, textAlpha: 1, labelAlpha: gone,
@@ -369,11 +374,11 @@
         if (ta > 0) {
           ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.accentMuted; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(box.x, ky - 6); ctx.lineTo(box.x + 26, ky - 6); ctx.stroke();
           ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.accentMuted; ctx.fillRect(box.x + 36, ky - 14, 26, 16); ctx.restore();
-          Motion.text(ctx, 'median and interquartile range of ' + groupLabel, box.x + 72, ky, { size: 22, color: theme.muted, alpha: ta });
+          Motion.paragraph(ctx, 'median and interquartile range of ' + groupLabel, box.x + 72, ky, BIG[side].w - 72, { size: 22, color: theme.muted, alpha: ta, group: 'cmp-key-' + key });   // wrapped at the full-screen column (round 10), so the lines never re-break while the box moves
           const g = gapText(s.anchor.gap, s.group.label, i === 1 ? 1 : 0);
-          Motion.reveal(ctx, g[0], box.x, ky + 44, l, 5.0, { size: 24, color: theme.ink, until, alpha: ta });
-          Motion.reveal(ctx, g[1], box.x, ky + 78, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta });
-          Motion.reveal(ctx, membersText(s.group), box.x, ky + 114, l, 6.2, { size: 22, color: theme.muted, until, alpha: ta });
+          Motion.revealParagraph(ctx, g[0], box.x, ky + 72, BIG[side].w, l, 5.0, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap1-' + key });
+          Motion.revealParagraph(ctx, g[1], box.x, ky + 138, BIG[side].w, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap2-' + key });
+          Motion.revealParagraph(ctx, membersText(s.group), box.x, ky + 174, BIG[side].w, l, 6.2, { size: 22, color: theme.muted, until, alpha: ta, group: 'cmp-members-' + key });
         }
       }
     });
@@ -393,7 +398,7 @@
   function legend(ctx, theme, { alpha, k }) {
     if (alpha <= 0) return;
     const ea = extentAlpha(k);
-    Motion.panel(ctx, 60, 802, 700, 266, theme, 0.92 * alpha);
+    Motion.panel(ctx, 60, 802, 900, 266, theme, 0.92 * alpha);   // 900 wide since round 10
     Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
     Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
     MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
@@ -436,7 +441,7 @@
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1), x = 1204, w = 632;
-    Motion.panel(ctx, 1180, 300, 680, 560, theme, 0.6 * step(l, 0.3, 0.5));   // dims the map under it (the far east) rather than covering it
+    Motion.panel(ctx, 1180, 300, 680, 740, theme, 0.6 * step(l, 0.3, 0.5));   // 740 tall since round 10   // dims the map under it (the far east) rather than covering it
     let y = 346;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red)} firms on at least one of the five lists red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
     y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;
@@ -518,7 +523,7 @@
       const markerAlpha = Motion.plateau(l, SEC.back + 2.5, SEC.national, 0.6, 0.5);   // findable through the Moscow scales; none at the national scale
       drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
       const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(l, SEC.back + 3.5, SEC.downtown + 1, 0.5, 0.5);
-      if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 980, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
+      if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 1240, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
       pileFacts(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 13.8, 0.5, 0.5), !!YL);
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
@@ -544,7 +549,7 @@
     } };
   }
 
-  window.TreatedScenes = {
+  window.TreatedScenes = { remeasure: computeOffsets,
     redCounts, presentCounts, cellSums, OFFSETS, CITY, SEC, journey, NATCAM, SETS, alignScene,
     pieces: { drawField, drawCells, drawTreated, drawMarker, headers, profiles, comparisonView, ticker, legend, disclosure, closeText, locationAt, extentAlpha, extentOf, counts, WINDOW, COL, dot, yearPair, anchorColour, LABEL },
     setImages(images) { IMG = images; },   // the rasters, handed over when they have loaded (the cuts are built before)

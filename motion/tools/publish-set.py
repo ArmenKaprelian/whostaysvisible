@@ -3,7 +3,7 @@
 
 The claude.ai artifact wraps a page in its own document skeleton, so the page copies drop the
 doctype, html, head and body tags, keep the <title>, inline css/theme.css, add the Google Fonts
-fallback (Arimo is metric-compatible with the Liberation/Arial family the pages use locally) and the
+fallback (IBM Plex Mono (Google Fonts, the same build as the installed family) is metric-compatible with the Liberation/Arial family the pages use locally) and the
 viewport-fit meta the page contract asks for. Beside them: the six shared scripts, every data file
 (the aggregates and, since the author's rule change of 23 October 2026, the firm-level files: the
 Moscow and national manifests, the listed firms, the anchors, the Moscow cells and comparison groups,
@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(MOTION, "publish")
 os.makedirs(OUT, exist_ok=True)
-FONT = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">'
+FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">'
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
 SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "treated-scenes.js", "explorer-app.js"]

@@ -135,9 +135,11 @@
     return stage;
   };
 
-  // Text helpers in design space. Fonts are a local-first stack; Arimo is metric-compatible with the
-  // Liberation/Arial family so the published copy keeps the same line breaks.
-  Motion.font = (px, weight) => `${weight || 400} ${px}px "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif`;
+  // Text helpers in design space. One typeface on both pages since round 10 (26 October 2026): IBM Plex Mono, read from the
+  // page's --font token (the installed family for the lab's renders, Google Fonts on the published pages), 400 for prose,
+  // 500 for labels and figures, 700 for headings and emphasis; the fallbacks are monospace faces of the same 0.6 em advance.
+  Motion.family = (() => { try { const f = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (f) return f; } catch (e) { /* no document */ } return '"IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace'; })();
+  Motion.font = (px, weight, family) => `${weight || 400} ${px}px ${family || Motion.family}`;
 
   // Text audit (page opened with ?__audit=1): every drawn string records its design-space box, its
   // effective alpha and its group (a paragraph's lines, or an explicit group for blocks that
@@ -173,7 +175,7 @@
   // hash of the two strings, the glyph index and the stage (never wall time), and slides from its
   // position in `from` to its position in `to`. One audit box is recorded per call, so the audit sees
   // one block that changes its text, not a cut.
-  Motion.flipText = function (ctx, from, to, u, { x, y, size = 24, weight = 600, color = '#fff', align = 'right', letterSpacing = 2, steps = 3, stagger = 0.06, group = 'location', alpha = 1 } = {}) {
+  Motion.flipText = function (ctx, from, to, u, { x, y, size = 24, weight = 500, color = '#fff', align = 'right', letterSpacing = 2, steps = 3, stagger = 0.06, group = 'location', alpha = 1 } = {}) {
     const plain = { size, weight, color, align, letterSpacing, group, alpha };
     if (alpha <= 0) return;
     if (from === to || u <= 0) return Motion.text(ctx, from, x, y, plain);
@@ -225,7 +227,7 @@
       return u >= 1 ? cur : Motion.lerp(val(es[i - 1], t), cur, Motion.ease.inOutSine(u));
     };
   };
-  Motion.measure = function (ctx, str, size, weight) { ctx.save(); ctx.font = Motion.font(size, weight); const w = ctx.measureText(str).width; ctx.restore(); return w; };
+  Motion.measure = function (ctx, str, size, weight, letterSpacing = 0) { ctx.save(); ctx.font = Motion.font(size, weight); const w = ctx.measureText(str).width; ctx.restore(); return w + (letterSpacing ? letterSpacing * str.length : 0); };
   // Word-wrapped paragraph; returns the y after the last line.
   Motion.paragraph = function (ctx, str, x, y, maxWidth, { size = 26, weight = 400, color = '#fff', lineHeight = 1.35, alpha = 1, align = 'left', group = null } = {}) {
     if (alpha <= 0) return y;
@@ -242,6 +244,13 @@
   };
   // Typewriter-free reveal: text fades and rises 10 px over 0.5 s from t0; with opts.until it
   // fades out over the 0.4 s before that local time, so a replaced block never cuts.
+  // A wrapped reveal (round 10): the paragraph fades and rises like reveal; returns the y after its last line.
+  Motion.revealParagraph = function (ctx, str, x, y, maxWidth, t, t0, opts) {
+    const u = Motion.step(t, t0, 0.5, Motion.ease.outCubic); if (u <= 0) return y;
+    const until = opts && opts.until != null ? opts.until : null;
+    const down = until == null ? 1 : 1 - Motion.step(t, until - 0.4, 0.4, Motion.ease.inOutSine); if (down <= 0) return y;
+    return Motion.paragraph(ctx, str, x, y + 10 * (1 - u), maxWidth, Object.assign({}, opts, { alpha: (opts && opts.alpha != null ? opts.alpha : 1) * u * down }));
+  };
   Motion.reveal = function (ctx, str, x, y, t, t0, opts) {
     const u = Motion.step(t, t0, 0.5, Motion.ease.outCubic);
     if (u <= 0) return;

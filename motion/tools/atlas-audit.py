@@ -43,6 +43,8 @@ def audit_boxes(boxes, canvases, min_size, overlap):
             if small > 0 and x / small > overlap: out.append(("overlap", p["scene"], "%s | %s" % (p["str"], q["str"])))
     return out
 
+CAPS_JS = "(() => { const want = [['header h1', 700, false], ['.card h2', 500, true], ['#theme', 500, true], ['.yearrow .ui', 500, true], ['#yearlabel', 500, true], ['#modes .modelabel', 500, true], ['#modes .btn', 500, true], ['#layers .btn', 500, true], ['#presets .btn', 500, true], ['#legendtitle', 500, true], ['#legendbody .row:not(.p)', 500, true], ['#mixtitle', 500, true], ['#cellinfo > span', 500, true], ['.ctxt .t.tip', 500, true], ['.loc', 500, true]];\n  const bad = [];\n  for (const [sel, wt, tracked] of want) { const els = [...document.querySelectorAll(sel)]; if (!els.length) { bad.push(sel + ': no element'); continue; }\n    for (const el of els.slice(0, 3)) { const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);\n      if (cs.textTransform !== 'uppercase') bad.push(sel + ': transform ' + cs.textTransform); if (parseInt(cs.fontWeight) !== wt) bad.push(sel + ': weight ' + cs.fontWeight);\n      if (tracked ? Math.abs(ls - 0.08 * fs) > 0.06 : ls !== 0) bad.push(sel + ': spacing ' + cs.letterSpacing + ' at ' + fs + 'px'); if (!/IBM Plex Mono/.test(cs.fontFamily)) bad.push(sel + ': family ' + cs.fontFamily); } }\n  const u = [...document.querySelectorAll('.u')]; if (!u.length) bad.push('.u: no element'); for (const el of u.slice(0, 5)) if (getComputedStyle(el).textTransform !== 'none') bad.push('.u: transform ' + getComputedStyle(el).textTransform);\n  for (const [sel, txt] of [['#zoom-in', 'ZOOM IN (+)'], ['#zoom-out', 'ZOOM OUT (−)'], ['#zoom-fit', 'FIT THE WHOLE COUNTRY (0)']]) if (document.querySelector(sel).title !== txt) bad.push(sel + ': title ' + document.querySelector(sel).title);\n  return bad; })()"
+
 def audit_dom(dom, mode=None):
     """The visible overlays must lie inside the map (0.5 px tolerance); the panels must never intersect one
     another. The tooltip follows the cursor and sits above the panels, so it is held inside the map but not
@@ -58,6 +60,7 @@ def audit_dom(dom, mode=None):
             for k in ("year", "yearlabel"):
                 if inter(p, dom[k]) > 0: out.append(("pulse", "dom", "intersects the %s" % k))
             if p["x1"] - p["x"] < 24 or p["y1"] - p["y"] < 24: out.append(("pulse", "dom", "smaller than 24 px: %.1f by %.1f" % (p["x1"] - p["x"], p["y1"] - p["y"])))
+    for o in dom.get("overflow") or []: out.append(("text-overflow", "dom", "%s %s runs %+d px past its box, %d px past its own" % (o["sel"], json.dumps(o["text"]), o["right"], o["over"])))   # tracked capitals (round 10)
     names = [n for n in ("legend", "note", "zoom", "scale", "tip", "strip", "mix") if dom.get(n) and dom[n]["visible"]]
     if dom.get("mix") and dom["mix"]["visible"]:   # the revenue mix box (round 9): its toggle inside it
         t, b = dom["mixtoggle"], dom["mix"]
@@ -106,12 +109,18 @@ def main():
         proc = subprocess.Popen(brave_flags(profile, w, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
             port = wait_port_file(profile, proc); cdp = CDP(page_ws_url(port))
-            cdp.call("Page.enable"); cdp.call("Runtime.enable")
+            cdp.call("Page.enable"); cdp.call("Runtime.enable"); cdp.call("DOM.enable"); cdp.call("CSS.enable")
             cdp.call("Emulation.setDeviceMetricsOverride", {"width": w, "height": a.height, "deviceScaleFactor": 1, "mobile": False})
             cdp.call("Page.navigate", {"url": url}); cdp.wait_event("Page.loadEventFired", timeout=60)
             cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60)
             time.sleep(0.5)
             layers = cdp.evaluate("window.__atlas.layers", await_promise=False)
+            # the typeface (round 10): the headless browser must have resolved IBM Plex Mono for the title and a button, the only proof the installed face is in use
+            doc = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]
+            for sel in ("header h1", "#theme"):
+                nid = cdp.call("DOM.querySelector", {"nodeId": doc, "selector": sel})["nodeId"]
+                fams = [f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]]
+                if not any("IBM Plex Mono" in f for f in fams): findings.append("%-11s width %d  %s rendered with %s" % ("font", w, sel, fams))
             # the preset cameras at this width, the map's size and the fitted k, for the camera checks
             P = cdp.evaluate("(() => { const A = window.__atlas; A.mode('cells'); A.preset('Moscow'); const moscow = A.camera(); A.preset('Central Moscow (250 m)'); const cm = A.camera(); A.preset('Russia'); const russia = A.camera(); return { moscow, cm, russia, kfit: A.kFit(), W: window.__atlasCanvases.map.w, H: window.__atlasCanvases.map.h, m: A.cities.Moscow }; })()", await_promise=False)
             side = min(round(P["W"]), round(P["H"])); mx, my = P["m"]   # the page rounds the map's size to whole CSS px
@@ -141,12 +150,15 @@ def main():
             # and at a city window, a forced tip, the tile at the map's corners and centre clear of the panels and of the hovered mark, a tap
             W, H = w, a.height
             def ctx_is(band, name_prefix, kind=None):
-                return lambda r: [] if r["extra"] and r["extra"]["band"] == band and r["extra"]["name"].startswith(name_prefix) and r["extra"]["glyph"] and r["extra"]["glyphD"] and (kind is None or r["extra"]["kind"] == kind) and r["extra"]["open"] and not r["extra"]["clipped"] else [("context", "strip", json.dumps(r["extra"])[:220])]
+                return lambda r: [] if r["extra"] and r["extra"]["band"] == band and r["extra"]["name"].startswith(name_prefix) and r["extra"]["glyph"] and r["extra"]["glyphD"] and (kind is None or r["extra"]["kind"] == kind) and r["extra"]["open"] and not r["extra"]["clipped"] and r["extra"].get("locs", 0) >= 1 else [("context", "strip", json.dumps(r["extra"])[:220])]
             state("share", 2021, "A.strip(true); A.preset('Russia'); window.__extra = A.context();", "ctxnat", ctx_is("national", "Russia"))
             state("industry", 2021, "A.strip(true); A.preset('Russia'); window.__extra = A.context();", "ctxind", ctx_is("national", "Russia", "industry"))
             state("share", 2024, "A.strip(true); await A.jump({ cx: m[0] + 60, cy: m[1], k: 1.0 }); window.__extra = A.context();", "ctxreg", ctx_is("region", "Moscow Oblast"))
             state("share", 2021, "A.strip(true); A.preset('Moscow'); window.__extra = Object.assign(A.context(), { g2: A.glyph('Saint Petersburg') });", "ctxcity", lambda r: ctx_is("city", "Moscow")(r) + ([] if r["extra"] and r["extra"]["g2"] and r["extra"]["g2"] != r["extra"]["glyphD"] else [("context", "glyph", "the St Petersburg glyph is empty or equals Moscow's")]))
             state("share", 2021, "A.strip(true); A.preset('Russia'); A.tip('reset'); window.__extra = { shown: A.tip(true), c: A.context() }; A.tip(false);", "ctxtip", lambda r: [] if r["extra"] and r["extra"]["shown"] and r["extra"]["c"]["kind"] == "tip" and r["extra"]["c"]["text"] else [("context", "tip", json.dumps(r["extra"])[:200])])
+            # interface labels in tracked capitals (round 10): the computed styles of every labelled element with a tip showing and a hover on, the zoom titles, every tip fitting the strip at this width
+            state("industry", 2021, "A.mode('cells'); A.strip(true); A.preset('Moscow'); A.hoverKm(m[0], m[1], { show: true }); A.tip('reset'); A.tip(true); window.__extra = { caps: %s, tips: A.tips() }; A.tip(false);" % CAPS_JS, "caps",
+                  lambda r: ([("caps", "dom", b) for b in (r["extra"] or {}).get("caps", ["no result"])] + [("tips", "strip", "clipped: %s" % json.dumps(t)) for t in (r["extra"] or {}).get("tips", []) if t["clipped"]] + ([] if r["extra"] and len(r["extra"]["tips"]) >= 9 else [("tips", "strip", "fewer tips measured than expected")])))
             state("share", 2021, "A.strip(false); A.preset('Russia'); window.__extra = A.context();", "ctxoff", lambda r: [] if r["extra"] and not r["extra"]["open"] and not r["dom"]["stripOpen"] else [("context", "closed", json.dumps(r["extra"])[:200])])
             state("share", 2021, "A.strip(null); A.preset('Russia');", "ctxdef")
             MAPSIZE = "const mbx = document.getElementById('mapwrap').getBoundingClientRect(), MW = mbx.width, MH = mbx.height; "

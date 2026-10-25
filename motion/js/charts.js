@@ -64,7 +64,7 @@
       if (endLabels && last && progress >= 0.9) ends.push({ str: s.label.replace('{y}', labelFmt(last.y)), x: sx(last.x) + 14, y: sy(last.y), color: s.color });
     }
     const ys = spreadLabels ? C.spread(ends.map(e => e.y), labelSize + 2, box.y + labelSize / 2, box.y + box.h - labelSize / 2) : ends.map(e => e.y);
-    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size: labelSize, color: e.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) }));
+    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size: labelSize, color: e.color, baseline: 'middle', weight: 500, alpha: tail(progress, 0.9) }));
     return { sx, sy };
   };
 
@@ -85,7 +85,7 @@
       T(ctx, fmt(it.a), x0 - 16, la[i], { size, color: theme.ink, align: 'right', baseline: 'middle' });
       T(ctx, it.label, x0 - 16 - Motion.measure(ctx, fmt(it.a), size) - 14, la[i], { size, color: theme.muted, align: 'right', baseline: 'middle' });
       if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); }
-      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, lb[i], { size, color: it.color, align: 'left', baseline: 'middle', weight: 600, alpha: tail(u) });
+      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, lb[i], { size, color: it.color, align: 'left', baseline: 'middle', weight: 500, alpha: tail(u) });
     });
   };
 
@@ -97,14 +97,14 @@
     }
     groups.forEach((g, gi) => {
       const y = box.y + gi * (barH + gap + 40);
-      T(ctx, g.label, box.x, y - 16, { size: size + 2, color: theme.ink, weight: 600 });
-      if (g.sub) T(ctx, g.sub, box.x + Motion.measure(ctx, g.label, size + 2, 600) + 18, y - 16, { size, color: theme.muted });
+      T(ctx, g.label, box.x, y - 16, { size: size + 2, color: theme.ink, weight: 500 });
+      if (g.sub) T(ctx, g.sub, box.x + Motion.measure(ctx, g.label, size + 2, 500) + 18, y - 16, { size, color: theme.muted });
       let x = box.x; const w = box.w * progress;
       for (const p of g.parts) {
         const pw = w * p.value / g.total; ctx.fillStyle = p.color; ctx.fillRect(x + 1.5, y, Math.max(0, pw - 3), barH);
         if (progress >= 0.85) {
           const label = Motion.fmt.pct(100 * p.value / g.total), la = tail(progress);
-          if (p.value / g.total >= minLabelFrac) T(ctx, label, x + pw / 2, y + barH / 2 + 1, { size, color: p.textColor || theme.stage, align: 'center', baseline: 'middle', weight: 600, alpha: la });
+          if (p.value / g.total >= minLabelFrac) T(ctx, label, x + pw / 2, y + barH / 2 + 1, { size, color: p.textColor || theme.stage, align: 'center', baseline: 'middle', weight: 500, alpha: la });
           else T(ctx, label, x + pw / 2, y + barH + 30, { size: size - 2, color: theme.muted, align: 'center', alpha: la });
         }
         x += pw;
@@ -151,7 +151,7 @@
       if (pts.length && progress >= 0.9) ends.push({ str: s.label, x: sx(pts[pts.length - 1].x) + 22, y: sy(pts[pts.length - 1].y), color: s.color });
     }
     const ys = spreadLabels ? C.spread(ends.map(e => e.y), size + 2, box.y + size / 2, box.y + box.h - size / 2) : ends.map(e => e.y);
-    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size, color: e.color, baseline: 'middle', weight: 600, alpha: tail(progress, 0.9) }));
+    ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size, color: e.color, baseline: 'middle', weight: 500, alpha: tail(progress, 0.9) }));
     return { sx, sy };
   };
 
@@ -161,7 +161,7 @@
     rows.forEach((r, i) => {
       const u = Motion.clamp(progress * rows.length - i, 0, 1); if (u <= 0) return;
       const y = box.y + i * (cell + gap); ctx.save(); ctx.globalAlpha *= u;
-      for (let j = 0; j < r.history.length; j++) { const ch = r.history[j]; const col = colors[ch] || theme.grid; ctx.fillStyle = col; ctx.fillRect(box.x + j * (cell + gap), y, cell, cell); T(ctx, ch, box.x + j * (cell + gap) + cell / 2, y + cell / 2 + 1, { size: size - 2, color: ch === 'A' ? theme.stage : theme.ink, align: 'center', baseline: 'middle', weight: 600 }); }
+      for (let j = 0; j < r.history.length; j++) { const ch = r.history[j]; const col = colors[ch] || theme.grid; ctx.fillStyle = col; ctx.fillRect(box.x + j * (cell + gap), y, cell, cell); T(ctx, ch, box.x + j * (cell + gap) + cell / 2, y + cell / 2 + 1, { size: size - 2, color: ch === 'A' ? theme.stage : theme.ink, align: 'center', baseline: 'middle', weight: 500 }); }
       const xx = box.x + r.history.length * (cell + gap) + 14;
       const barW = Math.max(0, (box.w - (xx - box.x) - 150) * (r.share / 100) * 2.5);
       ctx.fillStyle = theme.barMuted; ctx.fillRect(xx, y + 8, barW, cell - 16);
@@ -238,8 +238,8 @@
       const lastFirm = firm.filter(p => p.y != null && p.x <= xReveal).pop(), lastMed = med[med.length - 1];
       let yF = lastFirm ? sy(lastFirm.y) : null, yM = lastMed ? sy(lastMed[1]) : null;
       if (yF != null && yM != null && Math.abs(yF - yM) < 30) { const mid = (yF + yM) / 2; yF = mid + (yF <= yM ? -16 : 16); yM = mid + (yF <= yM ? 16 : -16); }
-      if (lastFirm && labels.firm) T(ctx, labels.firm, sx(lastFirm.x) + 12, yF, { size, color: col.firm, baseline: 'middle', weight: 600, alpha: la });
-      if (lastMed && labels.median) T(ctx, labels.median, sx(lastMed[0]) + 12, yM, { size, color: col.median, baseline: 'middle', weight: 600, alpha: la });
+      if (lastFirm && labels.firm) T(ctx, labels.firm, sx(lastFirm.x) + 12, yF, { size, color: col.firm, baseline: 'middle', weight: 500, alpha: la });
+      if (lastMed && labels.median) T(ctx, labels.median, sx(lastMed[0]) + 12, yM, { size, color: col.median, baseline: 'middle', weight: 500, alpha: la });
     }
     return { sx, sy };
   };
@@ -250,7 +250,7 @@
       const y = box.y + i * (barH + gap); const w = box.w * (r.value / max) * progress;
       T(ctx, r.label, box.x, y - 10, { size, color: theme.muted, alpha: head(progress) });
       ctx.fillStyle = r.color; ctx.fillRect(box.x, y, w, barH);
-      if (progress >= 0.85) T(ctx, r.text || fmt(r.value), box.x + box.w * (r.value / max) + 14, y + barH / 2 + 1, { size, color: theme.ink, baseline: 'middle', weight: 600, alpha: tail(progress) });
+      if (progress >= 0.85) T(ctx, r.text || fmt(r.value), box.x + box.w * (r.value / max) + 14, y + barH / 2 + 1, { size, color: theme.ink, baseline: 'middle', weight: 500, alpha: tail(progress) });
     });
   };
 

@@ -14,7 +14,7 @@
   --stage: #060B18; --land: #172A45; --border: #495669; --graticule: #2E333D;
   --ink: #ECEEF1; --muted: #9EABBD; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #7FCDBB; --accent-strong: #EDF8B1; --fall: #C2A5CF; --rise: #A6DBA0; --below: #3C4852; --highlight: rgba(127,205,187,0.10);
-  --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   color-scheme: dark;
 }
@@ -29,14 +29,16 @@
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
   --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.4;
+body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
-header h1 { font-size: 22px; margin: 0; font-weight: 700; }
+header h1 { font-size: 22px; margin: 0; font-weight: 700; text-transform: uppercase; }   /* VISIBILITY ATLAS (round 10) */
 header .sub { color: var(--muted); flex: 1 1 320px; min-width: 0; }
 button, select { font: inherit; }
-.btn { background: var(--control); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+.btn { background: var(--control); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* interface labels in tracked capitals (round 10, the author's widening of T4) */
+.ui { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the same for spans: the year label and value, the mix box title, the view label, the note's label */
+.u { text-transform: none; }   /* a unit symbol inside a tracked label keeps its case (km, m) */
 .btn[aria-pressed="true"], .btn.on { background: var(--control-on); color: #fff; border-color: var(--control-on); }
 .btn:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 1px; }
 main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; }
@@ -60,12 +62,21 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .toggle:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 1px; }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
 .maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
-.maplegend .row { margin: 2px 0; }
-.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }
+.maplegend .sw.bars { background: repeating-linear-gradient(to bottom, var(--c) 0 2px, transparent 2px 3px); }   /* a ramp swatch as five 2 px bars with 1 px gaps (round 10; a hard-stop stripe, not a tonal gradient) */
+.loc { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* place names in tracked capitals (round 10) */
+.tooltip b.loc { font-size: 11.5px; }
+.kv b.loc { font-size: 12px; }
+.maplegend .row { margin: 2px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; padding-left: 20px; text-indent: -20px; }   /* legend row labels in tracked capitals (round 10); a wrapped row hangs under its text, not under the swatch */
+.maplegend .row.p { text-transform: none; letter-spacing: 0; font-weight: 400; padding-left: 0; text-indent: 0; }   /* the legend's sentence lines stay mixed case */
+.lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.lhead .ltitle b { font-weight: 500; }
+.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 43%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }   /* 43 percent beside the legend's 53 (round 10: the wider type) */
+.mapwrap.narrow .mapnote { font-size: 11.5px; line-height: 1.3; max-width: 62%; }   /* a phone-width map: a smaller, wider note that ends above the scale bar (round 10) */
+.mapwrap:not(.narrow) .maplegend { max-width: min(calc(100% - 136px), 53%); }   /* the legend and the note never share the map's width (round 10) */
 .mapnote .nlabel { color: var(--muted); align-self: center; }
-.mixbox { position: absolute; left: 12px; top: 12px; z-index: 3; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px 8px; border-radius: 4px; font-size: 13px; width: 300px; max-width: calc(100% - 24px); box-sizing: border-box; }   /* the revenue mix (round 9): the industry layer's live breakdown */
+.mixbox { position: absolute; left: 12px; top: 12px; z-index: 3; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px 8px; border-radius: 4px; font-size: 13px; width: 340px; max-width: calc(100% - 24px); box-sizing: border-box; }   /* the revenue mix (round 9: the industry layer's live breakdown */
 .mixbox .mhead { display: flex; align-items: center; gap: 6px; }
-.mixbox .mhead b { flex: 1 1 auto; min-width: 0; }
+.mixbox .mhead b { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .mixbox .r { display: flex; align-items: baseline; gap: 6px; line-height: 1.45; }
 .mixbox .r .sw { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 2px; align-self: center; }
 .mixbox .r .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -73,7 +84,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mixbox #mixrows { min-height: calc(9 * 1.45em); }
 .mixbox.closed { width: auto; }
 .zoombox { position: absolute; right: 12px; bottom: calc(12px + var(--lift)); z-index: 4; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 6px; background: color-mix(in srgb, var(--panel) 92%, transparent); }
-.zoombox .btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; font-size: 22px; line-height: 1; font-weight: 600; }
+.zoombox .btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; font-size: 22px; line-height: 1; font-weight: 500; }
 .zoombox .btn svg { width: 18px; height: 18px; }
 .zoombox .btn:disabled { opacity: 0.4; cursor: default; }
 .scalebar { position: absolute; right: 12px; bottom: calc(156px + var(--lift)); max-width: 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--panel) 85%, transparent); font-size: 11px; color: var(--muted); pointer-events: none; }
@@ -81,18 +92,21 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 @media (pointer: coarse) { .zoombox .btn { width: 44px; height: 44px; } .scalebar { bottom: calc(168px + var(--lift)); } .ctx.closed { right: 80px; } }
 /* The cursor tile (round 9): the glance view that follows the cursor, its border in the cursor colour (muted at rest, full while
    the cursor moves), tabular monospace figures, a class-mix bar on the industry layer and a footer with the coordinate and the scale. */
-.tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 2px solid var(--cursor); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: min(280px, calc(100% - 16px)); display: none; z-index: 5; font-variant-numeric: tabular-nums; transition: border-color .15s; }
+.tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 2px solid var(--cursor); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: min(320px, calc(100% - 16px)); display: none; z-index: 5; font-variant-numeric: tabular-nums; transition: border-color .15s; }
 .tooltip b { font-variant-numeric: tabular-nums; }
 .mapwrap.cursor-live .tooltip { border-color: var(--cursor-live); }
 .mapwrap.narrow .tooltip { max-width: 64%; font-size: 12px; padding: 5px 7px; line-height: 1.3; }
 .mapwrap.narrow .t-foot { font-size: 11px; }   /* a phone-width map: the tile leaves room beside it for the zoom box and the scale bar (round 9) */
-.tile .num { font-family: "Nimbus Mono PS", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace; font-size: 12px; font-variant-numeric: tabular-nums; }
+.tile .num { font-family: var(--font); font-size: 12px; font-variant-numeric: tabular-nums; }
 .t-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
 .mapwrap.cursor-live .t-foot { color: var(--context-live); }
 /* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
 .ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 1.5px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }
 .ctx .toggle { pointer-events: auto; color: var(--context); }
-.ctx.narrow { font-size: 11.5px; }
+.ctx.narrow { font-size: 11.5px; height: 44px; }   /* a phone-width map: the strip wraps to two lines (round 10) */
+.ctx.narrow .ctxt { height: 32px; line-height: 16px; }
+.ctx.narrow .ctxt .t { white-space: normal; }
+.mapwrap.narrow.strip-open { --lift: 44px; }
 .ctx .toggle:hover { color: var(--context-live); }
 .ctx.closed { left: auto; right: 76px; bottom: 12px; height: auto; padding: 2px; border-top: 0; border-radius: 4px; }
 .ctx.closed .glyph, .ctx.closed .ctxt { display: none; }
@@ -102,22 +116,23 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctx .glyph path.nt { transition: none; }
 .ctx .glyph path.out { opacity: 0; }
 .ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 20px; line-height: 20px; }
-.ctxt .t { position: absolute; left: 0; right: 0; top: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
+.ctxt .t { position: absolute; left: 0; right: 0; top: 0; bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
 .ctxt .t.hid { opacity: 0; }
 .ctxt .t.live { color: var(--context-live); }
 .ctxt .num { font-variant-numeric: tabular-nums; }
+.ctxt .t.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the strip's tips in tracked capitals (round 10) */
 @media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
 .card { background: var(--panel); border-radius: 6px; padding: 10px 12px; min-width: 0; }
-.card h2 { font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 .controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .controls .btn { font-size: 13px; }
 #modes { margin-bottom: 8px; }
-#modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; }
+#modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
-.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 60px; font-weight: 600; }
+.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 60px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
 /* The context layer's live marker (round 9): while a pulse runs the slider and the year take the context colour and a dot follows the year. */
 .yearrow .yr::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: 1px; background: var(--context-live); opacity: 0; }
 .yearrow.live .yr::after { opacity: 1; }
@@ -129,19 +144,20 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .yearrow .pulse:disabled { opacity: 0.4; cursor: default; }
 @media (pointer: coarse) { .yearrow .pulse { width: 36px; height: 36px; } }
 .presets { display: flex; flex-wrap: wrap; gap: 5px; }
-.presets .btn { font-size: 12px; padding: 3px 8px; }
+.presets .btn { font-size: 12px; padding: 3px 6px; }
 canvas.chart { width: 100%; height: 170px; display: block; }
 .muted { color: var(--muted); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; }
 .kv b { font-variant-numeric: tabular-nums; text-align: right; }
+.kv > span { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 12px; padding-top: 2px; }   /* the panel's row labels in tracked capitals (round 10) */
 .gl { display: inline-block; width: 11px; height: 11px; border-radius: 50%; box-sizing: border-box; vertical-align: -1px; margin-right: 5px; }
 .kv .listed { grid-column: 1 / -1; display: grid; gap: 6px; margin-top: 2px; }
 .lf { display: grid; gap: 1px; font-size: 13px; line-height: 1.3; min-width: 0; }
 .lf-h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.lf-h b { text-align: left; font-weight: 600; min-width: 0; }
+.lf-h b { text-align: left; font-weight: 500; min-width: 0; }
 .lf-h .lists { flex: 0 1 auto; text-align: right; font-size: 12px; }
 .lf .filed { font-weight: 400; }
-.lf-s { display: grid; grid-template-columns: 96px 1fr; gap: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lf-s { display: grid; grid-template-columns: 124px 1fr; gap: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lf.more { color: var(--muted); }
 footer { color: var(--dim); font-size: 12px; line-height: 1.4; }
 footer a { color: var(--accent); }
@@ -161,12 +177,12 @@ footer a { color: var(--accent); }
     <canvas id="overlay"></canvas>
     <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend">▾</button></div><div class="lbody" id="legendbody"></div></div>
     <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix">▾</button></div><div id="mixbody"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div>
-    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
+    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel ui" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
     <div class="scalebar" id="scalebar" aria-hidden="true"><span class="bar"></span><span class="lab"></span></div>
     <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
-      <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
-      <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
-      <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="Fit the whole country (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="ZOOM IN (+)">+</button>
+      <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="ZOOM OUT (−)">−</button>
+      <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="FIT THE WHOLE COUNTRY (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     </div>
     <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line">▾</button></div>
     <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span></div></div>
@@ -176,7 +192,7 @@ footer a { color: var(--accent); }
       <h2>Layer</h2>
       <div class="controls" id="modes"></div>
       <div class="controls" id="layers"></div>
-      <div class="yearrow" id="yearrow"><span>Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
+      <div class="yearrow" id="yearrow"><span class="ui">Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
       <div class="prov" id="layerprov"></div>
     </section>
     <section class="card">

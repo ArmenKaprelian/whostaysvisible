@@ -26,19 +26,19 @@
   /* The atlas's two accents (round 9), carried here for parity; the video draws none of them. */
   --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   --highlight: rgba(127, 205, 187, 0.10);
-  --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;   /* one typeface since round 10: IBM Plex Mono, installed for the renders and linked from Google Fonts on the published page */
   color-scheme: dark;
 }
 html, body { height: 100%; }
 body {
-  margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font);
+  margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-variant-numeric: tabular-nums;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0;
 }
 .stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
 canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 100%; display: block; background: var(--stage); }
 .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; background: var(--panel); border-radius: 6px; padding: 10px 14px; font-size: 14px; }
-.controls button { background: transparent; color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; min-width: 64px; }
+.controls button { background: transparent; color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; min-width: 64px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* interface labels in tracked capitals (round 10) */
 .controls button:hover, .controls button:focus-visible { border-color: var(--accent); outline: none; }
 .controls .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; }
 .controls input[type=range] { flex: 1 1 240px; min-width: 120px; accent-color: var(--accent); }
