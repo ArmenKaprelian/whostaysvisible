@@ -1294,7 +1294,8 @@ the inferred share, the undated firms red throughout) is unchanged.
 
 Published on 25 October 2026 after the author's confirmation: atlas v16 (version id 1792898590-9ef6) (the page, `js/explorer-app.js`,
 `js/map-layers.js`) and explainer v20 (version id 1792898612-816b) (the page, `js/map-layers.js`, `js/treated-scenes.js`); the
-teaser asset kept, the committed round c12d966.
+teaser asset kept, the committed round c12d966. The author confirmed on 25 October that v16 and v20 load and
+behave well on their devices.
 
 ### Publishing
 
