@@ -31,7 +31,7 @@ def audit_boxes(boxes, canvases, min_size, overlap):
     vis = [b for b in boxes if b["eff"] >= 0.05 and b["str"].strip()]
     for b in vis:
         c = canvases.get(b["scene"])
-        if c and (b["x"] < -0.5 or b["y"] < -0.5 or b["x1"] > c["w"] + 0.5 or b["y1"] > c["h"] + 0.5):
+        if c and b.get("kind") != "ghost" and (b["x"] < -0.5 or b["y"] < -0.5 or b["x1"] > c["w"] + 0.5 or b["y1"] > c["h"] + 0.5):   # a ghost name may be clipped at the map's edge (round 12, part D)
             out.append(("offcanvas", b["scene"], b["str"]))
         if b["size"] < min_size:
             out.append(("small", b["scene"], "%s (%g px)" % (b["str"], b["size"])))
@@ -148,6 +148,7 @@ def main():
     a = ap.parse_args()
     url = a.url + ("&" if "?" in a.url else "?") + "__audit=1"
     findings = []; n_boxes = 0; n_states = 0; fields = set(); n_relaxed = 0; relaxed = []
+    WIRE_DATA = WC.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"))   # the wire's and the anniversaries' re-derivation (rounds 10 and 12)
     global CUR_W
     for w in [int(x) for x in a.widths.split(",")]:
         CUR_W = w
@@ -160,6 +161,12 @@ def main():
             cdp.call("Page.navigate", {"url": url}); cdp.wait_event("Page.loadEventFired", timeout=60)
             cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60)
             time.sleep(0.5)
+            # the console greeting (round 12, part D, item 4): the load logs exactly one message, the greeting with the mark, the title line, the build and the repository, and no error or warning
+            msgs = [(e["params"]["type"], " ".join(str(x.get("value", x.get("description", ""))) for x in e["params"].get("args", []))) for e in cdp.events if e.get("method") == "Runtime.consoleAPICalled"]
+            greet = [m for m in msgs if m[0] == "log" and "Visibility Atlas · Armen G. Kaprelian" in m[1] and "github.com/ArmenKaprelian/whostaysvisible" in m[1] and "Built from " in m[1] and "+--      --+" in m[1]]
+            if len(msgs) != 1 or len(greet) != 1: findings.append("%-11s width %d  the load logged %d message(s), expected the greeting alone: %s" % ("console", w, len(msgs), json.dumps(msgs)[:300]))
+            if cdp.problems: findings.append("%-11s width %d  errors or warnings on load: %s" % ("console", w, json.dumps(cdp.problems)[:300]))
+            n_states += 1
             # the landing (round 10): before any call, the Cells view, the leading-industry layer, 2024, at the national zoom (the camera is compared with the Russia preset below)
             landing = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, label: document.getElementById('yearlabel').textContent, cam: A.camera(), theme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), dataTheme: document.documentElement.getAttribute('data-theme'), button: document.getElementById('theme').textContent, yearrow: !document.getElementById('yearrow').hidden, mix: !document.getElementById('mixbox').hidden, prov: document.getElementById('layerprov').textContent.slice(0, 40) }; })()", await_promise=False)
             layers = cdp.evaluate("window.__atlas.layers", await_promise=False)
@@ -218,6 +225,71 @@ def main():
             # interface labels in tracked capitals (round 10): the computed styles of every labelled element with a tip showing and a hover on, the zoom titles, every tip fitting the strip at this width
             state("industry", 2021, "A.mode('cells'); A.strip(true); A.preset('Moscow'); A.hoverKm(m[0], m[1], { show: true }); A.tip('reset'); A.tip(true); window.__extra = { caps: %s, tips: A.tips() }; A.tip(false);" % CAPS_JS, "caps",
                   lambda r: ([("caps", "dom", b) for b in (r["extra"] or {}).get("caps", ["no result"])] + [("tips", "strip", "clipped: %s" % json.dumps(t)) for t in (r["extra"] or {}).get("tips", []) if t["clipped"]] + ([] if r["extra"] and len(r["extra"]["tips"]) >= 9 else [("tips", "strip", "fewer tips measured than expected")])))
+            # the ruler (round 12, part D, the author's request of 25 October 2026): at the three presets and the floor every major tick sits at the pad plus i times the step times
+            # the zoom, the step a 1-2-5 value in km, the numbers on every every-th major with the right values, every label inside the box and clear of its neighbours
+            RULER_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+            def ruler_ok(r):
+                x = r["extra"]; bad = []
+                if not x: return [("ruler", "dom", "no report")]
+                for name, R in x.items():
+                    if not R or "step" not in R: bad.append(("ruler", name, "no ruler state")); continue
+                    if R["step"] not in RULER_STEPS: bad.append(("ruler", name, "step %s is not a 1-2-5 value" % R["step"]))
+                    if R["n"] < 1 or R["every"] < 1: bad.append(("ruler", name, "n %s every %s" % (R["n"], R["every"])))
+                    if R["step"] * R["k"] < 14 - 1e-6: bad.append(("ruler", name, "majors %.1f px apart, under 14" % (R["step"] * R["k"])))
+                    if (R["n"] + 1) * R["step"] * R["k"] <= R["line"] + 1e-6: bad.append(("ruler", name, "a further major would fit: n %s, line %s px, step %.2f px" % (R["n"], R["line"], R["step"] * R["k"])))
+                    if R["n"] * R["step"] * R["k"] > R["line"] + 1e-6: bad.append(("ruler", name, "the last major lies past the line's end"))
+                    mult = 1000 if R["unit"] == "m" else 1
+                    for t in R["ticks"]:
+                        want = R["pad"] + t["i"] * R["step"] * R["k"]
+                        if abs(t["x"] - want) > 0.3: bad.append(("ruler", name, "tick %d at %.2f, expected %.2f" % (t["i"], t["x"], want)))
+                        if t["i"] % R["every"]: bad.append(("ruler", name, "tick %d numbered off the every-th rule" % t["i"]))
+                        if t["label"] != str(round(R["step"] * t["i"] * mult)): bad.append(("ruler", name, "tick %d reads %r, expected %r" % (t["i"], t["label"], str(round(R["step"] * t["i"] * mult)))))
+                    if [t["i"] for t in R["ticks"]] != list(range(0, R["n"] + 1, R["every"])): bad.append(("ruler", name, "numbered ticks %s" % [t["i"] for t in R["ticks"]]))
+                    nums = [l for l in R["labels"] if not l["unit"]]; units = [l for l in R["labels"] if l["unit"]]
+                    if len(units) != 1 or units[0]["text"] != R["unit"]: bad.append(("ruler", name, "unit label %s" % json.dumps(units)))
+                    for l in R["labels"]:
+                        if l["x"] < -0.5 or l["x1"] > R["box"]["w"] + 0.5 or l["y"] < -0.5 or l["y1"] > R["box"]["h"] + 0.5: bad.append(("ruler", name, "label %r outside the box: %s" % (l["text"], json.dumps({k: round(l[k], 1) for k in ("x", "x1", "y", "y1")}))))
+                    nums.sort(key=lambda l: l["x"])
+                    for a, b in zip(nums, nums[1:]):
+                        if b["x"] < a["x1"] + 2: bad.append(("ruler", name, "labels %r and %r %.1f px apart" % (a["text"], b["text"], b["x"] - a["x1"])))
+                    for u in units:
+                        for l in nums:
+                            if not (u["y1"] <= l["y"] + 0.5 or l["y1"] <= u["y"] + 0.5) and not (u["x1"] <= l["x"] or l["x1"] <= u["x"]): bad.append(("ruler", name, "the unit label meets %r" % l["text"]))
+                return bad
+            state("share", 2021, "A.mode('cells'); const out = {}; for (const p of ['Russia', 'Moscow', 'Central Moscow (250 m)']) { A.preset(p); await A.ready(); A.redraw(); out[p] = A.ruler(); } await A.zoom(-1); A.redraw(); out.floor = A.ruler(); A.preset('Russia'); window.__extra = out;", "ruler", ruler_ok)
+            # the separators' clearances (the author's report of 25 October 2026): every mark on the track at least 0.6 em from the items beside it and covering none, the lead separator's margins the same, the window's edges faded
+            def gap_ok(g):
+                if not g: return [("wire", "gap", "no clearance report")]
+                bad = []; em = g.get("em") or 14; floor = 0.6 * em
+                if g["items"] and (g["min"] is None or g["min"] < floor - 0.5): bad.append(("wire", "gap", "a separator sits %.1f px from an item, under 0.6 em (%.1f px)" % (g["min"] if g["min"] is not None else -1, floor)))
+                if g["covered"]: bad.append(("wire", "gap", "%d item boxes under a separator mark" % g["covered"]))
+                if g["lsepLeft"] is not None and (g["lsepLeft"] < floor - 0.5 or g["lsepRight"] < floor - 0.5): bad.append(("wire", "gap", "the lead separator's margins are %.1f and %.1f px, under 0.6 em" % (g["lsepLeft"], g["lsepRight"])))
+                if not g["fade"]: bad.append(("wire", "gap", "the window's edges carry no fade"))
+                return bad
+            # anniversaries (round 12, part D, item 6): the builder on four fixed days against the re-derivation (the anchor firm's day, the decree's day, a day with 167 listings, a day with none)
+            ANNIV_DAYS = ["2026-05-19", "2026-01-22", "2026-02-24", "2026-01-01"]
+            def anniv_ok(r):
+                x = r["extra"]
+                if not x: return [("anniversary", "strip", "no report")]
+                bad = []
+                for d, got in x["lines"]:
+                    exp = WC.anniversary(WIRE_DATA, d)
+                    if got != exp: bad.append(("anniversary", "strip", "%s: %r, expected %r" % (d, got, exp)))
+                if sum(1 for d, got in x["lines"] if got) != 3: bad.append(("anniversary", "strip", "%d of the four days carry a line, expected three" % sum(1 for d, got in x["lines"] if got)))
+                if not re.match(r"^\d{4}-\d{2}-\d{2}$", x["today"] or ""): bad.append(("anniversary", "strip", "the page's date is %r" % x["today"]))
+                return bad
+            state("share", 2021, "window.__extra = { lines: %s.map(d => [d, A.anniversary(d)]), today: A.today() };" % json.dumps(ANNIV_DAYS), "anniv", anniv_ok)
+            if w < 600:
+                def narrow_ok(r):
+                    x = r["extra"]
+                    if not x: return [("wire", "narrow", "no report")]
+                    bad = gap_ok(x.get("gaps"))
+                    if x["lead0"] != 0 or x["lead1"] != 0: bad.append(("wire", "narrow", "the lead slot shows on a phone-width map: %s, %s px" % (x["lead0"], x["lead1"])))
+                    if x["r1"] != x["r0"] + 1 or x["sets"] != 1 or "Moscow Oblast" not in x["key"] or not x["ghost"]: bad.append(("wire", "narrow", "a context change did not rebuild under the crossfade: resets %s then %s, sets %s, key %s, ghost %s, context %s, timers %s, camera %s" % (x["r0"], x["r1"], x["sets"], x["key"][:40], x["ghost"], x.get("ctx"), json.dumps(x.get("timers")), json.dumps(x.get("cam")))))
+                    if not (0 <= x["x"] < 80): bad.append(("wire", "narrow", "the new track did not start from the window's left edge: x %s" % x["x"]))
+                    if not x["lead"].startswith("Moscow Oblast"): bad.append(("wire", "narrow", "the first item is not the new lead: %r" % x["lead"][:60]))
+                    return bad
+                state("share", 2024, "A.mode('cells'); A.strip(true); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(450); const w0 = A.wire(); await A.jump({ cx: m[0] + 60, cy: m[1], k: 1.0 }); await A.ready(); const w1 = A.wire(); const c1 = A.context(); window.__extra = { r0: w0.resets, r1: w1.resets, sets: w1.sets.length, key: w1.key, x: w1.x, lead0: w0.lead.width, lead1: w1.lead.width, lead: w1.items.length ? w1.items[0].text : '', ghost: document.querySelectorAll('.ctxt .track.old').length, ctx: c1.band + '|' + c1.name + '|' + c1.open, timers: w1.timers, cam: A.camera(), gaps: A.wireGaps() }; await wait(500);", "wirenarrow", narrow_ok)
             # the authorship mark (round 10, item 17): on the left bracket's arm the stage colour lifted 0.04 toward the ink, the plain stage 12 px to its left (a sea point at the Russia preset), and
             # under the data at the Moscow preset on the density layer the sample is a data colour; the twin's gzip comment reads through the page
             def mark_check(under):
@@ -231,7 +303,7 @@ def main():
                 return f
             state("lists", 2021, "A.mode('cells'); A.strip(true); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); A.redraw(); window.__extra = A.markAt();", "mark", mark_check(False))
             state("density", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); A.redraw(); window.__extra = { cells: A.drawOrder(), firms: (A.mode('firms'), A.redraw(), A.drawOrder()) }; A.mode('cells');", "markunder",
-                  lambda r: [] if r["extra"] and r["extra"]["cells"][:3] == ["basemap", "mark", "ghost"] and len(r["extra"]["cells"]) >= 4 and r["extra"]["firms"][:4] == ["basemap", "mark", "ghost", "firms"] else [("mark", "order", "the mark must follow the basemap and precede every layer: %s" % json.dumps(r["extra"]))])
+                  lambda r: [] if r["extra"] and r["extra"]["cells"][:2] == ["basemap", "mark"] and len(r["extra"]["cells"]) >= 4 and r["extra"]["cells"][-1] == "ghost" and r["extra"]["firms"] == ["basemap", "mark", "firms", "ghost"] else [("mark", "order", "the mark must follow the basemap and precede every layer, the ghost names follow the layers (round 12, part D): %s" % json.dumps(r["extra"]))])
             def method_check(r):
                 x = r["extra"]; bad = []
                 if not x: return [("method", "dom", "no result")]
@@ -256,12 +328,11 @@ def main():
             # the data wire (round 10, W14 and E15): every item of the 50-item cycle re-derived from the data files by wire_check.py for 2021 and 2024 at the Russia preset and
             # inside Moscow Oblast; tips at every fifth slot and drawn from the page's TIPS; one cat item at the keyed slot, never beside a named firm; the lead carries a place name
             if w >= 768:
-                WIRE_DATA = WC.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"))
                 def wire_check(y, band, name):
                     def chk(r):
                         x = r["extra"]
                         if not x: return [("wire", "items", "no report")]
-                        exp = WC.cycle(WIRE_DATA, y, band, name, x["cycle"]); bad = []; tipset = set(x["tips"])
+                        exp = WC.cycle(WIRE_DATA, y, band, name, x["cycle"], today=x.get("today")); bad = gap_ok(x.get("gaps")); tipset = set(x["tips"])
                         if len(x["items"]) != 50: bad.append(("wire", "items", "%d items, expected 50" % len(x["items"])))
                         for i, (a, e) in enumerate(zip(x["items"], exp)):
                             if a["kind"] != e["kind"]: bad.append(("wire", "items", "%d: kind %s, expected %s (%s)" % (i, a["kind"], e["kind"], a["text"][:60])))
@@ -277,8 +348,8 @@ def main():
                         return bad[:12]
                     return chk
                 for y in (2021, 2024):
-                    state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts() });" % y, "wire%d" % y, wire_check(y, "national", "Russia"))
-                    state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); if (A.hoverOff) A.hoverOff(); await A.jump({ cx: m[0] + 60, cy: m[1], k: 1.0 }); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts() });" % y, "wirereg%d" % y, wire_check(y, "region", "Moscow Oblast"))
+                    state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts(), today: A.today(), gaps: A.wireGaps() });" % y, "wire%d" % y, wire_check(y, "national", "Russia"))
+                    state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); if (A.hoverOff) A.hoverOff(); await A.jump({ cx: m[0] + 60, cy: m[1], k: 1.0 }); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts(), today: A.today(), gaps: A.wireGaps() });" % y, "wirereg%d" % y, wire_check(y, "region", "Moscow Oblast"))
                 # the wire across context changes (round 11, item 6): two region hovers mid-scroll append and then replace the queued set, never the visible one; the scroll offset
                 # stays monotone (no reset) and the new region's lead is queued within one cycle of the view; a year change resets under the crossfade
                 def cross_ok(r):
@@ -295,7 +366,27 @@ def main():
                     if x["year"]["resets"] != x["w2"]["resets"] + 1 or x["year"]["sets"] != 1 or not x["year"]["ghost"]: bad.append(("wire", "cross", "the year change: resets %s after %s, sets %s, ghost %s" % (x["year"]["resets"], x["w2"]["resets"], x["year"]["sets"], x["year"]["ghost"])))
                     if x["sep"]["w"] < 13.5 or x["sep"]["w"] > 14.5 or x["sep"]["color"] != x["sep"]["context"]: bad.append(("wire", "sep", "the separator mark is %s px in %s, expected 14 px in the context green %s" % (x["sep"]["w"], x["sep"]["color"], x["sep"]["context"])))
                     return bad
-                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(450); const w0 = A.wire(); A.hoverKm(m[0] + 60, m[1], { show: true }); await wait(450); const w1 = A.wire(); const sp = A.cities['St Petersburg']; A.hoverKm(sp[0] + 40, sp[1] - 60, { show: true }); await wait(450); const w2 = A.wire(); const xs = []; for (let i = 0; i < 5; i++) { xs.push(A.wire().x); await wait(100); } const last = w2.sets[w2.sets.length - 1]; const sep = document.querySelector('.wsep'), sepW = sep ? sep.getBoundingClientRect().width : 0, sepColor = sep ? getComputedStyle(sep).color : '', tok = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; A.year(2024); await wait(60); const wy = A.wire(); window.__extra = { resets0: w0.resets, w1: { sets: w1.sets, resets: w1.resets }, w2: { sets: w2.sets, resets: w2.resets, vis: w2.vis, x: w2.x }, xs, gap: last.x0 - w2.x, maxw: Math.max(...w2.sets.map(s => s.x1 - s.x0)), year: { resets: wy.resets, sets: wy.sets.length, ghost: document.querySelectorAll('.ctxt .track.old').length }, sep: { w: sepW, color: sepColor, context: rgb(tok) } }; if (A.hoverOff) A.hoverOff(); A.year(2021); await wait(500);", "wirecross", cross_ok)
+                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(450); const w0 = A.wire(); A.hoverKm(m[0] + 60, m[1], { show: true }); await wait(450); const w1 = A.wire(); const sp = A.cities['St Petersburg']; A.hoverKm(sp[0] + 40, sp[1] - 60, { show: true }); await wait(450); const w2 = A.wire(); const xs = []; for (let i = 0; i < 5; i++) { xs.push(A.wire().x); await wait(100); } const last = w2.sets[w2.sets.length - 1]; const sep = document.querySelector('.wsep'), sepW = sep ? sep.getBoundingClientRect().width : 0, sepColor = sep ? getComputedStyle(sep).color : '', tok = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; A.year(2024); await wait(60); const wy = A.wire(); window.__extra = { resets0: w0.resets, w1: { sets: w1.sets, resets: w1.resets }, w2: { sets: w2.sets, resets: w2.resets, vis: w2.vis, x: w2.x }, xs, gap: last.x0 - w2.x, maxw: Math.max(...w2.sets.map(s => s.x1 - s.x0)), year: { resets: wy.resets, sets: wy.sets.length, ghost: document.querySelectorAll('.ctxt .track.old').length }, sep: { w: sepW, color: sepColor, context: rgb(tok) } }; if (A.hoverOff) A.hoverOff(); A.year(2021); await wait(500);", "wirecross", cross_ok)
+                # the wire's two-set queue (round 12, part D): the lead slot shows the hovered region at once; a pending set sits behind the playing set's next tip or cat
+                # fact; it is committed after a 600 ms rest; fifty hover changes at 100 ms leave at most one pending set, at most two sets, a bounded track, no stray
+                # timer and a stable heap; the capitals experiment's switch holds its state
+                def queue_ok(r):
+                    x = r["extra"]; bad = []
+                    if not x: return [("wire", "queue", "no report")]
+                    if not x["leadAtOnce"].startswith("Moscow Oblast"): bad.append(("wire", "queue", "the lead slot did not show the hovered region at once: %r" % x["leadAtOnce"][:60]))
+                    p = x["pending"]
+                    if len(p["sets"]) != 2 or p["sets"][1]["status"] != "pending" or p["sets"][0]["items"] > 5: bad.append(("wire", "queue", "after a hover: %s" % json.dumps([(s_["status"], s_["items"]) for s_ in p["sets"]])))
+                    c = x["committed"]
+                    if len(c["sets"]) != 1 or c["sets"][0]["status"] != "committed" or "Moscow Oblast" not in c["sets"][0]["key"] or c["commits"] != p["commits"] + 1: bad.append(("wire", "queue", "after a 600 ms rest: %s commits %s" % (json.dumps([(s_["status"], s_["key"][:30]) for s_ in c["sets"]]), c["commits"])))
+                    f = x["after50"]
+                    if len(f["sets"]) > 2 or sum(1 for s_ in f["sets"] if s_["status"] == "pending") > 1 or f["dom"] > 115 or f["orphans"] > 8: bad.append(("wire", "queue", "after fifty hovers: %d sets, dom %d, orphans %d" % (len(f["sets"]), f["dom"], f["orphans"])))
+                    if not x["monotone"]: bad.append(("wire", "queue", "the offset ran backwards during the hovers"))
+                    if x["heapMB"] is not None and x["heapMB"] > 24: bad.append(("wire", "queue", "the heap grew by %.1f MB over fifty hovers" % x["heapMB"]))
+                    t = x["afterRest"]["timers"]
+                    if t["debounce"] or t["commit"] or sum(1 for s_ in x["afterRest"]["sets"] if s_["status"] == "pending") > 0: bad.append(("wire", "queue", "after the rest a timer or a pending set is left: %s" % json.dumps(x["afterRest"]["timers"])))
+                    if x["caps"]["on"] is not True or x["caps"]["data"] != "uppercase" or x["caps"]["lead"] != "uppercase" or x["caps"]["offData"] != "none" or x["caps"]["backOn"] is not True: bad.append(("wire", "caps", json.dumps(x["caps"])))
+                    return bad
+                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(400); const sp = A.cities['St Petersburg']; A.hoverKm(m[0] + 60, m[1], { show: true }); await wait(40); const leadAtOnce = A.wire().lead.text; await wait(300); const pending = A.wire(); await wait(400); const committed = A.wire(); const h0 = performance.memory ? performance.memory.usedJSHeapSize : null; const pts = [[m[0] + 60, m[1]], [sp[0] + 40, sp[1] - 60], [m[0] + 200, m[1] + 150], [m[0] - 150, m[1] - 100]]; const xs = []; for (let i = 0; i < 50; i++) { const q = pts[i % 4]; A.hoverKm(q[0], q[1], { show: true }); xs.push(A.wire().x); await wait(100); } const after50 = A.wire(); await wait(700); const afterRest = A.wire(); if (A.hoverOff) A.hoverOff(); const caps = { on: A.wireCaps(), data: getComputedStyle(document.querySelector('.wi.data')).textTransform, lead: getComputedStyle(document.getElementById('ctxA')).textTransform }; A.wireCaps(false); caps.offData = getComputedStyle(document.querySelector('.wi.data')).textTransform; A.wireCaps(true); caps.backOn = A.wireCaps(); window.__extra = { leadAtOnce, pending, committed, after50, afterRest, monotone: xs.every((v, i) => i === 0 || v >= xs[i - 1]), heapMB: h0 == null ? null : (performance.memory.usedJSHeapSize - h0) / 1048576, caps };", "wirequeue", queue_ok)
             # the cards' collapse toggles (the author's addition of 26 October): all six collapsed at 1,600 and 400 px (the DOM rules above check each), then reopened
             if w in (1600, 400):
                 state("share", 2024, "A.mode('cells'); A.preset('Russia'); for (const id of ['layer', 'goto', 'cursor', 'national', 'groups', 'odds']) A.card(id, false); A.redraw(); window.__extra = A.cards();", "cardscollapsed", lambda r: [] if r["extra"] and not any(r["extra"].values()) else [("card", "state", "not all collapsed: %s" % json.dumps(r["extra"]))])
@@ -321,6 +412,14 @@ def main():
             def mm_check(r):
                 x = r["extra"]; bad = []
                 if not x: return [("minimap", "dom", "no report")]
+                tt = x.get("titles") or []
+                if len(tt) != 24: bad.append(("minimap", "title", "%d presets with titles, expected 24" % len(tt)))
+                for t in tt:
+                    if not t["button"]: bad.append(("minimap", "title", "%s: the button carries no title" % t["label"]))
+                    if len(t["button"]) > 200: bad.append(("minimap", "title", "%s: the title runs to %d characters" % (t["label"], len(t["button"]))))
+                    if ";" in t["button"] or "\u2014" in t["button"]: bad.append(("minimap", "title", "%s: a semicolon or a dash in the title" % t["label"]))
+                    if t["svg"] is not None and t["svg"] != t["button"]: bad.append(("minimap", "title", "%s: the group's title differs from the button's: %r" % (t["label"], (t["svg"] or "")[:40])))
+                    if t["svg"] is None and t["label"] != "Central Moscow (250 m)": bad.append(("minimap", "title", "%s has no minimap group" % t["label"]))
                 if w > 900:
                     if not x["visible"] or x["labels"] != 22 or not x["rings"]: bad.append(("minimap", "dom", "visible %s labels %s rings %s" % (x["visible"], x["labels"], x["rings"])))
                     if x["violations"]: bad.append(("minimap", "layout", "rules broken: %s" % json.dumps(x["violations"])[:300]))
@@ -334,7 +433,7 @@ def main():
                     if x["visible"] or x["domvis"]: bad.append(("minimap", "dom", "the minimap shows at %d px" % w))
                     if not x["presets"]: bad.append(("minimap", "dom", "the button list is hidden at %d px" % w))
                 return bad
-            state("share", 2021, "A.mode('cells'); A.preset('Russia'); const mm = A.minimap(), d = A.redraw().dom; const clicks = []; for (const lbl of ['Moscow', 'Novosibirsk', 'Vladivostok', 'Russia']) { const a = mm.visible ? await A.minimapClick(lbl) : null; A.preset(lbl); const b = A.camera(); if (a) clicks.push([lbl, a, b]); } A.preset('Russia'); const selOf = () => [...document.querySelectorAll('#minimap [aria-pressed=\"true\"]')].map(e => e.id); const sel = [selOf()]; A.preset('Moscow'); sel.push(selOf()); const tk = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')', g = document.querySelector('#mm-moscow'), selGreen = !!g && getComputedStyle(g).color === rgb(tk) && getComputedStyle(g.querySelector('text')).fill === rgb(tk) && getComputedStyle(g.querySelector('.ld')).stroke === rgb(tk); A.preset('Russia'); window.__extra = { visible: mm.visible, labels: mm.labels.length, rings: mm.rings, violations: mm.violations, presets: d.presets.visible, domvis: d.minimap.visible, clicks, sel, selGreen, builds: mm.builds, rebuilt: A.minimapVerify() };", "minimap", mm_check)
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); const mm = A.minimap(), d = A.redraw().dom; const clicks = []; for (const lbl of ['Moscow', 'Novosibirsk', 'Vladivostok', 'Russia']) { const a = mm.visible ? await A.minimapClick(lbl) : null; A.preset(lbl); const b = A.camera(); if (a) clicks.push([lbl, a, b]); } A.preset('Russia'); const selOf = () => [...document.querySelectorAll('#minimap [aria-pressed=\"true\"]')].map(e => e.id); const sel = [selOf()]; A.preset('Moscow'); sel.push(selOf()); const tk = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')', g = document.querySelector('#mm-moscow'), selGreen = !!g && getComputedStyle(g).color === rgb(tk) && getComputedStyle(g.querySelector('text')).fill === rgb(tk) && getComputedStyle(g.querySelector('.ld')).stroke === rgb(tk); A.preset('Russia'); window.__extra = { visible: mm.visible, labels: mm.labels.length, rings: mm.rings, violations: mm.violations, presets: d.presets.visible, domvis: d.minimap.visible, clicks, sel, selGreen, builds: mm.builds, rebuilt: A.minimapVerify(), titles: mm.titles };", "minimap", mm_check)
             # the region tint and the glow under the dot field (round 10, F13): both full at the Russia preset, both gone at Moscow; the glow cached (no rebuild across twenty frames)
             def fl_is(tint, glow):
                 def chk(r):
@@ -360,8 +459,14 @@ def main():
                 state("share", 2024, "A.mode('cells'); A.note(true); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.note(null);", "notemem", note_is(True, "national, the viewer's choice"))
             state("share", 2024, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.redraw(); window.__extra = Object.assign(A.firmsLayers(), { builds2: A.firmsLayers().builds });", "flayersoff", fl_is(0, 0))
             # ghost names, hairline borders, the hovered region's outline and the strip following the cursor (round 10, G13)
-            state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.redraw(); window.__extra = A.ghost();", "ghost", lambda r: [] if r["extra"] and abs(r["extra"]["alpha"] - 1) < 1e-9 and r["extra"]["drawn"] >= (12 if w >= 1600 else 1 if w <= 400 else 5) else [("ghost", "map", "at the Russia preset %s" % json.dumps(r["extra"]))])
-            state("share", 2021, "A.mode('cells'); A.preset('Moscow'); A.redraw(); window.__extra = A.ghost();", "ghostoff", lambda r: [] if r["extra"] and r["extra"]["alpha"] == 0 and r["extra"]["drawn"] == 0 else [("ghost", "map", "at the Moscow preset %s" % json.dumps(r["extra"]))])
+            # the ghost names float at a fixed size and opacity at every zoom (round 12, part D): the floors at the country, at least one name at the Moscow and Central Moscow presets in both views, the GO TO token as their colour
+            def ghost_ok(floor, label):
+                return lambda r: [] if r["extra"] and abs(r["extra"]["alpha"] - 0.3) < 1e-9 and r["extra"]["drawn"] >= floor and r["extra"]["colour"] == r["extra"]["go"] else [("ghost", "map", "%s %s" % (label, json.dumps(r["extra"])))]
+            GO = "window.__extra = Object.assign(A.ghost(), { go: getComputedStyle(document.documentElement).getPropertyValue('--go').trim() });"
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.redraw(); " + GO, "ghost", ghost_ok(12 if w >= 1600 else 1 if w <= 400 else 5, "at the Russia preset"))
+            state("share", 2021, "A.mode('cells'); A.preset('Moscow'); A.redraw(); " + GO, "ghostcity", ghost_ok(1, "at the Moscow preset"))
+            state("share", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); A.redraw(); " + GO, "ghoststreet", ghost_ok(1, "at the Central Moscow preset"))
+            state("share", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.redraw(); " + GO + " A.mode('cells');", "ghostfirms", ghost_ok(1, "at the Moscow preset in the Firms view"))
             def near_any(pixels, rgb, tol): return any(all(abs(p[i] - rgb[i]) <= tol for i in range(3)) for p in pixels)
             # the hairline borders are under the data tiles, so the sample runs on the lists layer (85 coloured cells in 2021) over eight vertices of Moscow Oblast's first ring: at least one must read the ghost tone
             state("lists", 2021, "A.mode('cells'); A.strip(true); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); A.redraw(); { const vs = [0, 9, 18, 27, 36, 45, 54, 63].map(i => { const v = A.regionVertex('Moscow Oblast', i); return { v, px: A.pixelsAt('map', v.px, v.py) }; }); window.__extra = { vs, ghost: getComputedStyle(document.documentElement).getPropertyValue('--ghost').trim() }; }", "borders",
@@ -544,6 +649,20 @@ def main():
                     if x and (x["moscow"].get("q2", 0) > 1e-6 or abs(x["moscow"]["alpha"] - (1 - 0.2 * x["moscow"]["q"])) > 1e-6): bad.append(("rule", "quiet", "at the city preset q2 %.3f alpha %.3f (q %.3f): the extra must end at the city zoom" % (x["moscow"].get("q2", 0), x["moscow"]["alpha"], x["moscow"]["q"])))
                     return bad
                 state("share", 2021, F + "{ const out = {}; for (const [k, p] of [['russia', 'Russia'], ['moscow', 'Moscow'], ['central', 'Central Moscow (250 m)']]) { A.preset(p); out[k] = A.listedRule(); } window.__extra = out; A.preset('Moscow'); }", tag + "rules", rules_ok)
+                def pair_ok(expect):
+                    def chk(r):
+                        x = r["extra"]
+                        if not x or not x["AN"]: return [("pair", "tile", "no report or no anchors")]
+                        bad = []; line = "The two firms of the film, %d m apart." % x["AN"]["distance"]
+                        if x["AN"]["distance"] != 57 or x["AN"]["computed"] != 57: bad.append(("pair", "data", "the shipped distance is %s, the coordinates give %s" % (x["AN"]["distance"], x["AN"]["computed"])))
+                        if x["kind"] not in ("firm", "listed"): bad.append(("pair", "hover", "no mark under the cursor: %s" % x["kind"]))
+                        if (line in x["text"]) != expect: bad.append(("pair", "tile", "the line is %s: %s" % ("present" if expect is False else "absent", json.dumps(x["text"])[:200])))
+                        if x["text"].count("film") > 1 or "Dental" in x["text"] or "dental" in x["text"]: bad.append(("pair", "tile", "more than the one line about the pair, or the neighbour described: %s" % json.dumps(x["text"])[:200]))
+                        return bad
+                    return chk
+                state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.a[0], AN.a[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pair", pair_ok(True))
+                state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.b[0], AN.b[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pairb", pair_ok(True))
+                state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.a[0] + 0.1, AN.a[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pair100", pair_ok(False))
                 # the additive field (round 11, item 1): additive below k 1.5 (a float target on WebGL), both weights inside the band, "over" alone from k 3; the firms in view (item 3) at the
                 # country equal the manifest's firms on no list plus the listed firms present, and the tile's footer shows them in the Firms view only; the floor's bitmaps cover the extent (item 5)
                 def regime_ok(add, over):
@@ -611,6 +730,13 @@ def main():
                     time.sleep(0.3)
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.6)
             if w in (400, 1600):
+                # an anniversary load (round 12, part D, item 6): with the page's date pinned to the anchor firm's day the wire's lead item ends with the sentence and the lead slot keeps the fact alone
+                sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "window.__today = '2026-05-19';"})["identifier"]
+                cdp.call("Page.navigate", {"url": url + qsep + "v=anniv"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                r = cdp.evaluate("(async () => { const A = window.__atlas; A.strip(true); await A.ready(); await new Promise(r => setTimeout(r, 450)); const wv = A.wire(); return { today: A.today(), lead: wv.items.length ? wv.items[0].text : '', slot: A.context().text, src: wv.items.length ? wv.items[0].src : '' }; })()", await_promise=True, timeout=60)
+                n_states += 1; exp_line = WC.anniversary(WIRE_DATA, "2026-05-19")
+                if r["today"] != "2026-05-19" or not r["lead"].endswith(". " + exp_line) or exp_line in r["slot"] or not r["src"].endswith("+anniversary"): findings.append("%-11s width %d  on the anchor firm's day: %s" % ("anniversary", w, json.dumps(r)[:300]))
+                cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid})
                 for frag, mode in (("#Moscow", "cells"), ("#Moscow-firms", "firms")):
                     # a new document URL each time (a fragment-only navigation fires no load event), then the page's own readiness
                     cdp.call("Page.navigate", {"url": url + qsep + "v=hash" + mode + frag}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()

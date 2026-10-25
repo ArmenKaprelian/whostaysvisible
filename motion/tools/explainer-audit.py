@@ -31,6 +31,11 @@ def run(url, w, h, out, findings):
         def shot(name):
             png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png"})["data"]); p = os.path.join(out, "%s-%d.png" % (name, w)); open(p, "wb").write(png)
         load()
+        # the console greeting (round 12, part D, item 4): the load logs exactly one message, the greeting, and no error or warning
+        msgs = [(e["params"]["type"], " ".join(str(x.get("value", x.get("description", ""))) for x in e["params"].get("args", []))) for e in cdp.events if e.get("method") == "Runtime.consoleAPICalled"]
+        greet = [m for m in msgs if m[0] == "log" and "Who stays visible? · Armen G. Kaprelian" in m[1] and "github.com/ArmenKaprelian/whostaysvisible" in m[1] and "Built from " in m[1]]
+        if len(msgs) != 1 or len(greet) != 1: bad("console", "the load logged %d message(s), expected the greeting alone: %s" % (len(msgs), json.dumps(msgs)[:200]))
+        if cdp.problems: bad("console", "errors or warnings on load: %s" % json.dumps(cdp.problems)[:200])
         s = st(); b = s["boxes"]; stage = {"x": 0, "y": 0, "x1": s["stage"]["w"], "y1": s["stage"]["h"]}
         # the stage box: 16:9 within a pixel, inside the viewport, bound by the width or the height
         if abs(s["stage"]["w"] / s["stage"]["h"] - 16 / 9) > 0.01: bad("stage", "aspect %.3f" % (s["stage"]["w"] / s["stage"]["h"]))

@@ -24,7 +24,7 @@ def date_of(iso):
 
 def load(data_dir):
     rd = lambda n: json.load(open(os.path.join(data_dir, n), encoding='utf-8'))
-    D = {n: rd(n + '.json') for n in ('treatednational', 'regions', 'cellsyears', 'firms', 'series', 'cells100', 'offwire')}
+    D = {n: rd(n + '.json') for n in ('treatednational', 'regions', 'cellsyears', 'firms', 'series', 'cells100', 'offwire', 'anchors')}
     dv = D['regions']['divisions']; D['short'] = {int(c): sh for c, sh in zip(dv['code'], dv['short'])}   # column arrays
     R = D['regions']; D['regrow'] = {(R['region'][i], R['year'][i]): i for i in range(len(R['region']))}
     return D
@@ -109,9 +109,23 @@ def firms(D, y, band, name):
         out.append(f'{T["name"][j]} · {("listed " + d) if d else ("listed in " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}')
     return out
 
-def cycle(D, y, band, name, cycle_index=0, layer='share'):
-    """The 50 items as dicts {kind, text}; a tip's text is None (any of the page's tips is accepted)."""
-    L = {'kind': 'lead', 'text': lead(D, y, band, name, layer)}; fs = [{'kind': 'data', 'text': t} for t in facts(D, y, band, name)]; fr = [{'kind': 'firm', 'text': t} for t in firms(D, y, band, name)]
+def anniversary(D, iso):
+    """The anniversary sentence for an ISO day, as the page builds it (round 12, part D, item 6), or None: the anchor firm's listing date, the resident list's decree
+    on 22 January, else the firms of the national list file listed on that day by a dated, non-inferred designation (one firm by name, several by count and years)."""
+    y, m, d = iso.split('-'); md = f'{m}-{d}'; day = f'{int(d)} {MONTHS[int(m) - 1]}'
+    A = D['anchors']['a']
+    if A['listed']['date'][5:] == md: return f"{day}: {A['label']} was listed on this day in {A['listed']['date'][:4]}."
+    if md == '01-22': return f'{day}: the resident list rests on Government Decree No. 35, signed on this day in 2020.'
+    T = D['treatednational']; hits = [i for i in range(T['n']) if T['red_date'][i] and T['red_date'][i][5:] == md and not T['inferred'][i] and not T['undated'][i]]
+    if not hits: return None
+    years = sorted({T['red_date'][i][:4] for i in hits}); yrs = years[0] if len(years) == 1 else ', '.join(years[:-1]) + ' and ' + years[-1]
+    if len(hits) == 1 and T['name'][hits[0]]: return f"{day}: {T['name'][hits[0]]} was listed on this day in {yrs}."
+    return f'{day}: {fmt_int(len(hits))} firms on the lists (treated) were listed on this day in {yrs}.'
+
+def cycle(D, y, band, name, cycle_index=0, layer='share', today=None):
+    """The 50 items as dicts {kind, text}; a tip's text is None (any of the page's tips is accepted); on an anniversary (today, an ISO day) the lead carries the sentence."""
+    ann = anniversary(D, today) if today else None
+    L = {'kind': 'lead', 'text': lead(D, y, band, name, layer) + ('. ' + ann if ann else '')}; fs = [{'kind': 'data', 'text': t} for t in facts(D, y, band, name)]; fr = [{'kind': 'firm', 'text': t} for t in firms(D, y, band, name)]
     fa, fb = fr[0::2], fr[1::2]; slots = {2, 6, 10, 14, 18}
     def half(fo, fh):
         data, fi, di = [], 0, 0

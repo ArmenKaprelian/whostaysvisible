@@ -14,10 +14,14 @@
   // manifest data/firms.js) and the listed firms from treatednational.js; off when either is absent or the
   // browser cannot inflate gzip. Nothing here names a firm on no list: the address files carry counts and classes only;
   // listed firms carry their list-file names (25 October 2026).
-  const FM = D.firms || null, TRN = D.treatednational || null;
+  const FM = D.firms || null, TRN = D.treatednational || null, AN = D.anchors && D.anchors.a && D.anchors.b ? D.anchors : null;   // the anchors: the two firms of the film, shipped since round 5
   if (TRN && typeof TRN.psh === 'string') { TRN.psh = MM.b64Int16(TRN.psh); TRN.rev_m = typeof TRN.rev_m === 'string' ? MM.b64Float32(TRN.rev_m) : null; }   // the listed firms' shares of the revenue at their coordinate pairs (tenths of a percent, -1 none) and their revenue in millions (round 9)
   const INDD = D.industry || null, REG = D.regions || null, IND_T = INDD || (FM && FM.industry) || null;   // the industry layer (round 9): cells, regions, the division and class tables
   const FIRMS_OK = !!(FM && TRN && typeof DecompressionStream === 'function');
+  // The console greeting (round 12, part D, item 4): one console.log on load, the project mark in ASCII, the title line, the build the publish set was made from
+  // (publish-set.py writes the commit into the build meta; the lab copy says working tree) and the repository; nothing else is logged.
+  const BUILD = (document.querySelector('meta[name="build"]') || {}).content || 'the working tree';
+  console.log(['+--      --+', '|          |', '      o', '|          |', '+--      --+', 'Visibility Atlas · Armen G. Kaprelian', 'Built from ' + BUILD, 'github.com/ArmenKaprelian/whostaysvisible'].join('\n'));
   const CLASS_LABELS = ['≤ −50%', '−50 to −20%', '−20 to 0%', '0 to +50%', '+50 to +150%', '> +150%'];
 
   // ---- theme -----------------------------------------------------------------------------------
@@ -252,7 +256,6 @@
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: state.mode === 'firms' ? () => drawFirmsGround(c) : null }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
-    drawGhostNames(c); drawLog.push('ghost');
     const L = state.layer;
     if (state.mode === 'firms') { drawLog.push('firms'); if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; } drawFirms(c); drawMarks(c); }
     else if (L === 'density') { drawLog.push('density');
@@ -298,7 +301,7 @@
       MM.drawTiles(mctx, stage, c, paths, cl => theme.change6[cl]);
     }
     stage.base();
-    if (state.mode !== 'firms') { if (layersOn) { endPulse(); clearField(); clearMarks(); fieldC.hidden = true; marksC.hidden = true; if (field2d) field2d.canvas.hidden = true; layersOn = false; } drawLabels(mctx, c, 'map'); }   // in the firms view the labels sit on the marks layer, above the field
+    if (state.mode !== 'firms') { if (layersOn) { endPulse(); clearField(); clearMarks(); fieldC.hidden = true; marksC.hidden = true; if (field2d) field2d.canvas.hidden = true; layersOn = false; } drawGhostNames(mctx, c, 'map'); drawLog.push('ghost'); drawLabels(mctx, c, 'map'); }   // the ghost names above the cells (round 12, part D), then the labels; in the firms view both sit on the marks layer, above the field
     if (!flight) { drawLegend(); drawScaleBar(); }
   }
 
@@ -388,12 +391,16 @@
     ghostCache.set(bucket, out); return out;
   }
   let ghostDrawn = 0, markBox = null; const GHOST_ALPHA = 0.30;   // the ghost names' opacity: plainly there when looked for, back in the ground when not (round 12, final)
-  function drawGhostNames(c) {
-    ghostDrawn = 0; const a = ghostAlpha(c.k); if (a <= 0) return;
-    const lay = ghostLayout(c.k); Motion.audit.scene = 'map';
-    for (const g of lay) { const [px, py] = Motion.project(c, g.city.x, g.city.y), x = px + g.dx, y = py + g.dy; if (x < 0 || x + g.w > stage.width || y < 0 || y + g.h > stage.height) continue;
-      if (markBox && x < markBox.x1 && x + g.w > markBox.x && y < markBox.y1 && y + g.h > markBox.y) continue;   // never over the authorship mark (round 12, final): a 30 percent name would hide the 4 percent mark
-      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.go, alpha: GHOST_ALPHA * a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }   // the GO TO card's ice at 30 percent (round 12, final; the cyan ramp's second step at 12 before)
+  // Floating (round 12, part D): each name keeps its pixel size at every zoom, anchored to its city's screen position, with no fade and no scaling, so a zoom into
+  // Moscow brings the letters over the city at the size they have at the country view; the collision pass runs per zoom bucket as before; a name is clipped at the
+  // map's edge rather than dropped. Drawn above the cells, the dots and the listed marks and below the pulse rings, the hover ring, the crosshair, the tile and the
+  // panels: on the map canvas after the cells layers, on the marks canvas after the marks and before the rings in the Firms view; 22 text calls at most, no new canvas.
+  function drawGhostNames(ctx, c, scene) {
+    ghostDrawn = 0; const lay = ghostLayout(c.k); Motion.audit.scene = scene;
+    for (const g of lay) { const [px, py] = Motion.project(c, g.city.x, g.city.y), x = px + g.dx, y = py + g.dy; if (x + g.w < 0 || x > stage.width || y + g.h < 0 || y > stage.height) continue;
+      if (markBox && x < markBox.x1 && x + g.w > markBox.x && y < markBox.y1 && y + g.h > markBox.y) continue;   // never over the authorship mark: a 30 percent name would hide the 4 percent mark
+      Motion.text(ctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.go, alpha: GHOST_ALPHA, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }   // the GO TO card's ice at 30 percent (round 12)
+    Motion.audit.scene = 'map';
   }
 
   // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
@@ -748,9 +755,15 @@ void main() {
           const rr = r + MM.flashPeak(r) * PH.swell, core = PH.release < 1 ? MM.coreAt(ch === '1' ? theme.coreRed : theme.coreLand, PH.release) : null;
           const tt = st ? 0 : Motion.clamp((tNow - pulseDelay[i]) / DECAY_MS, 0, 1);
           MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, core);
-          if (st || (PH.p > 0 && PH.p < 1)) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, st);
         } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo);
       }
+    }
+    drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');   // the floating names above the field and the marks (round 12, part D)
+    if (pulse) for (let i = 0; i < TRN.n; i++) {   // the pulse rings above the names: the same geometry as the marks pass, rings only, while a pulse runs
+      if (!pulse.mask[i] || TRN.red_from[i] > year) continue; const ch = TRN.filed[i][yi]; if (ch === '-') continue;
+      const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue;
+      const r = MM.listedRadius(LR, TRN.pile[i]); if (st) { PH.on = true; PH.p = 1; } else MM.pulsePhase((tNow - pulseDelay[i]) / 1000, PH); if (!PH.on) continue;
+      if (st || (PH.p > 0 && PH.p < 1)) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, st);
     }
     drawLabels(kctx, c, 'marks');
   }
@@ -957,7 +970,7 @@ void main() {
     setTimeout(() => { if (stripState.fact === f) ina.classList.remove('live'); }, 320);
   }
   // Tips on using the page, each once per session, shown only when the strip is open, nothing is moving, the cursor is still and 12 s have passed since the last fact change.
-  const TIPS = [   // each at most 72 characters (round 10: tracked capitals in the strip's slot at 768 px and the two-line phone strip); the two long round-9 tips split in two
+  const TIPS = [   // each at most 68 characters (round 12, part D: in tracked capitals the reduced-motion slot at 768 px holds 68, and a phone's two-line form holds 68 in sentence case); the two long round-9 tips split in two
     { text: 'A click on a cell flies to it: the city window from the country.', touch: 'Tap a cell for its values, double-tap to zoom, pinch to zoom.' },
     { text: 'From a city, a click flies to the 20 km scale, then steps of 2.5.', mouse: true },
     { text: 'In the Firms view a click climbs the same rungs, then steps of 4.', mouse: true, firms: true },
@@ -965,8 +978,8 @@ void main() {
     { text: 'The pulse button by the year replays the bloom of its listed firms.', firms: true },
     { text: 'The Firms view draws every registered address by year.', firms: true },
     { text: 'Firms on the five lists (treated) turn red from their listing year.', firms: true },
-    { text: 'Open the atlas at a city by adding its name to the link, as in #Moscow.' },
-    { text: 'With the map focused, + and − zoom, 0 fits the country, the arrows pan.', mouse: true },
+    { text: 'Open the atlas at a city: add its name to the link, as in #Moscow.' },
+    { text: 'Map focused: + and − zoom, 0 fits the country, the arrows pan.', mouse: true },
   ];
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
@@ -993,11 +1006,36 @@ void main() {
   // the old items run off the left edge; a further change before the queued set has entered the view replaces the queued set, never the visible one; the
   // queue tops itself up with the next cycle of the current context (the cat fact advancing by seven places) before it runs out and drops the sets that have
   // passed. Only a year change rebuilds at once, under a 0.3 s crossfade of the whole track. The tips and the cat slot keep their places in every cycle.
-  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, topTimer: 0, vis: 0, builds: 0, resets: 0 };
+  // Round 12, part D: at most two sets exist at any time, the committed set playing on the track and one pending set. A change of region, layer or view replaces
+  // the pending set, never the committed one, and the replaced set is dropped; a pending set is committed once the cursor has rested on its region for 600 ms or the
+  // camera has settled there, and a later change then queues behind it. Priority: a tip or a cat fact due in the playing cycle plays before a pending set takes over
+  // (the committed set keeps its items up to and including the first tip or cat past the visible ones; the rest go). The lead fact of the region under the cursor
+  // shows at once in the strip's first slot, a fixed lead zone before the scrolling track, whatever the queue holds. The items of a superseded set that are still
+  // crossing the view stay as orphans until they pass; nothing else is kept, so the track never grows and no timer outlives a change.
+  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], orphans: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, topTimer: 0, commitTimer: 0, changedAt: 0, vis: 0, builds: 0, resets: 0, commits: 0 };
+  let WIRE_CAPS = true;   // the capitals experiment (round 12, part D): every wire item and the lead in tracked capitals, the cat facts and the firm names as they are
   const wireScrolls = () => !reduceMotion();
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const fnv = str => { let h = 2166136261; for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
   const dateOf = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : ''; };
+  // Anniversaries (round 12, part D, item 6): the viewer's local date at load (window.__today, an ISO day, is the audit's hook); the sentence is built from the shipped dates
+  // only: the anchor firm's listing date, the resident list's decree (Government Decree No. 35 of 22 January 2020, the one date typed in), and every other day on which
+  // firms of the national list file were listed by a dated, non-inferred designation; null on every other day. tools/wire_check.py re-derives it for the audit.
+  const TODAY = (() => { const o = window.__today; if (typeof o === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o)) return o; const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+  function anniversaryLine(iso) {   // { text, html } or null
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return null; const md = m[2] + '-' + m[3], day = `${+m[3]} ${MONTHS[+m[2] - 1]}`;
+    const mk = (text, html) => ({ text, html: html || esc(text) });
+    if (AN && AN.a.listed && AN.a.listed.date && AN.a.listed.date.slice(5) === md) return mk(`${day}: ${AN.a.label} was listed on this day in ${AN.a.listed.date.slice(0, 4)}.`, `${esc(day)}: <span class="nm">${esc(AN.a.label)}</span> was listed on this day in <span class="num">${esc(AN.a.listed.date.slice(0, 4))}</span>.`);
+    if (md === '01-22') return mk(`${day}: the resident list rests on Government Decree No. 35, signed on this day in 2020.`);
+    if (!TRN || !TRN.red_date) return null;
+    const hits = []; for (let i = 0; i < TRN.n; i++) { const d = TRN.red_date[i]; if (d && d.slice(5) === md && !TRN.inferred[i] && !TRN.undated[i]) hits.push(i); }
+    if (!hits.length) return null;
+    const years = [...new Set(hits.map(i => TRN.red_date[i].slice(0, 4)))].sort(), yrs = years.length === 1 ? years[0] : years.slice(0, -1).join(', ') + ' and ' + years[years.length - 1];
+    if (hits.length === 1 && TRN.name[hits[0]]) return mk(`${day}: ${TRN.name[hits[0]]} was listed on this day in ${yrs}.`, `${esc(day)}: <span class="nm">${esc(TRN.name[hits[0]])}</span> was listed on this day in <span class="num">${esc(yrs)}</span>.`);
+    return mk(`${day}: ${fmt.int(hits.length)} firms on the lists (treated) were listed on this day in ${yrs}.`, `${esc(day)}: <span class="num">${fmt.int(hits.length)}</span> firms on the lists (treated) were listed on this day in <span class="num">${esc(yrs)}</span>.`);
+  }
+  let annivCache;   // the day's sentence, built at the first cycle (after every helper below is defined), never at script load
+  const anniv = () => { if (annivCache === undefined) annivCache = anniversaryLine(TODAY); return annivCache; };
   const regRowsOf = y => { const out = []; for (let i = 0; i < REG.region.length; i++) if (REG.year[i] === y && REG.region[i] !== 'Russia' && REG.region[i] !== 'outside the basemap outline' && REG.region[i] !== 'region not recorded') out.push(i); return out; };
   function wireFacts(y, band, name) {
     const ys = y + (y === 2025 ? '*' : ''), out = [], loc = s => `<span class="loc">${esc(s)}</span>`, num = f => `<span class="num">${f}</span>`, add = (src, html) => out.push({ kind: 'data', text: html, src });
@@ -1030,11 +1068,11 @@ void main() {
     let idx = ri >= 0 ? pick(true) : []; if (idx.length < 2) idx = pick(false); if (!idx.length) return [];
     const picks = []; for (let i = 0; i < 10; i++) { const j = idx[Math.floor(i * idx.length / 10)]; if (!picks.includes(j)) picks.push(j); }
     return picks.map(j => { const ch = TRN.filed[j][y - 2014], st = ch === '1' ? 'available' : ch === '0' ? 'absent' : 'not in the registry', d = dateOf(TRN.red_date[j]);
-      return { kind: 'firm', text: `${esc(TRN.name[j])} · ${d ? 'listed ' + d : 'listed in ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j }; });
+      return { kind: 'firm', text: `<span class="nm">${esc(TRN.name[j])}</span> · ${d ? 'listed ' + d : 'listed in ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j }; });
   }
   const wireTipsList = () => { const out = []; TIPS.forEach(t => { if (t.firms && !FIRMS_OK) return; if (t.mouse && coarse()) return; out.push(coarse() && t.touch ? t.touch : t.text); }); return out; };
   function buildCycle(y, band, name, cycleIndex) {
-    const lf = factFor(band, name, true), lead = { kind: 'lead', text: lf.text, src: 'lead:' + lf.kind }, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
+    const lf = factFor(band, name, true), an = anniv(), lead = { kind: 'lead', text: lf.text + (an ? '. ' + an.html : ''), src: 'lead:' + lf.kind + (an ? '+anniversary' : '') } /* on an anniversary the lead item carries the sentence (item 6) */, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
     const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([2, 6, 10, 14, 18]);
     const half = (fo, fh, tipStart) => { const data = []; let fi = 0, di = 0;
       for (let sl = 0; sl < 20; sl++) { if (sl === 0) { data.push(lead); continue; } if (firmSlots.has(sl) && fi < fh.length) { data.push(fh[fi++]); continue; } if (di < fo.length) { data.push(fo[di++]); continue; } if (fi < fh.length) { data.push(fh[fi++]); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
@@ -1046,64 +1084,98 @@ void main() {
     return cycle;
   }
   const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg>';   // the separator: the mark at 14 px with 2 px strokes in the full context green (round 11)
-  const wireTrack = () => $('wiretrack'), wireVisW = () => $('ctxtext').clientWidth;
+  const wireTrack = () => $('wiretrack'), wireVisW = () => $('ctxwin').clientWidth;
   const wirePos = el => { const tr = wireTrack().getBoundingClientRect(), r = el.getBoundingClientRect(); return [r.left - tr.left, r.right - tr.left]; };   // an item's edges along the track, whatever its transform (the separators are SVG, without offsetLeft)
   function wireX() { const ws = wireState; if (ws.anim && !ws.pinned && ws.anim.currentTime != null) return ws.animX0 + WIRE_SPEED * (ws.anim.currentTime / 1000); return ws.x; }   // the scroll offset now, px
   function wireStop() { const ws = wireState; if (ws.anim) { ws.x = wireX(); ws.anim.cancel(); ws.anim = null; } if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; } return ws.x; }
-  function wireAnimate(fromX) {   // one linear animation from fromX to the queue's end at the wire's speed; a top-up is scheduled before the end enters the view
-    const ws = wireState, tr = wireTrack(); wireStop(); ws.x = fromX; const end = ws.sets.length ? ws.sets[ws.sets.length - 1].x1 : 0, dist = end - fromX;
+  function wireAnimate(fromX) {   // one linear animation from fromX to the track's end at the wire's speed; a top-up is scheduled before the end enters the view
+    const ws = wireState, tr = wireTrack(); wireStop(); ws.x = fromX; const last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0, dist = end - fromX;
     tr.style.transform = `translateX(${-fromX}px)`;
     if (dist <= 0 || !tr.animate) return;
     ws.animX0 = fromX; ws.anim = tr.animate([{ transform: `translateX(${-fromX}px)` }, { transform: `translateX(${-end}px)` }], { duration: dist / WIRE_SPEED * 1000, easing: 'linear', fill: 'forwards' });
     if (ws.paused) ws.anim.pause();
     ws.topTimer = setTimeout(wireTopUp, Math.max(0, end - wireVisW() - 300 - fromX) / WIRE_SPEED * 1000);
   }
-  function wireAppend(cycle, key, ctx) {   // the cycle's items and separators after the queue's last item, their positions measured once
-    const ws = wireState, tr = wireTrack(), els = [];
-    for (const it of cycle) { const sp = document.createElement('span'); sp.className = 'wi ' + it.kind; sp.innerHTML = it.text; tr.appendChild(sp); els.push(sp); const hold = document.createElement('span'); hold.innerHTML = SEP; const svg = hold.firstChild; tr.appendChild(svg); els.push(svg); }
-    const x0 = wirePos(els[0])[0], x1 = wirePos(els[els.length - 1])[1];
-    ws.sets.push({ key, ctx, cycle, cycleIndex: ws.cycleIndex, els, x0, x1 }); ws.cycle = cycle; ws.width = x1 - x0; ws.key = key; ws.vis = wireVisW(); ws.builds++;
+  const wireItems = cycle => { const tr = wireTrack(), els = []; for (const it of cycle) { const sp = document.createElement('span'); sp.className = 'wi ' + it.kind; sp.innerHTML = it.text; tr.appendChild(sp); els.push(sp); const hold = document.createElement('span'); hold.innerHTML = SEP; const svg = hold.firstChild; tr.appendChild(svg); els.push(svg); } return els; };
+  function wireMake(cycle, key, ctx, status) {   // a set's items and separators appended after everything on the track
+    const ws = wireState, set = { key, ctx, cycle, cycleIndex: ws.cycleIndex, els: wireItems(cycle), status };
+    ws.sets.push(set); ws.cycle = cycle; ws.key = key; ws.width = setEnd(set) - setStart(set); ws.vis = wireVisW(); ws.builds++; return set;
   }
-  function wirePrune(x) {   // the sets that have passed the left edge leave the track; the ones behind them shift left by their width
-    const ws = wireState; let removed = 0;
-    while (ws.sets.length > 1 && ws.sets[0].x1 < x - 20) { const s0 = ws.sets.shift(); for (const el of s0.els) el.remove(); removed += s0.x1 - s0.x0; }
-    if (removed) for (const sset of ws.sets) { sset.x0 -= removed; sset.x1 -= removed; }
+  const setStart = set => (set.els.length ? wirePos(set.els[0])[0] : 0), setEnd = set => (set.els.length ? wirePos(set.els[set.els.length - 1])[1] : 0), setEntered = (set, x) => set.els.length > 0 && setStart(set) < x + wireVisW();
+  function wireDrop(set) { for (const el of set.els) el.remove(); set.els = []; }
+  function wireCutAfterTip(set, x) {   // the priority rule: the playing set keeps its items up to and including the first tip or cat fact past the visible ones; the rest go
+    const vis = x + wireVisW(); let cut = set.els.length;
+    for (let i = 0; i < set.els.length; i += 2) { const sp = set.els[i]; if (wirePos(sp)[0] < vis) continue; if (sp.classList.contains('tip') || sp.classList.contains('cat')) { cut = i + 2; break; } }
+    for (const el of set.els.splice(cut)) el.remove();
+  }
+  function wirePrune(x) {   // the items that have passed the left edge leave the track, orphans and the committed set's alike; the offset shifts by the width removed
+    const ws = wireState, tr = wireTrack(); let removed = 0;
+    while (tr.firstElementChild) { const el = tr.firstElementChild, [l, r] = wirePos(el); if (r >= x - 20) break; removed += r - l; el.remove();
+      if (ws.orphans[0] === el) ws.orphans.shift(); else for (const set of ws.sets) if (set.els[0] === el) { set.els.shift(); break; } }
+    while (ws.sets.length > 1 && !ws.sets[0].els.length) { ws.sets.shift(); ws.sets[0].status = 'committed'; ws.commits++; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } }   // the committed set has played out: the pending one plays now
     return removed;
   }
-  function wireTopUp() {   // the queue is about to run out: the current context's next cycle joins it
-    const ws = wireState; ws.topTimer = 0; if (!wireScrolls() || ws.pinned || !ws.sets.length) return;
-    let x = wireStop(); x -= wirePrune(x); const last = ws.sets[ws.sets.length - 1];
-    ws.cycleIndex++; wireAppend(buildCycle(last.ctx.y, last.ctx.band, last.ctx.name, ws.cycleIndex), last.key, last.ctx); wireAnimate(x);
+  function wireAutoCommit(x) {   // a pending set whose items have entered the view is playing: it is the committed set now, the old one's remaining items orphans
+    const ws = wireState; if (ws.sets.length > 1 && setEntered(ws.sets[1], x)) wireCommit('play');
   }
-  function wireReset(ctx, key, crossfade) {   // a fresh queue from x 0; under crossfade (a year change) a frozen copy of the old track fades out as the new one fades in, 0.3 s
-    const ws = wireState, tr = wireTrack(), box = $('ctxtext');
-    if (crossfade && ws.sets.length && !reduceMotion()) {
+  function wireCommit(why) {   // the pending set becomes the committed set: a committed set that has not entered the view is dropped unseen, one that has plays out to its cut as orphans
+    const ws = wireState; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
+    if (ws.sets.length < 2) return false;
+    let x = wireStop(); x -= wirePrune(x);
+    if (ws.sets.length > 1) { const cur = ws.sets.shift(); if (setEntered(cur, x)) ws.orphans.push(...cur.els); else wireDrop(cur); }
+    ws.sets[0].status = 'committed'; ws.commits++; ws.cycle = ws.sets[0].cycle; ws.key = ws.sets[0].key; wireAnimate(x); return true;
+  }
+  function wireTopUp() {   // the track is about to run out: the committed set continues with its context's next cycle (the cat fact advancing by seven)
+    const ws = wireState; ws.topTimer = 0; if (!wireScrolls() || ws.pinned || !ws.sets.length) return;
+    let x = wireStop(); x -= wirePrune(x); wireAutoCommit(x); x = wireStop(); const last = ws.sets[ws.sets.length - 1];
+    if (last.status === 'committed') { ws.cycleIndex++; last.els.push(...wireItems(buildCycle(last.ctx.y, last.ctx.band, last.ctx.name, ws.cycleIndex))); ws.width = setEnd(last) - setStart(last); }
+    wireAnimate(x);
+  }
+  function wireReset(ctx, key, crossfade) {   // a fresh track from x 0 with one committed set; under crossfade (a year change) a frozen copy of the old track fades out as the new one fades in, 0.3 s
+    const ws = wireState, tr = wireTrack(), box = $('ctxwin');
+    if (crossfade && tr.childElementCount && !reduceMotion()) {
       const x = wireX(), ghost = tr.cloneNode(true); ghost.removeAttribute('id'); ghost.classList.add('old'); ghost.classList.remove('in', 'pinned'); ghost.style.transform = `translateX(${-x}px)`; box.appendChild(ghost);
       requestAnimationFrame(() => { ghost.classList.add('fade'); setTimeout(() => ghost.remove(), 400); });
       tr.classList.add('in'); requestAnimationFrame(() => requestAnimationFrame(() => tr.classList.remove('in')));
     }
-    wireStop(); for (const sset of ws.sets) for (const el of sset.els) el.remove(); ws.sets = []; tr.innerHTML = ''; ws.x = 0; ws.pinned = false; tr.classList.remove('pinned'); ws.resets++;
-    wireAppend(buildCycle(ctx.y, ctx.band, ctx.name, ws.cycleIndex), key, ctx); wireAnimate(0);
+    wireStop(); if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.sets = []; ws.orphans = []; tr.innerHTML = ''; ws.x = 0; ws.pinned = false; tr.classList.remove('pinned'); ws.resets++;
+    wireMake(buildCycle(ctx.y, ctx.band, ctx.name, ws.cycleIndex), key, ctx, 'committed'); wireAnimate(0);
   }
-  function wireContextNow(band, name, how) {   // how: 'append' (a region, layer or view change), 'year' (a rebuild under the crossfade), 'reset' (the first build, or a layout guard)
+  function wireContextNow(band, name, how, settled) {   // how: 'append' (a region, layer or view change), 'year' (a rebuild under the crossfade), 'reset' (the first build, or a layout guard)
     const ws = wireState, ctx = { y: state.year, band, name }, key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|');
     if (stripState.tip && !wireScrolls()) endTip(false);
-    if (!wireScrolls()) { ws.key = key; ws.cycle = buildCycle(state.year, band, name, ws.cycleIndex); $('ctxtext').classList.add('rm'); wireTrack().innerHTML = ''; ws.sets = []; startRM(); return; }
+    applyRm2();
+    if (!wireScrolls()) { ws.key = key; ws.cycle = buildCycle(state.year, band, name, ws.cycleIndex); $('ctxtext').classList.add('rm'); wireTrack().innerHTML = ''; ws.sets = []; ws.orphans = []; startRM(); return; }
     $('ctxtext').classList.remove('rm');
-    const last = ws.sets[ws.sets.length - 1];
-    if (how === 'append' && last && last.key === key) return;
-    if (how !== 'append' || !last) { wireReset(ctx, key, how === 'year'); return; }
-    let x = wireStop(); x -= wirePrune(x);
-    const visEnd = x + wireVisW(); let cut = ws.sets.findIndex(sset => sset.x0 >= visEnd); if (cut === 0) cut = 1;   // the queued sets go, the visible one stays
-    if (cut > 0) for (const sset of ws.sets.splice(cut)) for (const el of sset.els) el.remove();
-    const kept = ws.sets[ws.sets.length - 1]; if (kept && kept.key === key) { ws.cycle = kept.cycle; ws.key = key; wireAnimate(x); return; }   // the visible set already carries this context: nothing to queue
-    ws.cycleIndex++; wireAppend(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx); wireAnimate(x);
+    const cur = ws.sets[0];
+    if (how !== 'append' || !cur || narrow()) { wireReset(ctx, key, how === 'year' || narrow()); return; }   // a phone-width map has no lead slot: every change rebuilds under the crossfade, as a year change does, so the lead shows at once
+    let x = wireStop(); x -= wirePrune(x); wireAutoCommit(x); x = wireStop();
+    const head = ws.sets[0], pend = ws.sets[1];
+    if (!setEntered(head, x) && head.key !== key) {   // a committed set that has not entered the view is replaced unseen, as a pending one is (round 13): nothing visible is touched and the new lead is not kept waiting behind it
+      if (pend) wireDrop(pend); wireDrop(head); ws.sets = []; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
+      ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'committed'); ws.commits++; wireAnimate(x); return;
+    }
+    if (head.key === key) { if (pend) { wireDrop(pend); ws.sets.length = 1; } if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.cycle = head.cycle; ws.key = key; wireAnimate(x); return; }   // back on the committed context: the pending set goes
+    if (pend && pend.key === key) { if (settled) wireCommit('settle'); else { wireAnimate(x); wireArmCommit(key); } return; }   // already pending; a settled camera commits it now, a hover back onto its region restarts the rest
+    if (pend) { wireDrop(pend); ws.sets.length = 1; }
+    if (setEntered(head, x)) wireCutAfterTip(head, x);   // the priority rule on the playing set; a set not yet in view keeps every item and the new one queues behind it
+    ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'pending'); wireAnimate(x);
+    if (settled) { wireCommit('settle'); return; }
+    wireArmCommit(key);
   }
-  function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead line itself changes at once); the rest at once
-    if (wireState.timer) { clearTimeout(wireState.timer); wireState.timer = 0; }
-    if (how !== 'append' || !wireState.sets.length) { wireContextNow(band, name, how); return; }
-    wireState.timer = setTimeout(() => { wireState.timer = 0; wireContextNow(band, name, 'append'); }, 250);
+  function wireArmCommit(key) {   // the pending set commits once the cursor has rested 600 ms on its region, counted from the region change
+    const ws = wireState; if (ws.commitTimer) clearTimeout(ws.commitTimer);
+    ws.commitTimer = setTimeout(() => { ws.commitTimer = 0; if (ws.sets[1] && ws.sets[1].key === key) wireCommit('rest'); }, Math.max(0, 600 - (performance.now() - ws.changedAt)));
   }
+  function applyRm2() { const on = narrow() && !wireScrolls(); $('ctxstrip').classList.toggle('rm2', on); wrap.classList.toggle('rm2', on); }   // the two-line reduced-motion form on a phone-width map (round 12, part D): the strip and the lift grow with it
+  let wireSettled = false;   // set by afterCameraMove around its context update: a settled camera commits the pending set at once
+  function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead slot changes at once); the rest at once
+    const ws = wireState, settled = wireSettled; if (ws.timer) { clearTimeout(ws.timer); ws.timer = 0; }
+    if (how !== 'append' || !ws.sets.length || settled) { if (how === 'append') ws.changedAt = performance.now(); wireContextNow(band, name, how, settled); return; }
+    if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }   // the cursor has moved to another region: the pending set's rest ends now, not after the debounce
+    ws.changedAt = performance.now(); ws.timer = setTimeout(() => { ws.timer = 0; wireContextNow(band, name, 'append', false); }, 250);
+  }
+  function applyWireCaps() { $('ctxtext').classList.toggle('caps', WIRE_CAPS); }
   { const bar = $('ctxstrip'), setPause = on => { const ws = wireState; ws.paused = on; if (ws.anim) { if (on) ws.anim.pause(); else ws.anim.play(); } };   // paused under the pointer or focus, as the CSS animation was
     bar.addEventListener('mouseenter', () => setPause(true)); bar.addEventListener('mouseleave', () => setPause(false)); bar.addEventListener('focusin', () => setPause(true)); bar.addEventListener('focusout', () => setPause(false)); }
   function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
@@ -1361,6 +1433,7 @@ void main() {
           if (Ls.n > shown.length) lines.push(`and ${num(fmt.int(Ls.n - shown.length))} more`);
         }
       }
+      if (AN && state.mode === 'firms' && h.kind !== 'none' && h.kmx != null && Math.min(Math.hypot(h.kmx - AN.a.x_km, h.kmy - AN.a.y_km), Math.hypot(h.kmx - AN.b.x_km, h.kmy - AN.b.y_km)) * 1000 <= 35) lines.push(`The two firms of the film, ${num(fmt.int(AN.distance_m))} m apart.`);   // round 12, part D, item 5: the cursor within 35 m of either firm of the video's pair; the neighbour stays unnamed
       return lines.join('<br>');
     }
     if (L === 'industry') {   // the leading division and the ranked mix of the cell (round 9)
@@ -1444,7 +1517,7 @@ void main() {
   function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
-  function afterCameraMove() { syncZoomButtons(); countFirmsInView(); refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { syncZoomButtons(); countFirmsInView(); wireSettled = true; try { refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -1687,14 +1760,26 @@ void main() {
   $('zoom-out').addEventListener('click', () => flyTo(stepCentre(0.5)));
   $('zoom-fit').addEventListener('click', () => flyTo(fitTarget()));
   function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFloor() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
-  const SCALE_STEPS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.25, 0.1];
-  let lastScale = '';
+  // The ruler (round 12, part D, the author's request of 25 October 2026): a line of fixed length with major ticks at a nice step (1, 2, 5 times a power of ten, in km) that
+  // follows the zoom, a minor tick at each half step, the numbers under the major ticks and the unit at the top right; the ruler's line starts 15 px in, so the end labels
+  // stay inside the box. The step is the smallest that puts the majors at least 28 px apart on a wide map (14 px on a phone-width map, where only every second major
+  // is numbered); every tick sits at i times the step times the zoom, so the ruler is exact at every zoom. Redrawn on every settled draw and wheel step, never on a flight frame.
+  const RULER_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000], RULER_PAD = 15;
+  let lastRuler = '', rulerState = null;
   function drawScaleBar() {
     dropObstacles();
-    const k = state.cam.k; let len = SCALE_STEPS[0]; for (const s of SCALE_STEPS) { len = s; if (s * k <= 84) break; }   // at most 84 px: the bar stays inside the right-hand column
-    const px = Math.round(len * k * 10) / 10, label = len >= 1 ? `${fmt.int(len)} km` : `${Math.round(len * 1000)} m`, key = px + label;
-    if (key === lastScale) return; lastScale = key;
-    $('scalebar').querySelector('.bar').style.width = px + 'px'; $('scalebar').querySelector('.lab').textContent = label;
+    const box = $('scalebar'), svg = $('ruler'), k = state.cam.k, Wc = box.clientWidth - 16; if (!(Wc > 0)) return;
+    const L = Wc - 2 * RULER_PAD; let s = RULER_STEPS[RULER_STEPS.length - 1]; for (const v of RULER_STEPS) { if (v * k >= 14) { s = v; break; } }   // majors at least 14 px apart
+    const n = Math.max(1, Math.floor(L / (s * k))), unit = s < 1 ? 'm' : 'km', key = [Wc, k.toFixed(6), s].join('|'); if (key === lastRuler) return; lastRuler = key;
+    { const f = k / kFit(); $('zoomfactor').textContent = '×' + (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : fmt.int(Math.round(f))); }   // the zoom as a factor of the country view, beside the fit button's icon (the author's note of 25 October 2026): ×1.0 at the fit, ×0.75 at the floor
+    const labM = i => String(Math.round(s * i * (unit === 'm' ? 1000 : 1))), labW = Motion.measure(mctx, labM(n), 12, 500, 0), every = Math.max(1, Math.ceil((labW + 4) / (s * k)));   // numbers on every major, or every second, third, as the widest number allows
+    const unitShown = unit === 'm' && s * every >= 1 && Math.abs(s * every - Math.round(s * every)) < 1e-9 ? 'km' : unit, lab = i => String(Math.round(s * i * (unitShown === 'm' ? 1000 : 1)));   // whole kilometres read as km even on a half-kilometre step; a step and a half stays in metres
+    const X = i => +(RULER_PAD + i * s * k).toFixed(2), ticks = []; let d = `M${RULER_PAD} 14.5H${X(n)}`;
+    for (let i = 0; i <= n; i++) { d += ` M${X(i)} 14V23`; if (i % every === 0) ticks.push({ i, x: X(i), label: lab(i) }); }
+    for (let i = 0; i < n; i++) d += ` M${+(RULER_PAD + (i + 0.5) * s * k).toFixed(2)} 14V18`;
+    svg.setAttribute('width', Wc); svg.setAttribute('viewBox', `0 0 ${Wc} 34`);
+    svg.innerHTML = `<path d="${d}" class="rl"/>` + ticks.map(t => `<text x="${t.x}" y="33" text-anchor="middle">${t.label}</text>`).join('') + `<text x="${Wc}" y="9" text-anchor="end" class="unit">${unitShown}</text>`;
+    rulerState = { k, step: s, unit: unitShown, n, every, ticks, width: Wc, line: L, labW, pad: RULER_PAD };
   }
 
   // ---- side panels -------------------------------------------------------------------------------
@@ -1821,8 +1906,36 @@ void main() {
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
+  // One short historical fact per place (round 12, part D, item 3): a native tooltip on each minimap group and the RUSSIA frame (an SVG title) and on the phone's
+  // buttons (a title attribute); every fact verified against a reference recorded in motion/README.md, never on screen; at most 200 characters, no semicolons.
+  const MM_FACTS = {
+    'Russia': 'Russia and the United States lie 3.8 km apart at the Diomede Islands in the Bering Strait. The date line runs between them, so the Russian island is almost a day ahead.',
+    'Moscow': 'From 1680 to the late 19th century the Kremlin\'s walls were kept whitewashed with lime. The red brick showed again only after the coats were left to wear away, by the early 1900s.',
+    'St Petersburg': 'In April 1942, with the paintings evacuated to the Urals, a Hermitage guide led visiting cadets through the halls and described the pictures by their empty frames.',
+    'Novosibirsk': 'Novosibirsk began in 1893 as a camp for the Trans-Siberian bridge over the Ob and passed one million inhabitants in 1962, 69 years after its founding.',
+    'Vladivostok': 'Vladivostok lies at 43° north, a little south of Sochi, yet its January mean is about −12 °C against Sochi\'s +6 °C.',
+    'Yekaterinburg': 'Yekaterinburg, founded in 1723 as an ironworks on the Iset, is named for Catherine I, the wife of Peter the Great, not for Catherine the Great.',
+    'Kazan': 'Nikolai Lobachevsky, a founder of non-Euclidean geometry, was rector of Kazan University for 19 years, from 1827 to 1846.',
+    'Nizhny Novgorod': 'A 19th-century saying made St Petersburg Russia\'s head, Moscow its heart and Nizhny Novgorod its purse, after the summer fair that drew traders from Europe and Asia until 1929.',
+    'Krasnodar': 'Until December 1920 the city was Yekaterinodar, Catherine\'s gift. Its new name reads two ways: krasny means red, and in older Russian beautiful.',
+    'Kaliningrad': 'Immanuel Kant lived his whole life in Königsberg, today\'s Kaliningrad, and is said never to have travelled far from it. His tomb stands by the cathedral on Kant Island, the old Kneiphof.',
+    'Rostov-on-Don': 'Until 1928 Rostov had a twin city a wheat field away: Nakhichevan-on-Don, founded in 1779 by Armenians resettled from Crimea, which became one of Rostov\'s districts.',
+    'Samara': 'In October 1941 Samara, then Kuybyshev, became the Soviet Union\'s reserve capital: the foreign embassies moved there from Moscow and stayed until 1943.',
+    'Chelyabinsk': 'On 15 February 2013 an asteroid of about 17 to 20 m across exploded high above Chelyabinsk with the energy of some 500 kilotons, the largest such event recorded since Tunguska in 1908.',
+    'Omsk': 'Fyodor Dostoevsky served four years of hard labour in the Omsk fortress, from January 1850 to early 1854. Notes from a Dead House grew out of them.',
+    'Ufa': 'From 1789 Ufa housed the Orenburg Muslim Spiritual Assembly, the Russian Empire\'s central body for its Muslim subjects, created by a decree of Catherine II in 1788.',
+    'Perm': 'The Permian period of the geological timescale takes its name from here: Roderick Murchison named it in 1841 after the strata he studied in the Perm region.',
+    'Voronezh': 'Russia\'s first regular navy was built at Voronezh: from the winter of 1695 Peter I\'s shipyards on the river sent galleys and warships down to the Don for the capture of Azov in 1696.',
+    'Volgograd': 'The Motherland Calls on Mamayev Kurgan, completed in 1967, rises 85 m to the tip of its sword and was then the tallest statue in the world.',
+    'Krasnoyarsk': 'Lavr Proskuryakov\'s railway bridge over the Yenisei at Krasnoyarsk, opened in 1899, won a gold medal at the 1900 Paris Exposition for its truss design.',
+    'Irkutsk': 'Irkutsk stands on the Angara, the only river that flows out of Lake Baikal. Hundreds of streams flow in, and this one carries the lake\'s water on to the Yenisei.',
+    'Khabarovsk': 'Khabarovsk is the city on the 5,000-ruble note: the Muravyov-Amursky monument and the embankment on the front, the bridge over the Amur on the back.',
+    'Murmansk': 'Murmansk was founded in October 1916 as Romanov-on-Murman, the last city founded in the Russian Empire, for a port that stays ice-free where Arkhangelsk freezes.',
+    'Tyumen': 'From July 1941 to the spring of 1945 Lenin\'s embalmed body was kept in Tyumen, in the building of the agricultural college, after a secret evacuation from Moscow.',
+    'Central Moscow (250 m)': 'An eighth Stalin skyscraper was begun in Zaryadye in 1947 and abandoned. The Rossiya hotel rose on its foundations in 1967, and since 2017 the site has been a park.',
+  };
   const slugOf = label => label.replace(/\s*\(.*\)$/, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
+  const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
   addPreset('Russia', fitTarget);
   for (const city of bmp.cities) addPreset(city.label, () => cityTarget(city));
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }); PRESETS[PRESETS.length - 1].button.classList.add('keep');   // the one button that stays under the minimap (round 10)
@@ -1870,6 +1983,7 @@ void main() {
     el('path', { class: 'grat', d: gd }, land);
     // the Russia frame: the mark's four brackets at the outline box's corners (10 px arms), a focusable group with the label box at the top-right corner
     const fr = el('g', { class: 'frame', id: 'mm-russia', tabindex: 0, role: 'button', 'aria-label': 'Go to Russia', 'aria-pressed': 'false' });
+    el('title', {}, fr).textContent = MM_FACTS.Russia;   // the native tooltip (item 3)
     const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
     el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
     // The label widths come from the canvas, never from the SVG's own layout (the author's report of 26 October: a browser that lays the page out hidden at load
@@ -1888,6 +2002,7 @@ void main() {
       const mids = [[box.x, (box.y + box.y1) / 2], [box.x1, (box.y + box.y1) / 2], [(box.x + box.x1) / 2, box.y], [(box.x + box.x1) / 2, box.y1]];   // the edge midpoints: left, right, top, bottom
       const ccx = (box.x + box.x1) / 2, ccy = (box.y + box.y1) / 2, end = Math.abs(dx - ccx) > Math.abs(dy - ccy) ? (dx < ccx ? mids[0] : mids[1]) : (dy < ccy ? mids[2] : mids[3]);   // the edge facing the dot
       const g = el('g', { class: 'city', id: 'mm-' + slugOf(city.label).toLowerCase(), tabindex: 0, role: 'button', 'aria-label': 'Go to ' + city.label, 'aria-pressed': 'false' });
+      if (MM_FACTS[city.label]) el('title', {}, g).textContent = MM_FACTS[city.label];   // the native tooltip (item 3)
       el('line', { class: 'ld', x1: dx.toFixed(1), y1: dy.toFixed(1), x2: end[0].toFixed(1), y2: end[1].toFixed(1), pathLength: 1 }, g);
       el('circle', { class: 'dot', cx: dx.toFixed(1), cy: dy.toFixed(1), r: MM_R }, g);
       labelBox(g, txt, left, top);
@@ -1933,7 +2048,8 @@ void main() {
   $('footer').innerHTML = `<div class="lic">Data: ${F.release}, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0 · © 2026 Armen G. Kaprelian</div>`;   // one line (round 10): the author line is inserted before it below, the data licences at the right
   // The footer line (round 10, the author's item 16): the name with the mark, the email as selectable text with a copy button (no mail link), the website as text until an address is given,
   // two square buttons to the author's X profile and an X share intent with a prepared text; then the licence line (item 17).
-  $('footer').insertAdjacentHTML('afterbegin', `<div class="byfoot"><span><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg>Armen G. Kaprelian</span><span>·</span><span><code id="mail">armenkaprelian@gmail.com</code> <button class="btn sq" id="copymail" type="button" aria-label="Copy the email address" title="COPY THE EMAIL ADDRESS"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 5V3h8v8h-2M3 5h8v8H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button> <span class="copied" id="copied" aria-live="polite"></span></span><span>·</span><span>[personal website]</span><span>·</span><a class="btn sq" href="https://x.com/ArmenKaprelian" target="_blank" rel="noopener" aria-label="Profile on X" title="PROFILE ON X"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a><a class="btn sq" href="https://x.com/intent/post?text=' + encodeURIComponent('Visibility Atlas: where Russian firms file, and where their statements stop appearing. https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n via @ArmenKaprelian') + '" target="_blank" rel="noopener" aria-label="Share on X" title="SHARE ON X"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 5l7 7M10 5L3 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 3h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`);
+  const SHARE_HREF = 'https://x.com/intent/post?text=' + encodeURIComponent('Visibility Atlas: where Russian firms file, and where their statements stop appearing.') + '&url=' + encodeURIComponent('https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n') + '&via=ArmenKaprelian';   // the share intent: text, link and handle as separate fields (the round-10 string quoted the call into the address; the author's report of 25 October 2026)
+  $('footer').insertAdjacentHTML('afterbegin', `<div class="byfoot"><span><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg>Armen G. Kaprelian</span><span>·</span><span><code id="mail">armenkaprelian@gmail.com</code> <button class="btn sq" id="copymail" type="button" aria-label="Copy the email address" title="COPY THE EMAIL ADDRESS"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 5V3h8v8h-2M3 5h8v8H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button> <span class="copied" id="copied" aria-live="polite"></span></span><span>·</span><span>[personal website]</span><span>·</span><a class="btn sq" href="https://x.com/ArmenKaprelian" target="_blank" rel="noopener" aria-label="Profile on X" title="PROFILE ON X"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a><a class="btn sq" href="${SHARE_HREF}" target="_blank" rel="noopener" aria-label="Share on X" title="SHARE ON X"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 5l7 7M10 5L3 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 3h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`);
   // The method block (round 10): the i button opens it, More expands it, both remembered per viewer.
   const methodOpen = () => ui.method === 'open', methodMore = () => ui.methodMore === 'open';   // the More state is stored as open or closed, the values readPref accepts
   ui.method = readPref('atlas-method') || 'closed'; ui.methodMore = readPref('atlas-method-more') || 'closed';
@@ -1953,7 +2069,7 @@ void main() {
     if (wireScrolls() && stripOpen() && wireState.sets.length) { const first = wireState.sets[0].els[0]; if (wireVisW() !== wireState.vis || !(wireState.width > 0) || !first || first.getBoundingClientRect().width <= 0) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'reset'); fixed.push('wire'); } }
     dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
   }
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); updateContext(true); verifyLayouts('resize'); }
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); applyRm2(); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
@@ -1981,14 +2097,14 @@ void main() {
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
     redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return { boxes: Motion.audit.boxes, dom: domBoxes() }; },
     tips() {   // every tip measured in the strip's hidden span as it would show (round 10): the audit asserts none is clipped at any width
-      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip');
+      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'), box = $('ctxtext'), hadRm = box.classList.contains('rm'); el.classList.add('tip'); box.classList.add('rm');   // measured in the lead's full width, the reduced-motion form where the tips show there (round 12)
       const out = TIPS.flatMap((t, i) => [t.text, t.touch].filter(Boolean).map(str => { el.innerHTML = units(esc(str)); return { i, text: str, w: el.scrollWidth, slot: el.clientWidth, h: el.scrollHeight, hslot: el.clientHeight, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 }; }));
-      el.innerHTML = keep; el.classList.toggle('tip', had); return out;
+      el.innerHTML = keep; el.classList.toggle('tip', had); box.classList.toggle('rm', hadRm); return out;
     },
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
-    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null }; },   // the minimap's geometry and the layout rules (round 10)
+    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (26 October): true when it rebuilt
     ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
@@ -2029,13 +2145,26 @@ void main() {
     floor() { return { kfit: kFit(), kfloor: kFloor(), fraction: FLOOR_FRACTION }; },   // the zoom floor (round 11, item 5)
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
     context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
-    wire() { const ws = wireState, last = ws.sets[ws.sets.length - 1], lead = last ? last.els[0] : $('wiretrack').querySelector('.wi.lead'), x = wireX(), vis = wireVisW(); return { key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, sets: ws.sets.map(sset => ({ key: sset.key, x0: sset.x0, x1: sset.x1, entered: sset.x0 < x + vis, lead: plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) })) }; },   // the wire's current cycle and its queue (rounds 10 and 11)
+    wire() { const ws = wireState, x = wireX(), vis = wireVisW(), cur = ws.sets[0], lead = cur && cur.els.length ? cur.els[0] : $('wiretrack').querySelector('.wi.lead'); return { key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, commits: ws.commits, caps: WIRE_CAPS, orphans: ws.orphans.length / 2, dom: $('wiretrack').querySelectorAll('.wi').length, timers: { debounce: !!ws.timer, commit: !!ws.commitTimer, top: !!ws.topTimer }, heap: performance.memory ? performance.memory.usedJSHeapSize : null, lead: { text: $(stripState.cur === 'A' ? 'ctxA' : 'ctxB').textContent, width: $('ctxlead').clientWidth }, sets: ws.sets.map(sset => ({ key: sset.key, status: sset.status, x0: setStart(sset), x1: setEnd(sset), entered: setEntered(sset, x), items: sset.els.length / 2, lead: sset.els.length ? plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) : '' })) }; },   // the wire's current cycle, its two-set queue and the lead slot (rounds 10 to 12)
+    wireGaps() {   // the separators' clearances (the author's report of 25 October 2026): the smallest gap between a separator mark and the items beside it on the track, the lead separator's two margins, the window's edge fade, and any item box a mark covers
+      const tr = wireTrack(), kids = [...tr.children], rs = kids.map(el => { if (el.classList.contains('wsep')) return el.getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(el); return rg.getBoundingClientRect(); }); let min = Infinity, covered = 0;   // an item's text extent, not its padded box
+      for (let i = 0; i < kids.length; i++) { if (!kids[i].classList.contains('wsep')) continue; const s = rs[i]; if (i > 0) { const g = s.left - rs[i - 1].right; if (g < min) min = g; if (g < -0.5) covered++; } if (i + 1 < kids.length) { const g = rs[i + 1].left - s.right; if (g < min) min = g; if (g < -0.5) covered++; } }
+      const lead = $('ctxlead').getBoundingClientRect(), sep = document.querySelector('.ctxt .lsep'), sr = sep ? sep.getBoundingClientRect() : null, win = $('ctxwin').getBoundingClientRect(), cs = getComputedStyle($('ctxwin')), mask = cs.maskImage || cs.webkitMaskImage || 'none';
+      return { min: kids.length ? min : null, covered, lsepLeft: sr && sr.width ? sr.left - lead.right : null, lsepRight: sr && sr.width ? win.left - sr.right : null, fade: mask !== 'none' && mask.includes('gradient'), em: parseFloat(getComputedStyle($('ctxtext')).fontSize), items: kids.length };
+    },
+    wireCaps(on) { if (on != null) { WIRE_CAPS = !!on; applyWireCaps(); } return WIRE_CAPS; },   // the capitals experiment's switch (round 12, part D)
+    wireSeek(x) { wireStop(); wireAnimate(Math.max(0, x)); return wireX(); },   // a frames hook: the track scrolled to x at once (round 12)
+    wireItemX(kind, n = 0) { const el = wireTrack().querySelectorAll('.wi.' + kind)[n]; return el ? wirePos(el)[0] : null; },   // a frames hook: the left edge of the n-th item of a kind on the track
+    ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
+    anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
+    anniversary(iso) { const a = anniversaryLine(iso); return a ? a.text : null; },   // the builder for a given ISO day (item 6)
+    today() { return TODAY; },
     wireAt(y, region) { const keep = state.year; state.year = y; const c = buildCycle(y, region === 'Russia' ? 'national' : 'region', region, 0); state.year = keep; return c.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })); },
     tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
     glyph(name) { return regionGlyph(name); },
     jump(t) { return flyTo(t, { instant: true }).then(() => cam()); },
-    hoverOff() { hideHover(); return true; },   // round 9: clear a hover (the frames tool's rest frames)
+    hoverOff() { lastPointer = null; hideHover(); return true; },   // round 9: clear a hover (the frames tool's rest frames); the pointer is forgotten too, so a settle does not revive it (round 13)
     mix() { const el = $('mixbox'); return { visible: !el.hidden, open: mixOpen(), title: $('mixtitle').textContent, unit: $('mixunit').textContent, rows: [...document.querySelectorAll('#mixrows .r')].map(r => ({ name: r.querySelector('.nm').textContent, pct: r.querySelector('.pc') ? r.querySelector('.pc').textContent : null, colour: r.querySelector('.sw') ? r.querySelector('.sw').style.background : null })) }; },
     mixbox(open) { openMix(open == null ? null : (open ? 'open' : 'closed')); return mixOpen(); },
     mixCost(n = 10) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); viewMix.key = ''; computeViewMix(); mx = Math.max(mx, performance.now() - a); } return { mean: +((performance.now() - t0) / n).toFixed(2), max: +mx.toFixed(2), rows: viewMix.rows ? viewMix.rows.length : 0 }; },
@@ -2066,7 +2195,7 @@ void main() {
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
     firmsLayers() { const c = cam(), ext = BM.extents.national, pr = (x, y) => Motion.project(c, x, y), rect = b => { if (!b) return null; const f = c.k / b.cam.k, [px, py] = pr(b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k); return [px, py, px + b.W * f, py + b.H * f]; }, e0 = pr(ext.x[0], ext.y[1]), e1 = pr(ext.x[1], ext.y[0]), tb = tintCache.get(state.year + '|' + theme.dark) || null;
       return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds, cover: { extent: [e0[0], e0[1], e1[0], e1[1]], view: [stage.width, stage.height], tint: rect(tb), glow: rect(glowCache), glowBlurPx: glowCache ? 2 * c.k / glowCache.cam.k : null } }; },   // the two layers' fades and caches, and where their bitmaps lie on screen against the country's extent (round 11, item 5)   // the two layers under the field (round 10)
-    ghost() { const c = cam(); return { alpha: ghostAlpha(c.k), drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)) }; },   // the ghost names (round 10)
+    ghost() { const c = cam(); return { alpha: GHOST_ALPHA, drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)), colour: theme.go }; },   // the ghost names (round 10; floating at a fixed size and opacity since round 12, part D)
     hoverRegion() { return hoverRegionName; },
     regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
     pixelsAt(id, px, py) { const cv = $(id), d = window.devicePixelRatio || 1, g = cv.getContext('2d'), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(Array.from(g.getImageData(Math.round((px + dx) * d), Math.round((py + dy) * d), 1, 1).data)); return out; },   // the 3 by 3 pixels of a canvas around a point   // the city-window hand-over (round 10): the window's strength, the outside layer's alpha and whether it is outlined
@@ -2075,5 +2204,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); });
 })();

@@ -15,7 +15,7 @@ label (25 October 2026: firms on the five lists are named, firms on no list neve
 names are place names and stay allowed); the neighbour firm (anchors.b) carries no name. The script prints the files by group with their sizes
 so each artifact publish stays under 64 MB, and exits non-zero on a rule breach or a file over the
 artifact's caps (16 MB page or text file, 15 MB binary file)."""
-import json, os, re, shutil, sys
+import json, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
@@ -23,6 +23,15 @@ OUT = os.path.join(MOTION, "publish")
 os.makedirs(OUT, exist_ok=True)
 FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">'
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
+def build_id():   # the commit the set is built from, for the pages' console greeting (round 12, part D); a dirty shipped file is said so
+    try:
+        git = lambda *args: subprocess.run(["git"] + list(args), cwd=MOTION, capture_output=True, text=True, check=True).stdout.strip()
+        h = git("rev-parse", "--short=12", "HEAD"); dirty = git("status", "--porcelain", "--", "explorer.html", "explainer.html", "js", "css", "data")
+    except Exception:
+        return "an unrecorded build"
+    return "commit " + h + (" with uncommitted changes" if dirty else "")
+BUILD = build_id()
+BUILD_META = '<meta name="build" content="%s">' % BUILD
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
 SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "treated-scenes.js", "explorer-app.js"]
 ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
@@ -42,7 +51,7 @@ def convert(name):
     body = re.search(r"<body>(.*?)</body>", src, re.S).group(1)
     style = re.search(r"<style>.*?</style>", head, re.S)
     css_link = re.search(r'<link rel="stylesheet" href="css/theme.css">', head)
-    parts = [title, META, FONT]
+    parts = [title, META, BUILD_META, FONT]
     if style:
         parts.append(style.group(0))
     if css_link:
@@ -124,6 +133,7 @@ def main():
             cap = TEXT_CAP if n.endswith((".html", ".js", ".json")) else BIN_CAP
             if b > cap: problems.append("%s is %.1f MB, over the %d MB cap" % (n, b / 1048576, cap // 1048576))
     print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
+    print("build: " + BUILD)
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0
 
