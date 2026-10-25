@@ -356,6 +356,21 @@ def main():
                 for y in (2021, 2024):
                     state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts(), today: A.today(), gaps: A.wireGaps() });" % y, "wire%d" % y, wire_check(y, "national", "Russia"))
                     state("share", y, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(%d); if (A.hoverOff) A.hoverOff(); await A.jump({ cx: m[0] + 60, cy: m[1], k: 1.0 }); await A.ready(); A.redraw(); await new Promise(r => setTimeout(r, 450)); window.__extra = Object.assign(A.wire(), { tips: A.tipTexts(), today: A.today(), gaps: A.wireGaps() });" % y, "wirereg%d" % y, wire_check(y, "region", "Moscow Oblast"))
+                # the prune (26 October 2026): with the first item scrolled past, a region change prunes the passed items and appends the region's set; an item well inside the window keeps
+                # its place on the screen (it advances at the wire's speed; an item at the window's edge may pass under the grown slot and be pruned, which is right), the track keeps at least a cycle, and the offset stays positive
+                def prune_ok(r):
+                    x = r["extra"]
+                    if not x: return [("wire", "prune", "no report")]
+                    bad = []
+                    if x["after"]["text"] != x["before"]["text"]: bad.append(("wire", "prune", "the item in view left the track on a region change (%r, then %r)" % (x["before"]["text"], x["after"]["text"])))
+                    else:
+                        moved = x["before"]["left"] - x["after"]["left"]; exp = 60 * x["ms"] / 1000
+                        if abs(moved - exp) > 15: bad.append(("wire", "prune", "the item in view moved %.0f px in %d ms, expected about %.0f (the wire's speed)" % (moved, x["ms"], exp)))
+                    if x["after"]["rendered"] < 0: bad.append(("wire", "prune", "the offset went negative: %.0f" % x["after"]["rendered"]))
+                    if not (50 <= x["after"]["dom"] <= 220): bad.append(("wire", "prune", "%d items on the track after the change (%d before)" % (x["after"]["dom"], x["before"]["dom"])))
+                    if x["removed"] <= 0: bad.append(("wire", "prune", "nothing was pruned although the first item had passed (%d items before, %d after)" % (x["before"]["dom"], x["after"]["dom"])))
+                    return bad
+                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); await A.ready(); A.redraw(); { const sleep = ms => new Promise(r => setTimeout(r, ms)); await sleep(450); const tr = document.getElementById('wiretrack'), win = document.getElementById('ctxwin'); const first = tr.querySelector('.wi'); const w0 = first.getBoundingClientRect().width; A.wireSeek(w0 + 400); await sleep(100); const wr0 = win.getBoundingClientRect(); const el0 = [...tr.querySelectorAll('.wi')].find(e => e.getBoundingClientRect().left > wr0.left + 120);   /* an item well inside the window: the slot may grow by up to a third of the bar and cover what sat at the edge */ const vis = () => ({ text: el0 && el0.isConnected ? el0.textContent.slice(0, 40) : null, left: el0 && el0.isConnected ? el0.getBoundingClientRect().left : null, dom: tr.querySelectorAll('.wi').length, rendered: A.wire().rendered }); const before = vis(), t0 = performance.now(); A.hoverKm(m[0] + 60, m[1], { show: true }); await sleep(450); const after = vis(); window.__extra = { before, after, ms: Math.round(performance.now() - t0), removed: (before.dom + 50) - after.dom }; A.hoverOff(); }", "wireprune", prune_ok)
                 # the wire watchdog (the author's request of 25 October 2026): a hidden-then-visible document with a track that stalled while hidden advances again within two seconds
                 def wake_ok(r):
                     x = r["extra"]
