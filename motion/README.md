@@ -1307,7 +1307,8 @@ teaser asset kept, the committed round c12d966. The author confirmed on 25 Octob
 behave well on their devices. Round 8 published on 25 October 2026 after the author's three display fixes: atlas v17
 (version id 1792908012-6e4e) (the page, `js/explorer-app.js`, `js/map-layers.js`, `data/treatednational.js`) and explainer v21
 (version id 1792908009-6d9c) (the page, `js/map-layers.js`, `js/treated-scenes.js`, `data/treated.js`, `data/treatednational.js`,
-the 27 Moscow rasters changed by the M6 re-run); the teaser asset kept; the cuts not re-rendered.
+the 27 Moscow rasters changed by the M6 re-run); the teaser asset kept; the cuts not re-rendered. The author approved the
+fixes the same evening.
 
 ### Atlas and video: quieter resting red marks, a stronger pulse, a hover floor, names for listed firms (author's requests, 25 October 2026)
 
