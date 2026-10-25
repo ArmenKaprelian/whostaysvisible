@@ -73,10 +73,12 @@ def browser_version(port):
     except Exception:
         return None
 
+AUTHOR_TAGS = ["-metadata", "author=Armen G. Kaprelian", "-metadata", "comment=by Armen G. Kaprelian; Who stays visible? (RFSD v3.1.0, CC BY 4.0)"]   # the authorship tags on every render (round 10, the author's item 17)
+
 def ffmpeg_cmd(fps, out, crf, preset):
     return ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "image2pipe", "-framerate", str(fps), "-i", "-",
             "-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-pix_fmt", "yuv420p", "-r", str(fps), "-fps_mode", "cfr",
-            "-movflags", "+faststart", out]
+            "-movflags", "+faststart"] + AUTHOR_TAGS + [out]
 
 def check_png(data, w, h):
     if data[:8] != b"\x89PNG\r\n\x1a\n":
@@ -274,7 +276,7 @@ def run_sharded(a, frames, fps, meta, whole, profile, log):
         with open(lst, "w") as fh:
             for f in shard_files:
                 fh.write("file '%s'\n" % os.path.abspath(f["out"]).replace("'", "'\\''"))
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart", a.out], check=True)
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", "-movflags", "+faststart"] + AUTHOR_TAGS + [a.out], check=True)
         merged["concat"] = [f["out"] for f in shard_files]
         merged["ffprobe"] = verify_video(a.out, len(frames), fps, meta if whole else None)
         for f in shard_files:   # the joined file is verified; the shard videos are intermediate (their logs stay)

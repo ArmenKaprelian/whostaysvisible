@@ -1,0 +1,272 @@
+{
+ "author": "by Armen G. Kaprelian",
+ "note": "Off the wire (round 10, the author's item 15): about one wire item in fifty is a cat fact from this pool, each true and light, each checked on 26 October 2026 against the reference beside it (the references are recorded in motion/README.md and never shown on screen). Atlas only, never the video.",
+ "prefix": "OFF THE WIRE ·",
+ "n": 44,
+ "facts": [
+  {
+   "id": 1,
+   "text": "Cats can see with about one sixth of the light people need.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: senses (vision)"
+  },
+  {
+   "id": 2,
+   "text": "A cat hears up to about 79 kilohertz, far above the human ceiling.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: senses (hearing, 55 Hz to 79 kHz)"
+  },
+  {
+   "id": 3,
+   "text": "A cat's hearing is sharpest between 500 hertz and 32 kilohertz.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: senses (hearing)"
+  },
+  {
+   "id": 4,
+   "text": "Cats sleep 12 to 16 hours a day, 13 to 14 on average.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: behaviour (sleep)"
+  },
+  {
+   "id": 5,
+   "text": "The name Felis catus was given by Carl Linnaeus in 1758.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: taxonomy"
+  },
+  {
+   "id": 6,
+   "text": "The domestic cat descends from the African wildcat, Felis lybica; taming began in the Near East around 7500 BCE.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: domestication; Driscoll et al. 2007, Science 317: 519"
+  },
+  {
+   "id": 7,
+   "text": "Domestic cats trace to at least five founding wildcat lineages of the Fertile Crescent.",
+   "ref": "https://www.science.org/doi/10.1126/science.1139518",
+   "source": "Driscoll et al. 2007, The Near Eastern origin of cat domestication, Science 317: 519-523"
+  },
+  {
+   "id": 8,
+   "text": "The oldest known cat burial, at Shillourokambos on Cyprus, is about 9,500 years old; the cat lay 40 centimetres from a person.",
+   "ref": "https://www.nationalgeographic.com/animals/article/oldest-known-pet-cat-9500-year-old-burial-found-on-cyprus",
+   "source": "National Geographic, 8 April 2004 (Vigne et al. 2004, Science)"
+  },
+  {
+   "id": 9,
+   "text": "Cats cannot taste sweetness: their sweet-receptor gene Tas1r2 is a pseudogene.",
+   "ref": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1183522/",
+   "source": "Li et al. 2005, PLoS Genetics 1(1): e3"
+  },
+  {
+   "id": 10,
+   "text": "A cat purrs at 25 to 150 hertz, on the in-breath and the out-breath alike.",
+   "ref": "https://www.scientificamerican.com/article/why-do-cats-purr/",
+   "source": "Scientific American, Why do cats purr? (Leslie Lyons), 2006"
+  },
+  {
+   "id": 11,
+   "text": "The spines on a cat's tongue are scoop-shaped: they carry saliva deep into the fur, and the cat cools as it dries.",
+   "ref": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6298085",
+   "source": "Noel and Hu 2018, PNAS 115: 12377; National Geographic, November 2018"
+  },
+  {
+   "id": 12,
+   "text": "A cat has five toes on each front paw and four on each hind paw: eighteen in all.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: paws"
+  },
+  {
+   "id": 13,
+   "text": "A cat's collarbones float free, held by muscle rather than joined to other bones.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: skeleton"
+  },
+  {
+   "id": 14,
+   "text": "Cats sweat mainly through their paw pads.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: skin"
+  },
+  {
+   "id": 15,
+   "text": "A cat's third eyelid is the nictitating membrane.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: eyes"
+  },
+  {
+   "id": 16,
+   "text": "A cat moves each ear on its own.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: ears"
+  },
+  {
+   "id": 17,
+   "text": "A cat's claws rest sheathed and extend at will.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_anatomy",
+   "source": "Wikipedia, Cat anatomy: claws"
+  },
+  {
+   "id": 18,
+   "text": "The righting reflex appears at three to four weeks of age and is perfected by six to nine.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_righting_reflex",
+   "source": "Wikipedia, Cat righting reflex"
+  },
+  {
+   "id": 19,
+   "text": "A cat falling from up to three metres can right itself and land on its paws.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: righting"
+  },
+  {
+   "id": 20,
+   "text": "The ancient Egyptian word for cat was mjw; cats appear in Egyptian scenes from about 1980 BC.",
+   "ref": "https://en.wikipedia.org/wiki/Cats_in_ancient_Egypt",
+   "source": "Wikipedia, Cats in ancient Egypt"
+  },
+  {
+   "id": 21,
+   "text": "Bastet, the Egyptian cat goddess, is attested from the Second Dynasty onward.",
+   "ref": "https://en.wikipedia.org/wiki/Cats_in_ancient_Egypt",
+   "source": "Wikipedia, Cats in ancient Egypt"
+  },
+  {
+   "id": 22,
+   "text": "The Hermitage in St Petersburg keeps cats in its basements against mice, as Empress Elizabeth ordered in 1745.",
+   "ref": "https://en.wikipedia.org/wiki/Hermitage_cats",
+   "source": "Wikipedia, Hermitage cats"
+  },
+  {
+   "id": 23,
+   "text": "The Hermitage's cats have their own press secretary and a Hermitage Cat Day every spring.",
+   "ref": "https://en.wikipedia.org/wiki/Hermitage_cats",
+   "source": "Wikipedia, Hermitage cats"
+  },
+  {
+   "id": 24,
+   "text": "The Siberian is a centuries-old natural variety of cat from Russia and its national cat.",
+   "ref": "https://en.wikipedia.org/wiki/Siberian_cat",
+   "source": "Wikipedia, Siberian cat"
+  },
+  {
+   "id": 25,
+   "text": "Siberian cats appear in Slavic folktales and artwork from the 10th century.",
+   "ref": "https://en.wikipedia.org/wiki/Siberian_cat",
+   "source": "Wikipedia, Siberian cat"
+  },
+  {
+   "id": 26,
+   "text": "The Russian Blue may have begun as a landrace in the port of Arkhangelsk; the Archangel Blues have emerald-green eyes.",
+   "ref": "https://en.wikipedia.org/wiki/Russian_Blue",
+   "source": "Wikipedia, Russian Blue"
+  },
+  {
+   "id": 27,
+   "text": "The Kurilian Bobtail, with a pom-pom tail of 2 to 10 vertebrae, is a natural breed of the Kuril Islands, Sakhalin and Kamchatka.",
+   "ref": "https://en.wikipedia.org/wiki/Kurilian_Bobtail",
+   "source": "Wikipedia, Kurilian Bobtail"
+  },
+  {
+   "id": 28,
+   "text": "Catnip's nepetalactone delights about two thirds of cats; leopards, cougars, servals and lynxes often react too.",
+   "ref": "https://en.wikipedia.org/wiki/Catnip",
+   "source": "Wikipedia, Catnip"
+  },
+  {
+   "id": 29,
+   "text": "Cats younger than six months may not react to catnip at all.",
+   "ref": "https://en.wikipedia.org/wiki/Catnip",
+   "source": "Wikipedia, Catnip"
+  },
+  {
+   "id": 30,
+   "text": "The world's first cat café opened in Taipei in 1998; Japan's first in Osaka in 2004.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_caf%C3%A9",
+   "source": "Wikipedia, Cat café"
+  },
+  {
+   "id": 31,
+   "text": "On Aoshima, Japan's Cat Island, cats have outnumbered people by up to 36 to one.",
+   "ref": "https://en.wikipedia.org/wiki/Aoshima,_Ehime",
+   "source": "Wikipedia, Aoshima, Ehime"
+  },
+  {
+   "id": 32,
+   "text": "The first cat show was held at the Crystal Palace in London in 1871, organised by Harrison Weir.",
+   "ref": "https://en.wikipedia.org/wiki/Cat_show",
+   "source": "Wikipedia, Cat show"
+  },
+  {
+   "id": 33,
+   "text": "The Maine Coon, one of the largest breeds, has been Maine's official state cat since 1985.",
+   "ref": "https://en.wikipedia.org/wiki/Maine_Coon",
+   "source": "Wikipedia, Maine Coon"
+  },
+  {
+   "id": 34,
+   "text": "A male Maine Coon weighs 8 to 10 kilograms on average.",
+   "ref": "https://en.wikipedia.org/wiki/Maine_Coon",
+   "source": "Wikipedia, Maine Coon"
+  },
+  {
+   "id": 35,
+   "text": "The longest domestic cat on record, Stewie, a Maine Coon, measured 123 centimetres from nose to tail tip in 2010.",
+   "ref": "https://www.guinnessworldrecords.com/news/2011/9/record-holder-profile-video-stewie-the-longest-cat-in-the-world",
+   "source": "Guinness World Records, Stewie, the longest cat in the world (2011)"
+  },
+  {
+   "id": 36,
+   "text": "The oldest cat on record, Creme Puff of Austin, Texas, lived 38 years and 3 days.",
+   "ref": "https://www.guinnessworldrecords.com/world-records/oldest-cat-ever",
+   "source": "Guinness World Records, Oldest cat ever"
+  },
+  {
+   "id": 37,
+   "text": "Nearly 60 polydactyl cats live at the Hemingway Home in Key West, descended from Snow White, a six-toed cat a ship's captain gave Hemingway.",
+   "ref": "https://hemingwayhome.com/our-cats",
+   "source": "The Ernest Hemingway Home and Museum, Our cats"
+  },
+  {
+   "id": 38,
+   "text": "Hemingway named his cats after famous people, and the Key West museum keeps the custom.",
+   "ref": "https://hemingwayhome.com/our-cats",
+   "source": "The Ernest Hemingway Home and Museum, Our cats"
+  },
+  {
+   "id": 39,
+   "text": "A cat's cerebral cortex holds about 250 million neurons.",
+   "ref": "https://www.frontiersin.org/articles/10.3389/fnana.2017.00118/full",
+   "source": "Jardim-Messeder et al. 2017, Frontiers in Neuroanatomy 11: 118"
+  },
+  {
+   "id": 40,
+   "text": "The orange-coat mutation sits near the Arhgap36 gene on the X chromosome; two teams found it in May 2025.",
+   "ref": "https://www.scientificamerican.com/article/this-strange-mutation-explains-the-mystifying-color-of-orange-cats/",
+   "source": "Scientific American, May 2025 (Kaelin et al. and Sasaki et al. 2025, Current Biology)"
+  },
+  {
+   "id": 41,
+   "text": "An adult cat's heart beats 140 to 220 times a minute; at rest it takes 20 to 30 breaths.",
+   "ref": "https://www.vetstreet.com/dr-marty-becker/feline-fine-how-to-read-your-cats-vital-signs",
+   "source": "Vetstreet, Feline fine: how to read your cat's vital signs (Marty Becker)"
+  },
+  {
+   "id": 42,
+   "text": "A cat's normal temperature runs from 100 to 102.5 degrees Fahrenheit, about 37.8 to 39.2 Celsius.",
+   "ref": "https://www.vetstreet.com/dr-marty-becker/feline-fine-how-to-read-your-cats-vital-signs",
+   "source": "Vetstreet, Feline fine: how to read your cat's vital signs (Marty Becker)"
+  },
+  {
+   "id": 43,
+   "text": "Whiskers grow above a cat's eyes and on its forelegs as well as on the muzzle.",
+   "ref": "https://en.wikipedia.org/wiki/Whiskers",
+   "source": "Wikipedia, Whiskers"
+  },
+  {
+   "id": 44,
+   "text": "The average pet cat's lifespan rose from about 7 years in the early 1980s to about 13 by 2014.",
+   "ref": "https://en.wikipedia.org/wiki/Cat",
+   "source": "Wikipedia, Cat: lifespan"
+  }
+ ]
+}

@@ -44,11 +44,11 @@ DBI::dbWriteTable(con, "deflator", deflator[, c("year", "defl")], temporary = TR
 # ---- sanctions list: one row per INN with the earliest start date and that row's inferred flag ----
 san <- utils::read.csv(lab_source("motion.sanctioned-list"), stringsAsFactors = FALSE, colClasses = "character", encoding = "UTF-8")
 san$inn <- trimws(san$inn); san <- san[nzchar(san$inn), ]
-san$start_year <- as.integer(substr(san$startDate, 1, 4)); san$inferred <- san$startDate_inferred == "1"
+san$start_year <- as.integer(substr(san$startDate, 1, 4)); san$inferred <- san$startDate_inferred == "1"; san$start_date <- substr(san$startDate, 1, 10)   # the day of the earliest listing (round 10: the wire names it)
 san <- san[order(san$inn, san$startDate), ]
-san_first <- san[!duplicated(san$inn), c("inn", "start_year", "inferred", "countries", "name", "name_alt")]
+san_first <- san[!duplicated(san$inn), c("inn", "start_year", "start_date", "inferred", "countries", "name", "name_alt")]
 san_first$countries_all <- vapply(split(san$countries, san$inn)[san_first$inn], function(v) { tok <- unlist(strsplit(v, "[|[:space:]]+")); paste(sort(unique(tok[nzchar(tok)])), collapse = " ") }, "")   # the file writes "gb | us"
-DBI::dbWriteTable(con, "san", san_first[, c("inn", "start_year", "inferred", "countries_all")], temporary = TRUE, overwrite = TRUE)
+DBI::dbWriteTable(con, "san", san_first[, c("inn", "start_year", "start_date", "inferred", "countries_all")], temporary = TRUE, overwrite = TRUE)
 
 # ---- listed firms' names (author's rule, 25 October 2026): the decree and government strategic workbooks' name columns,
 # then the sanctions file's name; one display name per INN through motion_display_names() (motion-common.R); into DuckDB as
@@ -102,7 +102,7 @@ motion_names_summary <- function(tr) {
 # One SQL text per year (the nationwide join of twelve years in one statement exceeds the DuckDB memory
 # grant; the union of the per-year selects is the same table), inserted into fy_all year by year.
 fy_year_sql <- function(y) sprintf("
-  WITH r AS (SELECT year, source_row, inn_key, original_available, creation_date_reconciled, industry2, legal_form, ownership_form,
+  WITH r AS (SELECT year, source_row, inn_key, original_available, creation_date_reconciled, industry2, legal_form, ownership_form, region_model,
                     coalesce(member_sanctioned, 0) + coalesce(member_putin_decree, 0) + coalesce(member_strateg_government, 0) + coalesce(member_strateg_putin, 0) AS other_lists,
                     coalesce(member_residents, 0) AS residents
              FROM %s WHERE eligible_raw = 1),
@@ -115,7 +115,7 @@ fy_year_sql <- function(y) sprintf("
                     CASE WHEN bounds_valid AND den > 1e-12 THEN 6371 * sqrt(2 / den) * (cos(pi() / 3) * sin(phi) - sin(pi() / 3) * cos(phi) * cos(dl)) END AS y_km FROM b)
   SELECT year, inn_key, x_km, y_km, coalesce(original_available, 0) = 1 AS filed, line_2110, line_1600, line_2110 / d.defl AS real_rev,
          (other_lists + residents) > 0 AS treated_row, residents > 0 AS residents_row, other_lists > 0 AS other_row,
-         geocoding_quality = 'city' AS city_level, industry2, legal_form, ownership_form, creation_date_reconciled
+         geocoding_quality = 'city' AS city_level, industry2, legal_form, ownership_form, region_model, creation_date_reconciled
   FROM c JOIN deflator d USING (year)
   WHERE x_km BETWEEN %.9f AND %.9f AND y_km BETWEEN %.9f AND %.9f", pq(paste0("registry.", y)), pq(paste0("payload.", y)), R$xmin, R$xmax, R$ymin, R$ymax)
 for (y in years) exec(paste0(if (y == years[1]) "CREATE TEMP TABLE fy_all AS" else "INSERT INTO fy_all", fy_year_sql(y)), sprintf("firm-years %d in the %s rectangle", y, SCOPE))
@@ -128,12 +128,13 @@ exec("CREATE TEMP TABLE firms AS
   WITH f AS (SELECT inn_key, bool_or(treated_row) AS treated, bool_or(residents_row) AS residents, bool_or(other_row) AS other_lists,
                     arg_max(x_km, year) AS x_km, arg_max(y_km, year) AS y_km, max(year) AS last_year, min(year) AS first_year,
                     arg_max(industry2, year) AS industry2, arg_max(legal_form, year) AS legal_form, arg_max(ownership_form, year) AS ownership_form,
+                    arg_max(region_model, year) AS region_model,   /* the registry region of the latest row (round 10: the wire names the camera's region) */
                     min(creation_date_reconciled) AS created
              FROM fy GROUP BY inn_key),
        b AS (SELECT inn_key, avg(real_rev) FILTER (WHERE filed AND line_2110 > 0) AS base, count(*) FILTER (WHERE filed AND line_2110 > 0) AS nbase
              FROM fy WHERE year BETWEEN 2019 AND 2021 GROUP BY inn_key)
   SELECT f.*, CASE WHEN b.nbase >= 2 THEN b.base END AS base, coalesce(b.nbase, 0) AS nbase,
-         s.start_year, s.inferred, s.countries_all,
+         s.start_year, s.start_date, s.inferred, s.countries_all,
          CASE WHEN NOT f.treated THEN NULL
               WHEN s.start_year IS NOT NULL THEN greatest(s.start_year, 2014)
               WHEN f.residents AND NOT f.other_lists THEN 2020
@@ -178,10 +179,13 @@ CANDIDATES <- list(current = BREAKS, previous = c(-40, -15, 0, 15, 40), c2 = c(-
 # script's trailing arguments: `Rscript --vanilla R/motion/M6-treated.R [a|b] [abs|rel]`.
 VARIANT <- tolower(if (length(ARGS) >= 1) ARGS[1] else Sys.getenv("MOTION_VARIANT", "a"))
 if (!VARIANT %in% c("a", "b")) stop("the ramp variant must be a or b")
-# The author's pick (23 October) is ramp A with its dark end lifted to L 0.65 (a clear mid-blue against
-# the land): six Blues steps at even lightness 0.65-0.96; validator: gaps 0.061-0.063, 4.30:1 at the
-# dark end, deltaE 28.3 / 24.8 against the purple control and 22.4 / 21.4 against the backdrop at 0.25.
-RAMPS <- list(a = list(name = "blues-even-lightness-0.65-0.96", cols = c("#4A97C9", "#67ABD4", "#88BEDC", "#ABCFE5", "#CDE0F1", "#EAF3FB")),
+# The author's pick (23 October) was ramp A with its dark end lifted to L 0.65: six Blues steps at even lightness 0.65-0.96.
+# Round 10 (26 October 2026): the signed layers share one diverging pair, declines amber to orange (classes 1 to 3: #FFB000 the
+# largest decline, #F39523, #EA7719 the inner step, held at L 0.69 or above so that it stays 10.3 deltaE from the listed red under
+# deutan vision) and rises in the cyan ramp's steps 3 to 5 (#50B5AA, #79CDBF, #A1E4D3); validator: each half monotone with gaps at
+# or above 0.06, 4.92:1 and 5.87:1 at the dark ends on the land; the figures are in motion/README.md. The blue six stays recorded.
+RAMPS <- list(a = list(name = "amber-orange-to-cyan-diverging", cols = c("#FFB000", "#F39523", "#EA7719", "#50B5AA", "#79CDBF", "#A1E4D3")),
+              blues = list(name = "blues-even-lightness-0.65-0.96", cols = c("#4A97C9", "#67ABD4", "#88BEDC", "#ABCFE5", "#CDE0F1", "#EAF3FB")),
               b = list(name = "brbg-muted", cols = c("#F6E8C3", "#DFC27D", "#BF812D", "#80CDC1", "#C7EAE5", "#E8F6F3")))
 CLASS_COLS <- RAMPS[[VARIANT]]$cols
 # Looks (author's colour review, 23 October): the ground and the control-firm scale together. "navy"
@@ -193,7 +197,7 @@ LOOK <- tolower(if (length(ARGS) >= 3) ARGS[3] else "navy")
 LOOKS <- list(navy = list(cols = CLASS_COLS, neutral = "#B5C3D1", ramp = RAMPS[[VARIANT]]$name),
               charcoal = list(cols = CLASS_COLS, neutral = "#B5C3D1", ramp = RAMPS[[VARIANT]]$name),
               green = list(cols = c("#45A382", "#5DB694", "#7EC7A9", "#9FD8BE", "#C2E8D4", "#E7F6EE"), neutral = "#B5C3D1", ramp = "phthalo-green-even-lightness-0.65-0.96"),
-              light = list(cols = c("#A4C1E2", "#7DA7D5", "#568EC8", "#3373B6", "#1B5A9A", "#0E4377"), neutral = "#8A9BAE", ramp = "navy-on-cream-even-lightness-0.80-0.38"))
+              light = list(cols = c("#854505", "#9D5E01", "#B27901", "#1C989E", "#0A7E83", "#196369"), neutral = "#8A9BAE", ramp = "amber-to-teal-diverging-on-cream"))   # round 10: the light pair, darker outward; before it the navy scale on cream
 if (!LOOK %in% names(LOOKS)) stop("the look must be navy, charcoal, green or light")
 CLASS_COLS <- LOOKS[[LOOK]]$cols
 LOOK_SUFFIX <- if (LOOK %in% c("navy", "charcoal")) "" else paste0("-", LOOK)
@@ -214,6 +218,7 @@ METRIC_TEXT <- list(abs = list(kind = "absolute", legend_title = "Firms on no li
 # chroma rather than lightness alone (validator, 23 October: deltaE 13.8 normal / 11.0 deutan against
 # the effective backdrop at 0.35, 14.1 / 10.7 against the land).
 COL_NONFILER <- "#5A3175"; COL_NEUTRAL <- LOOKS[[LOOK]]$neutral; COL_RED <- "#E31A1C"
+COL_ZERO_DARK <- "#6B7482"; COL_ZERO_LIGHT <- "#727C86"; COL_ZERO <- if (LOOK == "light") COL_ZERO_LIGHT else COL_ZERO_DARK   # round 10: the slate of class 0 (no usable baseline) on the Firms view's revenue layer; the neutral stays the presence colour
 BACKDROP_ALPHA <- 0.25; LAYER_ALPHA <- 0.9   # applied by the page when it composites the rasters
 class_of <- function(p, breaks = BREAKS) ifelse(is.na(p), NA_integer_, 1L + findInterval(p, breaks, left.open = TRUE))
 

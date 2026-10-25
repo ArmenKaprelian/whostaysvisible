@@ -237,7 +237,7 @@ checks <- motion_checks(rows_check,
 # ---- save --------------------------------------------------------------------------------------------
 manifest <- list(
   anchor = list(x = MX, y = MY), years = years, breaks = BREAKS, candidate_breaks = CANDIDATES, class_colours = CLASS_COLS, variant = VARIANT, ramp = LOOKS[[LOOK]]$ramp, look = LOOK,
-  nonfiler = COL_NONFILER, neutral = COL_NEUTRAL, backdrop_alpha = BACKDROP_ALPHA, layer_alpha = LAYER_ALPHA, treated = COL_RED,
+  nonfiler = COL_NONFILER, neutral = COL_NEUTRAL, zero = COL_ZERO, backdrop_alpha = BACKDROP_ALPHA, layer_alpha = LAYER_ALPHA, treated = COL_RED,
   metric_kind = METRIC_TEXT$kind, legend_title = METRIC_TEXT$legend_title, legend_subtitle = METRIC_TEXT$legend_subtitle, metric = METRIC_TEXT$description,
   metric_median_by_year = yearmed,
   metric_quantiles_2022_2024 = list(probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95), values = round(unlist(dist$q[[1]]), 2)),

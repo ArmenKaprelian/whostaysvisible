@@ -11,9 +11,13 @@ IND_DIVS <- sort(unlist(IND_CLASS_DIVS))
 stopifnot(length(IND_DIVS) == 88L, !anyDuplicated(IND_DIVS), all(IND_DIVS >= 1 & IND_DIVS <= 99))
 IND_CLASS_DIVS_TEXT <- c("01 to 03, 05 to 09, 35", "10 to 33", "41 to 43", "45 to 47", "49 to 53", "64 to 66, 68", "58 to 63, 69 to 75, 77 to 82", "84 to 88",
                          "36 to 39, 55, 56, 90 to 99, and firms without a division code")
-# Nine class colours (ColorBrewer qualitative hues, nudged on the navy ground by the lab validator, see motion/README.md).
-IND_COLOURS_DARK <- c("#7FC97F", "#FF7F00", "#FFFF33", "#1B9E77", "#FDBF6F", "#E78AC3", "#1F78B4", "#CCEBC5", "#999999")
-IND_COLOURS_LIGHT <- c("#1B9E77", "#4E342E", "#00838F", "#0277BD", "#7570B3", "#984EA3", "#3949AB", "#7B1FA2", "#616161")   # the light theme: darker hues at 3:1 or more on the cream, chosen by the same search; the warm family is too close to the red under deutan vision there
+# Nine class colours. Round 10 (26 October 2026): the author's nine lit hues (amber, electric blue, orange, soft teal, yellow, violet,
+# lavender grey, ice, slate), each moved inside its semantic window by the lab validator's coordinate search on the land #172A45 so that
+# every pair among the nine, the neutral #B5C3D1 and the listed red is at least 13.9 normal and 8.5 colour-vision apart (the warm trio
+# and the red share one lightness axis, the cool cluster, the neutral and the slate another; the legend and the tile name the class
+# as the secondary encoding; the figures are in motion/README.md). Rounds 9: ColorBrewer qualitative hues nudged the same way.
+IND_COLOURS_DARK <- c("#E8B533", "#2882F9", "#ED7D43", "#4CB3A4", "#FBEB87", "#E090FD", "#9887C7", "#ECF4FE", "#6D747A")
+IND_COLOURS_LIGHT <- c("#936E16", "#2550B4", "#973001", "#1A7F7A", "#6D6816", "#7B3FD1", "#5D4E78", "#537A9B", "#5B6470")   # the light theme: darker hues at 3:1 or more on the cream, chosen by the same search; the warm family is too close to the red under deutan vision there
 # NACE Rev. 2 sections by division range, for the check that the codelist's section letters agree.
 IND_SECTIONS <- list(A = 1:3, B = 5:9, C = 10:33, D = 35, E = 36:39, F = 41:43, G = 45:47, H = 49:53, I = 55:56, J = 58:63, K = 64:66, L = 68,
                      M = 69:75, N = 77:82, O = 84, P = 85, Q = 86:88, R = 90:93, S = 94:96, T = 97:98, U = 99)

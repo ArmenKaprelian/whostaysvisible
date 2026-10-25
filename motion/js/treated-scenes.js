@@ -44,7 +44,7 @@
   const nationalRaster = k => 1 - ramp(k, K.national, K.national * 1.3);
   const markRadius = (ext, pile) => { const m = P.extents[ext].mark; return Math.min(m.cap, m.base + m.s * Math.sqrt(Math.max(0, pile - 1))) / 2; };
   const inExtent = (ext, x, y) => { const e = P.extents[ext]; return x >= e.xmin && x <= e.xmax && y >= e.ymin && y <= e.ymax; };
-  const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : s === 'd' ? P.nonfiler : s === 'b' ? P.neutral : null);   // before its listing year every present member is drawn (25 October 2026): its class, the dark control colour for 'd' (baseline, no statement), the backdrop neutral for 'b' (no usable baseline)
+  const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : s === 'd' ? P.nonfiler : s === 'b' ? (P.zero || P.neutral) : null);   // before its listing year every present member is drawn (25 October 2026): its class, the dark control colour for 'd' (baseline, no statement), the backdrop neutral for 'b' (no usable baseline)
   // Two mark sets: the Moscow set (M6: every listed firm with a row in the region rectangle, at its
   // latest coordinates there) for the Moscow scales, and the nationwide set (M8: every listed firm at
   // its latest coordinates anywhere) for the national scale. They cross-fade with the rasters by scale;

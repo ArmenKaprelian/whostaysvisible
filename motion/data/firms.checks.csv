@@ -3,6 +3,8 @@
 "2014: filers with a value equal M8's filers_base",559516,559516,0,TRUE
 "2014: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2014: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2014: read-back padding carries the author's mark",1,1,0,TRUE
+"2014: gzip header carries the comment field",1,1,0,TRUE
 "2014: read-back first and last records",1,1,0,TRUE
 "2014: read-back addresses by industry class",1,1,0,TRUE
 "2014: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -28,6 +30,8 @@
 "2015: filers with a value equal M8's filers_base",707024,707024,0,TRUE
 "2015: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2015: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2015: read-back padding carries the author's mark",1,1,0,TRUE
+"2015: gzip header carries the comment field",1,1,0,TRUE
 "2015: read-back first and last records",1,1,0,TRUE
 "2015: read-back addresses by industry class",1,1,0,TRUE
 "2015: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -53,6 +57,8 @@
 "2016: filers with a value equal M8's filers_base",803731,803731,0,TRUE
 "2016: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2016: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2016: read-back padding carries the author's mark",1,1,0,TRUE
+"2016: gzip header carries the comment field",1,1,0,TRUE
 "2016: read-back first and last records",1,1,0,TRUE
 "2016: read-back addresses by industry class",1,1,0,TRUE
 "2016: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -78,6 +84,8 @@
 "2017: filers with a value equal M8's filers_base",917154,917154,0,TRUE
 "2017: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2017: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2017: read-back padding carries the author's mark",1,1,0,TRUE
+"2017: gzip header carries the comment field",1,1,0,TRUE
 "2017: read-back first and last records",1,1,0,TRUE
 "2017: read-back addresses by industry class",1,1,0,TRUE
 "2017: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -103,6 +111,8 @@
 "2018: filers with a value equal M8's filers_base",1023529,1023529,0,TRUE
 "2018: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2018: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2018: read-back padding carries the author's mark",1,1,0,TRUE
+"2018: gzip header carries the comment field",1,1,0,TRUE
 "2018: read-back first and last records",1,1,0,TRUE
 "2018: read-back addresses by industry class",1,1,0,TRUE
 "2018: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -128,6 +138,8 @@
 "2019: filers with a value equal M8's filers_base",1231517,1231517,0,TRUE
 "2019: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2019: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2019: read-back padding carries the author's mark",1,1,0,TRUE
+"2019: gzip header carries the comment field",1,1,0,TRUE
 "2019: read-back first and last records",1,1,0,TRUE
 "2019: read-back addresses by industry class",1,1,0,TRUE
 "2019: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -153,6 +165,8 @@
 "2020: filers with a value equal M8's filers_base",1420896,1420896,0,TRUE
 "2020: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2020: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2020: read-back padding carries the author's mark",1,1,0,TRUE
+"2020: gzip header carries the comment field",1,1,0,TRUE
 "2020: read-back first and last records",1,1,0,TRUE
 "2020: read-back addresses by industry class",1,1,0,TRUE
 "2020: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -178,6 +192,8 @@
 "2021: filers with a value equal M8's filers_base",1342207,1342207,0,TRUE
 "2021: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2021: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2021: read-back padding carries the author's mark",1,1,0,TRUE
+"2021: gzip header carries the comment field",1,1,0,TRUE
 "2021: read-back first and last records",1,1,0,TRUE
 "2021: read-back addresses by industry class",1,1,0,TRUE
 "2021: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -203,6 +219,8 @@
 "2022: filers with a value equal M8's filers_base",1212720,1212720,0,TRUE
 "2022: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2022: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2022: read-back padding carries the author's mark",1,1,0,TRUE
+"2022: gzip header carries the comment field",1,1,0,TRUE
 "2022: read-back first and last records",1,1,0,TRUE
 "2022: read-back addresses by industry class",1,1,0,TRUE
 "2022: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -228,6 +246,8 @@
 "2023: filers with a value equal M8's filers_base",1121169,1121169,0,TRUE
 "2023: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2023: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2023: read-back padding carries the author's mark",1,1,0,TRUE
+"2023: gzip header carries the comment field",1,1,0,TRUE
 "2023: read-back first and last records",1,1,0,TRUE
 "2023: read-back addresses by industry class",1,1,0,TRUE
 "2023: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -253,6 +273,8 @@
 "2024: filers with a value equal M8's filers_base",1042702,1042702,0,TRUE
 "2024: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2024: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2024: read-back padding carries the author's mark",1,1,0,TRUE
+"2024: gzip header carries the comment field",1,1,0,TRUE
 "2024: read-back first and last records",1,1,0,TRUE
 "2024: read-back addresses by industry class",1,1,0,TRUE
 "2024: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
@@ -278,6 +300,8 @@
 "2025: filers with a value equal M8's filers_base",953833,953833,0,TRUE
 "2025: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
 "2025: read-back header (magic, count, year, version 3)",1,1,0,TRUE
+"2025: read-back padding carries the author's mark",1,1,0,TRUE
+"2025: gzip header carries the comment field",1,1,0,TRUE
 "2025: read-back first and last records",1,1,0,TRUE
 "2025: read-back addresses by industry class",1,1,0,TRUE
 "2025: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE

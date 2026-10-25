@@ -1,0 +1,147 @@
+== cyan ramp, land
+
+Palette (dark, surface #172A45, ordinal ramp): 6 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #1C8383 at 3.18:1 vs surface
+  [PASS] Single hue             hue spread 23°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== cyan ramp, stage
+
+Palette (dark, surface #060B18, ordinal ramp): 6 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #1C8383 at 4.33:1 vs surface
+  [PASS] Single hue             hue spread 23°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== industry nine + red, accents, ramp ends, neutral, below; land, all pairs
+
+Palette (dark, surface #172A45, categorical): 16 slots
+  [FAIL] Lightness band         outside band: [["#E8B533",0.799],["#ED7D43",0.706],["#4CB3A4",0.702],["#FBEB87",0.932],["#E090FD",0.774],["#ECF4FE",0.964],["#FF45C8",0.701],["#4DFF7F",0.883],["#C7F8E7",0.94],["#B5C3D1",0.811],["#3C4852",0.395]]
+  [FAIL] Chroma floor           below floor (reads gray): [["#4CB3A4",0.098],["#9887C7",0.095],["#ECF4FE",0.016],["#6D747A",0.013],["#1C8383",0.088],["#C7F8E7",0.055],["#B5C3D1",0.025],["#3C4852",0.023]]
+  [FAIL] CVD separation         worst all-pairs #4DFF7F↔#FBEB87 ΔE 1.6 (protan) · tritan 5.3
+  [FAIL] Normal-vision floor    worst all-pairs #C7F8E7↔#ECF4FE ΔE 6.0 (normal) — below 15, hard to tell apart even with full color vision
+  [WARN] Contrast vs surface    below 3:1 — relief required (visible labels or table view): [["#3C4852",1.54]]
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== the same on the stage
+
+Palette (dark, surface #060B18, categorical): 16 slots
+  [FAIL] Lightness band         outside band: [["#E8B533",0.799],["#ED7D43",0.706],["#4CB3A4",0.702],["#FBEB87",0.932],["#E090FD",0.774],["#ECF4FE",0.964],["#FF45C8",0.701],["#4DFF7F",0.883],["#C7F8E7",0.94],["#B5C3D1",0.811],["#3C4852",0.395]]
+  [FAIL] Chroma floor           below floor (reads gray): [["#4CB3A4",0.098],["#9887C7",0.095],["#ECF4FE",0.016],["#6D747A",0.013],["#1C8383",0.088],["#C7F8E7",0.055],["#B5C3D1",0.025],["#3C4852",0.023]]
+  [FAIL] CVD separation         worst all-pairs #4DFF7F↔#FBEB87 ΔE 1.6 (protan) · tritan 5.3
+  [FAIL] Normal-vision floor    worst all-pairs #C7F8E7↔#ECF4FE ΔE 6.0 (normal) — below 15, hard to tell apart even with full color vision
+  [WARN] Contrast vs surface    below 3:1 — relief required (visible labels or table view): [["#3C4852",2.1]]
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== light nine + red, light accents; light ground, all pairs
+
+Palette (light, surface #F1F2EF, categorical): 12 slots
+  [PASS] Lightness band         all 12 inside L 0.43–0.77
+  [FAIL] Chroma floor           below floor (reads gray): [["#1A7F7A",0.087],["#6D6816",0.099],["#5D4E78",0.069],["#537A9B",0.068],["#5B6470",0.022]]
+  [FAIL] CVD separation         worst all-pairs #C60198↔#537A9B ΔE 1.2 (deutan) · tritan 2.0
+  [FAIL] Normal-vision floor    worst all-pairs #037E52↔#1A7F7A ΔE 6.3 (normal) — below 15, hard to tell apart even with full color vision
+  [PASS] Contrast vs surface    all 12 >= 3:1
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== declines (inner to outer), land
+
+Palette (dark, surface #172A45, ordinal ramp): 3 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #EA7719 at 4.92:1 vs surface
+  [PASS] Single hue             hue spread 24°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== declines, stage
+
+Palette (dark, surface #060B18, ordinal ramp): 3 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #EA7719 at 6.69:1 vs surface
+  [PASS] Single hue             hue spread 24°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== rises (inner to outer), land
+
+Palette (dark, surface #172A45, ordinal ramp): 3 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #50B5AA at 5.87:1 vs surface
+  [PASS] Single hue             hue spread 9°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== diverging six + zero, red, accents; land, all pairs
+
+Palette (dark, surface #172A45, categorical): 10 slots
+  [FAIL] Lightness band         outside band: [["#FFB000",0.812],["#F39523",0.751],["#EA7719",0.69],["#50B5AA",0.71],["#79CDBF",0.791],["#A1E4D3",0.869],["#FF45C8",0.701],["#4DFF7F",0.883]]
+  [FAIL] Chroma floor           below floor (reads gray): [["#50B5AA",0.096],["#79CDBF",0.085],["#A1E4D3",0.072],["#6B7482",0.024]]
+  [FAIL] CVD separation         worst all-pairs #FF45C8↔#50B5AA ΔE 3.9 (deutan) · tritan 5.9
+  [FAIL] Normal-vision floor    worst all-pairs #EA7719↔#F39523 ΔE 7.1 (normal) — below 15, hard to tell apart even with full color vision
+  [PASS] Contrast vs surface    all 10 >= 3:1
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== the same on the stage
+
+Palette (dark, surface #060B18, categorical): 10 slots
+  [FAIL] Lightness band         outside band: [["#FFB000",0.812],["#F39523",0.751],["#EA7719",0.69],["#50B5AA",0.71],["#79CDBF",0.791],["#A1E4D3",0.869],["#FF45C8",0.701],["#4DFF7F",0.883]]
+  [FAIL] Chroma floor           below floor (reads gray): [["#50B5AA",0.096],["#79CDBF",0.085],["#A1E4D3",0.072],["#6B7482",0.024]]
+  [FAIL] CVD separation         worst all-pairs #FF45C8↔#50B5AA ΔE 3.9 (deutan) · tritan 5.9
+  [FAIL] Normal-vision floor    worst all-pairs #EA7719↔#F39523 ΔE 7.1 (normal) — below 15, hard to tell apart even with full color vision
+  [PASS] Contrast vs surface    all 10 >= 3:1
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== light declines (inner to outer)
+
+Palette (light, surface #F1F2EF, ordinal ramp): 3 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #B27901 at 3.32:1 vs surface
+  [PASS] Single hue             hue spread 20°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== light rises
+
+Palette (light, surface #F1F2EF, ordinal ramp): 3 slots
+  [PASS] Lightness monotone     steps read light→dark
+  [PASS] Adjacent ΔL            all gaps >= 0.06
+  [PASS] Light-end contrast     #1C989E at 3.10:1 vs surface
+  [PASS] Single hue             hue spread 3°
+
+  → ALL CHECKS PASS  (ordinal: one hue, monotone L, visible step gaps, light end clears surface)
+== light diverging six + zero, red, light accents; all pairs
+
+Palette (light, surface #F1F2EF, categorical): 10 slots
+  [PASS] Lightness band         all 10 inside L 0.43–0.77
+  [FAIL] Chroma floor           below floor (reads gray): [["#1C989E",0.1],["#0A7E83",0.09],["#196369",0.07],["#727C86",0.019]]
+  [FAIL] CVD separation         worst all-pairs #727C86↔#0A7E83 ΔE 1.4 (protan) · tritan 2.3
+  [FAIL] Normal-vision floor    worst all-pairs #037E52↔#0A7E83 ΔE 7.7 (normal) — below 15, hard to tell apart even with full color vision
+  [PASS] Contrast vs surface    all 10 >= 3:1
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+
+== fall/rise tokens against the accent (amber class 2, cyan class 5, accent)
+
+Palette (dark, surface #091023, categorical): 4 slots
+  [FAIL] Lightness band         outside band: [["#F39523",0.751],["#A1E4D3",0.869],["#79CDBF",0.791],["#C7F8E7",0.94]]
+  [FAIL] Chroma floor           below floor (reads gray): [["#A1E4D3",0.072],["#79CDBF",0.085],["#C7F8E7",0.055]]
+  [WARN] CVD separation         worst all-pairs #C7F8E7↔#A1E4D3 ΔE 6.5 (protan) · tritan 7.6
+  [FAIL] Normal-vision floor    worst all-pairs #C7F8E7↔#A1E4D3 ΔE 7.3 (normal) — below 15, hard to tell apart even with full color vision
+  [PASS] Contrast vs surface    all 4 >= 3:1
+
+  → FAILED — fix the marked checks  (CVD in the 6–8 floor band is legal ONLY with secondary encoding: direct labels, gaps, or texture)
+  scope: categorical palettes only. For a lone status/text color check WCAG text contrast; for a sequential ramp, lightness monotonicity.
+

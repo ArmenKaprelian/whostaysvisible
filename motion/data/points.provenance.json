@@ -1,13 +1,13 @@
 {
   "id": "points",
-  "run_id": "20261025T090141Z-run-M6-treated.R",
+  "run_id": "20261025T120154Z-run-M6-treated.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T09:02:26Z",
+  "time_utc": "2026-10-25T12:02:39Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M6-treated.R",
-    "sha256": "251b48f6c52f004d94bf9b656428e1da7899391d4c67fb0d7a65c387c12ed8c3"
+    "sha256": "4824237de94d7291fe00519a59ca18926e4cc98a4abcb74d32079107efffe4b4"
   },
-  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
+  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -496,9 +496,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
-    "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-0914z3NU/duckdb",
+    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_THREADS": "8",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-RDXbsMBO/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -506,10 +506,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/points.json",
-    "json_sha256": "dcd5cbbcdf37c452ce68a51e325b22e522f2da32ed5ecc032a212540570c711e",
-    "json_bytes": 30662,
+    "json_sha256": "5c6f7ef9acfbeb876b2227f5946fe1f65b7a6d5c8adf8e45cc775ba557864070",
+    "json_bytes": 30712,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/points.js",
-    "js_sha256": "82ea574c046080b0ba7fb3699fbdb70605ae7006f958856abebd7e247d51c321",
-    "names": ["anchor", "years", "breaks", "candidate_breaks", "class_colours", "variant", "ramp", "look", "nonfiler", "neutral", "backdrop_alpha", "layer_alpha", "treated", "metric_kind", "legend_title", "legend_subtitle", "metric", "metric_median_by_year", "metric_quantiles_2022_2024", "extents", "files", "align", "counts", "classes", "pile_check", "deflator", "rules", "excluded_no_identifier", "notes", "x", "y", "current", "previous", "c2", "c3", "year", "med", "probs", "values", "region", "city", "downtown", "xmin", "xmax", "ymin", "ymax", "w_km", "h_km", "k", "mark", "base", "s", "cap", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "backdrop", "layer", "firms", "city_level", "red", "red_nonfilers", "red_undated", "drawn", "filers_base", "nonfilers_base", "nobase", "nobase_filed", "base_filed_novalue", "with_base_all", "piles", "piles_outcome", "piles_coloured", "piles_dark_only", "marks_firms_f", "marks_firms", "marks_firms_base", "filers", "quantiles", "n", "baseline_firms", "median_pct", "index", "defl", "red_from", "states", "excluded", "firm_years", "firm_years_2021"]
+    "js_sha256": "963c323fdd4a6346401820cb7d0de4ac619025ebf8102eb08be4d2d2f6865474",
+    "names": ["anchor", "years", "breaks", "candidate_breaks", "class_colours", "variant", "ramp", "look", "nonfiler", "neutral", "zero", "backdrop_alpha", "layer_alpha", "treated", "metric_kind", "legend_title", "legend_subtitle", "metric", "metric_median_by_year", "metric_quantiles_2022_2024", "extents", "files", "align", "counts", "classes", "pile_check", "deflator", "rules", "excluded_no_identifier", "notes", "x", "y", "current", "previous", "c2", "c3", "year", "med", "probs", "values", "region", "city", "downtown", "xmin", "xmax", "ymin", "ymax", "w_km", "h_km", "k", "mark", "base", "s", "cap", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "backdrop", "layer", "firms", "city_level", "red", "red_nonfilers", "red_undated", "drawn", "filers_base", "nonfilers_base", "nobase", "nobase_filed", "base_filed_novalue", "with_base_all", "piles", "piles_outcome", "piles_coloured", "piles_dark_only", "marks_firms_f", "marks_firms", "marks_firms_base", "filers", "quantiles", "n", "baseline_firms", "median_pct", "index", "defl", "red_from", "states", "excluded", "firm_years", "firm_years_2021"]
   }
 }

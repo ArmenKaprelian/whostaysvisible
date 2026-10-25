@@ -12,3 +12,6 @@
 "every LOD0 ring has at least 3 distinct vertices",1,1,0,TRUE
 "Moscow LOD1 window holds Moscow and Moscow Oblast",2,2,0,TRUE
 "St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast",2,2,0,TRUE
+"graticule: 18 meridians and 7 parallels",25,25,0,TRUE
+"graticule: every meridian ends within 0.05 km of the pole",0,0,0,TRUE
+"graticule: every parallel is closed (first and last vertex within 1e-6 km)",0,0,0,TRUE

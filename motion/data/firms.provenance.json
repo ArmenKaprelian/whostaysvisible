@@ -1,13 +1,13 @@
 {
   "id": "firms",
-  "run_id": "20261025T090704Z-run-M9-firms.R",
+  "run_id": "20261025T120416Z-run-M9-firms.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T09:10:24Z",
+  "time_utc": "2026-10-25T12:07:41Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M9-firms.R",
-    "sha256": "2e87fa9753049107077fd020782c691063fde6d0eb52c715a1eff6aab1892b5b"
+    "sha256": "60925b2b363771d309a386b758843a4e653751b1730abb0b616f4ef41518d76c"
   },
-  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
+  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -478,7 +478,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-cxt9GoKQ/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-cVBogajy/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -486,10 +486,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/firms.json",
-    "json_sha256": "79c907696855488a465060b17ee512dac44d3dba7958e5356f67b1e31fd10e18",
-    "json_bytes": 18398,
+    "json_sha256": "198c0a512457f25fda8f3644e9995ca3a0d88c6a23e3fecc2b6440fa9c68dfb4",
+    "json_bytes": 18563,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/firms.js",
-    "js_sha256": "9c79f48e630cb5656b888f2c2eff80eff47daa174873395243018231b61073c4",
-    "names": ["layout", "years", "files", "files_js", "by_year", "breaks", "class_colours", "neutral", "metric", "median_by_year", "industry", "rules", "notes", "version", "header_bytes", "header", "columns", "byte_order", "record_bytes", "mix_rows", "x", "y", "n", "a", "f", "rv", "cls", "mix", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "addresses", "firms", "statements", "filers", "by_cls", "by_ind", "addresses_with_revenue", "firms_with_revenue", "nodiv_dominant", "addresses_fully_listed", "divisions_max", "legacy_codes", "max_at_address", "addresses_100plus", "firms_at_100plus", "city_level", "listed", "bytes_raw", "bytes_gz", "40", "__MISSING__", "dark", "light", "year", "med", "divisions", "classes", "encoding", "division_titles_source", "equivalence", "sources", "code", "title", "short", "class", "id", "label", "colour_dark", "colour_light", "address", "marks", "colours", "addresses_2021", "all_located_exact", "all_located_1m"]
+    "js_sha256": "86f08cdd955082402f875fe8ab78612ea56a0c90cfde430fa8099460d9116825",
+    "names": ["layout", "years", "files", "files_js", "by_year", "breaks", "class_colours", "neutral", "zero", "metric", "median_by_year", "industry", "rules", "notes", "version", "header_bytes", "header", "columns", "byte_order", "record_bytes", "mix_rows", "x", "y", "n", "a", "f", "rv", "cls", "mix", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "addresses", "firms", "statements", "filers", "by_cls", "by_ind", "addresses_with_revenue", "firms_with_revenue", "nodiv_dominant", "addresses_fully_listed", "divisions_max", "legacy_codes", "max_at_address", "addresses_100plus", "firms_at_100plus", "city_level", "listed", "bytes_raw", "bytes_gz", "40", "__MISSING__", "dark", "light", "year", "med", "divisions", "classes", "encoding", "division_titles_source", "equivalence", "sources", "code", "title", "short", "class", "id", "label", "colour_dark", "colour_light", "address", "marks", "colours", "addresses_2021", "all_located_exact", "all_located_1m"]
   }
 }

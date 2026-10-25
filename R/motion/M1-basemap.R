@@ -138,9 +138,12 @@ names(lod1) <- cities$label
 n_vertices_lod1 <- sum(unlist(lapply(lod1, function(w) unlist(lapply(w$parts, function(p) vapply(p$rings, nrow, 0L) - 1L)))))
 lod1_parts <- sum(vapply(lod1, function(w) length(w$parts), 0L))
 
-# Graticule as in production (20 degree meridians 20-180, 10 degree parallels 40-80), decimated.
-grat <- c(lapply(seq(20, 180, 20), function(lon) c2rr$c2rr_map_project(lon, seq(35, 86, length.out = 60))),
-          lapply(seq(40, 80, 10), function(lat) c2rr$c2rr_map_project(seq(10, 200, length.out = 96), lat)))
+# Graticule for the pages (round 10, 26 October 2026; the production figure keeps its own ranges): meridians every 20 degrees around the
+# full circle from 20 N to the pole, so the far-side lines fan upward from the pole and fill the band the stage shows beyond it, and
+# parallels every 10 degrees from 20 N to 80 N as closed rings (the author's screenshot had the lines ending below the top of the map).
+grat <- c(lapply(seq(0, 340, 20), function(lon) c2rr$c2rr_map_project(lon, seq(20, 90, length.out = 71))),
+          lapply(seq(20, 80, 10), function(lat) c2rr$c2rr_map_project(seq(0, 360, length.out = 181), lat)))
+pole_xy <- c2rr$c2rr_map_project(100, 90)
 
 # Encoding: integers in 0.1 km, first vertex absolute, then deltas; the closing vertex is dropped (rings close implicitly).
 encode_ring <- function(xy) { q <- round(xy[-nrow(xy), , drop = FALSE] * 10); d <- rbind(q[1, ], diff(q)); as.integer(t(d)) }
@@ -175,7 +178,10 @@ checks <- motion_checks(
   motion_check("area change LOD0 (percent, abs)", 0, 100 * abs(area_out - area_in) / area_in, 0.5),
   motion_check("every LOD0 ring has at least 3 distinct vertices", 1, as.integer(all(unlist(lapply(lod0, function(p) vapply(p$rings, nrow, 0L))) >= 4L))),
   motion_check("Moscow LOD1 window holds Moscow and Moscow Oblast", 2, sum(c("Moscow", "Moscow Oblast") %in% lod1$Moscow$region_names)),
-  motion_check("St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast", 2, sum(c("Saint Petersburg", "Leningrad oblast") %in% lod1$`St Petersburg`$region_names)))
+  motion_check("St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast", 2, sum(c("Saint Petersburg", "Leningrad oblast") %in% lod1$`St Petersburg`$region_names)),
+  motion_check("graticule: 18 meridians and 7 parallels", 25, length(grat)),
+  motion_check("graticule: every meridian ends within 0.05 km of the pole", 0, sum(vapply(grat[1:18], function(xy) sqrt(sum((xy[nrow(xy), ] - pole_xy)^2)), 0) > 0.05)),
+  motion_check("graticule: every parallel is closed (first and last vertex within 1e-6 km)", 0, sum(vapply(grat[19:25], function(xy) sqrt(sum((xy[nrow(xy), ] - xy[1, ])^2)), 0) > 1e-6)))
 message(sprintf("  vertices: in %d, LOD0 %d (%.1f%%), LOD1 %d in %d clipped parts over %d windows; max Hausdorff %.3f km; area change %.3f%%",
                 n_vertices_in, n_vertices_lod0, 100 * n_vertices_lod0 / n_vertices_in, n_vertices_lod1, lod1_parts, length(lod1), max(haus), 100 * (area_out - area_in) / area_in))
 message("  Moscow LOD1 regions: ", paste(lod1$Moscow$region_names, collapse = "; "))

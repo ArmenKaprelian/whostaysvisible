@@ -23,7 +23,17 @@ nat <- motion_read_json("national"); msk <- motion_read_json("points"); facts <-
 titles <- ind_titles()
 
 # ---- the binary layout ------------------------------------------------------------------------------
-# Header (32 bytes): magic 'FRM1', u32 records, i32 origin x (m), i32 origin y (m), u16 year, u16 version (2 since round 9), 12 bytes zero.
+# Header (32 bytes): magic 'FRM1', u32 records, i32 origin x (m), i32 origin y (m), u16 year, u16 version (3 since round 9), 12 padding bytes that
+# carry the author's initials and the year, 'AGK 2026' then zeros (round 10, the author's item 17; the page's parser ignores them).
+FRM1_PAD <- { p <- raw(12); b <- charToRaw("AGK 2026"); p[seq_along(b)] <- b; p }
+GZ_COMMENT <- "by Armen G. Kaprelian"   # written into each twin's gzip header as the RFC 1952 comment field (FCOMMENT); the bytes inside are unchanged
+gz_comment <- function(path, comment) {   # set FLG bit 4 and insert the zero-terminated comment after the ten-byte header
+  b <- readBin(path, "raw", file.info(path)$size)
+  stopifnot(b[1] == as.raw(0x1f), b[2] == as.raw(0x8b), bitwAnd(as.integer(b[4]), 16L) == 0L)
+  b[4] <- as.raw(bitwOr(as.integer(b[4]), 16L))
+  writeBin(c(b[1:10], charToRaw(comment), as.raw(0), b[-(1:10)]), path)
+}
+gz_comment_read <- function(path) { b <- readBin(path, "raw", 80L); if (bitwAnd(as.integer(b[4]), 16L) == 0L) return(""); e <- which(b[-(1:10)] == as.raw(0))[1]; rawToChar(b[11:(9 + e)]) }
 # Columns in descending element size so every typed-array view is aligned without padding.
 # Version 3 (author's correction, 25 October 2026): after f comes rv, a u16 log code of the summed revenue at the address
 # (thousands of rubles in the source: 10^((rv - 1) / 100), 0 without revenue), then cls and eight (ind, ish) pairs, the
@@ -35,7 +45,7 @@ write_year <- function(path, year, d) {
   f <- file(path, "wb"); on.exit(close(f))
   writeBin(charToRaw("FRM1"), f); writeBin(as.integer(nrow(d)), f, size = 4L, endian = "little")
   writeBin(0L, f, size = 4L, endian = "little"); writeBin(0L, f, size = 4L, endian = "little")
-  writeBin(as.integer(year), f, size = 2L, endian = "little"); writeBin(3L, f, size = 2L, endian = "little"); writeBin(raw(12), f)
+  writeBin(as.integer(year), f, size = 2L, endian = "little"); writeBin(3L, f, size = 2L, endian = "little"); writeBin(FRM1_PAD, f)
   writeBin(as.integer(d$x_m), f, size = 4L, endian = "little"); writeBin(as.integer(d$y_m), f, size = 4L, endian = "little")
   writeBin(u16(d$n), f, size = 2L, endian = "little"); writeBin(u16(d$a), f, size = 2L, endian = "little"); writeBin(u16(d$f), f, size = 2L, endian = "little"); writeBin(u16(d$rv), f, size = 2L, endian = "little")
   writeBin(as.raw(d$cls), f)
@@ -46,13 +56,13 @@ read_back <- function(path) {   # through gzfile: the header fields and the firs
   g <- gzfile(path, "rb"); on.exit(close(g))
   magic <- rawToChar(readBin(g, "raw", 4L)); n <- readBin(g, "integer", 1L, size = 4L, endian = "little")
   ox <- readBin(g, "integer", 1L, size = 4L, endian = "little"); oy <- readBin(g, "integer", 1L, size = 4L, endian = "little")
-  year <- readBin(g, "integer", 1L, size = 2L, endian = "little"); ver <- readBin(g, "integer", 1L, size = 2L, endian = "little"); readBin(g, "raw", 12L)
+  year <- readBin(g, "integer", 1L, size = 2L, endian = "little"); ver <- readBin(g, "integer", 1L, size = 2L, endian = "little"); pad <- readBin(g, "raw", 12L)
   x <- readBin(g, "integer", n, size = 4L, endian = "little"); y <- readBin(g, "integer", n, size = 4L, endian = "little")
   nn <- readBin(g, "integer", n, size = 2L, signed = FALSE, endian = "little"); a <- readBin(g, "integer", n, size = 2L, signed = FALSE, endian = "little")
   ff <- readBin(g, "integer", n, size = 2L, signed = FALSE, endian = "little"); rv <- readBin(g, "integer", n, size = 2L, signed = FALSE, endian = "little"); cls <- as.integer(readBin(g, "raw", n))
   mix <- lapply(seq_len(2L * MIXK), function(k) as.integer(readBin(g, "raw", n)))   # ind1, ish1, ..., ind8, ish8
   ind <- mix[[1]]; ish <- mix[[2]]; K <- 2L * MIXK
-  list(magic = magic, n = n, ox = ox, oy = oy, year = year, ver = ver,
+  list(magic = magic, n = n, ox = ox, oy = oy, year = year, ver = ver, pad = rawToChar(pad[pad != as.raw(0)]),
        first = c(x[1], y[1], nn[1], a[1], ff[1], rv[1], cls[1], ind[1], ish[1], mix[[K - 1]][1], mix[[K]][1]), last = c(x[n], y[n], nn[n], a[n], ff[n], rv[n], cls[n], ind[n], ish[n], mix[[K - 1]][n], mix[[K]][n]),
        sum_n = sum(nn), sum_a = sum(a), sum_f = sum(ff), by_ind = tabulate(ind_class_of(ind) + 1L, nbins = 10L))
 }
@@ -84,8 +94,8 @@ for (yy in years) {
   legacy <- lab_query(con, sprintf("SELECT coalesce(industry2, '__MISSING__') AS code, count(*) AS n FROM fym WHERE year = %d AND NOT treated AND NOT city_level AND filed AND line_2110 > 0 AND coalesce(industry2, '__MISSING__') IN (%s) GROUP BY 1", yy, paste(sprintf("'%s'", IND_LEGACY), collapse = ", ")), sprintf("legacy codes %d", yy))
   raw_path <- file.path(out_dir, sprintf("firms-%d.bin", yy))
   raw_bytes <- write_year(raw_path, yy, d)
-  if (system2("gzip", c("-9", "-f", shQuote(raw_path))) != 0) stop("gzip failed for ", raw_path)
-  gz_path <- paste0(raw_path, ".gz"); gz_bytes <- file.size(gz_path)
+  if (system2("gzip", c("-9", "-n", "-f", shQuote(raw_path))) != 0) stop("gzip failed for ", raw_path)   # -n: no name or mtime in the header, so a re-run with the same bytes is byte-identical (round 10)
+  gz_path <- paste0(raw_path, ".gz"); gz_comment(gz_path, GZ_COMMENT); gz_bytes <- file.size(gz_path)   # the comment before the size, the read-back and the twin
   rb <- read_back(gz_path)
   m8 <- nat$counts[[as.character(yy)]]
   years_out[[as.character(yy)]] <- list(addresses = nrow(d), firms = sum(d$n), statements = sum(d$a), filers = sum(d$f), by_cls = as.integer(tabulate(d$cls + 1L, nbins = 7L)),
@@ -102,6 +112,8 @@ for (yy in years) {
     motion_check(sprintf("%d: filers with a value equal M8's filers_base", yy), m8$filers_base, sum(d$f)),
     motion_check(sprintf("%d: an address has a class exactly when it has a filer with a value", yy), 0, sum((d$cls > 0) != (d$f > 0))),
     motion_check(sprintf("%d: read-back header (magic, count, year, version 3)", yy), 1, as.integer(rb$magic == "FRM1" && rb$n == nrow(d) && rb$year == yy && rb$ver == 3L)),
+    motion_check(sprintf("%d: read-back padding carries the author's mark", yy), 1, as.integer(rb$pad == "AGK 2026")),
+    motion_check(sprintf("%d: gzip header carries the comment field", yy), 1, as.integer(gz_comment_read(gz_path) == GZ_COMMENT)),
     motion_check(sprintf("%d: read-back first and last records", yy), 1, as.integer(all(rb$first == c(d$x_m[1], d$y_m[1], d$n[1], d$a[1], d$f[1], d$rv[1], d$cls[1], d$ind1[1], d$ish1[1], d$ind8[1], d$ish8[1])) && all(rb$last == c(d$x_m[nrow(d)], d$y_m[nrow(d)], d$n[nrow(d)], d$a[nrow(d)], d$f[nrow(d)], d$rv[nrow(d)], d$cls[nrow(d)], d$ind1[nrow(d)], d$ish1[nrow(d)], d$ind8[nrow(d)], d$ish8[nrow(d)])))),
     motion_check(sprintf("%d: read-back addresses by industry class", yy), 1, as.integer(all(rb$by_ind == tabulate(ind_class_of(d$ind) + 1L, nbins = 10L)))),
     motion_check(sprintf("%d: industry bytes within 255, 0 and the 88 divisions", yy), 0, sum(!(cdm %in% c(255L, 0L, IND_DIVS)))),
@@ -143,13 +155,13 @@ checks <- do.call(motion_checks, c(unname(checks_rows), list(
   motion_check("12 year files written", 12, length(list.files(out_dir, pattern = "^firms-\\d{4}\\.bin\\.gz$")))), list(titles$checks)))
 
 manifest <- list(
-  layout = list(version = 3, header_bytes = 32, header = "magic 'FRM1' u32 | records u32 | origin_x_m i32 | origin_y_m i32 | year u16 | version u16 (3) | 12 bytes zero",
+  layout = list(version = 3, header_bytes = 32, header = "magic 'FRM1' u32 | records u32 | origin_x_m i32 | origin_y_m i32 | year u16 | version u16 (3) | 12 padding bytes ('AGK 2026' then zeros; ignored by the parser)",
                 columns = list(x = "i32 metres east of the km plane's origin", y = "i32 metres north", n = "u16 firms at the address", a = "u16 with a statement that year", f = "u16 with a usable baseline and a revenue value",
                                rv = "u16 log code of the summed revenue (line 2110, thousands of rubles) of every firm with a statement and a positive value at the address, listed firms included: 10^((rv - 1) / 100); 0 without revenue",
                                cls = "u8 relative revenue-change class of the address's filers (0 none, 1 to 6)",
                                mix = "eight (ind u8, ish u8) pairs: the divisions with revenue at the address by share descending, ish the rounded percent of the address's revenue; 255 and 0 beyond the present divisions; ind1 and ish1 are the leader (255 and 0 where no firm has a revenue value; 0 a firm without a division code)"),
-                byte_order = "little-endian, struct of arrays in the column order x, y, n, a, f, rv, cls, ind1, ish1, ..., ind8, ish8, gzip -9", record_bytes = 17 + 2 * MIXK, mix_rows = MIXK),
-  years = years, files = files, files_js = lapply(files, function(f) sub("\\.bin\\.gz$", ".js", f)), by_year = years_out, breaks = BREAKS, class_colours = list(dark = CLASS_COLS, light = LOOKS$light$cols), neutral = list(dark = COL_NEUTRAL, light = LOOKS$light$neutral),
+                byte_order = "little-endian, struct of arrays in the column order x, y, n, a, f, rv, cls, ind1, ish1, ..., ind8, ish8, gzip -9 -n with a comment field in the header", record_bytes = 17 + 2 * MIXK, mix_rows = MIXK),
+  years = years, files = files, files_js = lapply(files, function(f) sub("\\.bin\\.gz$", ".js", f)), by_year = years_out, breaks = BREAKS, class_colours = list(dark = CLASS_COLS, light = LOOKS$light$cols), neutral = list(dark = COL_NEUTRAL, light = LOOKS$light$neutral), zero = list(dark = COL_ZERO_DARK, light = COL_ZERO_LIGHT),
   metric = METRIC_TEXT$description, median_by_year = nat$metric_median_by_year, industry = ind_tables(titles),
   rules = list(address = "one record per distinct registered address at 1 m rounding of firms on no supplied list with below-city-level geocodes; city-level geocodes and listed firms are counted in by_year and not in the files (listed firms: treatednational.json)",
                marks = "below 20 px per km: 1 px marks, 2x2 blocks for 10 or more firms, 3x3 for 100 or more, alpha by count; from 20 px per km: discs of radius min(cap, base + s * sqrt(n - 1)) / 2 with (base, s, cap) = (2, 0.6, 8) below 60 px per km and (3, 1.1, 11) above (the thresholds the atlas draws with, aligned with the Moscow extents, 24 October 2026)",

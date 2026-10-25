@@ -1,13 +1,13 @@
 {
   "id": "treated",
-  "run_id": "20261025T090141Z-run-M6-treated.R",
+  "run_id": "20261025T120154Z-run-M6-treated.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T09:02:26Z",
+  "time_utc": "2026-10-25T12:02:39Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M6-treated.R",
-    "sha256": "251b48f6c52f004d94bf9b656428e1da7899391d4c67fb0d7a65c387c12ed8c3"
+    "sha256": "4824237de94d7291fe00519a59ca18926e4cc98a4abcb74d32079107efffe4b4"
   },
-  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
+  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -496,9 +496,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
-    "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-0914z3NU/duckdb",
+    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_THREADS": "8",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-RDXbsMBO/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -506,10 +506,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treated.json",
-    "json_sha256": "629f992453b9af08ca2e536cd0431ef209d13cf42a2107971ae68c0dca3f6b76",
-    "json_bytes": 679349,
+    "json_sha256": "18e1e7378a127b68f858137665b1a7edcef4a5e916467610afa6d265f52c1781",
+    "json_bytes": 679382,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treated.js",
-    "js_sha256": "19e26cd19d447654b82e0644ea0edb4779004ff05b2b2312d7bc9f96b84b917d",
+    "js_sha256": "17c83796d068539318d780ed7a102eaecfec4b288af0d6e3319719fbce6d7c11",
     "names": ["x", "y", "red_from", "undated", "inferred", "filed", "state", "pile", "name", "name_filed", "name_case", "name_shared", "lists", "names_summary", "rev_m", "psh", "revenue_note", "revenue_counts", "red_from_counts", "n", "inferred_n", "undated_n", "state_key", "named", "unnamed", "by_case", "by_source", "shared_firms", "capped", "threshold", "alias_similarity", "scheme", "rule", "alias", "transliterated", "latin_as_filed", "decree", "government", "sanctions", "ge_090", "s085_090", "s080_085", "lt_080", "firm_years_with_value", "firm_years_with_pair_share", "firms_with_any_value", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "-", "b", "d", "1-6"]
   }
 }

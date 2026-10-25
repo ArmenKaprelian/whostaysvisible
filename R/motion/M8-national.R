@@ -52,12 +52,19 @@ for (yy in years) {
 
 # ---- listed firms nationwide: coordinates, red-from, filing and state strings, pile size ---------------
 cls_sql <- paste0("1", paste(sprintf(" + CAST(y.%s > %d AS INTEGER)", PCOL, BREAKS), collapse = ""))
-tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, coalesce(nm.name, '') AS name, coalesce(nm.name_filed, '') AS name_filed, coalesce(nm.name_case, 0) AS name_case, coalesce(nm.name_shared, 0) AS name_shared, coalesce(ms.lists, '') AS lists,
+tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, m.region_model, m.start_date, coalesce(nm.name, '') AS name, coalesce(nm.name_filed, '') AS name_filed, coalesce(nm.name_case, 0) AS name_case, coalesce(nm.name_shared, 0) AS name_shared, coalesce(ms.lists, '') AS lists,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.filed THEN '1' ELSE '0' END, '' ORDER BY g.year) AS filed,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
                  FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year LEFT JOIN listnames nm ON nm.inn = m.inn_key LEFT JOIN memberships ms ON ms.inn_key = m.inn_key
                  WHERE m.treated GROUP BY ALL", cls_sql), "treated firms nationwide")
-lr <- motion_listed_revenue(); lrc <- motion_listed_revenue_cols(lr, tr$inn_key, tr$filed)   # yearly revenue and pair shares (author's request, 25 October 2026)
+lr <- motion_listed_revenue(); lrc <- motion_listed_revenue_cols(lr, tr$inn_key, tr$filed)
+# The wire (round 10, the author's item 14): the registry region of each listed firm as an index into the crosswalk's basemap names, and the day of its listing.
+xw <- utils::read.csv(lab_path("config", "regions-crosswalk.csv"), stringsAsFactors = FALSE, encoding = "UTF-8", colClasses = "character")
+region_names <- unique(xw$basemap_name)
+tr$region <- xw$basemap_name[match(tr$region_model, xw$region_model)]; tr$region[is.na(tr$region)] <- "region not recorded"
+tr$reg <- match(tr$region, region_names) - 1L
+tr$red_date <- ifelse(tr$undated | is.na(tr$start_date), "", tr$start_date)   # the sanctions file's earliest start date; members dated by the resident rule or undated carry none
+   # yearly revenue and pair shares (author's request, 25 October 2026)
 piles <- lab_query(con, "SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n FROM fy WHERE year = 2021 GROUP BY 1, 2", "2021 piles")
 tr$pile <- piles$n[match(paste(round(tr$x_km, 3), round(tr$y_km, 3)), paste(piles$px, piles$py))]; tr$pile[is.na(tr$pile)] <- 1L
 red_hist <- table(factor(tr$red_from, levels = years))
@@ -112,7 +119,7 @@ checks <- motion_checks(rows_check,
 manifest <- list(
   scope = "national", camera = NATCAM,
   extent = list(xmin = E$xmin, xmax = E$xmax, ymin = E$ymin, ymax = E$ymax, w_km = E$w, h_km = E$h, k = E$k, mark = E$mark, px_km = 1 / E$k),
-  years = years, breaks = BREAKS, class_colours = CLASS_COLS, neutral = COL_NEUTRAL, backdrop_alpha = BACKDROP_ALPHA, layer_alpha = LAYER_ALPHA, treated = COL_RED,
+  years = years, breaks = BREAKS, class_colours = CLASS_COLS, neutral = COL_NEUTRAL, zero = COL_ZERO, backdrop_alpha = BACKDROP_ALPHA, layer_alpha = LAYER_ALPHA, treated = COL_RED,
   metric_kind = METRIC_TEXT$kind, metric = METRIC_TEXT$description, metric_median_by_year = yearmed, moscow_median_by_year = msk_pts$metric_median_by_year,
   files = files, counts = counts, classes = classes,
   moscow_pixel = list(col = mcol, row = mrow, px = mpx, py = mpy), moscow_counters_minus_m6 = msk_diff,
@@ -124,7 +131,7 @@ manifest <- list(
   notes = c("Registered addresses, not production sites; a pixel is a 5.95 km square of the left framing, so a city's firms share a few pixels.",
             "Descriptive: the control metric is a firm's own revenue path, not an estimate of any effect."))
 motion_save_json(manifest, "national", checks = checks, rows = length(years))
-treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
+treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, red_date = tr$red_date, reg = as.integer(tr$reg), regions = region_names, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
                       name = tr$name, name_filed = tr$name_filed, name_case = as.integer(tr$name_case), name_shared = as.integer(tr$name_shared), lists = tr$lists, names_summary = motion_names_summary(tr),
                       rev_m = lrc$rev_m, psh = lrc$psh, revenue_note = MOTION_REVENUE_NOTE, revenue_counts = list(firm_years_with_value = lrc$n_with_value, firm_years_with_pair_share = lrc$n_with_share, firms_with_any_value = lrc$firms_with_any_value),
                     red_from_counts = as.list(stats::setNames(as.integer(red_hist), names(red_hist))), n = nrow(tr), inferred_n = sum(tr$inferred), undated_n = sum(tr$undated),
@@ -132,6 +139,10 @@ treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.
                     state_key = list(`-` = "absent from the registry", b = "no usable baseline (backdrop only)", d = "baseline, no statement", `1-6` = "revenue-change class, national median"))
 motion_save_json(treated_out, "treatednational", rows = nrow(tr),
                  checks = motion_checks(motion_name_checks(tr), lrc$checks,
+                                        motion_check("reg: every listed firm has a region index", 0, sum(is.na(tr$reg))),
+                                        motion_check("reg: the index points into the region list", 0, sum(tr$reg < 0 | tr$reg >= length(region_names))),
+                                        motion_check("red_date: an ISO day for every dated listing, none otherwise", 0, sum(ifelse(!tr$undated & !is.na(tr$start_year), !grepl("^\\d{4}-\\d{2}-\\d{2}$", tr$red_date), nzchar(tr$red_date)))),
+                                        motion_check("red_date: the year agrees with red_from for listings since 2014", 0, sum(nzchar(tr$red_date) & as.integer(substr(tr$red_date, 1, 4)) >= 2014 & as.integer(substr(tr$red_date, 1, 4)) != tr$red_from)),
                                         motion_check("lists: the resident code agrees with the firms table", 0, sum(grepl("r", tr$lists, fixed = TRUE) != tr_keys$residents[match(tr$inn_key, tr_keys$inn_key)])),
                                         motion_check("lists: the other-list codes agree with the firms table", 0, sum(grepl("[sdgp]", tr$lists) != tr_keys$other_lists[match(tr$inn_key, tr_keys$inn_key)]))))
 message(sprintf("  listed firms nationwide: %d (%d in the Moscow rectangle); Moscow point at pixel %d,%d (camera %.1f,%.1f)", nrow(tr), sum(inside_of(EXT$region)), mcol, mrow, mpx, mpy))

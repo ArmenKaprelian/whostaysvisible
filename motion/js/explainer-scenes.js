@@ -25,9 +25,9 @@
   // ---- palette (charcoal ground: lightness rises with the value) ---------------------------------
   // Ordered quantities use ColorBrewer YlGnBu (teal to pale yellow), signed change uses PRGn
   // (purple declines, green rises). Red is reserved for listed firms.
-  const RAMP6 = ['#1D91C0', '#38ADC3', '#6CC5BE', '#A2DAB8', '#D4EEB3', '#FFFFD9'];   // availability share, 6 fixed classes (YlGnBu resampled at even lightness steps)
+  const RAMP6 = ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'];   // availability share, 6 fixed classes: the single-hue cyan ramp (round 10, 26 October 2026; OKLCH L 0.556 to 0.940 in even steps, hue 195 to 172; YlGnBu before it)
   const RAMP5 = RAMP6.slice(1);                                                        // 5 classes (fine cells, cohort inclusion)
-  const CHANGE6 = ['#E7D4E8', '#C2A5CF', '#9970AB', '#5AAE61', '#A6DBA0', '#D9F0D3']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points
+  const CHANGE6 = ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points: amber to orange for declines, the cyan ramp's steps 3 to 5 for rises (round 10; PRGn before it)
   const YEAR_BREAKS = [20, 35, 50, 60, 70];
   const FINE_BREAKS = [55, 62, 68, 74];
   const FIN_BREAKS = [-20, -10, 0, 10, 20];
@@ -104,6 +104,7 @@
   }
   function drawGround(ctx, stage, cam, theme, T, sch) {
     MM.drawBasemap(ctx, stage, cam, bmp, theme, { landAlpha: Math.min(sch.land(T), step(T, 0, 1.6)), borderPx: 1 });
+    MM.markAGK(ctx, 960, 1040, 72, theme.ink, 0.04);   // the authorship mark (round 10, the author's item 17): the frame's lower edge, under every data layer and panel, 4 percent
     const dA = sch.dens(T) * (1 - step(cam.k, 1.5, 2.5, E.linear));   // the national density leaves as the camera closes in
     if (dA <= 0) return;
     const g0 = ctx.globalAlpha;
@@ -296,7 +297,7 @@
     title(ctx, 'Larger firms stay visible, and the gap widened in 2022', l, 0.2, theme);
     subtitle(ctx, 'Odds of a following-year statement against the smallest asset quintile (Q1), adjusted, outcomes 2020–2024', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
-    const cols = { Q2: '#5587B8', Q3: '#79A6D0', Q4: '#A3C4E3', Q5: theme.accentStrong };
+    const cols = { Q2: '#269C96', Q3: '#50B5AA', Q4: '#79CDBF', Q5: theme.accentStrong };   // the cyan ramp's steps 2 to 4 with Q5 in the accent-strong (round 10; three blues before it)
     const ser = ['Q2', 'Q3', 'Q4', 'Q5'].map(q => ({ label: q + ' vs Q1', color: cols[q], points: sizeRows[q], whiskers: q === 'Q5', dot: q === 'Q5' ? 9 : 7, width: q === 'Q5' ? 4 : 3 }));
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.yearDots(ctx, { x: 170, y: 250, w: 1000, h: 640 }, ser, { xDomain: [2020, 2024], yDomain: [1, 5], progress: u, theme, highlightX: l > 6.4 ? 2022 : null });
@@ -367,6 +368,8 @@
 
   DEFS.credits = { z: 1, draw({ ctx, local: l, theme }) {
     Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 960, 400, l, 0.3, { size: 40, weight: 700, color: theme.ink, align: 'center' });
+    { const u = Motion.step(l, 0.5, 0.5, Motion.ease.outCubic); if (u > 0) { const name = 'ARMEN G. KAPRELIAN · PHD CANDIDATE, CLAREMONT GRADUATE UNIVERSITY', w = Motion.measure(ctx, name, 22, 500, 22 * 0.08); MM.mark(ctx, 960 - w / 2 - 22, 446 - 8 + 10 * (1 - u), 22, theme.muted, u); } }   // the mark before the name line (round 10, the author's items 14 and 16)
+    Motion.reveal(ctx, 'ARMEN G. KAPRELIAN · PHD CANDIDATE, CLAREMONT GRADUATE UNIVERSITY', 960, 446, l, 0.5, { size: 22, weight: 500, color: theme.muted, align: 'center', letterSpacing: 22 * 0.08 });
     Motion.revealParagraph(ctx, 'Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 960, 490, 1760, l, 0.8, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-data' });
     Motion.reveal(ctx, 'Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 960, 572, l, 1.1, { size: 22, color: theme.muted, align: 'center' });
     Motion.revealParagraph(ctx, 'Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed memberships, not dated designations.', 960, 624, 1760, l, 1.4, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-caveat' });

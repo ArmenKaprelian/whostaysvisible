@@ -59,6 +59,13 @@
   // Boundaries follow the zoom (round 3): the national geometry's regional borders below k 6, the
   // window geometry (the Moscow city limit among them) above k 12, a crossfade between; thin pale
   // lines, never heavier than the marks. The land fill is one polygon set at a time.
+  // The project mark (round 10, the author's items 14 and 17): four corner brackets with a centred dot (M.mark), or with the author's initials inside
+  // the square (M.markAGK, the authorship mark drawn under every data layer at 4 percent). Plain fillText, so the text audit records no box.
+  function brackets(ctx, cx, cy, size) { const s = size / 24, x0 = cx - size / 2, y0 = cy - size / 2, x1 = cx + size / 2, y1 = cy + size / 2; ctx.lineWidth = 2 * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+    ctx.moveTo(x0 + 2 * s, y0 + 8 * s); ctx.lineTo(x0 + 2 * s, y0 + 2 * s); ctx.lineTo(x0 + 8 * s, y0 + 2 * s); ctx.moveTo(x1 - 8 * s, y0 + 2 * s); ctx.lineTo(x1 - 2 * s, y0 + 2 * s); ctx.lineTo(x1 - 2 * s, y0 + 8 * s);
+    ctx.moveTo(x1 - 2 * s, y1 - 8 * s); ctx.lineTo(x1 - 2 * s, y1 - 2 * s); ctx.lineTo(x1 - 8 * s, y1 - 2 * s); ctx.moveTo(x0 + 8 * s, y1 - 2 * s); ctx.lineTo(x0 + 2 * s, y1 - 2 * s); ctx.lineTo(x0 + 2 * s, y1 - 8 * s); ctx.stroke(); }
+  M.mark = function (ctx, cx, cy, size, colour, alpha = 1) { ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.beginPath(); ctx.arc(cx, cy, 2.5 * size / 24, 0, Math.PI * 2); ctx.fill(); ctx.restore(); };
+  M.markAGK = function (ctx, cx, cy, size, colour, alpha = 1) { ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.font = Motion.font(Math.round(size * 0.3), 500); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AGK', cx, cy + size * 0.02); ctx.restore(); };
   M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true } = {}) {
     Motion.camTransform(ctx, stage, cam);
     const fine = M.windowLod(bmp, cam, stage);

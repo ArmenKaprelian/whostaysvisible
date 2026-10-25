@@ -130,8 +130,8 @@
   };
 
   // Year-by-year dots joined by lines for several series on a log y axis. series: [{label, color, points: [{x, y, low, high}], whiskers}].
-  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null, thinTicks = false, spreadLabels = false } = {}) {
-    const sx = C.scale(xDomain, [box.x + 40, box.x + box.w - 40]), sy = C.logScale(yDomain, [box.y + box.h, box.y]);
+  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null, thinTicks = false, spreadLabels = false, pad = 40, endGap = 22 } = {}) {   // pad: the plot's inner margins; endGap: the end labels' distance from the last point (the atlas's small panel passes 14 and 10; round 10)
+    const sx = C.scale(xDomain, [box.x + pad, box.x + box.w - pad]), sy = C.logScale(yDomain, [box.y + box.h, box.y]);
     const tickSize = size >= 20 ? size - 2 : size;   // small panels keep their tick labels at the text size
     for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === 1 ? theme.ink : theme.grid; ctx.lineWidth = t === 1 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(t), box.x - 14, y, { size: tickSize, color: theme.muted, align: 'right', baseline: 'middle' }); }
     const years = []; for (let x = xDomain[0]; x <= xDomain[1]; x++) years.push(x);
@@ -148,7 +148,7 @@
         if (s.whiskers && p.low != null) { ctx.strokeStyle = s.color; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.low)); ctx.lineTo(sx(p.x), sy(p.high)); ctx.stroke(); }
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), s.dot || 7, 0, Math.PI * 2); ctx.fill();
       }
-      if (pts.length && progress >= 0.9) ends.push({ str: s.label, x: sx(pts[pts.length - 1].x) + 22, y: sy(pts[pts.length - 1].y), color: s.color });
+      if (pts.length && progress >= 0.9) ends.push({ str: s.label, x: sx(pts[pts.length - 1].x) + endGap, y: sy(pts[pts.length - 1].y), color: s.color });
     }
     const ys = spreadLabels ? C.spread(ends.map(e => e.y), size + 2, box.y + size / 2, box.y + box.h - size / 2) : ends.map(e => e.y);
     ends.forEach((e, i) => T(ctx, e.str, e.x, ys[i], { size, color: e.color, baseline: 'middle', weight: 500, alpha: tail(progress, 0.9) }));

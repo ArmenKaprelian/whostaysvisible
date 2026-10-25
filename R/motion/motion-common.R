@@ -19,6 +19,7 @@ motion_check <- function(check, expected, observed, tolerance = 0) {
 }
 motion_checks <- function(...) do.call(rbind, list(...))
 
+MOTION_AUTHOR <- "by Armen G. Kaprelian"   # the authorship string (the author's item 17, 26 October 2026): every manifest carries it as `author`
 MOTION_NAME_KEYS <- c("name", "name_alt", "name_filed", "name_shared", "name_case", "names", "label_long")
 MOTION_NAME_ALLOWED <- list(treated = c("name", "name_filed", "name_case", "name_shared"), treatednational = c("name", "name_filed", "name_case", "name_shared"), anchors = "label_long",
                             basemap = "name")   # basemap: the names of regions and city windows (M1), place names, not firms
@@ -36,6 +37,7 @@ motion_save_json <- function(obj, id, sources = .lab$used_sources, checks = NULL
   allowed <- MOTION_NAME_ALLOWED[[id]]; if (is.null(allowed)) allowed <- character()
   bad_name <- setdiff(intersect(nm, MOTION_NAME_KEYS), allowed)
   if (length(bad_name)) stop("Firm names ship only on the listed-firm files (treated, treatednational) and the anchor's hand-typed label; ", id, " carries: ", paste(bad_name, collapse = ", "))
+  obj[["author"]] <- MOTION_AUTHOR   # the authorship mark on every manifest (round 10)
   dir <- motion_data_dir()
   lab_run_checks(id, checks, dir)
   json <- file.path(dir, paste0(id, ".json"))

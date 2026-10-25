@@ -43,7 +43,7 @@ def audit_boxes(boxes, canvases, min_size, overlap):
             if small > 0 and x / small > overlap: out.append(("overlap", p["scene"], "%s | %s" % (p["str"], q["str"])))
     return out
 
-CAPS_JS = "(() => { const want = [['header h1', 700, false], ['.card h2', 500, true], ['#theme', 500, true], ['.yearrow .ui', 500, true], ['#yearlabel', 500, true], ['#modes .modelabel', 500, true], ['#modes .btn', 500, true], ['#layers .btn', 500, true], ['#presets .btn', 500, true], ['#legendtitle', 500, true], ['#legendbody .row:not(.p)', 500, true], ['#mixtitle', 500, true], ['#cellinfo > span', 500, true], ['.ctxt .t.tip', 500, true], ['.loc', 500, true]];\n  const bad = [];\n  for (const [sel, wt, tracked] of want) { const els = [...document.querySelectorAll(sel)]; if (!els.length) { bad.push(sel + ': no element'); continue; }\n    for (const el of els.slice(0, 3)) { const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);\n      if (cs.textTransform !== 'uppercase') bad.push(sel + ': transform ' + cs.textTransform); if (parseInt(cs.fontWeight) !== wt) bad.push(sel + ': weight ' + cs.fontWeight);\n      if (tracked ? Math.abs(ls - 0.08 * fs) > 0.06 : ls !== 0) bad.push(sel + ': spacing ' + cs.letterSpacing + ' at ' + fs + 'px'); if (!/IBM Plex Mono/.test(cs.fontFamily)) bad.push(sel + ': family ' + cs.fontFamily); } }\n  const u = [...document.querySelectorAll('.u')]; if (!u.length) bad.push('.u: no element'); for (const el of u.slice(0, 5)) if (getComputedStyle(el).textTransform !== 'none') bad.push('.u: transform ' + getComputedStyle(el).textTransform);\n  for (const [sel, txt] of [['#zoom-in', 'ZOOM IN (+)'], ['#zoom-out', 'ZOOM OUT (−)'], ['#zoom-fit', 'FIT THE WHOLE COUNTRY (0)']]) if (document.querySelector(sel).title !== txt) bad.push(sel + ': title ' + document.querySelector(sel).title);\n  return bad; })()"
+CAPS_JS = "(() => { const want = [['header h1', 700, false], ['.byline .who', 500, true], ['.card h2', 500, true], ['#theme', 500, true], ['.yearrow .ui', 500, true], ['#yearlabel', 500, true], ['#modes .modelabel', 500, true], ['#modes .btn', 500, true], ['#layers .btn', 500, true], ['#presets .btn', 500, true], ['#legendtitle', 500, true], ['#legendbody .row:not(.p)', 500, true], ['#mixtitle', 500, true], ['#cellinfo > span', 500, true], ['.ctxt .t.tip', 500, true], ['.loc', 500, true]];\n  const bad = [];\n  for (const [sel, wt, tracked] of want) { const els = [...document.querySelectorAll(sel)]; if (!els.length) { bad.push(sel + ': no element'); continue; }\n    for (const el of els.slice(0, 3)) { const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);\n      if (cs.textTransform !== 'uppercase') bad.push(sel + ': transform ' + cs.textTransform); if (parseInt(cs.fontWeight) !== wt) bad.push(sel + ': weight ' + cs.fontWeight);\n      if (tracked ? Math.abs(ls - 0.08 * fs) > 0.06 : ls !== 0) bad.push(sel + ': spacing ' + cs.letterSpacing + ' at ' + fs + 'px'); if (!/IBM Plex Mono/.test(cs.fontFamily)) bad.push(sel + ': family ' + cs.fontFamily); } }\n  const u = [...document.querySelectorAll('.u')]; if (!u.length) bad.push('.u: no element'); for (const el of u.slice(0, 5)) if (getComputedStyle(el).textTransform !== 'none') bad.push('.u: transform ' + getComputedStyle(el).textTransform);\n  for (const [sel, txt] of [['#zoom-in', 'ZOOM IN (+)'], ['#zoom-out', 'ZOOM OUT (−)'], ['#zoom-fit', 'FIT THE WHOLE COUNTRY (0)']]) if (document.querySelector(sel).title !== txt) bad.push(sel + ': title ' + document.querySelector(sel).title); const by = getComputedStyle(document.documentElement).getPropertyValue('--by').replace(/[^A-Za-z. ]/g, '').trim(); if (by !== 'Armen G. Kaprelian') bad.push('--by: ' + by); const who = document.querySelector('.byline .who'); if (!who || who.textContent.trim() !== 'Armen G. Kaprelian · PhD Candidate, Claremont Graduate University') bad.push('byline: ' + (who && who.textContent));  if (!document.querySelector('meta[name=author]') || document.querySelector('meta[name=author]').content !== 'Armen G. Kaprelian') bad.push('meta author missing'); for (const [sel, min] of [['.card.act', 2.9], ['.card:not(.act)', 2.9], ['#theme', 2.9], ['#modes .btn', 2.9], ['#layers .btn', 2.9], ['#presets .btn', 2.9], ['#zoom-in', 2.9], ['#pulse', 2.9], ['#methodbtn', 2.9], ['.toggle', 2.9], ['#zoombox', 1.9], ['#legend', 1.9], ['#mapnote', 1.9], ['#mixbox', 1.9], ['#tip', 1.9]]) { const el = document.querySelector(sel); if (!el) continue; const cs = getComputedStyle(el); if (parseFloat(cs.borderTopWidth) < min || cs.borderTopLeftRadius !== '0px' || cs.boxShadow !== 'none') bad.push(sel + ': border ' + cs.borderTopWidth + ' radius ' + cs.borderTopLeftRadius + ' shadow ' + cs.boxShadow); } { const hd = document.querySelector('header'), hb = hd.getBoundingClientRect(), bb = document.querySelector('.byline').getBoundingClientRect(); if (innerWidth >= 1200 && hb.height > (innerWidth >= 1600 ? 48 : 92)) bad.push('header taller than its row (one row at 1,600 px and above, two at 1,200): ' + hb.height); if (bb.bottom > hb.bottom + 0.5 || hd.scrollHeight > hd.clientHeight + 1) bad.push('the byline spills out of the header: byline bottom ' + bb.bottom + ' header bottom ' + hb.bottom); } const tg = document.querySelector('.tagline'); if (!tg || tg.textContent !== 'Where Russian firms file, and where their statements stop appearing.') bad.push('tagline: ' + (tg && tg.textContent)); const lic = document.querySelector('footer .lic'); if (!lic || !lic.textContent.startsWith('Data: RFSD v3.1.0, CC BY 4.0')) bad.push('licence line: ' + (lic && lic.textContent));\n  return bad; })()"
 
 def audit_dom(dom, mode=None):
     """The visible overlays must lie inside the map (0.5 px tolerance); the panels must never intersect one
@@ -114,6 +114,8 @@ def main():
             cdp.call("Page.navigate", {"url": url}); cdp.wait_event("Page.loadEventFired", timeout=60)
             cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60)
             time.sleep(0.5)
+            # the landing (round 10): before any call, the Cells view, the leading-industry layer, 2024, at the national zoom (the camera is compared with the Russia preset below)
+            landing = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, label: document.getElementById('yearlabel').textContent, cam: A.camera(), theme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), dataTheme: document.documentElement.getAttribute('data-theme'), button: document.getElementById('theme').textContent, yearrow: !document.getElementById('yearrow').hidden, mix: !document.getElementById('mixbox').hidden, prov: document.getElementById('layerprov').textContent.slice(0, 40) }; })()", await_promise=False)
             layers = cdp.evaluate("window.__atlas.layers", await_promise=False)
             # the typeface (round 10): the headless browser must have resolved IBM Plex Mono for the title and a button, the only proof the installed face is in use
             doc = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]
@@ -124,6 +126,12 @@ def main():
             # the preset cameras at this width, the map's size and the fitted k, for the camera checks
             P = cdp.evaluate("(() => { const A = window.__atlas; A.mode('cells'); A.preset('Moscow'); const moscow = A.camera(); A.preset('Central Moscow (250 m)'); const cm = A.camera(); A.preset('Russia'); const russia = A.camera(); return { moscow, cm, russia, kfit: A.kFit(), W: window.__atlasCanvases.map.w, H: window.__atlasCanvases.map.h, m: A.cities.Moscow }; })()", await_promise=False)
             side = min(round(P["W"]), round(P["H"])); mx, my = P["m"]   # the page rounds the map's size to whole CSS px
+            exp = {"mode": "cells", "layer": "industry", "year": "2024", "label": "2024", "theme": "dark", "dataTheme": None, "button": "Light theme", "yearrow": True, "mix": True}
+            for k, v in exp.items():
+                if landing.get(k) != v: findings.append("%-11s width %d  landing %s is %r, expected %r" % ("landing", w, k, landing.get(k), v))
+            if not same_cam(landing["cam"], P["russia"]): findings.append("%-11s width %d  landing camera %s, expected the Russia preset %s" % ("landing", w, json.dumps(landing["cam"]), json.dumps(P["russia"])))
+            if not landing["prov"].startswith("The division"): findings.append("%-11s width %d  landing provenance %r" % ("landing", w, landing["prov"]))
+            n_states += 1
             def state(layer, year, setup, tag, check=None):
                 nonlocal n_boxes, n_states, n_relaxed
                 r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; window.__extra = null; A.layer(%r); A.year(%d); await A.ready(); %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null, mode: mb ? mb.dataset.mode : 'cells', extra: window.__extra }; })()" % (layer, year, setup, layer, year), await_promise=True, timeout=180)
@@ -159,6 +167,32 @@ def main():
             # interface labels in tracked capitals (round 10): the computed styles of every labelled element with a tip showing and a hover on, the zoom titles, every tip fitting the strip at this width
             state("industry", 2021, "A.mode('cells'); A.strip(true); A.preset('Moscow'); A.hoverKm(m[0], m[1], { show: true }); A.tip('reset'); A.tip(true); window.__extra = { caps: %s, tips: A.tips() }; A.tip(false);" % CAPS_JS, "caps",
                   lambda r: ([("caps", "dom", b) for b in (r["extra"] or {}).get("caps", ["no result"])] + [("tips", "strip", "clipped: %s" % json.dumps(t)) for t in (r["extra"] or {}).get("tips", []) if t["clipped"]] + ([] if r["extra"] and len(r["extra"]["tips"]) >= 9 else [("tips", "strip", "fewer tips measured than expected")])))
+            # the authorship mark (round 10, item 17): on the left bracket's arm the stage colour lifted 0.04 toward the ink, the plain stage 12 px to its left (a sea point at the Russia preset), and
+            # under the data at the Moscow preset on the density layer the sample is a data colour; the twin's gzip comment reads through the page
+            def mark_check(under):
+                def f(r):
+                    x = r["extra"]; h2 = lambda h: [int(h[i:i + 2], 16) for i in (1, 3, 5)]; st, ink = h2(x["stage"]), h2(x["ink"]); exp = [round(st[i] + 0.04 * (ink[i] - st[i])) for i in range(3)]
+                    on, off = x["on"][:3], x["off"][:3]; near = lambda a, b, tol: all(abs(a[i] - b[i]) <= tol for i in range(3))
+                    land = h2(x["land"]); lift = lambda g: [round(g[i] + 0.04 * (ink[i] - g[i])) for i in range(3)]   # a ground (the stage, the land or the pixel beside the arm) lifted 0.04 toward the ink
+                    lifted = near(on, lift(st), 3) or near(on, lift(land), 3) or near(on, lift(off), 3)
+                    if under: return [] if not lifted else [("mark", "pixel", "under the data the arm should read a data colour, not the lift: arm %s beside %s" % (on, off))]
+                    return [] if lifted else [("mark", "pixel", "the mark's arm reads %s beside %s, expected the stage %s, the land %s or that ground lifted 0.04 toward the ink" % (on, off, lift(st), lift(land)))]
+                return f
+            state("lists", 2021, "A.mode('cells'); A.strip(true); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); A.redraw(); window.__extra = A.markAt();", "mark", mark_check(False))
+            state("density", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); A.redraw(); window.__extra = { cells: A.drawOrder(), firms: (A.mode('firms'), A.redraw(), A.drawOrder()) }; A.mode('cells');", "markunder",
+                  lambda r: [] if r["extra"] and r["extra"]["cells"][:2] == ["basemap", "mark"] and len(r["extra"]["cells"]) >= 3 and r["extra"]["firms"][:3] == ["basemap", "mark", "firms"] else [("mark", "order", "the mark must follow the basemap and precede every layer: %s" % json.dumps(r["extra"]))])
+            def method_check(r):
+                x = r["extra"]; bad = []
+                if not x: return [("method", "dom", "no result")]
+                if x["s0"]["open"]: bad.append(("method", "dom", "open before any click"))
+                s1 = x["s1"]
+                if not s1["open"] or s1["pressed"] != "true" or s1["more"] or s1["moreLabel"] != "More" or s1["height"] > 2.3 * s1["lineHeight"] or s1["height"] < 1.5 * s1["lineHeight"]: bad.append(("method", "dom", "opened: %s" % json.dumps(s1)[:200]))
+                if not s1["intro"].startswith("3,277,638 located eligible firms"): bad.append(("method", "dom", "intro: %r" % s1["intro"]))
+                s2 = x["s2"]
+                if not s2["more"] or s2["moreLabel"] != "Less" or s2["height"] < 6 * s2["lineHeight"] or not s2["read"].startswith("Descriptive associations") or not s2["prov"]: bad.append(("method", "dom", "expanded: %s" % json.dumps(s2)[:200]))
+                if x["s3"]["open"] or x["s3"]["pressed"] != "false": bad.append(("method", "dom", "closed again: %s" % json.dumps(x["s3"])[:120]))
+                return bad
+            state("share", 2021, "A.preset('Russia'); window.__extra = { s0: A.methodState(), s1: A.method(true), s2: A.methodMore(true), s3: (A.methodMore(false), A.method(false)) };", "method", method_check)
             state("share", 2021, "A.strip(false); A.preset('Russia'); window.__extra = A.context();", "ctxoff", lambda r: [] if r["extra"] and not r["extra"]["open"] and not r["dom"]["stripOpen"] else [("context", "closed", json.dumps(r["extra"])[:200])])
             state("share", 2021, "A.strip(null); A.preset('Russia');", "ctxdef")
             MAPSIZE = "const mbx = document.getElementById('mapwrap').getBoundingClientRect(), MW = mbx.width, MH = mbx.height; "
@@ -264,6 +298,7 @@ def main():
                 for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia"), ("industry", 2021, "Russia"), ("industry", 2021, "Moscow"), ("industry", 2021, "Central Moscow (250 m)")]:
                     state(layer, year, F + "A.preset(%r);" % preset, tag, field_is(expect, "the firms view draws on " + "/".join(expect)))
                 state("share", 2021, F + "A.preset('Central Moscow (250 m)'); A.hoverKm(m[0] + 1.2, m[1] + 0.4);", tag + "hov", field_is(expect, "hover"))
+                state("share", 2021, F + "A.preset('Moscow'); await A.ready(); window.__extra = { note: A.twinNote(2021) };", tag + "twin", lambda r: [] if r["extra"] and r["extra"]["note"] == "by Armen G. Kaprelian" else [("twin", "gzip", "the 2021 twin's comment reads %r" % (r["extra"] and r["extra"]["note"]))])
                 state("fin", 2021, F + "A.preset('Moscow'); A.hoverKm(m[0], m[1]);", tag + "hov2", field_is(expect, "hover"))
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0], m[1]);", tag + "clk", both(cam_k(min(2.5 * P["moscow"]["k"], 200), "a click in the firms view steps x2.5"), field_is(expect, "click")))
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2022); await new Promise(r => setTimeout(r, 250));", tag + "pulse", both(pulsing_is(True, "a forward year change pulses the newly red marks"), field_is(expect, "pulse")))
@@ -330,6 +365,40 @@ def main():
             state("share", 2021, "A.mode('firms'); A.preset('Moscow'); A.legend(true); A.note(true);", "fopen")
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.legend(false); A.note(false);", "closed")
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.legend(null); A.note(null);", "-")
+            # hash links keep their meaning (round 10): #Moscow opens the Cells view at the Moscow preset, #Moscow-firms the Firms view there; the theme: a browser that prefers light
+            # still opens dark, and a remembered light choice draws the first frame light (the read-order fix)
+            qsep = "&" if "?" in url else "?"
+            near_px = lambda px, rgb, tol=4: all(abs(px[i] - rgb[i]) <= tol for i in range(3))   # the canvas rounds the stage colour by a unit or two
+            def wait_atlas():   # the page defines window.__atlas after its data scripts have run; wait for it, then the fonts
+                t0 = time.time()
+                while time.time() - t0 < 60:
+                    if cdp.evaluate("typeof window.__atlas === 'object' && document.readyState === 'complete'", await_promise=False): break
+                    time.sleep(0.3)
+                cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.6)
+            if w in (400, 1600):
+                for frag, mode in (("#Moscow", "cells"), ("#Moscow-firms", "firms")):
+                    # a new document URL each time (a fragment-only navigation fires no load event), then the page's own readiness
+                    cdp.call("Page.navigate", {"url": url + qsep + "v=hash" + mode + frag}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                    r = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, cam: A.camera() }; })()", await_promise=False)
+                    n_states += 1
+                    if r["mode"] != mode or r["layer"] != "industry" or r["year"] != "2024" or not same_cam(r["cam"], P["moscow"]): findings.append("%-11s width %d  %s opened %s, expected %s at the Moscow preset on industry 2024" % ("hash", w, frag, json.dumps(r), mode))
+                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": "light"}]})
+                cdp.call("Page.navigate", {"url": url + qsep + "v=themeA"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), button: document.getElementById('theme').textContent }))()", await_promise=False)
+                n_states += 1
+                if r["scheme"] != "dark" or not near_px(r["px"], (6, 11, 24)) or r["button"] != "Light theme": findings.append("%-11s width %d  a browser preferring light did not open dark: %s" % ("theme", w, json.dumps(r)))
+                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": "dark"}]})
+                sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', 'light'); } catch (e) {}"})["identifier"]
+                cdp.call("Page.navigate", {"url": url + qsep + "v=themeB"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), button: document.getElementById('theme').textContent, data: document.documentElement.getAttribute('data-theme') }))()", await_promise=False)
+                n_states += 1
+                if r["scheme"] != "light" or not near_px(r["px"], (255, 255, 255)) or r["button"] != "Dark theme" or r["data"] != "light": findings.append("%-11s width %d  a remembered light choice did not draw the first frame light: %s" % ("theme", w, json.dumps(r)))
+                cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid}); cdp.evaluate("(() => { try { localStorage.removeItem('atlas-theme'); } catch (e) {} return true; })()", await_promise=False)
+                sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-method', 'open'); localStorage.setItem('atlas-method-more', 'open'); } catch (e) {}"})["identifier"]
+                cdp.call("Page.navigate", {"url": url + qsep + "v=method"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                r = cdp.evaluate("window.__atlas.methodState()", await_promise=False); n_states += 1
+                if not (r["open"] and r["more"] and r["moreLabel"] == "Less"): findings.append("%-11s width %d  a remembered open method block did not open expanded at load: %s" % ("method", w, json.dumps(r)[:200]))
+                cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid}); cdp.evaluate("(() => { try { localStorage.removeItem('atlas-method'); localStorage.removeItem('atlas-method-more'); } catch (e) {} return true; })()", await_promise=False)
         finally:
             proc.terminate()
     head = "atlas audit: %d states, %d boxes, %d finding(s); field renderers seen: %s; tiles placed over the note or the legend for want of a clear place: %d (%s)" % (n_states, n_boxes, len(findings), ", ".join(sorted(fields)), n_relaxed, " ".join(relaxed))

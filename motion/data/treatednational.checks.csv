@@ -15,5 +15,9 @@
 "listed revenue: a pair share exists exactly where a revenue value does and the geocode is not city-level",0,0,0,TRUE
 "listed revenue: a firm alone with revenue at its coordinate pair holds all of it",0,0,0,TRUE
 "listed revenue: a revenue value implies a statement in the filing string",0,0,0,TRUE
+"reg: every listed firm has a region index",0,0,0,TRUE
+"reg: the index points into the region list",0,0,0,TRUE
+"red_date: an ISO day for every dated listing, none otherwise",0,0,0,TRUE
+"red_date: the year agrees with red_from for listings since 2014",0,0,0,TRUE
 "lists: the resident code agrees with the firms table",0,0,0,TRUE
 "lists: the other-list codes agree with the firms table",0,0,0,TRUE

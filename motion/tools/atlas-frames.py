@@ -50,12 +50,14 @@ def main():
     proc = subprocess.Popen(brave_flags(profile, a.width, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         port = wait_port_file(profile, proc); cdp = CDP(page_ws_url(port)); cdp.call("Page.enable"); cdp.call("Runtime.enable"); cdp.call("DOM.enable"); cdp.call("CSS.enable")
-        cur = None
+        cur = None; themeScript = None
         for sh in shots:
             dpr = sh.get("dpr", 1); theme = sh.get("theme", "dark")
             if cur != (dpr, theme):
                 cdp.call("Emulation.setDeviceMetricsOverride", {"width": a.width, "height": a.height, "deviceScaleFactor": dpr, "mobile": False})
-                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": theme}]})
+                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": theme}]})   # for pages that still read the browser scheme (round 9 and before); the round-10 page reads the remembered choice below
+                if themeScript is not None: cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": themeScript})
+                themeScript = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', %s); } catch (e) {}" % json.dumps(theme)})["identifier"]   # the page no longer reads the browser scheme (round 10): a light shot is a remembered choice
                 cdp.call("Page.navigate", {"url": a.url + "?v=frames" + str(int(time.time()))}); cdp.wait_event("Page.loadEventFired", timeout=60)
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme)
             js = """(async () => { const A = window.__atlas; A.pulseAt(null); A.mode(%s); if (%s) A.layer(%s); A.preset(%s); A.year(%d); await A.ready(); if (%s == null) A.pulseAt(null); A.redraw(); if (%s) A.legend(true); if (%s) { A.tip('reset'); A.tip(true); } %s
@@ -78,7 +80,7 @@ def main():
                 node = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]
                 nid = cdp.call("DOM.querySelector", {"nodeId": node, "selector": "#" + sh["focus"]})["nodeId"]
                 cdp.call("CSS.forcePseudoState", {"nodeId": nid, "forcedPseudoClasses": ["focus-visible", "focus"]})
-            if sh.get("swatches"): cdp.evaluate(SWATCH_JS % json.dumps(TOKENS), await_promise=False)
+            if sh.get("swatches"): cdp.evaluate(SWATCH_JS % json.dumps(sh.get("tokens", TOKENS)), await_promise=False)   # "tokens": a list of token names for the strip (round 10)
             time.sleep(0.25)
             png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png"})["data"])
             path = os.path.join(a.out, sh["name"] + ".png"); open(path, "wb").write(png)

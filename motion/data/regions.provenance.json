@@ -1,13 +1,13 @@
 {
   "id": "regions",
-  "run_id": "20261025T090550Z-run-M11-industry.R",
+  "run_id": "20261025T115711Z-run-M11-industry.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T09:06:25Z",
+  "time_utc": "2026-10-25T11:57:45Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M11-industry.R",
     "sha256": "5425e9d4abf50b20c673d89f8c4aa4fbbb0df27b88ce4aa6ad2fb8f500d3c6e6"
   },
-  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
+  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -438,7 +438,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-Us5jkduy/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-LgQ0BwDu/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -446,10 +446,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.json",
-    "json_sha256": "8ea93347bf8d675a8d3b64e1aef7b2be4aba5e142be2dd92bd8dc4c74198a5ca",
+    "json_sha256": "e77bf5092877b12590176a48e1b6af7287d729a38e01fd0faf083f4316160419",
     "json_bytes": 80240,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.js",
-    "js_sha256": "0d1835265d70f35bdacdfcbc2e79eb6e253943df384c7d080e1bc547e6138dfa",
+    "js_sha256": "918e583c05b3c11395897f19a9b1762f019eb14bb90a255bce11cee438648ae4",
     "names": ["columns", "rows", "basis", "crosswalk", "validation", "notes", "region", "year", "n", "a", "listed", "nrev", "d1", "s1", "d2", "s2", "d3", "s3", "lsh", "osh", "od", "ods", "divisions", "classes", "division_titles_source", "region_model", "basemap_name", "lowest_inside_share", "outside_labels_inside_share", "code", "title", "short", "class", "id", "label", "colour_dark", "colour_light"]
   }
 }

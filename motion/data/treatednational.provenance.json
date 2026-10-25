@@ -1,13 +1,13 @@
 {
   "id": "treatednational",
-  "run_id": "20261025T090037Z-run-M8-national.R",
+  "run_id": "20261025T120308Z-run-M8-national.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T09:01:40Z",
+  "time_utc": "2026-10-25T12:04:13Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M8-national.R",
-    "sha256": "d0ec2d2b4d84840bfd39f4318a220bbb09cd8d5e8a07e0ebdf2820d86902fb57"
+    "sha256": "425e423e78c1928fb3e355889b0103f8e4bcb80aab95b131599bdcd8b5c0ed96"
   },
-  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
+  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -456,9 +456,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-pbiIBuRM/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-qsZiBHkb/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -466,10 +466,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treatednational.json",
-    "json_sha256": "ef038ac7ce4445941d2bb2f225af909eab39a3db621d250cb1236474930542d6",
-    "json_bytes": 1489257,
+    "json_sha256": "1a57995fbf8758f9758993ced55ff09ae1f8b3f90aaa0fb1b61eee32895ff457",
+    "json_bytes": 1561528,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/treatednational.js",
-    "js_sha256": "1579d409e80e0f17d5a68cde5218bb596f2f9d67c29d70f889317e0dae2ee0dd",
-    "names": ["x", "y", "red_from", "undated", "inferred", "filed", "state", "pile", "name", "name_filed", "name_case", "name_shared", "lists", "names_summary", "rev_m", "psh", "revenue_note", "revenue_counts", "red_from_counts", "n", "inferred_n", "undated_n", "moscow_rectangle_n", "state_key", "named", "unnamed", "by_case", "by_source", "shared_firms", "capped", "threshold", "alias_similarity", "scheme", "rule", "alias", "transliterated", "latin_as_filed", "decree", "government", "sanctions", "ge_090", "s085_090", "s080_085", "lt_080", "firm_years_with_value", "firm_years_with_pair_share", "firms_with_any_value", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "-", "b", "d", "1-6"]
+    "js_sha256": "3552d75293e07d66f48cc5b71fccdd4cf024c9395d3d9045458b3fa32006a5a8",
+    "names": ["x", "y", "red_from", "undated", "inferred", "red_date", "reg", "regions", "filed", "state", "pile", "name", "name_filed", "name_case", "name_shared", "lists", "names_summary", "rev_m", "psh", "revenue_note", "revenue_counts", "red_from_counts", "n", "inferred_n", "undated_n", "moscow_rectangle_n", "state_key", "named", "unnamed", "by_case", "by_source", "shared_firms", "capped", "threshold", "alias_similarity", "scheme", "rule", "alias", "transliterated", "latin_as_filed", "decree", "government", "sanctions", "ge_090", "s085_090", "s080_085", "lt_080", "firm_years_with_value", "firm_years_with_pair_share", "firms_with_any_value", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "-", "b", "d", "1-6"]
   }
 }
