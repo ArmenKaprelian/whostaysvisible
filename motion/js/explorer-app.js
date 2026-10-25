@@ -37,7 +37,8 @@
              ramp5: dark ? ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
              change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : dark ? ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3'] : ['#854505', '#9D5E01', '#B27901', '#1C989E', '#0A7E83', '#196369']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
              density: dark ? '#79CDBF' : '#16436E',
-             ghost: tok('ghost') || (dark ? '#1F3350' : '#E4E7E4'),   // one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders
+             ghost: tok('ghost') || (dark ? '#1F3350' : '#E4E7E4'),   // one step above the land (round 10): the hand-over outline, the hairline borders
+             go: tok('go') || (dark ? '#9CC8FF' : '#22364D'),   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
              neutral: FM ? (dark ? FM.neutral.dark : FM.neutral.light) : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? (dark ? FM.zero.dark : FM.zero.light) : (dark ? '#6B7482' : '#727C86')), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
     t.div6 = t.change6;   // the revenue classes of the Firms view and the Cells view's fin layer share the Change layer's pair (round 10; the blue six of rounds 3 to 9 stay in the manifests' class_colours)
     return Object.assign(t, MM.coreRamp(t));   // the bloom's pale-core tables (round 9)
@@ -249,6 +250,7 @@
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: state.mode === 'firms' ? () => drawFirmsGround(c) : null }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     drawGhostNames(c); drawLog.push('ghost');
     const L = state.layer;
@@ -385,12 +387,13 @@
     }
     ghostCache.set(bucket, out); return out;
   }
-  let ghostDrawn = 0; const GHOST_ALPHA = 0.12;
+  let ghostDrawn = 0, markBox = null; const GHOST_ALPHA = 0.30;   // the ghost names' opacity: plainly there when looked for, back in the ground when not (round 12, final)
   function drawGhostNames(c) {
     ghostDrawn = 0; const a = ghostAlpha(c.k); if (a <= 0) return;
     const lay = ghostLayout(c.k); Motion.audit.scene = 'map';
     for (const g of lay) { const [px, py] = Motion.project(c, g.city.x, g.city.y), x = px + g.dx, y = py + g.dy; if (x < 0 || x + g.w > stage.width || y < 0 || y + g.h > stage.height) continue;
-      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.ramp6[1], alpha: GHOST_ALPHA * a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }   // the cyan ramp's second step at 12 percent (round 12): a cold tint of the land, never competing with a mark
+      if (markBox && x < markBox.x1 && x + g.w > markBox.x && y < markBox.y1 && y + g.h > markBox.y) continue;   // never over the authorship mark (round 12, final): a 30 percent name would hide the 4 percent mark
+      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.go, alpha: GHOST_ALPHA * a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }   // the GO TO card's ice at 30 percent (round 12, final; the cyan ramp's second step at 12 before)
   }
 
   // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
