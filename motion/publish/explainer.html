@@ -158,6 +158,9 @@ html[data-render] * { transition: none !important; animation: none !important; }
     const rc = TreatedScenes.redCounts, cnt = D.points.counts; const bad = [];
     for (const ext of Object.keys(cnt)) for (const [y, c] of Object.entries(cnt[ext])) { const r = rc[ext][+y]; if (!r || r.red !== c.red || r.dark !== c.red_nonfilers) bad.push(`${ext} ${y}: page ${r && r.red}/${r && r.dark} manifest ${c.red}/${c.red_nonfilers}`); }
     if (bad.length) throw new Error('listed-firm counters disagree with the manifest: ' + bad.slice(0, 3).join('; '));
+    const pc = TreatedScenes.presentCounts, badRing = [];   // the ringed count (25 October 2026): members present that year whose listing year lies ahead, so ringed = present − red
+    for (const ext of Object.keys(rc)) for (const [y, r] of Object.entries(rc[ext])) if (r.ringed !== pc[ext][y] - r.red) badRing.push(`${ext} ${y}: ringed ${r.ringed}, present ${pc[ext][y]}, red ${r.red}`);
+    if (badRing.length) throw new Error('ringed counts do not reconcile: ' + badRing.slice(0, 3).join('; '));
     const cs = TreatedScenes.cellSums; const badCells = [];
     for (const gid of Object.keys(cs)) for (const [y, s] of Object.entries(cs[gid])) { const c = cnt.region[y]; if (s.f !== c.filers_base || s.nfb !== c.nonfilers_base) badCells.push(`${gid} ${y}: cells ${s.f}/${s.nfb} manifest ${c.filers_base}/${c.nonfilers_base}`); }
     if (badCells.length) throw new Error('cell sums disagree with the manifest: ' + badCells.slice(0, 3).join('; '));

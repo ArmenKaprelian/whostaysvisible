@@ -9,19 +9,19 @@
   --stage: #121418; --land: #22262D; --border: #4A515C; --graticule: #1A1D22;
   --ink: #ECEEF1; --muted: #A3AAB4; --dim: #6B7380; --grid: #1D2126; --panel: #171A1F; --panel-2: #1D2126;
   --accent: #7FCDBB; --accent-strong: #EDF8B1; --fall: #C2A5CF; --rise: #A6DBA0; --below: #3C4852; --highlight: rgba(127,205,187,0.10);
-  --control: #22262D; --control-on: #1F6F80; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --control: #22262D; --control-on: #1F6F80; --treated: #E31A1C; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
   --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
-  --control: #E6EBEF; --control-on: #2166AC; color-scheme: light; } }
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; color-scheme: light; } }
 :root[data-theme="light"] {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
   --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
-  --control: #E6EBEF; --control-on: #2166AC; color-scheme: light; }
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; color-scheme: light; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.4;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box;
@@ -51,6 +51,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .toggle:hover { border-color: var(--border); color: var(--ink); }
 .toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
+.maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
 .maplegend .row { margin: 2px 0; }
 .mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }
 .mapnote .nlabel { color: var(--muted); align-self: center; }
@@ -74,6 +75,10 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
 .yearrow .yr { font-variant-numeric: tabular-nums; min-width: 48px; font-weight: 600; }
+.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--treated); flex: 0 0 auto; }
+.yearrow .pulse svg { width: 16px; height: 16px; display: block; }
+.yearrow .pulse:disabled { opacity: 0.4; cursor: default; }
+@media (pointer: coarse) { .yearrow .pulse { width: 36px; height: 36px; } }
 .presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .presets .btn { font-size: 12px; padding: 3px 8px; }
 canvas.chart { width: 100%; height: 170px; display: block; }
@@ -108,7 +113,7 @@ footer a { color: var(--accent); }
       <h2>Layer</h2>
       <div class="controls" id="modes"></div>
       <div class="controls" id="layers"></div>
-      <div class="yearrow" id="yearrow"><span>Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span></div>
+      <div class="yearrow" id="yearrow"><span>Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2021" aria-label="Financial year"><span class="yr" id="yearlabel">2021</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
       <div class="prov" id="layerprov"></div>
     </section>
     <section class="card">

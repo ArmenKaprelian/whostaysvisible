@@ -143,8 +143,29 @@
   const fineTarget = (cx, cy) => ({ cx, cy, k: minSide() / 20 });                       // the 250 m cells: 20 km across
   const cellTarget = (ix, iy) => ({ cx: (ix + 0.5) * 100, cy: (iy + 0.5) * 100, k: minSide() / 500 });   // a 100 km cell without a preset city: 500 km across
   const atFloor = k => k <= kFit() * 1.001;   // fully zoomed out: the view re-centres on the country (a safe reset)
-  const stepAt = (km, f) => { const k2 = clampK(state.cam.k * f); if (atFloor(k2)) return fitTarget(); return { cx: km.x - (km.px - stage.width / 2) / k2, cy: km.y + (km.py - stage.height / 2) / k2, k: k2 }; };   // the wheel's rule: the point under the cursor stays put
-  const stepCentre = f => { const k2 = clampK(state.cam.k * f); return atFloor(k2) ? fitTarget() : { cx: state.cam.cx, cy: state.cam.cy, k: k2 }; };
+  // Earlier re-centring (author's decision, 25 October 2026): on a zoom-out step whose new zoom lies in the band from
+  // RECENTRE_FROM x kFit down to kFit, the stepped centre is blended toward the country's centre in proportion (none at
+  // the band's top, all at the floor). Within one run of zoom-out steps inside the band an anchor holds the un-pulled
+  // centre, so the pull stays proportional and continuous; a zoom-in step, a pan, a flight, a preset or a resize forgets
+  // it, and nothing is remembered on the way in: the wheel and the trackpad pinch zoom about the cursor, the touch pinch
+  // about the finger midpoint, the + button, the + key and a double-tap about the view's centre, as before. The 300 ms
+  // settle at the floor stays.
+  const RECENTRE_FROM = 2;
+  const pullW = k => Motion.clamp((RECENTRE_FROM * kFit() - k) / ((RECENTRE_FROM - 1) * kFit()), 0, 1);
+  let pullFrom = null;
+  function zoomStep(f, km) {   // km: the point to hold under its pixel {x, y, px, py}, or null for a centre-anchored step
+    const k1 = state.cam.k, k2 = clampK(k1 * f);
+    if (atFloor(k2)) { pullFrom = null; return fitTarget(); }
+    const c = km ? { cx: km.x - (km.px - stage.width / 2) / k2, cy: km.y + (km.py - stage.height / 2) / k2 } : { cx: state.cam.cx, cy: state.cam.cy };   // the point under the cursor stays put, or the centre does
+    const w = pullW(k2);
+    if (k2 >= k1 || w <= 0) { pullFrom = null; return { cx: c.cx, cy: c.cy, k: k2 }; }   // zooming in, or above the band: nothing remembered
+    const w1 = pullW(k1), dx = c.cx - state.cam.cx, dy = c.cy - state.cam.cy;   // the step's own shift of the centre
+    if (!pullFrom) pullFrom = w1 <= 0 ? { cx: state.cam.cx, cy: state.cam.cy } : w1 >= 1 ? { cx: NAT.cx, cy: NAT.cy } : { cx: (state.cam.cx - w1 * NAT.cx) / (1 - w1), cy: (state.cam.cy - w1 * NAT.cy) / (1 - w1) };   // entering the band, or resuming inside it without a jump
+    pullFrom = { cx: pullFrom.cx + dx, cy: pullFrom.cy + dy };
+    return { cx: Motion.lerp(pullFrom.cx, NAT.cx, w), cy: Motion.lerp(pullFrom.cy, NAT.cy, w), k: k2, pull: true };
+  }
+  const stepAt = (km, f) => zoomStep(f, km);
+  const stepCentre = f => zoomStep(f, null);
   const cityInCell = (ix, iy) => bmp.cities.find(c => Math.floor(c.x / 100) === ix && Math.floor(c.y / 100) === iy) || null;
   function fitNational() { state.cam = fitTarget(); }
   function nearestCity(c) { let best = null, bd = Infinity; for (const city of bmp.cities) { const d = Math.hypot(city.x - c.cx, city.y - c.cy); if (d < bd) { bd = d; best = city; } } return { city: best, dist: bd }; }
@@ -401,39 +422,59 @@ void main() {
     if (useGL()) { if (field2d) field2d.canvas.hidden = true; glDraw(c, d, L, i0, i1, discs, idx); }
     else { const f = ensureField2d(); if (discs) discs2d(f, c, d, L, idx); else blit2d(f, c, d, L, i0, i1); }
   }
-  // Listed firms on the marks layer, above the field: red from their listing year, a ring when the year's statement is
-  // absent; before that year a plain mark in the layer's colour for their own state. On a forward year change the firms
-  // newly red bloom once as in the video (24 October 2026): the mark swells to 1.9 times and back while a thin red ring
-  // expands by 26 px and fades, over 0.9 s; backward changes and the cells view show nothing.
-  const PULSE_MS = 900; let pulse = null, pulseRaf = 0;
-  function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; pulse = null; }
-  function startPulse(yPrev, yNew) {
+  // Listed firms on the marks layer, above the field (25 October 2026): before its listing year a firm keeps its ordinary
+  // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
+  // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
+  // and never rimmed or pulsed. On a forward year change the firms newly red bloom once as in the video (24 October
+  // 2026): the mark swells to 1.9 times and back while a thin red ring expands by 26 px and fades, over 0.9 s; backward
+  // changes and the cells view show nothing. The pulse button beside the year slider replays the bloom for the firms
+  // listed in the shown year; under prefers-reduced-motion a pulse is a still highlight held for the same 0.9 s.
+  const PULSE_MS = 900; let pulse = null, pulseRaf = 0, pulseTimer = 0;
+  function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; }
+  function beginPulse(mask, count) {
+    endPulse();
+    pulse = { t0: performance.now(), mask, count, static: reduceMotion() };
+    if (pulse.static) { if (state.mode === 'firms') drawMarks(cam()); pulseTimer = setTimeout(() => { pulseTimer = 0; pulse = null; if (state.mode === 'firms') drawMarks(cam()); }, PULSE_MS); }
+    else pulseRaf = requestAnimationFrame(pulseTick);
+  }
+  function startPulse(yPrev, yNew) {   // the automatic pulse: the firms newly red on a forward year change
     if (yNew === yPrev) return;
     endPulse();   // any change of year ends a running pulse; a backward one starts none
     if (!TRN || yNew < yPrev) return;
     const mask = new Uint8Array(TRN.n), yi = yNew - 2014; let any = 0;
     for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] > yPrev && TRN.red_from[i] <= yNew && TRN.filed[i][yi] !== '-') { mask[i] = 1; any++; }
-    if (!any) return;
-    pulse = { t0: performance.now(), mask, count: any }; pulseRaf = requestAnimationFrame(pulseTick);
+    if (any) beginPulse(mask, any);
   }
   function pulseTick() { pulseRaf = 0; if (!pulse) return; if (performance.now() - pulse.t0 >= PULSE_MS) pulse = null; if (state.mode === 'firms') drawMarks(cam()); if (pulse) pulseRaf = requestAnimationFrame(pulseTick); }
+  const manualMasks = new Map();   // per year: the dated firms listed that year and present in it (undated firms never pulse)
+  function manualMask(y) {
+    if (!manualMasks.has(y)) { const mask = new Uint8Array(TRN ? TRN.n : 0), yi = y - 2014; let count = 0; if (TRN) for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.filed[i][yi] !== '-') { mask[i] = 1; count++; } manualMasks.set(y, { mask, count }); }
+    return manualMasks.get(y);
+  }
+  function replayPulse() { if (!FIRMS_OK || state.mode !== 'firms') return 0; const m = manualMask(state.year); if (!m.count) return 0; beginPulse(m.mask, m.count); return m.count; }
+  function syncPulseButton() {
+    const b = $('pulse'); if (!b) return;
+    const show = FIRMS_OK && state.mode === 'firms', y = state.year, count = show ? manualMask(y).count : 0;
+    b.hidden = !show; b.disabled = !count;
+    const label = count ? `Replay the bloom of the firms listed in ${y}` : `No firm on these lists was listed in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+  }
   function drawMarks(c) {
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     const year = state.year, yi = year - 2014, rule = markRule(c.k), L = state.layer, now = performance.now();
-    const b = pulse ? Motion.clamp((now - pulse.t0) / PULSE_MS, 0, 1) : 1, grow = Motion.ease.outCubic(b), flash = 1 + 0.9 * Math.sin(Math.PI * b);
+    const st = !!(pulse && pulse.static), b = pulse ? (st ? 1 : Motion.clamp((now - pulse.t0) / PULSE_MS, 0, 1)) : 1, grow = st ? 1 : Motion.ease.outCubic(b), flash = st ? 1 : 1 + 0.9 * Math.sin(Math.PI * b);
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
       const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]); if (px < -40 || px > stage.width + 40 || py < -40 || py > stage.height + 40) continue;
       const r = markRadius(rule, TRN.pile[i]), pulsing = pulse && pulse.mask[i];
       if (TRN.red_from[i] > year || pulsing) {
         const st = TRN.state[i][yi], col = L === 'fin' && st >= '1' && st <= '6' ? theme.blue6[+st - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
-        kctx.save(); kctx.globalAlpha = 0.9 * (pulsing ? 1 - grow : 1); kctx.fillStyle = col; kctx.beginPath(); kctx.arc(px, py, r, 0, Math.PI * 2); kctx.fill(); kctx.restore();
+        const fade = pulsing ? 1 - grow : 1; MM.rimmedMark(kctx, px, py, r, col, 0.9 * fade, 0.8 * fade, theme);   // the ordinary fill with the rim; both fade as the bloom takes over
       }
       if (TRN.red_from[i] <= year) {
         if (pulsing) {
           const rr = r * flash;
           MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, grow, theme);
-          if (b < 1) { kctx.save(); kctx.globalAlpha = (1 - b) * 0.9; kctx.strokeStyle = theme.treated; kctx.lineWidth = 1.5; kctx.beginPath(); kctx.arc(px, py, rr + 4 + 22 * grow, 0, Math.PI * 2); kctx.stroke(); kctx.restore(); }
+          if (st || b < 1) { kctx.save(); kctx.globalAlpha = st ? 0.9 : (1 - b) * 0.9; kctx.strokeStyle = theme.treated; kctx.lineWidth = 1.5; kctx.beginPath(); kctx.arc(px, py, rr + 4 + 22 * grow, 0, Math.PI * 2); kctx.stroke(); kctx.restore(); }   // a still pulse holds the ring at its largest
         } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, 1, theme);
       }
     }
@@ -455,15 +496,15 @@ void main() {
       }
       if (best >= 0) { const [px, py] = Motion.project(c, d.x[best] / 1000, d.y[best] / 1000); Object.assign(out, { kind: 'firm', n: d.nn[best], a: d.a[best], f: d.f[best], cls: d.cls[best], px, py, r: br - 2 }); }
     }
-    let ln = 0, lred = 0, lring = 0, lpx = 0, lpy = 0, lr = 0, ld = Infinity;
+    let ln = 0, lred = 0, lring = 0, lrim = 0, rimA = Infinity, rimB = 0, lpx = 0, lpy = 0, lr = 0, ld = Infinity;
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
       const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]), r = markRadius(rule, TRN.pile[i]) + 2, dist = Math.hypot(px - km.px, py - km.py);
       if (dist > r) continue;
-      ln++; if (TRN.red_from[i] <= state.year) { lred++; if (ch === '0') lring++; }
+      ln++; if (TRN.red_from[i] <= state.year) { lred++; if (ch === '0') lring++; } else { lrim++; const yf = TRN.red_from[i]; if (yf < rimA) rimA = yf; if (yf > rimB) rimB = yf; }
       if (dist < ld) { ld = dist; lpx = px; lpy = py; lr = r - 2; }
     }
-    if (ln) { out.listed = { n: ln, red: lred, ring: lring, within_km: k < 20 ? (markRadius(rule, 1) + 2) / k : 0 }; if (out.kind === 'none') Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr }); }
+    if (ln) { out.listed = { n: ln, red: lred, ring: lring, rim: lrim, rim_from: lrim ? rimA : null, rim_to: lrim ? rimB : null, within_km: k < 20 ? (markRadius(rule, 1) + 2) / k : 0 }; if (out.kind === 'none') Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr }); }
     return out;
   }
   const hitAt = km => (state.mode === 'firms' ? firmAt(km) : cellAt(km));
@@ -493,11 +534,11 @@ void main() {
     let title = '', html = '', note = '';
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
-      const ring = `<span class="sw" style="background:transparent;border:2px solid ${theme.treated};box-sizing:border-box"></span>`;
+      const dot = (bg, border) => `<span class="sw dot" style="background:${bg}${border ? ';border:2px solid ' + border : ''}"></span>`;
       if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${sw(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
       else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a usable baseline</div>`; }
       else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
-      html += `<div class="row">${sw(theme.treated)}Firm on one of the five lists (treated), red from its listing year.</div><div class="row">${ring}listed (treated), no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
+      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
       note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.`;
     } else if (L === 'density') {
       title = '<b>Firms per cell</b> (' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')';
@@ -585,7 +626,12 @@ void main() {
         lines.push(`Coordinate pair: ${fmt.int(h.n)} located firm${h.n === 1 ? '' : 's'}, ${fmt.int(h.a)} with a ${state.year} statement` + (h.n > 1 ? ` (${fmt.pct(100 * h.a / h.n)})` : ''));
         if (state.layer === 'fin') lines.push(h.f ? `${fmt.int(h.f)} with a baseline and a value; median change ${CLASS_LABELS[h.cls - 1]}` : 'No firm with a usable baseline and a value');
       }
-      if (h.listed) lines.push(`${fmt.int(h.listed.n)} firm${h.listed.n === 1 ? '' : 's'} on one of the five lists (treated) ${h.listed.within_km ? `within ${h.listed.within_km < 1 ? Math.round(h.listed.within_km * 1000) + ' m' : fmt.dec(h.listed.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair'}: ${fmt.int(h.listed.red)} red this year` + (h.listed.ring ? `, ${fmt.int(h.listed.ring)} without a ${state.year} statement` : ''));
+      if (h.listed) {
+        const Ls = h.listed, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair';
+        const years = Ls.rim ? (Ls.rim_from === Ls.rim_to ? String(Ls.rim_from) : `${Ls.rim_from}–${Ls.rim_to}`) : '', head = `${fmt.int(Ls.n)} firm${Ls.n === 1 ? '' : 's'} on one of the five lists (treated) ${where}`;
+        if (Ls.rim === Ls.n) lines.push(`${head}, listed in ${years}`);   // rimmed: on a list, not yet red
+        else lines.push(`${head}: ${fmt.int(Ls.red)} red this year` + (Ls.ring ? `, ${fmt.int(Ls.ring)} without a ${state.year} statement` : '') + (Ls.rim ? `, ${fmt.int(Ls.rim)} before ${Ls.rim === 1 ? 'its' : 'their'} listing year (${years})` : ''));
+      }
       return lines.join('<br>');
     }
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
@@ -624,7 +670,7 @@ void main() {
     return Motion.camera(kf, W, H);
   }
   function flyTo(target, { instant = false, duration = null } = {}) {
-    cancelFlight();
+    cancelFlight(); if (!target.pull) pullFrom = null;   // a flight to a place, and the floor's settle, forget the zoom-out anchor
     const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) };
     const dk = Math.abs(Math.log2(to.k / from.k)), dpx = Math.hypot(to.cx - from.cx, to.cy - from.cy) * Math.min(from.k, to.k);
     if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { hideHover(); state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
@@ -702,8 +748,8 @@ void main() {
     return h;
   }
   function refreshHover() { if (press || pinch || flight || !lastPointer || !lastPointer.inside) return; showHoverAt(lastPointer.x, lastPointer.y); }
-  function startPinch() { const [p, q] = [...pointers.values()]; const c = cam(); const mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }; return { d0: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), k0: c.k, km: { x: c.cx + (mid.x - c.ox) / c.k, y: c.cy - (mid.y - c.oy) / c.k } }; }
-  function movePinch() { const [p, q] = [...pointers.values()]; const d = Math.hypot(p.x - q.x, p.y - q.y), mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }; const k2 = clampK(pinch.k0 * d / pinch.d0); state.cam = { cx: pinch.km.x - (mid.x - stage.width / 2) / k2, cy: pinch.km.y + (mid.y - stage.height / 2) / k2, k: k2 }; requestDraw(); }
+  function startPinch() { const [p, q] = [...pointers.values()]; return { d: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), mid: { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 } }; }
+  function movePinch() { const [p, q] = [...pointers.values()]; const d = Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }, c = cam(); const km = { x: c.cx + (pinch.mid.x - c.ox) / c.k, y: c.cy - (pinch.mid.y - c.oy) / c.k, px: mid.x, py: mid.y }; const t = zoomStep(d / pinch.d, km); state.cam = { cx: t.cx, cy: t.cy, k: t.k }; pinch.d = d; pinch.mid = mid; requestDraw(); }   // the point under the previous midpoint stays under the new one (zoom and pan), through zoomStep for the pull
   wrap.addEventListener('pointerdown', ev => {
     if (overControl(ev, '.zoombox, .toggle') || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
     cancelFlight(); try { wrap.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
@@ -717,7 +763,7 @@ void main() {
     if (pinch) { if (pointers.size === 2) movePinch(); return; }
     if (press && press.id === ev.pointerId) {
       if (!press.moved && Math.hypot(p.x - press.x, p.y - press.y) > PRESS_PX) { press.moved = true; wrap.classList.add('dragging'); hideHover(); }
-      if (press.moved) { const c = cam(); state.cam.cx -= (p.x - press.last.x) / c.k; state.cam.cy += (p.y - press.last.y) / c.k; press.last = p; requestDraw(); }
+      if (press.moved) { pullFrom = null; const c = cam(); state.cam.cx -= (p.x - press.last.x) / c.k; state.cam.cy += (p.y - press.last.y) / c.k; press.last = p; requestDraw(); }
       return;
     }
     if (ev.pointerType !== 'touch') { lastPointer = { x: p.x, y: p.y, inside: true }; if (!flight && !overControl(ev, '.zoombox, .toggle')) showHoverAt(p.x, p.y); }
@@ -744,11 +790,11 @@ void main() {
     // A trackpad pinch arrives as a wheel with the Ctrl flag and small deltas (the phone's pinch is a touch gesture,
     // handled apart); it takes PINCH_RATE against the wheel's WHEEL_RATE. Line- and page-based wheels are scaled to pixels.
     const dy = ev.deltaY * (ev.deltaMode === 1 ? 20 : ev.deltaMode === 2 ? 400 : 1);
-    const km = kmAt(ev); const f = Math.exp(-dy * (ev.ctrlKey ? PINCH_RATE : WHEEL_RATE)); const k2 = clampK(state.cam.k * f);
+    const km = kmAt(ev); const f = Math.exp(-dy * (ev.ctrlKey ? PINCH_RATE : WHEEL_RATE)); const t = zoomStep(f, km);
     if (ev.pointerType !== 'touch') lastPointer = { x: km.px, y: km.py, inside: true };
     hideHover();
-    if (atFloor(k2)) { flyTo(fitTarget(), { duration: 300 }); return; }   // fully zoomed out: settle on the country's centre
-    state.cam.cx = km.x - (km.px - stage.width / 2) / k2; state.cam.cy = km.y + (km.py - stage.height / 2) / k2; state.cam.k = k2;
+    if (atFloor(t.k)) { flyTo(t, { duration: 300 }); return; }   // fully zoomed out: settle on the country's centre
+    state.cam = { cx: t.cx, cy: t.cy, k: t.k };
     requestDraw(afterCameraMove);
   }, { passive: false });
   // Keys, when the map has focus: + and − zoom one step, 0 fits the country, the arrows pan (Shift: a small step).
@@ -843,16 +889,17 @@ void main() {
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
   const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncProv(); drawMap(); drawNational(); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share'); }
+  $('pulse').addEventListener('click', () => replayPulse());
   // The view switch (round 5): cells as before, or every registered address as a mark.
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   $('layerprov').textContent = LAYERS[1].prov;
-  $('year').addEventListener('input', () => { const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); drawMap(); drawNational(); });
+  $('year').addEventListener('input', () => { const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); drawNational(); });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -869,13 +916,14 @@ void main() {
   window.addEventListener('hashchange', () => { const hp = presetFromHash(); if (hp) flyTo(hp.preset.target()); });
   $('footer').innerHTML = `Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; the lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, resident, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the firms view).`;
   // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
-  function onResize() { const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); }
+  function onResize() { pullFrom = null; const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); }
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   function domBoxes() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
-    return { map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip') };
+    const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
+    return { map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel') };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -890,6 +938,7 @@ void main() {
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
+    zoomBy(f, km) { const c = cam(); const p = km ? { x: km[0], y: km[1], px: c.ox + (km[0] - c.cx) * c.k, py: c.oy - (km[1] - c.cy) * c.k } : null; return flyTo(p ? stepAt(p, f) : stepCentre(f), { instant: true }).then(() => this.camera()); },   // an instant step by a factor, anchored at a km point or the centre (the audit's wheel)
     fly(target) { return flyTo(target); },
     // the real frame cadence of a flight to target: intervals between animation frames while it runs
     profileFlight(target) { const stamps = [], ks = []; const tick = now => { stamps.push(now); ks.push(state.cam.k); if (flight) requestAnimationFrame(tick); }; requestAnimationFrame(tick); return flyTo(target).then(r => { const iv = [], slow = []; for (let i = 1; i < stamps.length; i++) { const d = stamps[i] - stamps[i - 1]; iv.push(d); if (d > 25) slow.push([+ks[i - 1].toFixed(2), Math.round(d)]); } const sorted = iv.slice().sort((a, b) => a - b); const mean = iv.reduce((s, v) => s + v, 0) / Math.max(1, iv.length); return { frames: r.frames, ms: Math.round(r.ms), fps: Math.round(r.frames / Math.max(1, r.ms) * 1000), mean: +mean.toFixed(1), p95: +(sorted[Math.floor(sorted.length * 0.95)] || 0).toFixed(1), max: +(sorted[sorted.length - 1] || 0).toFixed(1), over25: slow.length, slow }; }); },
@@ -905,8 +954,9 @@ void main() {
     loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
     pulsing() { return pulse ? pulse.count : 0; },
+    pulse() { return replayPulse(); },
     ready() { return state.mode === 'firms' ? ensureYear(state.year).then(() => {}) : Promise.resolve(); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
   };
-  document.fonts.ready.then(() => { sizeCanvases(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); });
+  document.fonts.ready.then(() => { sizeCanvases(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); });
 })();

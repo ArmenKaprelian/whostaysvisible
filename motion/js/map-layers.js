@@ -165,15 +165,17 @@
   window.MotionMap = M;
   // --- the top-right information panel -------------------------------------------------------
   // Shared by the explainer's Moscow beats and the treated cut's ticker: the location (split-flap)
-  // with its window line, a large year (two strings crossfading during a dissolve) and up to two
-  // right-aligned count lines. Everything sits inside one 440 x 210 panel at (1420, 70).
+  // with its window line, a large year (two strings crossfading during a dissolve) and up to three
+  // right-aligned count lines. Everything sits inside one 440 px wide panel at (1420, 70): 210 px tall
+  // with up to two lines (at y 244 and 272), 230 px with three (at 240, 266 and 292; 25 October 2026).
   M.infoLines = function (ctx, theme, lines, alpha) {
     if (alpha <= 0) return;
-    lines.forEach(([s, color], i) => Motion.text(ctx, s, 1836, i === 0 ? 244 : 272, { size: i === 0 ? 24 : 22, color: color || (i === 0 ? theme.ink : theme.muted), align: 'right', alpha, group: 'counters' }));
+    const three = lines.length > 2, y0 = three ? 240 : 244, dy = three ? 26 : 28;
+    lines.forEach(([s, color], i) => Motion.text(ctx, s, 1836, y0 + dy * i, { size: i === 0 ? 24 : 22, color: color || (i === 0 ? theme.ink : theme.muted), align: 'right', alpha, group: 'counters-' + i }));
   };
   M.infoPanel = function (ctx, theme, { alpha = 1, loc = null, year = null, lines = [] } = {}) {
     if (alpha <= 0) return;
-    Motion.panel(ctx, 1420, 70, 440, 210, theme, 0.92 * alpha);
+    Motion.panel(ctx, 1420, 70, 440, lines.length > 2 ? 230 : 210, theme, 0.92 * alpha);
     if (loc) {
       Motion.flipText(ctx, loc.from.name, loc.to.name, loc.u, { x: 1836, y: 108, size: 24, weight: 600, color: theme.muted, align: 'right', letterSpacing: 2, group: 'location', alpha });
       Motion.flipText(ctx, loc.from.size, loc.to.size, loc.u, { x: 1836, y: 138, size: 22, weight: 400, color: theme.dim, align: 'right', letterSpacing: 1, group: 'location-size', alpha });
@@ -195,6 +197,15 @@
     ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
     ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
     if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = Math.max(1.5, Math.min(2.2, rr * 0.5)); ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, rr - ctx.lineWidth / 2), 0, TAU); ctx.stroke(); }
+    ctx.restore();
+  };
+  // A listed firm before its listing year (25 October 2026): its ordinary fill at the scale's radius and a thin rim in the
+  // listed red stroked outside the fill (width 1.5 px), so the fill stays visible at the 1.5 px floor and the mark never
+  // reads as hollow red; no halo. The callers pass the fill's and the rim's opacity (the rim at about 0.8 at rest).
+  M.rimmedMark = function (ctx, px, py, r, colour, fillAlpha, rimAlpha, theme) {
+    const TAU = Math.PI * 2; ctx.save();
+    ctx.globalAlpha = fillAlpha; ctx.fillStyle = colour; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill();
+    ctx.globalAlpha = rimAlpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, r + 0.75, 0, TAU); ctx.stroke();
     ctx.restore();
   };
   M.locationAt = function (entries, l) {

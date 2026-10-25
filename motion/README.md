@@ -166,7 +166,8 @@ archived OKVED dictionary (`motion.okved-names`) and the OKFS and OKOPF classifi
 Rules (author's decisions, 23 October):
 - Treated: any of the five list memberships, one firm once. Red from the minimum sanctions-file start
   year (clamped to 2014; 1,003 of the 2,220 treated firms in the rectangle carry an inferred date);
-  residents-list-only firms from 2020; the 200 other undated members from the first frame.
+  residents-list-only firms from 2020; the 200 other undated members from the first frame. Since 25 October a
+  member carries a thin red rim before its listing year in both pages (the round of 25 October).
 - Firms on no list, three states: a filer with a baseline carries its revenue-change class (real revenue
   against the firm's own 2019-2021 average of original filings with positive revenue, at least two of the
   three years; a filed zero counts as -100%); a firm with a baseline and no statement that year is the
@@ -730,7 +731,7 @@ ramp with the 100 km breaks (one firm: absent or available at the two ends), the
 address's class in the blue ramp (neutral when no firm there has a baseline and a value), every other
 layer the neutral tone; listed firms from `treatednational.js` draw last as vector marks (the Moscow
 `redMark` style, now `MM.listedMark` in `map-layers.js`): red from their listing year, a ring when the
-year's statement is absent, their own state's colour before. Hover gives counts, never a firm: the
+year's statement is absent, their own state's colour before (with a thin red rim since 25 October). Hover gives counts, never a firm: the
 nearest address within its mark radius plus 2 px (found through the sorted x column), "Address: n located
 firms, a with a YEAR statement (share)" and on the revenue layer the filers and the median class, plus
 the listed firms at the address (below 20 px per km, within the mark's radius in km, which the tooltip
@@ -861,6 +862,11 @@ none); frames 4,560, 4,740, 6,000 and 7,920 of `full` and 300, 700 and 1,300 of 
 and after the change are byte-identical, so the video files were not re-rendered. The video deliverables are
 `full` and `teaser`, each with a 720p copy.
 
+Correction (author, 25 October 2026): the two red legend rows above are replaced in both pages by three rows
+with glyphs, "On one of the five lists, before its listing year" (a rimmed dot), "Listed, red from its listing
+year, statement available" (solid red) and "Listed, no statement that year" (hollow red); the ticker reads
+"N listed, shown red", "M on a list, ringed", "K without a YEAR statement" (the round of 25 October below).
+
 ### Atlas: the treated gloss, click-to-zoom, zoom controls, a phone layout (author's requests, 24 October 2026)
 
 Wording. The atlas, and the atlas alone, carries a viewer-facing gloss after its list terms: "(treated)" after
@@ -961,6 +967,10 @@ flight to Moscow (78 to 92 s), the street zoom (93 to 99 s) and the pull-back to
 Moscow across the screen in a straight line (766, 366, 226 px) to its place in the national framing. The
 explainer artifact is at v19 with the new teaser asset, the atlas at v11.
 
+Correction (author, 25 October 2026): the atlas rows now read "On one of the five lists (treated), before its
+listing year", "Listed (treated), red from its listing year, statement available" and "Listed (treated), no
+statement that year"; the tooltip names rimmed firms "on one of the five lists (treated), listed in YYYY".
+
 ### Atlas: pinch zoom, the hand-over between grids, and 25 km cells (author's requests, 24 October 2026)
 
 Two observations from the author's laptop and phone. A trackpad pinch was too slow: it arrives as a wheel event
@@ -1048,6 +1058,7 @@ tuned apart. Zoom floor. Every zoom-out path (the wheel, the trackpad pinch, the
 the "−" key, Shift+click) re-centres the map on the country when it reaches the fitted zoom: steps land on the
 country's camera, a wheel or pinch that reaches the floor settles there with a 300 ms flight; a safe reset of
 the place in view (checked: seven zoom-out steps from the Moscow preset land exactly on the Russia preset).
+Since 25 October the pull toward the country's centre begins at twice the fitted zoom (the round of 25 October).
 
 Smoothness. `window.__atlas.profileFlight(target)` records the intervals between animation frames during a
 real flight (the compositor's cadence, which stretches when a frame paints slowly) and names the zoom of every
@@ -1080,7 +1091,7 @@ flight frames only; a cached national field picture per year for k under 0.3; We
 ### Atlas: the pulse of newly listed firms and the address field in WebGL (author's decisions, 24 October 2026)
 
 The pulse. In the firms view a move of the year slider to a later year makes every listed firm that turns red
-in the new year (its listing year after the old year and up to the new one, with a statement in the new year)
+in the new year (its listing year after the old year and up to the new one, present in the new year)
 bloom once as in the video: over 0.9 s the mark swells to 1.9 times its radius and back while its pre-listing
 disc fades and a thin red ring expands by 26 px and fades (`startPulse`, `drawMarks`, `PULSE_MS`). A move to an
 earlier year starts no pulse and ends a running one, the cells view never pulses, and the marks, the terms and
@@ -1209,6 +1220,79 @@ manifest) uploaded, the twelve address scripts left as uploaded for v14 (M9 rege
 content; only gzip's header timestamp differs). The author confirmed on 25 October that v15 loads and
 moves well on their devices.
 
+
+### Atlas and video: membership visible from the first frame, a pulse button, earlier re-centring (author's requests, 25 October 2026)
+
+The rim. Before its listing year a firm on any of the five lists keeps its ordinary mark at the scale's radius
+floor (atlas: the layer's colour for its own state; video: its class colour, the dark control colour #5A3175 for a
+baseline firm without a statement, state 'd', and the backdrop neutral #B5C3D1 for a firm without a usable
+baseline, state 'b'; every present member is now drawn, where the video drew only the class-coloured ones before)
+and carries a thin rim in the listed red: 1.5 px wide, stroked outside the fill (from r to r + 1.5 px), at 0.8
+opacity (`MM.rimmedMark` in `map-layers.js`, used by `drawMarks` in the atlas and `drawMarkSet` in the video).
+At its listing year the mark blooms (the pulse of 24 October; the rim fades with the pre-listing disc) and
+becomes red, solid with a statement and hollow without one, as before; hollow red keeps its one meaning.
+Undated members (594 nationally, 200 in the Moscow set, all red from 2014) are never rimmed and never pulse;
+resident-list-only firms keep their 2020 dating; the rewinds of the video are unchanged (a plain crossfade). The
+rim never appears in the cells view and lives on the marks canvas, not in the WebGL field. The author chose the
+outside rim over a rim centred on the fill's edge from a labelled comparison at two scales: at the 1.5 px floor
+the outside rim leaves a 3 px core and is 6 px wide, the on-edge rim 4.5 px wide with a 1.5 px core.
+
+Legend. Three rows with glyphs replace the two red rows in both pages: a rimmed dot "On one of the five lists,
+before its listing year", a solid red dot "Listed, red from its listing year, statement available", a hollow red
+dot "Listed, no statement that year", with "(treated)" after "lists" and "Listed" in the atlas only; the size
+rule row stays. The atlas glyphs are round spans (`.sw.dot`; the earlier two were rounded squares); the video's
+legend panel grows from 238 to 266 px (rows at y 985, 1013 and 1041, the canvas bottom at 1,080).
+
+Ticker (video). Three lines: "N listed, shown red" (red), "M on a list, ringed" (muted, new) and "K without a
+YEAR statement"; the shared info panel (`MM.infoPanel`, `MM.infoLines`) is 230 px tall with three lines at y 240,
+266 and 292, each in its own audit group, and 210 px with two, so the explainer's zoom panel and the teaser are
+unchanged (frames 300, 700 and 1,300 byte-identical to the baseline). The page-load check keeps red and dark
+against `points.json` and adds the identity ringed = present − red for every extent and year, with present
+counted in a separate loop (members present that year whose listing year lies ahead: downtown 2022 580 ringed
+against 393 red; national 2022 2,422 against 1,694; 0 ringed in 2024 and 2025). The close is untouched.
+
+Tooltip (atlas). Rimmed firms under the cursor read "N firm(s) on one of the five lists (treated) within X of the
+cursor, listed in YYYY" (a range of years when they differ), or ", M before their listing year (YYYY)" appended
+to the red line when both kinds share the spot; the hit radius r + 2 px already covers the rim.
+
+The pulse button. A glyph button right of the year label (`#pulse`, a red ring and dot through a `--treated`
+token; 28 px, 36 on coarse pointers), title and aria-label "Replay the bloom of the firms listed in YYYY",
+disabled with "No firm on these lists was listed in YYYY" (2025 nationally), hidden with the year row and in the
+cells view, keyboard focusable. It replays the bloom for the dated firms listed in the shown year and present in
+it (732 in 2022, 21 in 2020), wherever the map is and at any time, including after a move back a year;
+`window.__atlas.pulse()` presses it and returns the count. Under prefers-reduced-motion a pulse, manual or
+automatic, is a still highlight (the ring at its largest radius, the mark at its size) held for the same 0.9 s
+with no frame loop.
+
+Earlier re-centring (atlas). `RECENTRE_FROM = 2`: on a zoom-out step whose new zoom lies in the band from
+2 x kFit down to kFit the stepped centre is blended toward the country's centre by w = (2 kFit − k) / kFit (none
+at the band's top, all at the floor); within one run of zoom-out steps inside the band an anchor holds the
+un-pulled centre, so the pull is proportional and continuous, and the 300 ms settle at the floor stays. The pull
+is one-way: a zoom-in step, a pan, a flight, a preset or a resize forgets the anchor, and nothing is remembered
+on the way in: the wheel and the trackpad pinch zoom about the cursor, the touch pinch about the finger midpoint
+(now an incremental step per move through the same `zoomStep`), the + button, the + key and a double-tap about
+the view's centre, from the displayed camera as before. Checked: a wheel zoom-in from the floor anchored at
+Moscow keeps Moscow under its pixel within 0.01 px and does not go into the country's centre.
+
+Verification. Atlas audit 419 states, 15,377 boxes, zero findings at 400, 768, 1,200, 1,600 and 2,000 px on
+both renderers (`build/audit-atlas.txt`); the new states: the button pressed at Moscow 2022 (732 marks), at
+2025 (disabled, the title), after a move back (2020, 21), a rimmed hover, the same under reduced motion, the
+band (n zoom-out steps to just above it with the centre still on Moscow, a wheel-sized step to 1.5 x kFit
+landing halfway between Moscow and the country's centre, one more step exactly on the Russia preset) and the
+zoom-in from the floor; the button's DOM box inside the year row, clear of the slider and the label, at least
+24 px square; the earlier seven-step, zoomfit and Shift+click states still hold. Screenshots in both themes at
+1,600 px and on the phone layout were sent to the author. Video: both probes pass the manifest and identity
+checks; the text audit of the full cut has 1,435 frames, 29,702 boxes and the 17 counted box-over-mark lines
+only, the teaser 460 frames and zero; seven review frames in `build/r9` (152.0, 155.1, 158.0, 190.0, 192.6,
+195.0 and 203.0 s). Renders: the full cut 8,610 frames, 287.000 s (4 shards, 302 s; an 8-shard run crashed the
+desktop app, and the shard fragments were deleted), the teaser 1,380 frames, 46.000 s; 720p copies of 21.9 MB
+and 4.99 MB, the teaser's identical to the asset already on the explainer artifact, which was kept.
+
+The chapter treats membership as fixed and uses no dates. This view is therefore the chapter's own view of the
+group, with the dated turning-red added as a descriptive layer; the close's caveat (the sanctions-list dates,
+the inferred share, the undated firms red throughout) is unchanged.
+
+Published: TBD-V16; TBD-V20.
 
 ### Publishing
 

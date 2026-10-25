@@ -44,15 +44,17 @@
   const nationalRaster = k => 1 - ramp(k, K.national, K.national * 1.3);
   const markRadius = (ext, pile) => { const m = P.extents[ext].mark; return Math.min(m.cap, m.base + m.s * Math.sqrt(Math.max(0, pile - 1))) / 2; };
   const inExtent = (ext, x, y) => { const e = P.extents[ext]; return x >= e.xmin && x <= e.xmax && y >= e.ymin && y <= e.ymax; };
-  const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : null);   // 'd' (absent) and 'b' are not drawn
+  const stateColour = s => ((s >= '1' && s <= '6') ? P.class_colours[+s - 1] : s === 'd' ? P.nonfiler : s === 'b' ? P.neutral : null);   // before its listing year every present member is drawn (25 October 2026): its class, the dark control colour for 'd' (baseline, no statement), the backdrop neutral for 'b' (no usable baseline)
   // Two mark sets: the Moscow set (M6: every listed firm with a row in the region rectangle, at its
   // latest coordinates there) for the Moscow scales, and the nationwide set (M8: every listed firm at
   // its latest coordinates anywhere) for the national scale. They cross-fade with the rasters by scale;
   // each scale's counters come from its own set, as its manifest does.
   const SETS = { moscow: TR, national: TRN };
   const setOf = ext => (ext === 'national' ? TRN : TR);
-  const redCounts = {};
-  for (const ext of Object.keys(P.extents)) { const S = setOf(ext); redCounts[ext] = {}; for (const y of YEARS) { let red = 0, dark = 0; for (let i = 0; i < S.n; i++) { const ch = S.filed[i][y - Y0]; if (ch === '-' || S.red_from[i] > y || !inExtent(ext, S.x[i], S.y[i])) continue; red++; if (ch === '0') dark++; } redCounts[ext][y] = { red, dark }; } }
+  const redCounts = {}, presentCounts = {};
+  for (const ext of Object.keys(P.extents)) { const S = setOf(ext); redCounts[ext] = {}; for (const y of YEARS) { let red = 0, dark = 0, ringed = 0; for (let i = 0; i < S.n; i++) { const ch = S.filed[i][y - Y0]; if (ch === '-' || !inExtent(ext, S.x[i], S.y[i])) continue; if (S.red_from[i] > y) { ringed++; continue; } red++; if (ch === '0') dark++; } redCounts[ext][y] = { red, dark, ringed }; } }
+  // members present that year in the extent, counted apart from the red and ringed loop: the page refuses to build unless ringed = present − red
+  for (const ext of Object.keys(P.extents)) { const S = setOf(ext); presentCounts[ext] = {}; for (const y of YEARS) { let present = 0; for (let i = 0; i < S.n; i++) if (S.filed[i][y - Y0] !== '-' && inExtent(ext, S.x[i], S.y[i])) present++; presentCounts[ext][y] = present; } }
   const counts = (ext, y) => P.counts[ext][String(y)];
   const breakLabels = P.breaks.map(b => (b > 0 ? '+' : b < 0 ? '−' : '') + Math.abs(b) + '%');
   const money = (mn, exact) => (mn == null ? 'no statement' : mn >= 1000 ? fmt.dec(mn / 1000, 1) + ' bn rubles' : (exact ? '' : 'about ') + fmt.int(mn) + ' mn rubles');
@@ -189,9 +191,10 @@
       const bloom = Motion.clamp(vy - (MARKS.red_from[i] - 1), 0, 1);
       if (bloom < 1) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
-        const pre = (1 - E.outCubic(bloom)) * present * alpha;
-        if (c0 && u < 1) { ctx.globalAlpha = pre * (1 - u); ctx.fillStyle = c0; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
-        if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
+        const pre = (1 - E.outCubic(bloom)) * present * alpha, rp = Math.max(floor, r);   // the ordinary fill at the scale's floor radius
+        if (c0 && u < 1) { ctx.globalAlpha = pre * (1 - u); ctx.fillStyle = c0; ctx.beginPath(); ctx.arc(px, py, rp, 0, TAU); ctx.fill(); }
+        if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, rp, 0, TAU); ctx.fill(); }
+        if (c0 || c1) { ctx.globalAlpha = pre * 0.8; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rp + 0.75, 0, TAU); ctx.stroke(); }   // the rim outside the fill: membership visible from the first frame (25 October 2026)
       }
       if (bloom > 0) {
         const f0 = MARKS.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = MARKS.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
@@ -353,25 +356,28 @@
     if (alpha <= 0) return;
     const [y0, y1, u] = yearPair(v); const yr = u < 0.5 ? y0 : y1; const rc = redCounts[ext][yr];
     MM.infoPanel(ctx, theme, { alpha, loc, year: { a: String(y0), b: y1 === y0 ? null : String(y1), u },
-      lines: [[`${fmt.int(rc.red)} listed firms shown red`, theme.treated], [`${fmt.int(rc.dark)} without a ${yr} statement`, theme.muted]] });
+      lines: [[`${fmt.int(rc.red)} listed, shown red`, theme.treated], [`${fmt.int(rc.ringed)} on a list, ringed`, theme.muted], [`${fmt.int(rc.dark)} without a ${yr} statement`, theme.muted]] });   // three lines (25 October 2026); the panel grows for the third
   }
-  // Bottom-left legend (author's instruction, 23 October, round 3): the bar with its two-line title,
-  // one muted line with the mark rule and support at each scale, and the red row with its two glyphs.
+  // Bottom-left legend (author's instruction, 23 October, round 3; the three listed rows of 25 October): the bar with its
+  // two-line title, one muted line with the mark rule and support at each scale, and three rows for the firms on the five
+  // lists: rimmed before the listing year, solid red with a statement, hollow red without one.
   function legend(ctx, theme, { alpha, k }) {
     if (alpha <= 0) return;
     const ea = extentAlpha(k);
-    Motion.panel(ctx, 60, 802, 700, 238, theme, 0.92 * alpha);
+    Motion.panel(ctx, 60, 802, 700, 266, theme, 0.92 * alpha);
     Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
     Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
     MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
     const rule = [['Each mark is one coordinate pair. Larger marks hold more firms.', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
     for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 950, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
     ctx.save(); ctx.globalAlpha *= alpha;
-    ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 987, 9, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1022, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1022, 8, 0, TAU); ctx.stroke();
+    ctx.fillStyle = P.class_colours[2]; ctx.beginPath(); ctx.arc(95, 985, 9, 0, TAU); ctx.fill(); ctx.globalAlpha *= 0.8; ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 985, 10, 0, TAU); ctx.stroke(); ctx.globalAlpha /= 0.8;
+    ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 1013, 9, 0, TAU); ctx.fill();
+    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1041, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1041, 8, 0, TAU); ctx.stroke();
     ctx.restore();
-    Motion.text(ctx, 'Firm on one of the five lists, red from its listing year.', 118, 987, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'listed, no statement that year', 118, 1022, { size: 22, color: theme.muted, baseline: 'middle', alpha });
+    Motion.text(ctx, 'On one of the five lists, before its listing year', 118, 985, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Listed, red from its listing year, statement available', 118, 1013, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Listed, no statement that year', 118, 1041, { size: 22, color: theme.muted, baseline: 'middle', alpha });
   }
   // The two shared-registration facts of the density pass, once in the downtown run where the sized piles are
   // visible (round 5; same counts, same denominators), with the author's standard explanation of shared
@@ -509,7 +515,7 @@
   }
 
   window.TreatedScenes = {
-    redCounts, cellSums, OFFSETS, CITY, SEC, journey, NATCAM, SETS, alignScene,
+    redCounts, presentCounts, cellSums, OFFSETS, CITY, SEC, journey, NATCAM, SETS, alignScene,
     pieces: { drawField, drawCells, drawTreated, drawMarker, headers, profiles, comparisonView, ticker, legend, disclosure, closeText, locationAt, extentAlpha, extentOf, counts, WINDOW, COL, dot, yearPair, anchorColour, LABEL },
     setImages(images) { IMG = images; },   // the rasters, handed over when they have loaded (the cuts are built before)
     async loadImages(base, { layers = ['downtown', 'national'] } = {}) {

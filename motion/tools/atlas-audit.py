@@ -40,11 +40,21 @@ def audit_boxes(boxes, canvases, min_size, overlap):
             if small > 0 and x / small > overlap: out.append(("overlap", p["scene"], "%s | %s" % (p["str"], q["str"])))
     return out
 
-def audit_dom(dom):
+def audit_dom(dom, mode=None):
     """The visible overlays must lie inside the map (0.5 px tolerance); the panels must never intersect one
     another. The tooltip follows the cursor and sits above the panels, so it is held inside the map but not
-    counted against them."""
+    counted against them. The pulse button (25 October 2026) is shown in the firms view only, inside the year
+    row, clear of the slider and the year label, at least 24 px square."""
     out = []; m = dom["map"]
+    if dom.get("pulse") is not None and mode is not None:
+        p = dom["pulse"]
+        if p["visible"] != (mode == "firms"): out.append(("pulse", "dom", "visible %s in the %s view" % (p["visible"], mode)))
+        if p["visible"]:
+            yr = dom["yearrow"]
+            if p["x"] < yr["x"] - 0.5 or p["y"] < yr["y"] - 0.5 or p["x1"] > yr["x1"] + 0.5 or p["y1"] > yr["y1"] + 0.5: out.append(("pulse", "dom", "outside the year row %s" % json.dumps({k: round(p[k], 1) for k in ("x", "y", "x1", "y1")})))
+            for k in ("year", "yearlabel"):
+                if inter(p, dom[k]) > 0: out.append(("pulse", "dom", "intersects the %s" % k))
+            if p["x1"] - p["x"] < 24 or p["y1"] - p["y"] < 24: out.append(("pulse", "dom", "smaller than 24 px: %.1f by %.1f" % (p["x1"] - p["x"], p["y1"] - p["y"])))
     names = [n for n in ("legend", "note", "zoom", "scale", "tip") if dom.get(n) and dom[n]["visible"]]
     panels = [n for n in names if n != "tip"]
     for n in names:
@@ -86,9 +96,9 @@ def main():
             side = min(round(P["W"]), round(P["H"])); mx, my = P["m"]   # the page rounds the map's size to whole CSS px
             def state(layer, year, setup, tag, check=None):
                 nonlocal n_boxes, n_states
-                r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null }; })()" % (setup, layer, year), await_promise=True, timeout=180)
+                r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; window.__extra = null; %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null, mode: mb ? mb.dataset.mode : 'cells', extra: window.__extra }; })()" % (setup, layer, year), await_promise=True, timeout=180)
                 n_boxes += len(r["boxes"]); n_states += 1
-                found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"])
+                found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"], r.get("mode"))
                 if check: found += check(r)
                 for kind, scene, key in found:
                     findings.append("%-11s width %d  %-7s %-5s %-8s %-10s %s" % (kind, w, layer, year, tag, scene, key))
@@ -126,6 +136,18 @@ def main():
             state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0] + 300, m[1]);", "clkcell", cam_k(side / 500, "a click on the cell 300 km east of Moscow lands on its centre", cx, cy, 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1);", "zoom3", cam_k(8 * P["kfit"], "three zoom-ins from Russia give 8 x kFit", P["russia"]["cx"], P["russia"]["cy"], 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(-1); await A.zoom(-1); await A.zoom(-1); await A.zoom(0);", "zoomfit", cam_is(P["russia"], "zooming in, out past the floor and fitting returns the Russia preset", 1e-6, 1e-6))
+            # earlier re-centring (25 October 2026): zoom-out steps to just above the band keep the centre on Moscow; a wheel-sized step
+            # into the band lands on the proportional blend (halfway at 1.5 x kFit); one more step lands exactly on the Russia preset;
+            # and a zoom-in from the floor anchored at Moscow keeps Moscow under its pixel (nothing remembered on the way in)
+            import math
+            kM, kf, R = P["moscow"]["k"], P["kfit"], P["russia"]
+            nsteps = int(math.floor(math.log2(kM / (2 * kf)))); kn = kM / 2 ** nsteps; fband = 1.5 * kf / kn
+            OUT = "A.preset('Moscow'); " + "await A.zoom(-1); " * nsteps
+            state("share", 2021, SET + OUT, "band0", cam_k(kn, "%d zoom-out steps from Moscow stay above the band with the centre on Moscow" % nsteps, mx, my, 1e-6))
+            state("share", 2021, SET + OUT + "await A.zoomBy(%r);" % fband, "band1", cam_k(1.5 * kf, "a wheel-sized step into the band lands halfway between Moscow and the country's centre", (mx + R["cx"]) / 2, (my + R["cy"]) / 2, 0.01))
+            state("share", 2021, SET + OUT + "await A.zoomBy(%r); await A.zoom(-1);" % fband, "band2", cam_is(R, "one more step from inside the band lands exactly on the Russia preset", 1e-6, 1e-6))
+            state("share", 2021, SET + "A.preset('Russia'); { const c0 = A.camera(), W = window.__atlasCanvases.map.w, H = window.__atlasCanvases.map.h; const s0 = [W / 2 + (m[0] - c0.cx) * c0.k, H / 2 - (m[1] - c0.cy) * c0.k]; const c1 = await A.zoomBy(2, m); window.__extra = { s0, s1: [W / 2 + (m[0] - c1.cx) * c1.k, H / 2 - (m[1] - c1.cy) * c1.k] }; }", "floorin",
+                  lambda r: ([] if abs(r["cam"]["k"] / (2 * kf) - 1) < 1e-6 else [("camera", "cam", "a zoom-in from the floor: expected k %.4f, got %.4f" % (2 * kf, r["cam"]["k"]))]) + ([] if r["extra"] and abs(r["extra"]["s0"][0] - r["extra"]["s1"][0]) < 0.01 and abs(r["extra"]["s0"][1] - r["extra"]["s1"][1]) < 0.01 else [("camera", "cam", "a zoom-in from the floor moved Moscow's screen point: %s" % json.dumps(r["extra"]))]) + ([] if math.hypot(r["cam"]["cx"] - R["cx"], r["cam"]["cy"] - R["cy"]) >= 1 else [("camera", "cam", "a zoom-in from the floor went into the country's centre")]))
             # the 25 km cells (M10) and the hand-over around the city windows: three and four zoom steps in from the country
             Z3, Z4 = "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1);", "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1); await A.zoom(1);"
             for layer, year in [("share", 2021), ("share", 2014), ("change", 2021), ("lists", 2021), ("density", 2021)]:
@@ -156,6 +178,25 @@ def main():
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2022); await new Promise(r => setTimeout(r, 250));", tag + "pulse", both(pulsing_is(True, "a forward year change pulses the newly red marks"), field_is(expect, "pulse")))
                 state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready();", tag + "back", pulsing_is(False, "a backward year change does not pulse"))
                 state("share", 2025, "A.mode('cells'); A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2025); await A.ready();", tag + "cells", pulsing_is(False, "a forward year change in the cells view does not pulse"))
+                # the pulse button (25 October 2026): pressed at the Moscow preset for 2022 it replays the bloom for the firms listed that
+                # year (dated, present), is disabled in 2025 (no listing), and works after a move back a year; a rimmed firm's hover
+                N22 = "(() => { const T = MOTION_DATA.treatednational; let n = 0; for (let i = 0; i < T.n; i++) if (T.red_from[i] === %d && !T.undated[i] && T.filed[i][%d] !== '-') n++; return n; })()"
+                def pulsed_is(y, label):
+                    def f(r):
+                        exp = r["extra"]["expect"] if r["extra"] else None
+                        bad = []
+                        if not r["extra"] or r["extra"]["pulsed"] != exp: bad.append(("pulse", "button", "%s: pulse() returned %s, expected %s" % (label, r["extra"] and r["extra"]["pulsed"], exp)))
+                        if r["pulsing"] != exp: bad.append(("pulse", "button", "%s: pulsing %s, expected %s" % (label, r["pulsing"], exp)))
+                        return bad
+                    return f
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2022, 8)), tag + "btn", both(pulsed_is(2022, "the button replays the bloom of the firms listed in 2022"), field_is(expect, "button")))
+                state("share", 2025, F + "A.preset('Moscow'); A.layer('share'); A.year(2025); await A.ready(); await new Promise(r => setTimeout(r, 1000)); window.__extra = { pulsed: A.pulse(), expect: 0 };", tag + "btn0", lambda r: ([] if r["extra"] and r["extra"]["pulsed"] == 0 and r["pulsing"] == 0 else [("pulse", "button", "2025: pulse() %s, pulsing %s" % (r["extra"] and r["extra"]["pulsed"], r["pulsing"]))]) + ([] if r["dom"]["pulse"]["disabled"] and r["dom"]["pulse"]["title"] == "No firm on these lists was listed in 2025" else [("pulse", "button", "2025: disabled %s, title %r" % (r["dom"]["pulse"]["disabled"], r["dom"]["pulse"]["title"]))]))
+                state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2020, 6)), tag + "btnback", pulsed_is(2020, "after a move back a year the button pulses the firms listed in the shown year"))
+                state("share", 2016, F + "A.preset('Moscow'); A.layer('share'); A.year(2016); await A.ready(); { const T = MOTION_DATA.treatednational; let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] <= 2016 || T.filed[i][2] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best], T.y[best], { show: true }), d: bd }; }", tag + "rimhov", lambda r: [] if r["extra"] and r["extra"]["hover"].get("listed") and r["extra"]["hover"]["listed"]["rim"] >= 1 and r["extra"]["hover"]["listed"]["rim_from"] > 2016 else [("hover", "rim", "a rimmed firm's hover: %s" % json.dumps(r["extra"] and r["extra"]["hover"] and r["extra"]["hover"].get("listed")))])
+                # under prefers-reduced-motion the button highlights without animation: the count is there at once and the frame loop is not used
+                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]})
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2022, 8)), tag + "rmpulse", pulsed_is(2022, "under reduced motion the button still pulses (a still highlight)"))
+                cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
             F0 = cdp.evaluate("window.__atlas.field()", await_promise=False); fields.add(F0)
             firms_states(GL if F0 in GL else ("2d",), "firms")
             # a lost context falls back to the 2D field and a restored one returns to WebGL (on a page that had it)
