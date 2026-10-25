@@ -75,6 +75,8 @@
   const jurisdictions = (A.listed.jurisdiction_names || []).join(' and ');
   const listedDate = (() => { const d = new Date(A.listed.date + 'T00:00:00Z'); return d.getUTCDate() + ' ' + ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][d.getUTCMonth()] + ' ' + d.getUTCFullYear(); })();
   const anchorColour = (theme, key) => (key === 'A' ? theme.anchorA : theme.anchorB);
+  const mixHex = (a, b, u) => { if (u <= 0) return a; if (u >= 1) return b; const c = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), x = c(a), y = c(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * u).toString(16).padStart(2, '0')).join(''); };
+  const aeroflotColour = (theme, inkU) => mixHex(theme.anchorA, theme.ink, inkU);   // Aeroflot keeps the anchor amber; where the diverging pair's amber shares the frame (the revenue classes of the Moscow runs), its marker and line take the ink with the circle marker (Part B item 2, the author's decision of 25 October 2026)
 
   // Comparison groups (M7): the firm's index against its group's median and quartiles.
   const cmpSeries = (gid, anchor) => {
@@ -84,7 +86,11 @@
     return { band, firm, group: g, anchor };
   };
   const CMPA = cmpSeries('listed2022', CMP.anchors.a), CMPB = cmpSeries('nolist', CMP.anchors.b);
-  const yDomainCmp = [Math.min(10, Math.floor(CMP.extremes.min_q1 / 10) * 10, Math.floor(CMP.extremes.min_idx / 10) * 10), Math.max(500, Math.ceil(CMP.extremes.max_q3 / 100) * 100, Math.ceil(CMP.extremes.max_idx / 100) * 100)];
+  // The paired y-axis follows the data (round 13, the author's request of 25 October 2026): the lower bound the largest of a nice set at or below 0.9 times the smallest value drawn
+  // in either panel (a quartile or a firm's index), the upper bound the smallest at or above 1.1 times the largest; 20 to 250 with the shipped data (10 to 500 before).
+  const cmpLo = 0.9 * Math.min(CMP.extremes.min_q1, CMP.extremes.min_idx), cmpHi = 1.1 * Math.max(CMP.extremes.max_q3, CMP.extremes.max_idx);
+  const yDomainCmp = [[10, 15, 20, 25, 30, 40, 50].filter(v => v <= cmpLo).pop() || 10, [150, 200, 250, 300, 400, 500].find(v => v >= cmpHi) || 500];
+  const yTicksCmp = [25, 50, 100, 200, 400].filter(t => t >= yDomainCmp[0] && t <= yDomainCmp[1]);
   const gapText = (gap, groupLabel, decimals) => {
     const word = v => (Math.abs(v) < 0.5 ? 'at the median' : fmt.dec(Math.abs(v), decimals) + ' points ' + (v > 0 ? 'above' : 'below'));
     const en = s => s.replace('-', '–');
@@ -280,9 +286,9 @@
     if (sw <= 0) { const o = OFFSETS.downtown[key]; return { dx: o.dir[0] * o.dist, dy: o.dir[1] * o.dist, dir: o.dir, dist: o.dist }; }
     const dx = sx / sw, dy = sy / sw, n = Math.hypot(dx, dy) || 1; return { dx, dy, dir: [dx / n, dy / n], dist: sd / sw };
   }
-  function drawMarker(ctx, cam, theme, key, alpha) {
+  function drawMarker(ctx, cam, theme, key, alpha, inkU = 0) {
     if (alpha <= 0) return;
-    const colour = anchorColour(theme, key), [px, py] = key === 'A' ? Motion.project(cam, AX, AY) : Motion.project(cam, BX, BY);
+    const colour = key === 'A' ? aeroflotColour(theme, inkU) : anchorColour(theme, key), [px, py] = key === 'A' ? Motion.project(cam, AX, AY) : Motion.project(cam, BX, BY);
     const o = offsetAt(cam.k, key), w = measure(LABEL[key], 22, 500), b = labelBox(px, py, o.dir, o.dist, w);
     ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -343,10 +349,10 @@
   // current year in the box (years beyond it in place at reduced opacity, a dot on each line).
   // The panel rectangles enclose their boxes with the tick-label margins at both ends, so every
   // interpolated panel encloses the interpolated boxes and their labels.
-  const BIG = { panel: { x: 84, y: 352, w: 1626, h: 450 }, left: { x: 140, y: 400, w: 630, h: 330 }, right: { x: 1050, y: 400, w: 630, h: 330 } };
+  const BIG = { panel: { x: 84, y: 352, w: 1626, h: 410 }, left: { x: 140, y: 400, w: 630, h: 290 }, right: { x: 1050, y: 400, w: 630, h: 290 } };   // 290 tall since round 13: the facts under the plots take the room (the author, 25 October 2026)
   const SMALL = { panel: { x: 1320, y: 340, w: 540, h: 290 }, left: { x: 1376, y: 388, w: 150, h: 170 }, right: { x: 1650, y: 388, w: 150, h: 170 } };   // 540 wide since round 10 (the monospace group labels)
   const lerpBox = (a, b, u) => ({ x: Motion.lerp(a.x, b.x, u), y: Motion.lerp(a.y, b.y, u), w: Motion.lerp(a.w, b.w, u), h: Motion.lerp(a.h, b.h, u) });
-  function comparisonView(ctx, theme, { u, alpha, progress = 1, textAlpha = 1, v = null, l = 0, until = 12, explain2025 = true }) {
+  function comparisonView(ctx, theme, { u, alpha, progress = 1, textAlpha = 1, v = null, l = 0, until = 12, explain2025 = true, inkU = 0 }) {
     if (alpha <= 0) return;
     const big = u < 1, live = u >= 1 && v != null;
     ctx.save(); ctx.globalAlpha *= alpha;
@@ -359,12 +365,12 @@
     if (pa > 0) { const pb = lerpBox(BIG.panel, SMALL.panel, u); Motion.panel(ctx, pb.x, pb.y, pb.w, pb.h, theme, 0.92 * pa, 'livebox'); }
     const panels = [['left', CMPB, 'B', 'the private firm', 'firms on no list'], ['right', CMPA, 'A', 'Aeroflot', 'firms listed in 2022']];
     panels.forEach(([side, s, key, firmLabel, groupLabel], i) => {
-      const box = lerpBox(BIG[side], SMALL[side], u), colour = anchorColour(theme, key);
+      const box = lerpBox(BIG[side], SMALL[side], u), colour = key === 'A' ? aeroflotColour(theme, inkU) : anchorColour(theme, key);
       const nameA = pa;   // the group names of the live box arrive with its panel
       if (nameA > 0) Motion.text(ctx, side === 'right' ? 'listed in 2022' : groupLabel, box.x - 40, Motion.lerp(BIG.panel.y, SMALL.panel.y, u) + 30, { size: 22, color: theme.muted, alpha: nameA, group: 'livebox-' + key });   // rides with the box, so it stays inside the interpolated panel
       ctx.save();
-      CH.bandLines(ctx, box, { firm: s.firm, band: s.band }, { yDomain: yDomainCmp, yTicks: [25, 50, 100, 200, 400], xTicks: [2014, 2025], xTicksMinor: [2018, 2022], minorAlpha: gone, progress: live ? 1 : progress, theme,
-        colors: { firm: colour, median: theme.accentMuted, band: theme.accentMuted, marker: theme.treated }, labels: { firm: firmLabel, median: 'median' }, textAlpha: 1, labelAlpha: gone,
+      CH.bandLines(ctx, box, { firm: s.firm, band: s.band }, { yDomain: yDomainCmp, yTicks: yTicksCmp, xTicks: [2014, 2025], xTicksMinor: [2018, 2022], minorAlpha: gone, progress: live ? 1 : progress, theme,
+        colors: { firm: colour, median: theme.cmpLine, band: theme.cmpBand, marker: theme.treated }, labels: { firm: firmLabel, median: 'median' }, textAlpha: 1, labelAlpha: gone, ringCurrent: key === 'A' && inkU > 0.5,
         marker: s.anchor.marker ? { x: s.anchor.marker.year, label: s.anchor.marker.label } : null,
         gapLabel: s.anchor.idx.some(x => x == null) ? { x: 2022, y: 100, text: 'no 2022 statement' } : null,
         current: live ? v : null, compact: u > 0.5 });
@@ -372,13 +378,14 @@
       if (big) {   // the key, the two gap facts and the counts of the first showing, fading with the move
         const ky = box.y + box.h + 58, ta = textAlpha * gone;
         if (ta > 0) {
-          ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.accentMuted; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(box.x, ky - 6); ctx.lineTo(box.x + 26, ky - 6); ctx.stroke();
-          ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.accentMuted; ctx.fillRect(box.x + 36, ky - 14, 26, 16); ctx.restore();
+          ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.cmpLine; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(box.x, ky - 6); ctx.lineTo(box.x + 26, ky - 6); ctx.stroke();
+          ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.cmpBand; ctx.fillRect(box.x + 36, ky - 14, 26, 16); ctx.restore();
           Motion.paragraph(ctx, 'median and interquartile range of ' + groupLabel, box.x + 72, ky, BIG[side].w - 72, { size: 22, color: theme.muted, alpha: ta, group: 'cmp-key-' + key });   // wrapped at the full-screen column (round 10), so the lines never re-break while the box moves
-          const g = gapText(s.anchor.gap, s.group.label, i === 1 ? 1 : 0);
-          Motion.revealParagraph(ctx, g[0], box.x, ky + 72, BIG[side].w, l, 5.0, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap1-' + key });
-          Motion.revealParagraph(ctx, g[1], box.x, ky + 138, BIG[side].w, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap2-' + key });
-          Motion.revealParagraph(ctx, membersText(s.group), box.x, ky + 174, BIG[side].w, l, 6.2, { size: 22, color: theme.muted, until, alpha: ta, group: 'cmp-members-' + key });
+          const g = gapText(s.anchor.gap, s.group.label, i === 1 ? 1 : 0), rb = ta * step(l, 5.0, 0.5) * (until ? 1 - step(l, until - 0.4, 0.4) : 1);   // in with the first fact, out with the texts
+          MM.resultBox(ctx, box.x - 24, ky + 36, BIG[side].w + 48, 150, theme, rb, 'ink'); MM.ringMarker(ctx, box.x + 8, ky + 70, 7, theme.ink, rb);   // the gap facts in an ink box: the anchor's amber is on this screen (round 13); 24 px of padding around the two facts
+          Motion.revealParagraph(ctx, g[0], box.x + 28, ky + 78, BIG[side].w - 28, l, 5.0, { size: 24, color: theme.ink, lineHeight: 1.45, until, alpha: ta, group: 'cmp-gap1-' + key });
+          Motion.revealParagraph(ctx, g[1], box.x + 28, ky + 156, BIG[side].w - 28, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap2-' + key });
+          Motion.revealParagraph(ctx, membersText(s.group), box.x, ky + 224, BIG[side].w, l, 6.2, { size: 22, color: theme.muted, until, alpha: ta, group: 'cmp-members-' + key });
         }
       }
     });
@@ -436,19 +443,20 @@
   // The close: the count line, the caveats, the St Petersburg sentence (round 4; the two numbers checked
   // against motion/review/spb-vs-moscow-report.md, 160 by 90 km, 2022-2025 and 2022-2024) and the
   // comparison line, on one opaque panel in the right column, clear of the ticker and the legend.
-  const SPB = 'St Petersburg shows the same pattern at 160 by 90 km: the absence of its firms on these lists after listing stays within 6 points of Moscow’s, and only its share of firms with a usable baseline runs higher, 53 to 54 percent against 38 to 44 in 2022 to 2024.';
-  function closeText(ctx, theme, l, mul = 1) {
+  function closeText(ctx, theme, l, mul = 1) {   // the count lines in their ink box and nothing under them (the author, 25 October 2026, evening: the caveat cascade read as a wall of text; its disclosures live in review/2026-10-25-screen-text-notes.md and the README)
     if (mul <= 0) return;
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1), x = 1204, w = 632;
-    Motion.panel(ctx, 1180, 300, 680, 740, theme, 0.6 * step(l, 0.3, 0.5));   // 740 tall since round 10   // dims the map under it (the far east) rather than covering it
-    let y = 346;
-    y = Motion.paragraph(ctx, `${fmt.int(cr.red)} firms on at least one of the five lists red by ${Y1} within 160 by 90 km of ${CITY.name}`, x, y, w, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
-    y = Motion.paragraph(ctx, `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`, x, y, w, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) }) + 16;
-    y = Motion.paragraph(ctx, 'Colours show each firm’s own real revenue change against its 2019–2021 average, relative to the year’s median of firms on no list. No spatial or proximity effect is estimated.', x, y, w, { size: 22, color: theme.muted, alpha: step(l, 1.8, 0.5) }) + 12;
-    y = Motion.paragraph(ctx, `Dated by the sanctions list (${fmt.int(TR.inferred_n)} of ${fmt.int(TR.n)} dates inferred). ${fmt.int(TR.undated_n)} undated firms on these lists red throughout. Descriptive, not causal.`, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 3.0, 0.5) }) + 12;
-    y = Motion.paragraph(ctx, SPB, x, y, w, { size: 22, color: theme.muted, alpha: step(l, 4.0, 0.5) }) + 12;
-    Motion.text(ctx, 'Paths compared, no effect estimated.', x, y + 10, { size: 22, color: theme.muted, alpha: step(l, 5.0, 0.5) });
+    const y = 466; const line1 = `${fmt.int(cr.red)} firms on at least one of the five lists red by ${Y1} within 160 by 90 km of ${CITY.name}`, line2 = `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`;
+    const yEnd = Motion.paragraph(ctx, line2, x + 28, Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, lineHeight: 1.3, alpha: 0.001 }) + 8, w - 28, { size: 24, lineHeight: 1.3, alpha: 0.001 });   // the lines' extent, drawn all but invisible (a zero alpha returns early; the audit ignores boxes under 0.05)
+    const yb = yEnd + 4 + 24 + 17;   // the St Petersburg note 24 px under the box (the author, 25 October 2026, evening: kept, shorter and scannable): an eyebrow and two figure lines, baselines 29 px apart
+    Motion.panel(ctx, 1180, y - 28 - 16, 680, (yb + 58 + 6 + 16) - (y - 28 - 16), theme, 0.6 * step(l, 0.3, 0.5));   // 16 px around the box and the note; dims the map under it rather than covering it
+    const rb = step(l, 0.5, 0.5); MM.resultBox(ctx, x - 8, y - 28, w + 16, yEnd - y + 32, theme, rb, 'ink'); MM.ringMarker(ctx, x + 8, y - 9, 7, theme.ink, rb);   // the count lines in an ink box: the revenue classes around are amber (round 13)
+    let yy = Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
+    Motion.paragraph(ctx, line2, x + 28, yy, w - 28, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) });
+    Motion.text(ctx, 'ST PETERSBURG, 160 BY 90 KM, 2022 TO 2024', x, yb, { size: 22, weight: 500, color: theme.muted, letterSpacing: 22 * 0.08, alpha: step(l, 1.8, 0.5) });
+    Motion.text(ctx, 'Absence after listing: within 6 points of Moscow', x, yb + 29, { size: 22, color: theme.ink, alpha: step(l, 2.4, 0.5) });   // review/spb-vs-moscow-report.md: the listed firms' absence after listing within 6 points of Moscow's every year
+    Motion.text(ctx, 'Usable baseline: 53 to 54%, Moscow 38 to 44%', x, yb + 58, { size: 22, color: theme.ink, alpha: step(l, 3.0, 0.5) });   // the share of firms with a usable revenue baseline, 2022 to 2024
     ctx.restore();
   }
   const locationAt = (entries, l) => MM.locationAt(entries.map(e => Object.assign({ start: e.start }, WINDOW[e.ext])), l);
@@ -521,14 +529,14 @@
       Motion.reveal(ctx, 'Aeroflot', ap.A[0] + 26, ap.A[1], l, 8.3, { size: 30, weight: 700, color: theme.anchorA, baseline: 'middle', until: introUntil });
       headers(ctx, theme, Motion.plateau(l, SEC.profiles + 0.8, SEC.back + 0.4, 0.5, 0.4));
       const markerAlpha = Motion.plateau(l, SEC.back + 2.5, SEC.national, 0.6, 0.5);   // findable through the Moscow scales; none at the national scale
-      drawMarker(ctx, cam, theme, 'A', markerAlpha); drawMarker(ctx, cam, theme, 'B', markerAlpha);
+      drawMarker(ctx, cam, theme, 'A', markerAlpha, layerReveal); drawMarker(ctx, cam, theme, 'B', markerAlpha);   // Aeroflot's marker in the ink once the classes show
       const c21 = counts('downtown', 2021); const factAlpha = Motion.plateau(l, SEC.back + 3.5, SEC.downtown + 1, 0.5, 0.5);
       if (factAlpha > 0) { Motion.panel(ctx, 60, 950, 1240, 90, theme, 0.92 * factAlpha); Motion.text(ctx, `${fmt.int(c21.drawn + c21.treated)} firms in view in 2021. ${fmt.int(c21.with_base_all)} with a usable revenue baseline.`, 84, 1006, { size: 28, color: theme.ink, alpha: factAlpha }); }
       pileFacts(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 13.8, 0.5, 0.5), !!YL);
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
-      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v: vy, explain2025: false }); }
+      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), inkU: layerReveal, alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v: vy, explain2025: false }); }
       if (l >= SEC.close - 0.5) closeText(ctx, theme, l - SEC.close, outA);
       YL_ACTIVE = null;
     } };

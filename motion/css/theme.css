@@ -21,7 +21,8 @@
   --treated: #E31A1C;      /* listed firms, solid; never used for anything else */
   --treated-outline: #FFD9D9;
   --control-dark: #5A3175; --backdrop: #B5C3D1; /* the purple is no longer drawn on maps (round 3); the backdrop neutral */
-  --anchor-a: #F2B134; --anchor-b: #7CE8C3; --accent-muted: #6FA39A; /* the two anchor firms (amber: Aeroflot, mint: the private firm) and the comparison groups */
+  --anchor-a: #F2B134; --anchor-b: #7CE8C3; --cmp-line: #50B5AA; --cmp-band: #269C96; /* the two anchor firms (amber: Aeroflot, mint: the private firm); the comparison groups' median line and interquartile band in the cyan ramp's steps 3 and 2, the band at 22 percent (Part B item 3, 25 October 2026; the muted teal retired) */
+  --result: #F2B134;       /* the delivered figure's colour and its box (round 13): the anchor amber, kept as it is by the author's decision of 25 October 2026 */
   --nobase: #55606B; --ramp6: #1C8383 #269C96 #50B5AA #79CDBF #A1E4D3 #C7F8E7;       /* non-treated firm without a revenue baseline */
   --below: #3C4852;        /* cells below support (round 8's value) */
   /* The atlas's two accents (round 9), carried here for parity; the video draws none of them. */
@@ -101,7 +102,8 @@ canvas.stage { width: 100%; height: 100%; display: block; background: var(--stag
 .efoot .btn.sq svg { width: 14px; height: 14px; display: block; }
 .efoot .copied { color: var(--muted); }
 @media (max-width: 900px) { .ehead { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }
-.note a { color: var(--accent); }
+.note a { color: var(--cursor); }   /* a link acts: the cursor accent, the ink on hover (Part B item 4, 25 October 2026) */
+.note a:hover { color: var(--ink); }
 html[data-render] .controls, html[data-render] .note, html[data-render] .ehead, html[data-render] .efoot { display: none !important; }
 html[data-render] body { padding: 0; gap: 0; }
 html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none; aspect-ratio: auto; }

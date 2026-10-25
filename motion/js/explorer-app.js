@@ -253,7 +253,7 @@
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: state.mode === 'firms' ? () => drawFirmsGround(c) : null }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { drawRegionFill(c); if (state.mode === 'firms') drawFirmsGround(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
@@ -336,7 +336,7 @@
   function ensureYear(y) {
     if (firmYears.has(y)) return Promise.resolve(firmYears.get(y));
     if (firmPending.has(y)) return firmPending.get(y);
-    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
+    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); for (const T of MOSAIC_LEVELS) mosaicCache.delete(yy + '|' + T); mosaicBitmaps.clear(); mosaicPathCache.clear(); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
     firmPending.set(y, p); return p;
   }
   // Mark rules by zoom (base, s, cap, floor), the Moscow rasters' three extents: pixel marks with blocks below
@@ -665,6 +665,88 @@ void main() {
     if (tf > 0 && REG) drawKmBitmap(regionTint(y), TINT_A * tf, false);
     if (gf > 0 && d) drawKmBitmap(glowFor(y, L, d), GLOW_A * gf, true);
   }
+  // ---- the binned Firms view (round 13, the author's request of 25 October 2026) -------------------------------------------------------------
+  // Below the dots zoom the year's addresses are binned on the Cells view's own ladder and drawn as gapped squares, one colour per square from the layer's
+  // statistic over the addresses inside it: 25 km squares at the country (the national 25 km grid), 1 km squares from k 1.5 (the city windows' grid, here
+  // everywhere), the dots from k 20 as before; each hand-over a crossfade. The squares share the grids' origin (the km plane's), so a flip between the views
+  // at any zoom shows the same squares. Per square: n firms, p coordinate pairs, a with a statement, f filers with a class, the revenue by industry class (each
+  // address's revenue split by its mix shares) and the filers by revenue-change class. The population is the address file's: firms on no list at house- and
+  // street-level geocodes (the Cells view counts every located eligible firm); the legend says so. Squares of 6 px and more are filled per frame inside the
+  // view (the bins sorted by column, the x-band found by a binary search); smaller ones are rendered once into a bitmap of the view with a margin of its own
+  // size, redrawn when the view leaves it or the zoom drifts past 40 percent (a build touches the bins inside the margin once).
+  const MOSAIC_DOTS_K = 20, MOSAIC_LEVELS = [25, 1];
+  const dotsK = () => Math.min(MOSAIC_DOTS_K, minSide() / 20 / 1.4);   // the hand-over to the dots starts at k 20 and runs over a 1.4 x band (20 to 28), or lower on a map whose fine rung (the 250 m preset, minSide / 20) lies under 28, so that preset always shows the dots (a 400 px phone: 13.1 to 18.3)
+  const mosaicAlphas = k => { const dk = dotsK(), to1 = Motion.step(k, 1.5, 1.0, Motion.ease.linear); let toDots = Motion.step(k, dk, 0.4 * dk, Motion.ease.linear); if (toDots > 0.999999) toDots = 1; return { 25: 1 - to1, 1: to1 * (1 - toDots), dots: toDots }; };
+  const mosaicLevelAt = k => (mosaicAlphas(k)[25] >= 0.5 ? 25 : 1);   // the level the hover and the legend speak of
+  const binKey = (bx, by) => (bx + 20000) * 40000 + (by + 20000);
+  const mosaicCache = new Map(), mosaicBitmaps = new Map(); let mosaicBuilds = 0, mosaicBitmapBuilds = 0, mosaicState = { level: null, mode: null, drawn: 0 }, mosaicOff = false;
+  function mosaicBins(y, T) {
+    const key = y + '|' + T; if (mosaicCache.has(key)) return mosaicCache.get(key);
+    const d = firmYears.get(y); if (!d) return null; const N = d.nn.length, Tm = T * 1000, idx = new Map(), bxA = [], byA = []; let count = 0;
+    for (let i = 0; i < N; i++) { const bx = Math.floor(d.x[i] / Tm), by = Math.floor(d.y[i] / Tm), kk = binKey(bx, by); if (!idx.has(kk)) { idx.set(kk, count++); bxA.push(bx); byA.push(by); } }
+    const n = new Uint32Array(count), p = new Uint32Array(count), a = new Uint32Array(count), f = new Uint32Array(count), rev = new Float64Array(count), cls9 = new Float32Array(count * 9), fin6 = new Uint32Array(count * 6), MK = d.mixInd.length;
+    for (let i = 0; i < N; i++) { const j = idx.get(binKey(Math.floor(d.x[i] / Tm), Math.floor(d.y[i] / Tm))); n[j] += d.nn[i]; p[j]++; a[j] += d.a[i]; f[j] += d.f[i];
+      if (d.cls[i]) fin6[j * 6 + d.cls[i] - 1] += d.f[i];
+      if (d.rv[i]) { const r = Math.pow(10, (d.rv[i] - 1) / 100); rev[j] += r; for (let m = 0; m < MK; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; cls9[j * 9 + (IND_CLASS[ind] || 9) - 1] += r * d.mixSh[m][i] / 100; } } }
+    const bx = Int32Array.from(bxA), by = Int32Array.from(byA), ord = new Uint32Array(count); for (let j = 0; j < count; j++) ord[j] = j; ord.sort((u, v) => bx[u] - bx[v]);
+    const bxSorted = new Int32Array(count); for (let q = 0; q < count; q++) bxSorted[q] = bx[ord[q]];
+    let sumN = 0; for (let j = 0; j < count; j++) sumN += n[j];
+    const bins = { T, count, idx, bx, by, n, p, a, f, rev, cls9, fin6, ord, bxSorted, sumN }; mosaicCache.set(key, bins); mosaicBuilds++; return bins;
+  }
+  function mosaicClass(b, j, L) {   // the square's class on the layer: 'below' and 'zero' as the Cells view uses them, 'count' for the layers without a firm-level statistic
+    if (L === 'share') { if (b.T >= 25) return classOfShare(b.n[j], b.a[j], YEAR_BREAKS); if (b.n[j] < 50) return 'below'; const sh = 100 * b.a[j] / b.n[j]; let c = 0; while (c < FINE_BREAKS.length && sh >= FINE_BREAKS[c]) c++; return c; }
+    if (L === 'industry') { let best = -1, bv = 0; for (let c = 0; c < 9; c++) { const v = b.cls9[j * 9 + c]; if (v > bv) { bv = v; best = c; } } return best < 0 ? 'below' : best + 1; }
+    if (L === 'fin') { let tot = 0; for (let c = 0; c < 6; c++) tot += b.fin6[j * 6 + c]; if (!tot) return 'zero'; let acc = 0; for (let c = 0; c < 6; c++) { acc += b.fin6[j * 6 + c]; if (acc * 2 >= tot) return c + 1; } return 6; }
+    return 'count';
+  }
+  const mosaicColour = (L, cl, T) => (cl === 'below' ? theme.below : cl === 'zero' ? theme.zero : cl === 'count' ? theme.density : L === 'share' ? (T >= 25 ? theme.ramp6[cl] : theme.ramp5[cl]) : L === 'industry' ? theme.ind9[cl - 1] : theme.div6[cl - 1]);
+  const mosaicAlphaOf = (cl, n) => (cl === 'below' ? 0.5 : cl === 'zero' ? 0.7 : cl === 'count' ? MM.countAlpha[MM.countClass(n)] : 1);
+  function mosaicGroups(b, L, T, x0, x1, y0, y1, gapOn) {   // the squares inside a km rectangle as one path per colour class
+    const gap = gapOn ? T * 0.12 : 0, s = T - gap, h = gap / 2, bx0 = Math.floor(x0 / T) - 1, bx1 = Math.floor(x1 / T) + 1, by0 = Math.floor(y0 / T) - 1, by1 = Math.floor(y1 / T) + 1;
+    const j0 = lowerBound(b.bxSorted, bx0), j1 = lowerBound(b.bxSorted, bx1 + 1), groups = new Map(); let drawn = 0;
+    for (let q = j0; q < j1; q++) { const j = b.ord[q], by = b.by[j]; if (by < by0 || by > by1) continue; const cl = mosaicClass(b, j, L), key = cl === 'count' ? 'c' + MM.countClass(b.n[j]) : cl; let g = groups.get(key); if (!g) { g = { path: new Path2D(), cl, n: b.n[j] }; groups.set(key, g); } g.path.rect(b.bx[j] * T + h, by * T + h, s, s); drawn++; }
+    return { groups, drawn };
+  }
+  function mosaicBitmap(c, b, L, T) {
+    const k = c.k, key = [T, state.year, L, theme.dark].join('|'), old = mosaicBitmaps.get(key);
+    const vx0 = c.cx - c.ox / k, vx1 = c.cx + (stage.width - c.ox) / k, vy0 = c.cy - (stage.height - c.oy) / k, vy1 = c.cy + c.oy / k;
+    if (old && old.k / k > 0.6 && old.k / k < 1.7 && vx0 >= old.x0 && vx1 <= old.x1 && vy0 >= old.y0 && vy1 <= old.y1) return old;
+    const mx = vx1 - vx0, my = vy1 - vy0, x0 = vx0 - mx / 2, x1 = vx1 + mx / 2, y0 = vy0 - my / 2, y1 = vy1 + my / 2;   // half a view of margin each side: a 2,000 px map stays under the 4,096 px cap, so the blit is 1:1 (round 13, the cost rule at 2,000 px)
+    const sc = Math.min(k * (stage.scale || 1), 4096 / (x1 - x0), 4096 / (y1 - y0)), W = Math.ceil((x1 - x0) * sc), H = Math.ceil((y1 - y0) * sc);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), st = { width: W, height: H, scale: 1, base() { g.setTransform(1, 0, 0, 1, 0, 0); } }, camB = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, k: sc, ox: W / 2, oy: H / 2 };
+    const { groups, drawn } = mosaicGroups(b, L, T, x0, x1, y0, y1, T * sc >= 5);
+    Motion.camTransform(g, st, camB); for (const gr of groups.values()) { g.fillStyle = mosaicColour(L, gr.cl, T); g.globalAlpha = mosaicAlphaOf(gr.cl, gr.n); g.fill(gr.path); } st.base();
+    const out = { cv, cam: camB, W, H, x0, y0, x1, y1, k, drawn }; mosaicBitmaps.set(key, out); mosaicBitmapBuilds++; if (mosaicBitmaps.size > 4) mosaicBitmaps.delete(mosaicBitmaps.keys().next().value); return out;
+  }
+  const mosaicPathCache = new Map();   // the 25 km level's paths per year, layer and gap state: camera-independent, so built once and filled per frame
+  function drawMosaicLevel(c, b, L, T, alpha) {
+    const k = c.k, px = T * k;
+    if (px >= 6 || b.count <= 20000) {
+      const vx0 = c.cx - c.ox / k, vx1 = c.cx + (stage.width - c.ox) / k, vy0 = c.cy - (stage.height - c.oy) / k, vy1 = c.cy + c.oy / k, gapOn = px >= 5;
+      let groups, drawn; if (b.count <= 20000) { const key = [state.year, T, L, gapOn ? 1 : 0].join('|'); let g = mosaicPathCache.get(key); if (!g) { g = mosaicGroups(b, L, T, -1e9, 1e9, -1e9, 1e9, gapOn); mosaicPathCache.set(key, g); if (mosaicPathCache.size > 6) mosaicPathCache.delete(mosaicPathCache.keys().next().value); } groups = g.groups; drawn = g.drawn; }
+      else ({ groups, drawn } = mosaicGroups(b, L, T, vx0, vx1, vy0, vy1, gapOn));
+      Motion.camTransform(mctx, stage, c); for (const g of groups.values()) { mctx.fillStyle = mosaicColour(L, g.cl, T); mctx.globalAlpha = alpha * mosaicAlphaOf(g.cl, g.n); mctx.fill(g.path); } mctx.globalAlpha = 1; stage.base();
+      mosaicState = { level: T, mode: 'direct', drawn };
+    } else { const bm = mosaicBitmap(c, b, L, T); drawKmBitmapClipped(bm, alpha); mosaicState = { level: T, mode: 'bitmap', drawn: bm.drawn }; }
+  }
+  function drawKmBitmapClipped(b, alpha) {   // the part of a km bitmap under the view, drawn through the nine-argument drawImage, so a frame costs the view's area and not the bitmap's
+    const c = cam(), f = c.k / b.cam.k, vx0 = c.cx - c.ox / c.k, vx1 = c.cx + (stage.width - c.ox) / c.k, vy0 = c.cy - (stage.height - c.oy) / c.k, vy1 = c.cy + c.oy / c.k;
+    const sx = Math.max(0, Math.floor((vx0 - (b.cam.cx - b.W / 2 / b.cam.k)) * b.cam.k) - 2), sy = Math.max(0, Math.floor(((b.cam.cy + b.H / 2 / b.cam.k) - vy1) * b.cam.k) - 2);
+    const sw = Math.min(b.W - sx, Math.ceil((vx1 - vx0) * b.cam.k) + 4), sh = Math.min(b.H - sy, Math.ceil((vy1 - vy0) * b.cam.k) + 4); if (sw <= 0 || sh <= 0) return;
+    const [px, py] = Motion.project(c, b.cam.cx - b.W / 2 / b.cam.k + sx / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k - sy / b.cam.k);
+    const dpr = stage.scale || 1, exact = Math.abs(f * dpr - 1) < 1e-6;   // the bitmap at the device's resolution: a copy without filtering, aligned to device pixels (at most half a pixel of shift); a zoom in flight filters
+    mctx.save(); stage.base(); mctx.globalAlpha *= alpha; mctx.imageSmoothingEnabled = !exact; mctx.drawImage(b.cv, sx, sy, sw, sh, exact ? Math.round(px * dpr) / dpr : px, exact ? Math.round(py * dpr) / dpr : py, sw * f, sh * f); mctx.restore();
+  }
+  function binMix(b, j, d) {   // the square's divisions by revenue share, the top eight and the rest (the mix box)
+    const T = b.T, Tm = T * 1000, bx = b.bx[j], by = b.by[j], i0 = lowerBound(d.x, bx * Tm), i1 = lowerBound(d.x, (bx + 1) * Tm), y0 = by * Tm, y1 = (by + 1) * Tm, acc = new Map(); let tot = 0;
+    for (let i = i0; i < i1; i++) { if (d.y[i] < y0 || d.y[i] >= y1 || !d.rv[i]) continue; const r = Math.pow(10, (d.rv[i] - 1) / 100); tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } }
+    if (!tot) return { rows: [], other: 0 }; const rows = [...acc].sort((u, v) => v[1] - u[1]).slice(0, 8).map(([code, v]) => ({ code, share: Math.round(100 * v / tot) })); return { rows, other: Math.max(0, 100 - rows.reduce((t, r) => t + r.share, 0)) };
+  }
+  function binLeader(b, j, d) {   // the division with the largest revenue inside the square and its share, from the addresses inside it (on hover only)
+    const T = b.T, Tm = T * 1000, bx = b.bx[j], by = b.by[j], i0 = lowerBound(d.x, bx * Tm), i1 = lowerBound(d.x, (bx + 1) * Tm), y0 = by * Tm, y1 = (by + 1) * Tm, acc = new Map(); let tot = 0;
+    for (let i = i0; i < i1; i++) { if (d.y[i] < y0 || d.y[i] >= y1 || !d.rv[i]) continue; const r = Math.pow(10, (d.rv[i] - 1) / 100); tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } }
+    if (!tot) return null; let div = -1, bv = 0; for (const [ind, v] of acc) if (v > bv) { bv = v; div = ind; } return { div, share: Math.round(100 * bv / tot) };
+  }
   function drawFirms(c) {
     const y = state.year, d = firmYears.get(y), L = state.layer;
     if (!d) {
@@ -674,11 +756,16 @@ void main() {
       return;
     }
     firmStatus = null;
-    const k = c.k, pad = markRadius(markRule(k), 65535) / k * 1000 + 1000;
+    const k = c.k, A = mosaicAlphas(k);
+    if (!mosaicOff && k < dotsK() * 1.4) for (const T of MOSAIC_LEVELS) { const al = A[T]; if (al > 0) { const b = mosaicBins(y, T); if (b) drawMosaicLevel(c, b, L, T, al); } }   // the squares on the map canvas, under the field and the marks (round 13)
+    const op = A.dots < 1 ? String(A.dots) : ''; fieldC.style.opacity = op; if (field2d) field2d.canvas.style.opacity = op;
+    if (k < dotsK()) { clearField(); if (field2d) field2d.canvas.hidden = true; fieldRegime = { u: 0, smax: 0, additive: false, over: false, mosaic: mosaicLevelAt(k) }; return; }
+    const pad = markRadius(markRule(k), 65535) / k * 1000 + 1000;
     const i0 = lowerBound(d.x, (c.cx - c.ox / k) * 1000 - pad), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + pad);
-    const discs = k >= 20, idx = discs ? discOrder(c, d, i0, i1) : null;   // the switch depends on the zoom alone (author's decision, 24 October 2026)
+    const discs = k >= 20, idx = discs ? discOrder(c, d, i0, i1) : null;   // the switch depends on the zoom alone (author's decision, 24 October 2026); below it the squares since round 13
     if (useGL()) { if (field2d) field2d.canvas.hidden = true; glDraw(c, d, L, i0, i1, discs, idx); }
     else { const f = ensureField2d(); if (discs) discs2d(f, c, d, L, idx); else blit2d(f, c, d, L, i0, i1); }
+    fieldRegime.mosaic = A[1] > 0 ? 1 : null;
   }
   // Listed firms on the marks layer, above the field (25 October 2026): before its listing year a firm keeps its ordinary
   // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
@@ -775,7 +862,10 @@ void main() {
     const c = cam(), k = c.k, rule = markRule(k), LR = MM.listedRule(rule, k, kFit()), yi = state.year - 2014;
     const out = { kind: 'none', region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y, ix: Math.floor(km.x / 100), iy: Math.floor(km.y / 100), grid: 100 };
     const d = firmYears.get(state.year);
-    if (d) {
+    if (d && k < dotsK()) {   // the square under the cursor (round 13)
+      const T = mosaicLevelAt(k), b = mosaicBins(state.year, T); if (b) { const bx = Math.floor(km.x / T), by = Math.floor(km.y / T), j = b.idx.get(binKey(bx, by));
+        if (j !== undefined) Object.assign(out, { kind: 'bin', T, bx, by, j, grid: T, origin: [0, 0], n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], rev: b.rev[j], cls: mosaicClass(b, j, 'fin'), lead: state.layer === 'industry' ? binLeader(b, j, d) : null }); }
+    } else if (d) {
       const Rpx = markRadius(rule, 65535) + 2, Rm = Rpx / k * 1000, xm = km.x * 1000, ym = km.y * 1000;
       const i0 = lowerBound(d.x, xm - Rm), i1 = lowerBound(d.x, xm + Rm); let best = -1, bd = Infinity, br = 0;
       for (let i = i0; i < i1; i++) {
@@ -801,6 +891,7 @@ void main() {
     if (ln) {
       out.listed = { n: ln, red: lred, ring: lring, rim: lrim, rim_from: lrim ? rimA : null, rim_to: lrim ? rimB : null, within_km: k < 20 ? Math.max(MM.listedRadius(LR, 1) + 2, LISTED_HIT) / k : 0, top: top.filter(i => i >= 0) };
       if (out.kind === 'firm') out.address = { rec: out.rec, n: out.n, a: out.a, f: out.f, cls: out.cls, ind: out.ind, ish: out.ish, px: out.px, py: out.py, r: out.r };   // the address under the same cursor keeps its line and its panel row
+      if (out.kind === 'bin') out.bin = { T: out.T, bx: out.bx, by: out.by, j: out.j, n: out.n, p: out.p, a: out.a, f: out.f, rev: out.rev, cls: out.cls, lead: out.lead };   // the square likewise (round 13)
       Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr });   // a listed mark wins the tie
     }
     return out;
@@ -813,7 +904,7 @@ void main() {
   // The cards' collapse toggles (the author's addition of 26 October): a toggle per card, the state remembered per viewer, a collapsed card's chart not drawn (its canvas has no size) and redrawn on opening.
   const CARDS = ['layer', 'goto', 'cursor', 'national', 'groups', 'odds'], cardUI = {};
   const cardOpen = id => (cardUI[id] ? cardUI[id] === 'open' : true);
-  function applyCards() { for (const id of CARDS) { const sec = $('card-' + id), body = $('cb-' + id), t = $('ct-' + id), open = cardOpen(id); body.hidden = !open; sec.classList.toggle('collapsed', !open); t.textContent = open ? '▾' : '▸'; t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + $('h2-' + id).textContent.trim().toLowerCase()); } }
+  function applyCards() { for (const id of CARDS) { const sec = $('card-' + id), body = $('cb-' + id), t = $('ct-' + id), open = cardOpen(id); body.hidden = !open; sec.classList.toggle('collapsed', !open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + $('h2-' + id).textContent.trim().toLowerCase()); } }
   function setCard(id, v) { cardUI[id] = v; applyCards(); if (v === 'open') { drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); } }
   function readPref(key) { try { const v = localStorage.getItem(key); return v === 'open' || v === 'closed' ? v : null; } catch (e) { return null; } }
   function writePref(key, v) { try { localStorage.setItem(key, v); } catch (e) { /* no storage */ } }
@@ -828,8 +919,8 @@ void main() {
   function applyPanels() {
     dropObstacles();
     const lo = legendOpen(), no = noteOpen();
-    $('legendbody').hidden = !lo; const lt = $('legendtoggle'); lt.textContent = lo ? '▾' : '▸'; lt.setAttribute('aria-expanded', String(lo)); lt.setAttribute('aria-label', lo ? 'Collapse the legend' : 'Expand the legend');
-    $('notebody').hidden = !no; $('notelabel').hidden = no; const nt = $('notetoggle'); nt.textContent = no ? '▾' : '▸'; nt.setAttribute('aria-expanded', String(no)); nt.setAttribute('aria-label', no ? 'Collapse the note' : 'Expand the note');
+    $('legendbody').hidden = !lo; const lt = $('legendtoggle'); lt.setAttribute('aria-expanded', String(lo)); lt.setAttribute('aria-label', lo ? 'Collapse the legend' : 'Expand the legend');
+    $('notebody').hidden = !no; $('notelabel').hidden = no; const nt = $('notetoggle'); nt.setAttribute('aria-expanded', String(no)); nt.setAttribute('aria-label', no ? 'Collapse the note' : 'Expand the note');
   }
   // On a narrow map (under 600 px) one panel is open at a time: opening the legend closes the note and the reverse.
   const narrow = () => stage.width < 600;
@@ -855,13 +946,14 @@ void main() {
   function applyMix() {
     const el = $('mixbox'), show = state.layer === 'industry' && !!IND_T; el.hidden = !show; wrap.classList.toggle('mix-on', show); dropObstacles(); if (!show) return;   // mix-on: the legend ends below the box's stub (round 10)
     const open = mixOpen(), t = $('mixtoggle'); el.classList.toggle('closed', !open); $('mixbody').hidden = !open;
-    t.textContent = open ? '▾' : '▸'; t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the revenue mix' : 'Expand the revenue mix');
+    t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the revenue mix' : 'Expand the revenue mix');
     placeMix();
   }
   function openMix(v) { mixUI.open = v; if (v === 'open' && tight() && legendOpen()) { ui.legend = 'closed'; applyPanels(); } applyMix(); mixUI.key = ''; fillMixBox(state.hover); }
   $('mixtoggle').addEventListener('click', () => { const v = mixOpen() ? 'closed' : 'open'; writePref('atlas-mix', v); openMix(v); });
   function mixRowsFor(h) {   // the hovered unit's rows, or null for the view's
     if (!h) return null;
+    { const bn = h.kind === 'bin' ? h : h.bin; if (bn) { const d = firmYears.get(state.year), b = mosaicBins(state.year, bn.T); if (!d || !b) return null; const mix = binMix(b, bn.j, d); return { rows: mix.rows, other: mix.other, unit: `${bn.T} km square at the cursor`, empty: !mix.rows.length }; } }   // the square under the cursor (round 13)
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none') {
       const ad = h.kind === 'firm' ? h : h.address; if (!ad || ad.rec == null) return null; const d = firmYears.get(state.year); if (!d || !d.mixInd) return null;
       const rows = []; let sum = 0; for (let k = 0; k < d.mk; k++) { const code = d.mixInd[k][ad.rec]; if (code === 255) break; const sh = d.mixSh[k][ad.rec]; sum += sh; rows.push({ code, share: sh }); }
@@ -897,7 +989,7 @@ void main() {
   const stripState = { fact: null, tip: null, lastFactAt: 0, tipTimer: 0, tipEnd: 0, glyphName: null, cur: 'A', seen: new Set(), tickRaf: 0 };
   try { const v = JSON.parse(sessionStorage.getItem('atlas-tips') || '[]'); if (Array.isArray(v)) v.forEach(i => stripState.seen.add(+i)); } catch (e) { /* no storage */ }
   const stripOpen = () => (ui.ctx ? ui.ctx === 'open' : true);
-  function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'); el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.textContent = open ? '▾' : '▸'; t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
+  function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'); el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
   $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); syncNoteDefault(); if (v === 'open') updateContext(true); });
   const pts = (n, d) => `${fmt.signed(d)} points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
@@ -920,12 +1012,17 @@ void main() {
     const what = nat ? 'located firms' : 'firms registered in the region';
     if (state.mode === 'firms' && nat && FM && FM.by_year[y]) { const by = FM.by_year[y]; return { band, name, kind: 'firms', text: nw ? `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group)` : `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group) at ${num(by.addresses, fmt.int(by.addresses))} coordinate pairs; ${num(by.listed, fmt.int(by.listed))} on the lists (treated)`, nums: N, short: `${loc('Russia')}, ${ys}: ${sp(fmt.int(by.firms))} on no list (comparison group)`, shortNums: [by.firms] }; }
     if (i == null) { const t = totals[y]; if (t) return { band, name, kind: 'share-t', text: `${loc('Russia')}, ${ys}: ${num(t.located, fmt.int(t.located))} located firms, ${num(t.share, fmt.pct(t.share))} of eligible firms with a statement`, nums: N }; return { band, name, kind: 'none', text: '', nums: N }; }
-    if (L === 'industry' && REG.d1[i] !== 255) { const d = REG.d1[i]; return { band, name, kind: 'industry', text: nw ? `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}), ${num(REG.s1[i], REG.s1[i] + '%')} of revenue` : `${loc(name)}, ${ys}: ${esc(divShort(d))} (division ${divPad(d)}) leads with ${num(REG.s1[i], REG.s1[i] + '%')} of revenue`, nums: N, short: `${loc(name)}, ${ys}: division ${divPad(d)}, ${sp(REG.s1[i] + '%')} of revenue`, shortNums: [REG.s1[i]] }; }
+    if (L === 'industry' && REG.d1[i] !== 255) { const d = REG.d1[i]; return { band, name, kind: 'industry', text: nw ? `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}), ${num(REG.s1[i], REG.s1[i] + '%')} of revenue` : `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}) leads with ${num(REG.s1[i], REG.s1[i] + '%')} of revenue`, nums: N, short: `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}), ${sp(REG.s1[i] + '%')} of revenue`, shortNums: [REG.s1[i]] }; }   // the short label with its code, never the code alone (the author's rule of 25 October 2026)
     if (L === 'lists') return { band, name, kind: 'lists', text: nw ? `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} of ${num(n, fmt.int(n))} on the lists (treated)` : `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} ${nat ? 'located firms' : 'firms registered in the region'} on the five lists (treated) of ${num(n, fmt.int(n))}`, nums: N, short: `${loc(name)}, ${ys}: ${sp(fmt.int(REG.listed[i]))} on the lists (treated)`, shortNums: [REG.listed[i]] };
     if (L === 'change') { const i24 = regRow(name, 2024); if (i24 != null && i21 != null) { const s21 = shareOf(REG.a[i21], REG.n[i21]), s24 = shareOf(REG.a[i24], REG.n[i24]); return { band, name, kind: 'change', text: `${loc(name)}: ${num(s21, fmt.pct(s21))} with a statement in 2021, ${num(s24, fmt.pct(s24))} in 2024, ${num(s24 - s21, pts(0, s24 - s21))}`, nums: N, short: `${loc(name)}: ${sp(fmt.pct(s21))} in 2021, ${sp(fmt.pct(s24))} in 2024`, shortNums: [s21, s24] }; } }
     return Object.assign({ band, name, kind: 'share' }, shareLine(loc(name), n, a, n21, a21, what));
   }
   let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it
+  const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
+  function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
+    if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
+    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = theme.dark ? REGION_FILL.dark : REGION_FILL.light; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore(); stage.base();
+  }
   const regionPaths = new Map();
   const regionPath = name => { if (!regionPaths.has(name)) regionPaths.set(name, MM.partsToPath(BM.lod0.parts.filter(p => p.name === name))); return regionPaths.get(name); };
   function bandUnderCamera() {
@@ -952,16 +1049,19 @@ void main() {
     if (same && !force) return;
     const prev = stripState.fact; stripState.fact = f; stripState.lastFactAt = performance.now();
     if (stripState.tip) endTip(false);
-    setStripText(f, prev); setGlyph(band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name);
+    const gname = band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name;
+    f.slot = `<span class="loc">${esc(gname)}</span> · <span class="num">${state.year}${state.year === 2025 ? '*' : ''}</span>`;   // the slot's essentials (the author's request of 25 October 2026): the glyph's region and the slider's year; the full fact rides the wire as the set's first item
+    setStripText(f, prev); setGlyph(gname);
     rebuildWire(band, name); scheduleTip();
   }
   function setStripText(f, prev) {   // crossfade the two stacked spans; when the previous fact had the same figures, the numbers count to the new values
     const ina = stripState.cur === 'A' ? $('ctxB') : $('ctxA'), out = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); stripState.cur = stripState.cur === 'A' ? 'B' : 'A';
-    ina.innerHTML = f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
-    if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; }   // one layout read per fact change, never per frame
+    const slotMode = wireScrolls() && f.kind !== 'tip' && !!f.slot;   // the scrolling wire's slot shows the essentials; the reduced-motion form shows the facts and tips themselves
+    ina.innerHTML = slotMode ? f.slot : f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
+    if (slotMode) sizeSlot(ina); else { $('ctxlead').style.width = ''; if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; } }   // one layout read per fact change, never per frame
     ina.classList.add('live'); ina.classList.remove('hid'); out.classList.add('hid'); out.classList.remove('live');
     if (stripState.tickRaf) { cancelAnimationFrame(stripState.tickRaf); stripState.tickRaf = 0; }
-    if (prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {
+    if (!slotMode && prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {   // the slot's year changes under the crossfade, never ticks (a ticking year would read as a count)
       const spans = ina.querySelectorAll('.num'), finals = [...spans].map(sp => sp.textContent), t0 = performance.now();
       const fmtLike = (final, v) => { const m = final.match(/^([+−-]?)([\d,]+)(\.(\d+))?(.*)$/); if (!m) return final; const dec = m[4] ? m[4].length : 0; const sign = m[1] === '−' || m[1] === '-' ? (v < 0 ? '−' : m[1] === '+' ? '+' : '') : (m[1] === '+' ? (v < 0 ? '−' : '+') : ''); return sign + fmt.int(Math.floor(Math.abs(v))).replace(/\.\d+$/, '') .replace(/^(\d)/, '$1') + (dec ? '.' + Math.abs(v).toFixed(dec).split('.')[1] : '') + m[5]; };
       const step = () => { stripState.tickRaf = 0; const u = Math.min(1, (performance.now() - t0) / 300), e = Motion.ease.outCubic(u); spans.forEach((sp, j) => { sp.textContent = u >= 1 ? finals[j] : fmtLike(finals[j], prev.nums[j] + (f.nums[j] - prev.nums[j]) * e); }); if (u < 1) stripState.tickRaf = requestAnimationFrame(step); };
@@ -1012,7 +1112,7 @@ void main() {
   // (the committed set keeps its items up to and including the first tip or cat past the visible ones; the rest go). The lead fact of the region under the cursor
   // shows at once in the strip's first slot, a fixed lead zone before the scrolling track, whatever the queue holds. The items of a superseded set that are still
   // crossing the view stay as orphans until they pass; nothing else is kept, so the track never grows and no timer outlives a change.
-  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], orphans: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, topTimer: 0, commitTimer: 0, changedAt: 0, vis: 0, builds: 0, resets: 0, commits: 0 };
+  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], orphans: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, restarts: 0, watchX: null, topTimer: 0, commitTimer: 0, changedAt: 0, vis: 0, builds: 0, resets: 0, commits: 0 };
   let WIRE_CAPS = true;   // the capitals experiment (round 12, part D): every wire item and the lead in tracked capitals, the cat facts and the firm names as they are
   const wireScrolls = () => !reduceMotion();
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1047,19 +1147,19 @@ void main() {
       add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} located firms, ${num(fmt.int(nla))} with a statement and ${num(fmt.int(t.located - nla))} without`);
       add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`); } }
     if (REG) { const iN = regRow('Russia', y); if (iN != null && REG.d1[iN] !== 255) { const d = REG.d1[iN], rows = regRowsOf(y), k = rows.filter(i => REG.d1[i] === d).length;
-        add('regions.d1', `${ys}: ${esc(divShort(d))} (division ${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
-        if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (division ${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
+        add('regions.d1', `${ys}: ${esc(divShort(d))} (${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
+        if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
       if (reg) { const ir = regRow(reg, y); if (ir != null) { add('regions.lsh', `${loc(reg)}, ${ys}: firms on the lists (treated) hold ${num(REG.lsh[ir] + '%')} of the region's revenue`); add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region on the five lists (treated)`); } } }
     if (FM && FM.by_year[y]) { const b = FM.by_year[y];
       add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
-      add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated); ${num(fmt.int(b.city_level))} firms with other geocodes`);
-      add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list; ${num(fmt.int(b.firms_at_100plus))} firms at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
+      add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated). ${num(fmt.int(b.city_level))} firms with other geocodes`);
+      add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list. ${num(fmt.int(b.firms_at_100plus))} firms at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
       const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their 2019 to 2021 average`); }
-    if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms at the largest coordinate pair; ${num(fmt.int(F.firms_at_100plus_locations))} at pairs shared by 100 or more, over every located firm`);
-    { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} supported 100 km cells; ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms with a statement in 2021, ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
+    if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms at the largest coordinate pair. ${num(fmt.int(F.firms_at_100plus_locations))} firms at pairs shared by 100 or more, over every located firm`);
+    { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} supported 100 km cells. ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms with a statement in 2021, ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
     { const k = C100.lists.sanctioned.filter(v => v >= 5).length; add('cells100.lists', `2021: ${num(fmt.int(k))} cells with 5 or more sanctions-list members (treated)`); }
     add('series.facts.cohorts', `2021: ${num(fmt.int(F.cohorts.revenue_cash))} located eligible firms in the revenue cohort by cash share`);
-    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of ${num(fmt.int(TRN.n))} listed firms (treated) red`); add('treatednational', `${num(fmt.int(TRN.undated_n))} firms on the undated lists are red from 2014; ${num(fmt.int(TRN.inferred_n))} listing dates are inferred`); }
+    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of ${num(fmt.int(TRN.n))} listed firms (treated) red`); add('treatednational', `${num(fmt.int(TRN.undated_n))} firms on the undated lists are red from 2014. ${num(fmt.int(TRN.inferred_n))} listing dates are inferred`); }
     return out;
   }
   function wireFirms(y, band, name) {
@@ -1167,6 +1267,12 @@ void main() {
     const ws = wireState; if (ws.commitTimer) clearTimeout(ws.commitTimer);
     ws.commitTimer = setTimeout(() => { ws.commitTimer = 0; if (ws.sets[1] && ws.sets[1].key === key) wireCommit('rest'); }, Math.max(0, 600 - (performance.now() - ws.changedAt)));
   }
+  function sizeSlot(el) {   // the slot's width follows its text (the width transition carries the wire's window with it), capped at a third of the bar (the author's rule); on a resize the cap is applied again
+    const lead = $('ctxlead'); if (!el) el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); if (!wireScrolls() || narrow()) { lead.style.width = ''; return; }
+    const rg = document.createRange(); rg.selectNodeContents(el); const tw = Math.ceil(rg.getBoundingClientRect().width), cap = Math.floor($('ctxstrip').clientWidth / 3), w0 = lead.getBoundingClientRect().width, w1 = Math.max(0, Math.min(tw + 2, cap));
+    if (Math.abs(w1 - w0) < 0.5) return; lead.style.width = w1 + 'px';
+    const ws = wireState; if (ws.anim && !ws.pinned) wireAnimate(wireStop() + (w1 - w0));   // the window's left edge moved by the change: the offset moves with it, so every item keeps its place on screen and the wire never jumps
+  }
   function applyRm2() { const on = narrow() && !wireScrolls(); $('ctxstrip').classList.toggle('rm2', on); wrap.classList.toggle('rm2', on); }   // the two-line reduced-motion form on a phone-width map (round 12, part D): the strip and the lift grow with it
   let wireSettled = false;   // set by afterCameraMove around its context update: a settled camera commits the pending set at once
   function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead slot changes at once); the rest at once
@@ -1176,6 +1282,19 @@ void main() {
     ws.changedAt = performance.now(); ws.timer = setTimeout(() => { ws.timer = 0; wireContextNow(band, name, 'append', false); }, 250);
   }
   function applyWireCaps() { $('ctxtext').classList.toggle('caps', WIRE_CAPS); }
+  // The wire watchdog (the author's request of 25 October 2026): once a second while the document is visible, and at once on visibilitychange and on window focus, the
+  // track's rendered offset is compared with the last check's; a track that should be moving (the scrolling form, an animation started, neither paused under the pointer nor
+  // pinned) but has not advanced restarts its animation from its rendered offset, or tops up when it sits at the track's end. The offset at hiding is kept, so a return finds
+  // a stalled track at once. Nothing is logged.
+  const wireRenderedX = () => { const t = getComputedStyle(wireTrack()).transform; if (!t || t === 'none') return 0; const m = t.match(/matrix\(([^)]+)\)/); return m ? -parseFloat(m[1].split(',')[4]) : 0; };
+  function wireWatch() {
+    const ws = wireState, x = wireRenderedX();
+    if (document.visibilityState !== 'visible') { ws.watchX = x; return; }
+    const should = wireScrolls() && !!ws.anim && !ws.paused && !ws.pinned;
+    if (should && ws.watchX != null && Math.abs(x - ws.watchX) < 0.5) { const tr = wireTrack(), last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0; ws.restarts++; ws.watchX = null; if (end - x <= 1) wireTopUp(); else wireAnimate(x); return; }
+    ws.watchX = x;
+  }
+  setInterval(wireWatch, 1000); document.addEventListener('visibilitychange', wireWatch); window.addEventListener('focus', wireWatch);
   { const bar = $('ctxstrip'), setPause = on => { const ws = wireState; ws.paused = on; if (ws.anim) { if (on) ws.anim.pause(); else ws.anim.play(); } };   // paused under the pointer or focus, as the CSS animation was
     bar.addEventListener('mouseenter', () => setPause(true)); bar.addEventListener('mouseleave', () => setPause(false)); bar.addEventListener('focusin', () => setPause(true)); bar.addEventListener('focusout', () => setPause(false)); }
   function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
@@ -1280,12 +1399,17 @@ void main() {
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const dot = (bg, border) => `<span class="sw dot" style="background:${bg}${border ? ';border:2px solid ' + border : ''}"></span>`;
-      if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row p">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
+      const sqT = c.k < dotsK() ? mosaicLevelAt(c.k) : 0, sq = sqT ? ` <span class="u">(${sqT} km squares)</span>` : '';   // the binned levels (round 13)
+      if (sqT && L === 'share') { const br = sqT >= 25 ? YEAR_BREAKS : FINE_BREAKS, ramp = sqT >= 25 ? theme.ramp6 : theme.ramp5; title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: share of the firms in the square with a ${ys} statement</div>` + ramp.map((col, i) => `<div class="row">${bar(col)}${breakLabels(br, ramp.length)[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in the square</div>`; }
+      else if (sqT && L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>${sq}`; html = `<div class="row p">Colour: the median revenue-change class of the square’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median)</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm in the square has a usable baseline</div>`; }
+      else if (sqT && L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: the class with the largest revenue in the square (each address’s revenue split by its divisions), in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm in the square has a revenue value</div>`; }
+      else if (sqT) { title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: firms on no list in the square (this layer is a cell layer)</div>` + MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
+      else if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row p">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
       else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm at the coordinate pair has a usable baseline</div>`; }
       else if (L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a revenue value</div>`; }
       else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
       if (firmsFade.tint > 0 && REG) html += `<div class="row p">Regions tinted by their leading industry at the national zoom.</div>`;   // the tint under the field (round 10)
-      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
+      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each square bins the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.'}</div>`;
       note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.` + (TRN.name ? ' Hover a listed firm for its name.' : '');
     } else if (L === 'density') {
       title = '<b>Firms per cell</b> <span class="u">(' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')</span>';
@@ -1415,12 +1539,17 @@ void main() {
   function tipText(h) {
     const L = state.layer; const lines = [];
     if (h.region) lines.push(`<b class="loc">${esc(h.region)}</b>`);   // the region line in tracked capitals (round 10)
-    if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none') {
-      const ad = h.kind === 'firm' ? h : h.address;
+    if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none' || h.kind === 'bin') {
+      const ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin;
+      if (bn) {   // the square under the cursor (round 13): its firms on no list, their statements, the layer's statistic
+        lines.push(`${bn.T} km square, ${num(state.year)}: ${num(fmt.int(bn.n))} firms on no list at ${num(fmt.int(bn.p))} coordinate pair${bn.p === 1 ? '' : 's'}, ${num(fmt.int(bn.a))} with a statement${bn.n ? ` (${num(fmt.pct(100 * bn.a / bn.n))})` : ''}`);
+        if (state.layer === 'fin') lines.push(bn.f ? `${fmt.int(bn.f)} with a baseline and a value, median class ${CLASS_LABELS[bn.cls - 1]}` : 'No firm with a usable baseline and a value');
+        if (state.layer === 'industry') lines.push(bn.lead ? `${esc(divShort(bn.lead.div))} (${divPad(bn.lead.div)}), ${bn.lead.share}% of revenue in the square` : 'No firm with a revenue value in the square');   // the short label with the code wherever the tile names a division (the author's rule of 25 October 2026); the full NACE title stays in the panel and the METHOD block
+      }
       if (ad) {   // the glance view (author's rule, 25 October 2026): one figures line, one listed line, the named lines in their short form; the detail stays in the panel
         lines.push(ad.n === 1 ? `1 firm, ${ad.a ? '' : 'no '}${num(state.year)} statement` : `${num(fmt.int(ad.n))} firms, ${num(fmt.int(ad.a))} with a ${num(state.year)} statement, ${num(fmt.pct(100 * ad.a / ad.n))}`);
         if (state.layer === 'fin') lines.push(ad.f ? `${fmt.int(ad.f)} with a baseline and a value, median change ${CLASS_LABELS[ad.cls - 1]}` : 'No firm with a usable baseline and a value');
-        if (state.layer === 'industry' && ad.ind != null) lines.push(ad.ind === 255 ? 'No firm with a revenue value at this coordinate pair' : narrow() ? `${esc(divShort(ad.ind))} (${divPad(ad.ind)}), ${ad.ish}% of revenue here` : `${divLabel(ad.ind)}, ${ad.ish}% of revenue at this coordinate pair`);
+        if (state.layer === 'industry' && ad.ind != null) lines.push(ad.ind === 255 ? 'No firm with a revenue value at this coordinate pair' : `${esc(divShort(ad.ind))} (${divPad(ad.ind)}), ${ad.ish}% of revenue at this coordinate pair`);
       }
       if (h.listed) {
         const Ls = h.listed, parts = [];
@@ -1441,13 +1570,13 @@ void main() {
       if (h.dom == null || h.dom === 255) lines.push(`No firm with a revenue value in this ${cell}`);
       else {
         lines.push(`${cell}, ${state.year}: ${fmt.int(h.nrev)} firms with a revenue value`);
-        lines.push(narrow() ? `Largest share: ${esc(divShort(h.dom))} (${divPad(h.dom)}), ${h.share}%` : `Largest share of revenue: ${divLabel(h.dom)}, ${h.share}%`);
+        lines.push(`Largest share of revenue: ${esc(divShort(h.dom))} (${divPad(h.dom)}), ${h.share}%`);
         if (h.lsh) lines.push(`Firms on these lists (treated) hold ${h.lsh}% of this cell’s revenue`);
       }
       return lines.join('<br>');
     }
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
-    if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a ${h.yearShown || 2021} statement (${fmt.pct(100 * h.a / h.n)})` : h.n >= 50 ? '' : '; share not shown under 50 firms')); return lines.join('<br>'); }
+    if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a ${h.yearShown || 2021} statement (${fmt.pct(100 * h.a / h.n)})` : h.n >= 50 ? '' : '. Share not shown under 50 firms')); return lines.join('<br>'); }
     if (L === 'share') { if (h.n == null) lines.push('No located firms in this 100 km cell'); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement (${fmt.pct(100 * h.ar / h.nr)})`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members (treated): ${fmt.int(h.ns)}`); } }
     else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)} (${fmt.pct(100 * h.a21 / h.n21)})<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)} (${fmt.pct(100 * h.a24 / h.n24)})<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} points</b>` : 'Fewer than 50 firms in a year: not classed')); }
     else if (L === 'cohort') { if (h.n == null) lines.push('No located firms'); else lines.push(`${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms in the revenue cohort by cash share` + (h.supported ? ` (<b>${fmt.pct(h.pct)}</b>)` : ' (fewer than 50 eligible: not classed)')); }
@@ -1574,7 +1703,7 @@ void main() {
   const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover() { $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName) { hoverRegionName = null; updateContext(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
+  function hideHover() { $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName) { hoverRegionName = null; updateContext(); drawMap(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -1680,7 +1809,7 @@ void main() {
   function showHoverAt(x, y, opts = {}) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     if (h.region === undefined) h.region = regionAt(x, y);
-    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); } }   // the strip follows the cursor's region (round 10)
+    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); drawMap(); } }   // the map redraws with the region's fill on a region change only   // the strip follows the cursor's region (round 10)
     const tip = $('tip'); $('tipbody').innerHTML = tipText(h); fillFoot(km, !!opts.tick); tip.style.display = 'block';
     const tw = tip.offsetWidth, th = tip.offsetHeight, obs = tileObstacles();   // one forced layout; the panels' boxes are read under it
     const mark = h.kind === 'firm' || h.kind === 'listed', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
@@ -1795,7 +1924,12 @@ void main() {
     const lead = (code, share) => (code === 0 ? `no OKVED 2 division code&nbsp;·&nbsp;${share}%` : `<span class="ksw" style="background:${mixColour(code)}"></span>${esc(divShort(code))} (${divPad(code)})&nbsp;·&nbsp;${share}%<span class="sub">${esc(indClassLabel(code))}</span>`);
     const mixRows = (list, rest) => '<div class="mix">' + list.map(m => `<div class="r"><span class="ksw" style="background:${mixColour(m.code)}"></span><span class="nm" title="${esc(m.title)} (${divPad(m.code)})">${esc(m.short)} (${divPad(m.code)})</span><span class="pc">${m.share ? m.share + '%' : '<1%'}</span></div>`).join('') + (rest ? `<div class="r"><span class="ksw"></span><span class="nm">other divisions</span><span class="pc">${rest}%</span></div>` : '') + '</div>';
     if (h && h.region) row('Region', esc(h.region), 'loc');
-    const cellHit = !!h && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none', ad = h && (h.kind === 'firm' ? h : h.address);
+    const cellHit = !!h && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none' && h.kind !== 'bin', ad = h && (h.kind === 'firm' ? h : h.address), bn = h && (h.kind === 'bin' ? h : h.bin);
+    if (bn) {   // the square under the cursor (round 13)
+      row('Square', `${bn.T} km`); row('Firms', `${fmt.int(bn.n)} on no list at ${fmt.int(bn.p)} pair${bn.p === 1 ? '' : 's'}`); row(`${y} statement`, bn.n ? `${fmt.int(bn.a)} (${pct(bn.a, bn.n)})` : 'none');
+      if (L === 'fin') { if (bn.f) { row('Baseline', `${fmt.int(bn.f)} with a value`); row('Median class', CLASS_LABELS[bn.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'industry') row('Leading', bn.lead ? lead(bn.lead.div, bn.lead.share) : 'no firm with a revenue value');
+    }
     if (cellHit) {
       row('Cell', h.fine ? (h.grid < 1 ? '250 m' : `${h.grid} km`) : `${h.grid} km (${h.ix}, ${h.iy})`);
       if (L === 'industry') {
@@ -1992,9 +2126,10 @@ void main() {
     // verifyMinimap() rebuilds the boxes should the rendered text ever disagree, as after a late font load.
     const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
-    { const w = Math.ceil(measure('RUSSIA') + 2 * MM_PAD); MMAP.russia = labelBox(fr, 'RUSSIA', X1 - A - 4 - w, MM_Y0 + 2); }   // inside the frame's top-right corner, clear of the bracket's arms
+    MMAP.russia = null;   // the frame carries no label since 25 October 2026 (the author's request): RUSSIA is a kept button under the minimap, above CENTRAL MOSCOW, in the context green; the frame keeps its brackets, its tooltip and its pressed state
     const flyRussia = () => flyTo(fitTarget()); fr.addEventListener('click', flyRussia); fr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyRussia(); } });
     PRESETS.find(p => p.label === 'Russia').node = fr;
+    { const rb = PRESETS.find(p => p.label === 'Russia').button; rb.classList.add('keep', 'russia'); }
     for (const city of bmp.cities) {
       const lay = MM_LAYOUT[city.label]; if (!lay) continue; const txt = city.label.toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
       const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
@@ -2022,7 +2157,7 @@ void main() {
   function minimapCheck() {   // the layout rules, as the audit tests them; returns the violations (empty when clean)
     if (!MMAP) return null; const out = [], C = MMAP.cities, clear = 2, near = 2;   // 2 px between a box and anything, 2 px between a leader and another city's dot edge (5 from its centre)
     const inter = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x, b.x)) > -clear && Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y, b.y)) > -clear && Math.min(a.x1, b.x1) - Math.max(a.x, b.x) > -clear && Math.min(a.y1, b.y1) - Math.max(a.y, b.y) > -clear;
-    const boxes = C.map(c => Object.assign({ label: c.label }, c.box)).concat([Object.assign({ label: 'Russia' }, MMAP.russia)]);
+    const boxes = C.map(c => Object.assign({ label: c.label }, c.box));   // the 22 city boxes (the Russia label left the frame on 25 October 2026)
     for (const b of boxes) if (b.x < 0 || b.y < 0 || b.x1 > MM_W || b.y1 > MM_H) out.push(['outside', b.label]);
     for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) if (inter(boxes[i], boxes[j])) out.push(['box-box', boxes[i].label, boxes[j].label]);
     const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)); return Math.hypot(a[0] + t * dx - p[0], a[1] + t * dy - p[1]); };
@@ -2069,7 +2204,7 @@ void main() {
     if (wireScrolls() && stripOpen() && wireState.sets.length) { const first = wireState.sets[0].els[0]; if (wireVisW() !== wireState.vis || !(wireState.width > 0) || !first || first.getBoundingClientRect().width <= 0) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'reset'); fixed.push('wire'); } }
     dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
   }
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); applyRm2(); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); applyRm2(); sizeSlot(); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
@@ -2087,7 +2222,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -2145,17 +2280,21 @@ void main() {
     floor() { return { kfit: kFit(), kfloor: kFloor(), fraction: FLOOR_FRACTION }; },   // the zoom floor (round 11, item 5)
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
     context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
-    wire() { const ws = wireState, x = wireX(), vis = wireVisW(), cur = ws.sets[0], lead = cur && cur.els.length ? cur.els[0] : $('wiretrack').querySelector('.wi.lead'); return { key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, commits: ws.commits, caps: WIRE_CAPS, orphans: ws.orphans.length / 2, dom: $('wiretrack').querySelectorAll('.wi').length, timers: { debounce: !!ws.timer, commit: !!ws.commitTimer, top: !!ws.topTimer }, heap: performance.memory ? performance.memory.usedJSHeapSize : null, lead: { text: $(stripState.cur === 'A' ? 'ctxA' : 'ctxB').textContent, width: $('ctxlead').clientWidth }, sets: ws.sets.map(sset => ({ key: sset.key, status: sset.status, x0: setStart(sset), x1: setEnd(sset), entered: setEntered(sset, x), items: sset.els.length / 2, lead: sset.els.length ? plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) : '' })) }; },   // the wire's current cycle, its two-set queue and the lead slot (rounds 10 to 12)
+    wire() { const ws = wireState, x = wireX(), vis = wireVisW(), cur = ws.sets[0], lead = cur && cur.els.length ? cur.els[0] : $('wiretrack').querySelector('.wi.lead'); return { slotW: $('ctxlead').getBoundingClientRect().width, barW: $('ctxstrip').clientWidth, slot: (stripState.cur === 'A' ? $('ctxA') : $('ctxB')).textContent.trim(), rendered: wireRenderedX(), restarts: ws.restarts, key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, commits: ws.commits, caps: WIRE_CAPS, orphans: ws.orphans.length / 2, dom: $('wiretrack').querySelectorAll('.wi').length, timers: { debounce: !!ws.timer, commit: !!ws.commitTimer, top: !!ws.topTimer }, heap: performance.memory ? performance.memory.usedJSHeapSize : null, lead: { text: $(stripState.cur === 'A' ? 'ctxA' : 'ctxB').textContent, width: $('ctxlead').clientWidth }, sets: ws.sets.map(sset => ({ key: sset.key, status: sset.status, x0: setStart(sset), x1: setEnd(sset), entered: setEntered(sset, x), items: sset.els.length / 2, lead: sset.els.length ? plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) : '' })) }; },   // the wire's current cycle, its two-set queue and the lead slot (rounds 10 to 12)
     wireGaps() {   // the separators' clearances (the author's report of 25 October 2026): the smallest gap between a separator mark and the items beside it on the track, the lead separator's two margins, the window's edge fade, and any item box a mark covers
       const tr = wireTrack(), kids = [...tr.children], rs = kids.map(el => { if (el.classList.contains('wsep')) return el.getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(el); return rg.getBoundingClientRect(); }); let min = Infinity, covered = 0;   // an item's text extent, not its padded box
       for (let i = 0; i < kids.length; i++) { if (!kids[i].classList.contains('wsep')) continue; const s = rs[i]; if (i > 0) { const g = s.left - rs[i - 1].right; if (g < min) min = g; if (g < -0.5) covered++; } if (i + 1 < kids.length) { const g = rs[i + 1].left - s.right; if (g < min) min = g; if (g < -0.5) covered++; } }
       const lead = $('ctxlead').getBoundingClientRect(), sep = document.querySelector('.ctxt .lsep'), sr = sep ? sep.getBoundingClientRect() : null, win = $('ctxwin').getBoundingClientRect(), cs = getComputedStyle($('ctxwin')), mask = cs.maskImage || cs.webkitMaskImage || 'none';
       return { min: kids.length ? min : null, covered, lsepLeft: sr && sr.width ? sr.left - lead.right : null, lsepRight: sr && sr.width ? win.left - sr.right : null, fade: mask !== 'none' && mask.includes('gradient'), em: parseFloat(getComputedStyle($('ctxtext')).fontSize), items: kids.length };
     },
+    wireStall(on) { const ws = wireState; if (!ws.anim) return false; if (on) ws.anim.pause(); else ws.anim.play(); return true; },   // a stalled animation the page did not ask for (the watchdog's audit state)
     wireCaps(on) { if (on != null) { WIRE_CAPS = !!on; applyWireCaps(); } return WIRE_CAPS; },   // the capitals experiment's switch (round 12, part D)
     wireSeek(x) { wireStop(); wireAnimate(Math.max(0, x)); return wireX(); },   // a frames hook: the track scrolled to x at once (round 12)
     wireItemX(kind, n = 0) { const el = wireTrack().querySelectorAll('.wi.' + kind)[n]; return el ? wirePos(el)[0] : null; },   // a frames hook: the left edge of the n-th item of a kind on the track
     ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
+    mosaic() { const c = cam(), A = mosaicAlphas(c.k), y = state.year, levels = {}; for (const T of MOSAIC_LEVELS) { const b = mosaicCache.get(y + '|' + T); levels[T] = b ? { count: b.count, sumN: b.sumN } : null; } return { k: c.k, dotsK: dotsK(), alphas: A, state: mosaicState, builds: mosaicBuilds, bitmapBuilds: mosaicBitmapBuilds, bitmaps: mosaicBitmaps.size, levels, fieldOpacity: fieldC.style.opacity || '1', regime: fieldRegime }; },   // the binned Firms view (round 13)
+    binAt(x, y) { const k = cam().k, T = mosaicLevelAt(k), b = mosaicBins(state.year, T); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x / T), Math.floor(y / T))); return j === undefined ? null : { T, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry'), fin: mosaicClass(b, j, 'fin') }; },
+    mosaicOff(v) { if (v != null) { mosaicOff = !!v; drawMap(); } return mosaicOff; },   // the squares off, for the contrast probe
     anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
     anniversary(iso) { const a = anniversaryLine(iso); return a ? a.text : null; },   // the builder for a given ISO day (item 6)
     today() { return TODAY; },
@@ -2179,6 +2318,16 @@ void main() {
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
     drawOrder() { return drawLog.slice(); },   // the last drawMap's steps: basemap, mark, then the layer
     handover() { return Object.assign({}, handover); },
+    mosaicContrast(n = 300) {   // the squares' WCAG contrast against the composite beneath them with the two layers on and off (round 13: the round-10 check carried to the squares)
+      if (state.mode !== 'firms') return null; const y = state.year, c = cam(), L = state.layer, T = mosaicLevelAt(c.k), b = mosaicBins(y, T); if (!b || c.k >= dotsK()) return null;
+      const W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(b.count / n));
+      for (let j = 0; j < b.count && pts.length < n; j += step) { const [px, py] = Motion.project(c, (b.bx[j] + 0.5) * T, (b.by[j] + 0.5) * T); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; const cl = mosaicClass(b, j, L); pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(mosaicColour(L, cl, T)), mosaicAlphaOf(cl, b.n[j])]); }
+      const lum = ([r, g, bb]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bb); }, ratio = (a, bb) => { const x = lum(a), z = lum(bb); return (Math.max(x, z) + 0.05) / (Math.min(x, z) + 0.05); };
+      const sample = () => { const img = mctx.getImageData(0, 0, W, mctx.canvas.height).data, rs = []; for (const [px, py, col, al] of pts) { const o = 4 * (py * W + px), a = img[o + 3] / 255, ground = [img[o], img[o + 1], img[o + 2]].map((v, k) => Math.round(v * a + stg[k] * (1 - a))), sq = col.map((v, k) => Math.round(v * al + ground[k] * (1 - al))); rs.push(ratio(sq, ground)); } return rs; };
+      mosaicOff = true; drawMap(); const on = sample(); firmsLayersOff = true; drawMap(); const off = sample(); firmsLayersOff = false; mosaicOff = false; drawMap();
+      let so = 0, sf = 0, mx = 0; for (let i = 0; i < on.length; i++) { so += on[i]; sf += off[i]; mx = Math.max(mx, Math.abs(on[i] - off[i])); }
+      return { n: on.length, on: so / on.length, off: sf / off.length, diff: so / on.length - sf / off.length, maxDiff: mx, layer: L, year: y, level: T };
+    },
     dotContrast(n = 300) {   // the dots' WCAG contrast against the composite beneath them with the two layers on and off (round 10, the author's check of 26 October)
       if (state.mode !== 'firms') return null; const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return null; const c = cam(), W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(d.nn.length / n));
       for (let i = 0; i < d.nn.length && pts.length < n; i += step) { const [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(firmColour(L, firmClass(d, i, L)))]); }
@@ -2197,6 +2346,8 @@ void main() {
       return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds, cover: { extent: [e0[0], e0[1], e1[0], e1[1]], view: [stage.width, stage.height], tint: rect(tb), glow: rect(glowCache), glowBlurPx: glowCache ? 2 * c.k / glowCache.cam.k : null } }; },   // the two layers' fades and caches, and where their bitmaps lie on screen against the country's extent (round 11, item 5)   // the two layers under the field (round 10)
     ghost() { const c = cam(); return { alpha: GHOST_ALPHA, drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)), colour: theme.go }; },   // the ghost names (round 10; floating at a fixed size and opacity since round 12, part D)
     hoverRegion() { return hoverRegionName; },
+    pxOf(x, y) { const c = cam(); return [c.ox + (x - c.cx) * c.k, c.oy - (y - c.cy) * c.k]; },   // a km point on the screen (the region-fill states)
+    regionFill() { return { name: hoverRegionName, alpha: theme.dark ? REGION_FILL.dark : REGION_FILL.light }; },
     regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
     pixelsAt(id, px, py) { const cv = $(id), d = window.devicePixelRatio || 1, g = cv.getContext('2d'), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(Array.from(g.getImageData(Math.round((px + dx) * d), Math.round((py + dy) * d), 1, 1).data)); return out; },   // the 3 by 3 pixels of a canvas around a point   // the city-window hand-over (round 10): the window's strength, the outside layer's alpha and whether it is outlined
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },

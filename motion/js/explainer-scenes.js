@@ -216,8 +216,9 @@
     if (blend > 0) Motion.text(ctx, yearLabel(yearList[i + 1]), px, 330, { size: 128, weight: 700, color: theme.ink, alpha: blend, group: 'year' });
     Motion.text(ctx, yShow === 2019 ? 'FNS, the provider changes' : providerOf(yShow), px, 380, { size: 26, color: yShow === 2019 ? theme.accentStrong : theme.muted, alpha: step(l, 0.4, 0.5) });
     if (tot.share != null) {
-      Motion.text(ctx, fmt.pct(tot.share), px, 500, { size: 72, weight: 700, color: theme.accentStrong, alpha: step(l, 0.6, 0.5) });
-      Motion.text(ctx, 'of eligible firms have a statement', px, 542, { size: 24, color: theme.muted, alpha: step(l, 0.6, 0.5) });
+      const ra = step(l, 0.6, 0.5); MM.resultBox(ctx, px - 24, 424, 508, 148, theme, ra);   // the result box (round 13)
+      Motion.text(ctx, fmt.pct(tot.share), px, 500, { size: 72, weight: 700, color: MM.resultColour(theme), alpha: ra });
+      Motion.text(ctx, 'of eligible firms have a statement', px, 542, { size: 22, color: theme.muted, alpha: ra });   // 22 px: inside the box (round 13)
     }
     if (tot.located != null) Motion.paragraph(ctx, `${fmt.pct(tot.located)} of ${fmt.int(tot.n)} eligible firms located`, px, 600, 500, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5), group: 'years-located' });
     Motion.paragraph(ctx, `${fmt.int(ytShow.supported)} cells with 50 or more located firms`, px, 664, 500, { size: 24, color: theme.muted, alpha: step(l, 0.8, 0.5), group: 'years-cells' });
@@ -239,7 +240,8 @@
     MM.legendSwatches(ctx, px, 660, [{ color: theme.below, alpha: 0.45, label: 'fewer than 50 firms in a year', right: '' }], theme, { alpha: step(l, 0.8, 0.6), colWidth: 440 });
     const ct = C100.change_totals;
     Motion.paragraph(ctx, `${fmt.int(C100.change.supported.reduce((s, v) => s + v, 0))} cells with 50 or more located firms in both years`, px, 760, 460, { size: 24, color: theme.ink, alpha: step(l, 4.4, 0.5) });
-    Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} to ${fmt.pct(ct.availability_share_percent[1])}`, px, 830, l, 4.8, { size: 24, color: theme.ink });
+    { const ra = step(l, 4.8, 0.5); MM.resultBox(ctx, px - 24, 806, 508, 60, theme, ra, 'ink'); MM.ringMarker(ctx, px + 8, 832, 7, theme.ink, ra);   // the result box in the ink: the declines on this map are amber (round 13)
+      Motion.reveal(ctx, `Located share ${fmt.pct(ct.availability_share_percent[0])} to ${fmt.pct(ct.availability_share_percent[1])}`, px + 28, 840, l, 4.8, { size: 24, color: theme.ink }); }
   } };
 
   // The flight to Moscow under the start of the section's street zoom (23 s): the Moscow hold with the
@@ -304,9 +306,12 @@
     ctx.restore();
     const px = 1400;
     if (l > 6.6) {
-      Motion.reveal(ctx, '2022 against 2021, Q5 vs Q1', px, 300, l, 6.6, { size: 30, weight: 700, color: theme.ink });
+      const t1 = '2022 against 2021, Q5 vs Q1', t4 = `95% interval ${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`;
+      const bw = Math.max(Motion.measure(ctx, t1, 28, 700), Motion.measure(ctx, 'ratio of odds ratios', 24, 400), Motion.measure(ctx, fmt.dec(F.size_q5_2022_ratio, 3), 60, 700), Motion.measure(ctx, t4, 26, 400));
+      MM.resultBox(ctx, px - 24, 300 - 20 - 24, bw + 48, (440 + 6 + 24) - (300 - 20 - 24), theme, step(l, 6.6, 0.5));   // the result box (round 13): 24 px around the four lines, from the title's cap height to the interval's descent
+      Motion.reveal(ctx, t1, px, 300, l, 6.6, { size: 28, weight: 700, color: theme.ink });
       Motion.reveal(ctx, 'ratio of odds ratios', px, 340, l, 7.0, { size: 24, color: theme.muted });
-      Motion.reveal(ctx, fmt.dec(F.size_q5_2022_ratio, 3), px, 404, l, 7.0, { size: 60, weight: 700, color: theme.accentStrong });
+      Motion.reveal(ctx, fmt.dec(F.size_q5_2022_ratio, 3), px, 404, l, 7.0, { size: 60, weight: 700, color: MM.resultColour(theme) });
       Motion.reveal(ctx, `95% interval ${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`, px, 440, l, 7.3, { size: 26, color: theme.muted });
       Motion.paragraph(ctx, `Raw shares in 2022: Q1 ${fmt.pct(F.size_raw_q1_2022)}, Q5 ${fmt.pct(F.size_raw_q5_2022)}.`, px, 510, 440, { size: 26, color: theme.ink, alpha: step(l, 8.2, 0.6) });
       Motion.paragraph(ctx, `Provisional: without wholesale trade the later widening shrinks. Early-era (2014–2018) Q5 ratios: ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 600, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
@@ -372,7 +377,7 @@
     Motion.reveal(ctx, 'ARMEN G. KAPRELIAN · PHD CANDIDATE, CLAREMONT GRADUATE UNIVERSITY', 960, 446, l, 0.5, { size: 22, weight: 500, color: theme.muted, align: 'center', letterSpacing: 22 * 0.08 });
     Motion.revealParagraph(ctx, 'Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 960, 490, 1760, l, 0.8, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-data' });
     Motion.reveal(ctx, 'Boundaries: geoBoundaries.org gbOpen (CC BY 4.0); OpenStreetMap/Wambacher 2017, ODbL 1.0; © OpenStreetMap contributors', 960, 572, l, 1.1, { size: 22, color: theme.muted, align: 'center' });
-    Motion.revealParagraph(ctx, 'Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. Supplied lists are fixed memberships, not dated designations.', 960, 624, 1760, l, 1.4, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-caveat' });
+    Motion.revealParagraph(ctx, 'Descriptive, not causal. Dated events are context. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations.', 960, 624, 1760, l, 1.4, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-caveat' });
   } };
 
   // ---- cuts ------------------------------------------------------------------------------------

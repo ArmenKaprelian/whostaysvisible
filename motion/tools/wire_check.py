@@ -64,10 +64,10 @@ def facts(D, y, band, name):
     iN = D['regrow'].get(('Russia', y))
     if iN is not None and R['d1'][iN] != 255:
         d = R['d1'][iN]; rows = [i for i in range(len(R['region'])) if R['year'][i] == y and R['region'][i] not in SKIP]; k = sum(1 for i in rows if R['d1'][i] == d)
-        out.append(f'{ys}: {div_short(D, d)} (division {d:02d}) leads nationally and in {fmt_int(k)} of {fmt_int(len(rows))} regions')
+        out.append(f'{ys}: {div_short(D, d)} ({d:02d}) leads nationally and in {fmt_int(k)} of {fmt_int(len(rows))} regions')
         if reg:
             ir = D['regrow'].get((reg, y))
-            if ir is not None and R['d1'][ir] != 255 and R['d1'][ir] != d: out.append(f'{reg}, {ys}: {div_short(D, R["d1"][ir])} (division {R["d1"][ir]:02d}) leads with {R["s1"][ir]}% of revenue')
+            if ir is not None and R['d1'][ir] != 255 and R['d1'][ir] != d: out.append(f'{reg}, {ys}: {div_short(D, R["d1"][ir])} ({R["d1"][ir]:02d}) leads with {R["s1"][ir]}% of revenue')
     if reg:
         ir = D['regrow'].get((reg, y))
         if ir is not None:
@@ -76,18 +76,18 @@ def facts(D, y, band, name):
     b = FM['by_year'].get(str(y))
     if b:
         out.append(f'{ys}: {fmt_int(b["firms"])} firms on no list (comparison group) at {fmt_int(b["addresses"])} coordinate pairs')
-        out.append(f'{ys}: {fmt_int(b["listed"])} located firms on the lists (treated); {fmt_int(b["city_level"])} firms with other geocodes')
-        out.append(f'{ys}: the largest coordinate pair holds {fmt_int(b["max_at_address"])} firms on no list; {fmt_int(b["firms_at_100plus"])} firms at the {fmt_int(b["addresses_100plus"])} pairs shared by 100 or more')
+        out.append(f'{ys}: {fmt_int(b["listed"])} located firms on the lists (treated). {fmt_int(b["city_level"])} firms with other geocodes')
+        out.append(f'{ys}: the largest coordinate pair holds {fmt_int(b["max_at_address"])} firms on no list. {fmt_int(b["firms_at_100plus"])} firms at the {fmt_int(b["addresses_100plus"])} pairs shared by 100 or more')
         if y in FM['median_by_year']['year']:
             k = FM['median_by_year']['year'].index(y); out.append(f'{ys}: the median real-revenue change of firms on no list (comparison group) {fmt_signed(FM["median_by_year"]["med"][k])}% against their 2019 to 2021 average')
-    if y == 2021: out.append(f'2021: {fmt_int(F["largest_location_firms"])} firms at the largest coordinate pair; {fmt_int(F["firms_at_100plus_locations"])} at pairs shared by 100 or more, over every located firm')
+    if y == 2021: out.append(f'2021: {fmt_int(F["largest_location_firms"])} firms at the largest coordinate pair. {fmt_int(F["firms_at_100plus_locations"])} firms at pairs shared by 100 or more, over every located firm')
     ct = C['change_totals']; sup = sum(1 for v in C['change']['supported'] if v)
-    out.append(f'2024 against 2021: {fmt_int(sup)} supported 100 km cells; {fmt_pct(ct["availability_share_percent"][0])} of located firms with a statement in 2021, {fmt_pct(ct["availability_share_percent"][1])} in 2024')
+    out.append(f'2024 against 2021: {fmt_int(sup)} supported 100 km cells. {fmt_pct(ct["availability_share_percent"][0])} of located firms with a statement in 2021, {fmt_pct(ct["availability_share_percent"][1])} in 2024')
     out.append(f'2021: {fmt_int(sum(1 for v in C["lists"]["sanctioned"] if v is not None and v >= 5))} cells with 5 or more sanctions-list members (treated)')
     out.append(f'2021: {fmt_int(F["cohorts"]["revenue_cash"])} located eligible firms in the revenue cohort by cash share')
     red = sum(1 for i in range(T['n']) if T['red_from'][i] <= y)
     out.append(f'By {ys}: {fmt_int(red)} of {fmt_int(T["n"])} listed firms (treated) red')
-    out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014; {fmt_int(T["inferred_n"])} listing dates are inferred')
+    out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014. {fmt_int(T["inferred_n"])} listing dates are inferred')
     return out
 
 def firms(D, y, band, name):

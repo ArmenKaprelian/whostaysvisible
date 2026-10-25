@@ -15,7 +15,7 @@
    something moves or has focus (the author's correction, 25 October 2026). */
 :root {
   --stage: #060B18; --land: #172A45; --border: #495669; --graticule: #2E333D;
-  --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
+  --ink: #ECEEF1; --muted: #B4C0D0; --wire-pre: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #79CDBF; --accent-strong: #C7F8E7; --fall: #F39523; --rise: #79CDBF; --below: #3C4852; --highlight: rgba(121,205,191,0.10);   /* the cyan ramp's steps 4 and 6; the diverging pair's classes 2 and 5 (round 10) */
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
   --div-1: #FFB000; --div-2: #F39523; --div-3: #EA7719; --div-4: #50B5AA; --div-5: #79CDBF; --div-6: #A1E4D3; --zero: #6B7482;   /* the signed layers' pair (round 10): declines amber to orange, rises the cyan ramp's steps 3 to 5, the slate for no usable baseline */
@@ -30,7 +30,7 @@
 }
 :root[data-theme="light"] {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
-  --ink: #24323D; --muted: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
+  --ink: #24323D; --muted: #52636D; --wire-pre: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
   --ind-1: #936E16; --ind-2: #2550B4; --ind-3: #973001; --ind-4: #1A7F7A; --ind-5: #6D6816; --ind-6: #7B3FD1; --ind-7: #5D4E78; --ind-8: #537A9B; --ind-9: #5B6470;
   --div-1: #854505; --div-2: #9D5E01; --div-3: #B27901; --div-4: #1C989E; --div-5: #0A7E83; --div-6: #196369; --zero: #727C86; --fall: #9D5E01; --rise: #0A7E83;
@@ -104,7 +104,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
-.toggle { background: transparent; color: var(--muted); border: 3px solid var(--context); border-radius: 0; width: 26px; height: 24px; padding: 0; cursor: pointer; font-size: 12px; line-height: 1; flex: 0 0 auto; position: relative; }
+.toggle { background: transparent; color: var(--muted); border: 3px solid var(--context); border-radius: 0; width: 26px; height: 24px; padding: 0; cursor: pointer; font-size: 12px; line-height: 1; flex: 0 0 auto; position: relative; display: grid; place-items: center; }
+.toggle::before { content: ""; display: block; width: 12px; height: 8px; background: currentColor; clip-path: polygon(0 0, 100% 0, 50% 100%); }   /* the triangle drawn, not set in type (the author's request of 25 October 2026): 12 by 8 px inside the 20 by 18 px box, the same on every device; collapsed, it points right */
+.toggle[aria-expanded="false"]::before { width: 8px; height: 12px; clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .toggle:hover { border-color: var(--context-live); color: var(--ink); }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 0; }
 .maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
@@ -176,12 +178,12 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; line-height: 24px; font-size: 14px; overflow: hidden; pointer-events: auto; display: flex; align-items: center; }
 /* The strip's first slot (round 12, part D): a lead zone before the scrolling track shows the region under the cursor at once, whatever the queue holds; the
    two stacked spans crossfade as round 9's strip did and take the short form when the full one would clip. Under reduced motion the lead takes the whole width. */
-.ctxt > .lead { display: grid; flex: 0 0 min(680px, 64%); min-width: 0; height: 24px; color: var(--context); }   /* a fixed slot (round 12, part D): the window's width never follows the lead's text, so the scroll never jumps and the layout guard sees one width per map width */
+.ctxt > .lead { display: grid; flex: 0 0 auto; width: 0; max-width: 33%; min-width: 0; height: 24px; color: var(--context); }   /* the slot's essentials (the author's request of 25 October 2026): the region's name and the year, sized to the text by the script (about a fifth of the bar at 1,600 px), never more than a third; the width snaps and the wire's offset moves with it, so the items keep their place */   /* a fixed slot (round 12, part D): the window's width never follows the lead's text, so the scroll never jumps and the layout guard sees one width per map width */
 .ctx.narrow .ctxt:not(.rm) > .lead, .ctx.narrow .ctxt:not(.rm) > .lsep { display: none; }   /* a phone-width map has no room for a slot beside the window: the lead rides the wire (the first item after those in view) */
 .ctxt .lsep { flex: 0 0 auto; margin: 0 12px; }   /* 0.86 em on both sides of the lead separator (the author's report of 25 October 2026: the mark had sat 4 px from a glyph clipped at the window's edge) */
 .ctxt .trackwin { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent); }   /* the window's edges fade over 14 px, so a glyph scrolling under them leaves softly instead of being cut beside the separator */
 .ctxt.rm .trackwin, .ctxt.rm .lsep { display: none; }
-.ctxt.rm > .lead { flex: 1 1 auto; max-width: 100%; }
+.ctxt.rm > .lead { flex: 1 1 auto; max-width: 100%; width: auto; }
 .ctx.narrow .ctxt.rm, .ctx.narrow .ctxt.rm > .lead { height: 48px; font-size: 13px; }   /* the reduced-motion form on a phone-width map: one item at a time over two lines of 13 px (36 characters a line) */
 .ctx.narrow.rm2 { height: 58px; }
 .ctx.narrow .ctxt.rm .t.tip { text-transform: none; letter-spacing: 0; font-weight: 400; }   /* a tip of up to 68 characters fits two lines in sentence case; in capitals it would need three */
@@ -195,7 +197,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .wi { display: inline-block; padding: 0 12px; }
 .wi .num { font-variant-numeric: tabular-nums; }
 .wi.tip, .wi.cat .pre { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.wi.cat .pre { color: var(--context-muted); }
+.wi.cat .pre { color: var(--wire-pre); }   /* the cat prefix in the muted text tone through its own token (Part B item 7, 25 October 2026); the earlier rule named a token the neon-rests correction had removed */
 .wi.cat .cf { color: var(--ink); }
 .wsep { width: 14px; height: 14px; color: var(--context); flex: 0 0 auto; }   /* the separator mark at 14 px with 2 px strokes in the full context green (round 11) */
 .ctxt .t { grid-area: 1 / 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
@@ -303,7 +305,11 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .minimap [aria-pressed="true"] text { fill: var(--context); }
 .minimap .city:hover text, .minimap .frame:hover text { fill: var(--ink); }
 @media (max-width: 900px) { .minimap { display: none; } }
-@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } }
+@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } .presets { flex-direction: column; align-items: flex-start; } .presets .btn.keep { font-size: 11px; padding: 2px 6px; } }   /* under the minimap the two kept buttons stack at the left, RUSSIA above CENTRAL MOSCOW, at one size between the frame label's 9 px and the list's 12 px (the author's request of 25 October 2026) */
+.card.go .btn.russia { border-color: var(--context); color: var(--context); }   /* RUSSIA keeps the context green of the minimap's frame */
+.card.go .btn.russia:hover { border-color: var(--context-live); color: var(--context-live); }
+.card.go .btn.russia[aria-pressed="true"] { background: var(--context); color: var(--stage); border-color: var(--context); }
+.card.go .btn.russia[aria-pressed="true"]:hover { background: var(--context-live); border-color: var(--context-live); color: var(--stage); }
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 .muted { color: var(--muted); }
@@ -335,7 +341,7 @@ footer .byfoot code { font-family: var(--font); color: var(--ink); user-select: 
 footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
-footer a { color: var(--accent); }
+footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
 </style>
 </head>
 <body>
@@ -351,21 +357,21 @@ footer a { color: var(--accent); }
     <canvas id="field" aria-hidden="true"></canvas>
     <canvas id="marks" aria-hidden="true"></canvas>
     <canvas id="overlay"></canvas>
-    <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend">▾</button></div><div class="lbody" id="legendbody"></div></div>
-    <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix">▾</button></div><div id="mixbody"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div>
-    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel ui" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
+    <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend"></button></div><div class="lbody" id="legendbody"></div></div>
+    <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix"></button></div><div id="mixbody"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div>
+    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note"></button><span class="nlabel ui" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
     <div class="scalebar" id="scalebar" aria-hidden="true"><svg class="ruler" id="ruler" width="204" height="34" viewBox="0 0 204 34"></svg></div>
     <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
       <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="ZOOM IN (+)">+</button>
       <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="ZOOM OUT (−)">−</button>
       <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="FIT THE WHOLE COUNTRY (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="zf" id="zoomfactor" aria-hidden="true">×1.0</span></button>
     </div>
-    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><svg class="mk wsep lsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg><div class="trackwin" id="ctxwin"><div class="track" id="wiretrack"></div></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line">▾</button></div>
+    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><svg class="mk wsep lsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg><div class="trackwin" id="ctxwin"><div class="track" id="wiretrack"></div></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line"></button></div>
     <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div></div>
   </div>
   <aside class="side">
     <section class="card act" id="card-layer">
-      <div class="chead" id="ch-layer"><h2 id="h2-layer">Layer</h2><button class="toggle ctoggle" id="ct-layer" type="button" aria-expanded="true" aria-controls="cb-layer" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-layer"><h2 id="h2-layer">Layer</h2><button class="toggle ctoggle" id="ct-layer" type="button" aria-expanded="true" aria-controls="cb-layer" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-layer">
       <div class="controls" id="modes"></div>
       <div class="methodrow"><span class="ui">Method</span><button class="btn info" id="methodbtn" type="button" aria-expanded="false" aria-controls="method" aria-label="Show the method" title="METHOD">i</button></div>
@@ -375,7 +381,7 @@ footer a { color: var(--accent); }
       </div>
     </section>
     <section class="card go" id="card-goto">
-      <div class="chead" id="ch-goto"><h2 id="h2-goto">Go to</h2><button class="toggle ctoggle" id="ct-goto" type="button" aria-expanded="true" aria-controls="cb-goto" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-goto"><h2 id="h2-goto">Go to</h2><button class="toggle ctoggle" id="ct-goto" type="button" aria-expanded="true" aria-controls="cb-goto" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-goto">
       <svg class="minimap" id="minimap" viewBox="0 0 376 232" role="group" aria-label="Minimap of the preset cities"></svg>
       <div class="presets" id="presets"></div>
@@ -383,28 +389,28 @@ footer a { color: var(--accent); }
       </div>
     </section>
     <section class="card" id="card-cursor">
-      <div class="chead" id="ch-cursor"><h2 id="h2-cursor">Under the cursor</h2><button class="toggle ctoggle" id="ct-cursor" type="button" aria-expanded="true" aria-controls="cb-cursor" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-cursor"><h2 id="h2-cursor">Under the cursor</h2><button class="toggle ctoggle" id="ct-cursor" type="button" aria-expanded="true" aria-controls="cb-cursor" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-cursor">
       <div class="kv" id="cellinfo"><span class="muted">Hover a cell</span><b></b></div>
       <canvas class="chart" id="cellchart" aria-label="Share with a statement in the hovered cell, by year"></canvas>
       </div>
     </section>
     <section class="card" id="card-national">
-      <div class="chead" id="ch-national"><h2 id="h2-national">National availability by year</h2><button class="toggle ctoggle" id="ct-national" type="button" aria-expanded="true" aria-controls="cb-national" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-national"><h2 id="h2-national">National availability by year</h2><button class="toggle ctoggle" id="ct-national" type="button" aria-expanded="true" aria-controls="cb-national" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-national">
       <canvas class="chart" id="natchart" aria-label="Share of firms with a statement by year"></canvas>
       <div class="prov" id="natprov"></div>
       </div>
     </section>
     <section class="card" id="card-groups">
-      <div class="chead" id="ch-groups"><h2 id="h2-groups">Groups, 2021 to 2024</h2><button class="toggle ctoggle" id="ct-groups" type="button" aria-expanded="true" aria-controls="cb-groups" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-groups"><h2 id="h2-groups">Groups, 2021 to 2024</h2><button class="toggle ctoggle" id="ct-groups" type="button" aria-expanded="true" aria-controls="cb-groups" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-groups">
       <canvas class="chart" id="groupchart" aria-label="Share with a statement by ownership and legal form, 2021 and 2024"></canvas>
       <div class="prov" id="groupprov"></div>
       </div>
     </section>
     <section class="card" id="card-odds">
-      <div class="chead" id="ch-odds"><h2 id="h2-odds">Odds against the comparison group</h2><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card">▾</button></div>
+      <div class="chead" id="ch-odds"><h2 id="h2-odds">Odds against the comparison group</h2><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-odds">
       <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and the sanctions list (treated)"></canvas>
       <div class="prov" id="oddsprov"></div>

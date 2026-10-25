@@ -177,7 +177,7 @@
   // a transition) draws the years beyond it in place at `futureAlpha` and puts a dot on each line at
   // the current year (the live box); `compact` drops the labels and the marker's text. The marker is
   // drawn in `colors.marker` (red for the listing year) and the firm line in `colors.firm`.
-  C.bandLines = function (ctx, box, data, { xDomain = [2013.6, 2025.4], yDomain = [25, 500], yTicks = [50, 100, 200, 400], xTicks = [2014, 2018, 2022, 2025], progress = 1, theme,
+  C.bandLines = function (ctx, box, data, { ringCurrent = false, xDomain = [2013.6, 2025.4], yDomain = [25, 500], yTicks = [50, 100, 200, 400], xTicks = [2014, 2018, 2022, 2025], progress = 1, theme,
                                             colors = {}, marker = null, labels = {}, gapLabel = null, size = 22, current = null, futureAlpha = 0.3, compact = false, textAlpha = 1,
                                             labelAlpha = 1, xTicksMinor = [], minorAlpha = 1 } = {}) {
     const col = Object.assign({ firm: theme.ink, median: theme.accent, band: theme.accent, marker: theme.tick }, colors);
@@ -222,7 +222,7 @@
       const at = (pts, key) => { const s = pts.filter(p => p[key] != null).sort((a, b) => a.x - b.x); for (let i = 0; i < s.length - 1; i++) { if (current >= s[i].x && current <= s[i + 1].x && s[i + 1].x - s[i].x <= 1.001) { const u = (current - s[i].x) / (s[i + 1].x - s[i].x); return s[i][key] * Math.pow(s[i + 1][key] / s[i][key], u); } } const e = s.find(p => Math.abs(p.x - current) < 1e-9); return e ? e[key] : null; };
       const yf = at(firm, 'y'), ym = at(band, 'med');
       if (ym != null) { ctx.fillStyle = col.median; ctx.beginPath(); ctx.arc(sx(current), sy(ym), 6, 0, Math.PI * 2); ctx.fill(); }
-      if (yf != null) { ctx.fillStyle = col.firm; ctx.beginPath(); ctx.arc(sx(current), sy(yf), 6.5, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = theme.stage; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (yf != null) { ctx.beginPath(); ctx.arc(sx(current), sy(yf), 6.5, 0, Math.PI * 2); if (ringCurrent) { ctx.fillStyle = theme.stage; ctx.fill(); ctx.strokeStyle = col.firm; ctx.lineWidth = 2; ctx.stroke(); } else { ctx.fillStyle = col.firm; ctx.fill(); ctx.strokeStyle = theme.stage; ctx.lineWidth = 1.5; ctx.stroke(); } }   // ringCurrent: the current point as a ring, the circle marker of a line drawn in the ink (round 13)
     }
     // The marker's label sits at the foot of its dotted line, the gap label at the top of the plot, so
     // neither meets the band or the other.

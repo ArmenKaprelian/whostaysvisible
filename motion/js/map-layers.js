@@ -110,6 +110,19 @@
     stage.base();
   };
 
+  // The result style (round 13, the author's request of 25 October 2026): a delivered figure sits in a subtle box, the anchor amber at 10 percent over the stage with a 1 px
+  // border at 30 percent, squared, no shadow; the ink at 6 and 25 percent with a ring marker before the figure where the frame already carries an amber (the pair's declines,
+  // the anchor firm's line), so that one amber never means two things in a frame. The box is recorded as a panel for the audit's panel-clip rule.
+  M.resultBox = function (ctx, x, y, w, h, theme, alpha = 1, variant = 'amber') {
+    if (alpha <= 0) return;
+    const col = variant === 'ink' ? theme.ink : (theme.result || theme.anchorA || '#F2B134');
+    Motion.panel(ctx, x, y, w, h, theme, 0.7 * alpha, 'result');
+    ctx.save(); ctx.globalAlpha *= alpha * (variant === 'ink' ? 0.06 : 0.10); ctx.fillStyle = col; ctx.fillRect(x, y, w, h); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= alpha * (variant === 'ink' ? 0.25 : 0.30); ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1); ctx.restore();
+  };
+  M.resultColour = theme => theme.result || theme.anchorA || '#F2B134';
+  M.ringMarker = function (ctx, x, y, r, colour, alpha = 1) { if (alpha <= 0) return; ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); };
+
   // --- density layers (base64 typed arrays) --------------------------------------------------
   M.countClass = function (n) { return n <= 2 ? 0 : n <= 5 ? 1 : n <= 10 ? 2 : n <= 25 ? 3 : n <= 60 ? 4 : n <= 150 ? 5 : n <= 400 ? 6 : 7; };
   M.countAlpha = [0.22, 0.32, 0.44, 0.56, 0.68, 0.8, 0.9, 1.0];

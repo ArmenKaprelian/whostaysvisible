@@ -17,3 +17,13 @@ Read against `design/principles.md` on 26 October 2026 (round 12, part B): the a
 7. **The cat prefix names a token that no longer exists.** `.wi.cat .pre { color: var(--context-muted); }` references the muted context colour removed with the "neon rests" correction, so the prefix renders in the full green; the stylesheet still asks for a muted accent at rest. Principle: no muted accents at rest (section 2; met on screen by accident). Where: `motion/explorer.html:176`. Fix: `color: var(--context)`, or a second tone for the prefix if the author wants the item 15 distinction back (the muted text tone #B4C0D0, not a muted accent).
 
 Checked and clean: no rounded corner outside the round listed-state glyphs and the minimap's dots; no shadow, filter, blur or backdrop effect on either page; no tonal gradient (the slider track and the legend bars are hard-stop fills); no retired 600 weight on either page or in the video (the two matches in the scene code are positions, not weights); no em-dash; no "supplied list", "treatment group", "sanctioned or strategic" or "control" on screen beyond item 5; the video's panels are flat `fillRect` surfaces at 0.92 with no radius; the explainer's control buttons are tracked capitals and its chapter buttons mixed case by decision; the eyebrows and location lines are tracked capitals; the accents sit only on the roles the document names; "(treated)" appears nowhere in the video.
+
+## Outcomes (the author's picks of 25 October 2026, applied on the `round-13` branch)
+
+1. Fixed: the five wire facts and the fine-cell line are two sentences each, every figure and denominator kept, the checker's templates matched, and the wire's audit state reports any semicolon in an item.
+2. Settled by the author's colour decision: Aeroflot keeps the anchor amber; where the diverging pair's amber shares the frame (the Moscow runs' revenue classes) its marker, leader and label on the map and its line in the live box take the ink, the live box's current point as a ring, the colour crossing with the classes' reveal.
+3. Fixed: the medians in the cyan ramp's third step (#50B5AA), the bands in the second (#269C96) at 22 percent, through `--cmp-line` and `--cmp-band`; `--accent-muted` retired.
+4. Fixed: `.note a` in the cursor accent with the ink on hover; the atlas's `footer a` rule aligned.
+5. Fixed: "The lists are fixed memberships, not dated designations."; both cuts re-rendered; the README's wording record no longer lists an exception.
+6. Accepted as the recorded deviation (the minimap's labels at 9 px).
+7. Fixed: the cat prefix takes the muted text tone through its own token `--wire-pre` (#B4C0D0 on the dark theme, #52636D on the light); the dead reference is gone.
