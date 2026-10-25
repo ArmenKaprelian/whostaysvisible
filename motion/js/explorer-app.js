@@ -51,7 +51,7 @@
 
   // ---- data ------------------------------------------------------------------------------------
   const bmp = MM.buildBasemap(BM);
-  const partPaths = BM.lod0.parts.map(p => ({ name: p.name, path: MM.partsToPath([p]) }));
+  const partPaths = BM.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } } return { name: p.name, path: MM.partsToPath([p]), x0, y0, x1, y1 }; });   // each part with its km bounds: the region lookup under the cursor tests the bounds before the path (26 October 2026)
   const nat = MM.decodeDensity(DEN.national);
   const FINE_BREAKS = [55, 62, 68, 74], YEAR_BREAKS = [20, 35, 50, 60, 70], FIN_BREAKS = [-20, -10, 0, 10, 20];
   // The national 5 km grid (36,585 cells) is split into 500 km blocks, so a draw touches only the blocks in view and
@@ -694,9 +694,15 @@ void main() {
 
   // The legend and the note (24 October 2026): a title row with a toggle and a body, collapsible; collapsed by default
   // on a narrow map (under 600 px) and remembered per viewer; written only when the text changes.
+  // The cards' collapse toggles (the author's addition of 26 October): a toggle per card, the state remembered per viewer, a collapsed card's chart not drawn (its canvas has no size) and redrawn on opening.
+  const CARDS = ['layer', 'goto', 'cursor', 'national', 'groups', 'odds'], cardUI = {};
+  const cardOpen = id => (cardUI[id] ? cardUI[id] === 'open' : true);
+  function applyCards() { for (const id of CARDS) { const sec = $('card-' + id), body = $('cb-' + id), t = $('ct-' + id), open = cardOpen(id); body.hidden = !open; sec.classList.toggle('collapsed', !open); t.textContent = open ? '▾' : '▸'; t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + $('h2-' + id).textContent.trim().toLowerCase()); } }
+  function setCard(id, v) { cardUI[id] = v; applyCards(); if (v === 'open') { drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); } }
   function readPref(key) { try { const v = localStorage.getItem(key); return v === 'open' || v === 'closed' ? v : null; } catch (e) { return null; } }
   function writePref(key, v) { try { localStorage.setItem(key, v); } catch (e) { /* no storage */ } }
   const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note'), ctx: readPref('atlas-context') };
+  CARDS.forEach(id => { cardUI[id] = readPref('atlas-card-' + id); $('ct-' + id).addEventListener('click', () => { const v = cardOpen(id) ? 'closed' : 'open'; writePref('atlas-card-' + id, v); setCard(id, v); }); }); applyCards();
   const legendOpen = () => (ui.legend ? ui.legend === 'open' : stage.width >= 600);
   // The note (round 10, the author's correction of 26 October): without a stored choice it starts collapsed at the national and regional zooms while the strip is open (the strip carries the fact)
   // and expanded inside a city window or when the strip is closed; a narrow map keeps it collapsed; the viewer's own toggle is remembered and wins.
@@ -1105,7 +1111,7 @@ void main() {
 
   // ---- hover ------------------------------------------------------------------------------------
   function kmAt(ev) { const r = wrap.getBoundingClientRect(); const c = cam(); const x = ev.clientX - r.left, y = ev.clientY - r.top; return { x: c.cx + (x - c.ox) / c.k, y: c.cy - (y - c.oy) / c.k, px: x, py: y }; }
-  function regionAt(px, py) { const c = cam(); mctx.save(); Motion.camTransform(mctx, stage, c); let name = null; const dx = px * stage.scale, dy = py * stage.scale; for (const p of partPaths) { if (mctx.isPointInPath(p.path, dx, dy, 'evenodd')) { name = p.name; break; } } mctx.restore(); stage.base(); return name; }
+  function regionAt(px, py) { const c = cam(), kx = c.cx + (px - c.ox) / c.k, ky = c.cy - (py - c.oy) / c.k; mctx.save(); Motion.camTransform(mctx, stage, c); let name = null; const dx = px * stage.scale, dy = py * stage.scale; for (const p of partPaths) { if (kx < p.x0 || kx > p.x1 || ky < p.y0 || ky > p.y1) continue; if (mctx.isPointInPath(p.path, dx, dy, 'evenodd')) { name = p.name; break; } } mctx.restore(); stage.base(); return name; }
   function cellAt(km) {
     const c = cam(); const L = state.layer; const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), key = cellKey(ix, iy);
     const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
@@ -1528,6 +1534,7 @@ void main() {
   // ---- side panels -------------------------------------------------------------------------------
   function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); Motion.audit.scene = id; window.__atlasCanvases[id] = { w: r.width, h: r.height }; return { ctx, w: r.width, h: r.height }; }
   function drawCellPanel(h) {
+    if (!cardOpen('cursor')) return;
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', esc(h.region), 'loc']);
     const ad = h && (h.kind === 'firm' ? h : h.address);
@@ -1577,6 +1584,7 @@ void main() {
     chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], `share with a statement, this ${h.grid} km cell, by year`);
   }
   function drawNational() {
+    if (!cardOpen('national')) return;
     const { ctx, w } = chartCtx('natchart'); const hh = $('natchart').getBoundingClientRect().height;
     const el = [], reg = []; S.avail.year.forEach((y, i) => { if (S.avail.eligible_share[i] != null) { el.push({ x: y, y: S.avail.eligible_share[i] }); reg.push({ x: y, y: S.avail.registered_share[i] }); } });
     // The right margin fits the longer end label (measured), the axes draw at the panel's 12 px, the two end labels are pushed apart.
@@ -1587,6 +1595,7 @@ void main() {
     $('natprov').textContent = 'Table B.1: statements over the annual eligible population and over firms registered at year-end; 2011 has no statements, 2025* is flagged. Source ' + S.sources.avail + '.';
   }
   function drawGroups() {
+    if (!cardOpen('groups')) return;
     const { ctx, w } = chartCtx('groupchart'); const hh = $('groupchart').getBoundingClientRect().height;
     const items = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }, { label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Unitary', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.fall }];
     const vm = Motion.measure(ctx, '00.0%', 12, 500), lm = 16 + vm + 14 + Math.max(...items.map(it => Motion.measure(ctx, it.label, 12, 500))) + 6, rm = 16 + vm + 12;   // measured margins (round 10: the monospace widened the labels)
@@ -1594,6 +1603,7 @@ void main() {
     $('groupprov').textContent = 'Share of eligible firms with a statement by ownership and legal form (Figures 2.2 and 2.3 sources); population comparisons by year, not the same firms.';
   }
   function drawOdds() {
+    if (!cardOpen('odds')) return;
     const { ctx, w } = chartCtx('oddschart'); const hh = $('oddschart').getBoundingClientRect().height;
     const sz = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz[S.size.quintile[i]] = sz[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
@@ -1663,7 +1673,8 @@ void main() {
     return order.map(i => mooreTrace((x, y) => land(x, y) && comp[y * W + x] === i, W, H, starts[i][0], starts[i][1]).map(([px, py]) => [x0 + (px - 2) / S, y0 + (H - 2 - py) / S]));
   }
   function buildMinimap() {
-    const svg = $('minimap'); if (!svg || MMAP) return; const NS = 'http://www.w3.org/2000/svg', el = (t, at, parent) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(at || {})) e.setAttribute(k, String(v)); (parent || svg).appendChild(e); return e; };
+    const svg = $('minimap'); if (!svg || MMAP) return; const gob = $('cb-goto'), gobWas = gob.hidden; gob.hidden = false;   // the labels are measured in a shown subtree (a collapsed GO TO card at load)
+    const NS = 'http://www.w3.org/2000/svg', el = (t, at, parent) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(at || {})) e.setAttribute(k, String(v)); (parent || svg).appendChild(e); return e; };
     MMAP = { cities: [], rings: 0 };
     const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
     const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
@@ -1695,7 +1706,7 @@ void main() {
       MMAP.cities.push({ label: city.label, dot: [dx, dy], box, leader: [dx, dy, end[0], end[1]] });
     }
     if (!reduceMotion()) svg.classList.add('drawn');
-    syncPresetPressed();
+    gob.hidden = gobWas; syncPresetPressed();
   }
   function minimapCheck() {   // the layout rules, as the audit tests them; returns the violations (empty when clean)
     if (!MMAP) return null; const out = [], C = MMAP.cities, clear = 2, near = 2;   // 2 px between a box and anything, 2 px between a leader and another city's dot edge (5 from its centre)
@@ -1754,7 +1765,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -1830,6 +1841,8 @@ void main() {
     },
     firmsLayerAlphas(o) { if (o) { if (o.tint != null) TINT_A = o.tint; if (o.glow != null) GLOW_A = o.glow; glowCache = null; tintCache.clear(); drawMap(); } return { tint: TINT_A, glow: GLOW_A }; },   // the two layers' strengths (the audit's and the author's tuning)
     grain(on) { document.documentElement.classList.toggle('nograin', on === false); return !document.documentElement.classList.contains('nograin'); },   // the surface grain on or off, for the audit's contrast guard (round 10)
+    card(id, open, persist) { if (persist) writePref('atlas-card-' + id, open ? 'open' : 'closed'); setCard(id, open == null ? null : open ? 'open' : 'closed'); return cardOpen(id); },   // a card's collapse state (round 10)
+    cards() { return Object.fromEntries(CARDS.map(id => [id, cardOpen(id)])); },
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
     firmsLayers() { return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds }; },   // the two layers under the field (round 10)
     ghost() { const c = cam(); return { alpha: ghostAlpha(c.k), drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)) }; },   // the ghost names (round 10)

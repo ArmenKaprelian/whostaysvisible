@@ -185,7 +185,13 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .card.go .btn:hover { border-color: var(--go-live); }
 .card.go .btn[aria-pressed="true"] { background: var(--go); color: var(--stage); border-color: var(--go); }
 .card.go .btn[aria-pressed="true"]:hover { background: var(--go-live); border-color: var(--go-live); }
-.card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--context); margin: 0 0 8px; font-weight: 500; }   /* the card titles in the neon green at rest (the author's correction of 26 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
+.card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--context); margin: 0; font-weight: 500; }
+/* Collapse toggles on the six cards (the author's addition of 26 October, before step 5): the map overlays' square toggle at the right of the title row, in the neon green with the
+   fuchsia focus corners; collapsed, a card shows its title row only; the state remembered per viewer; all open by default on every screen. */
+.chead { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.chead h2 { flex: 1 1 auto; min-width: 0; }
+.ctoggle { color: var(--context); }
+.card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 26 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 /* The method block (round 10, the author's correction): under VIEW, a green i button toggles the block, collapsed by default and remembered; the block shows two lines
    under a fade with a More toggle (remembered too); the first section follows the view and the layer, the second holds the reading notes. */
@@ -319,40 +325,52 @@ footer a { color: var(--accent); }
     <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span></div></div>
   </div>
   <aside class="side">
-    <section class="card act">
-      <h2>Layer</h2>
+    <section class="card act" id="card-layer">
+      <div class="chead" id="ch-layer"><h2 id="h2-layer">Layer</h2><button class="toggle ctoggle" id="ct-layer" type="button" aria-expanded="true" aria-controls="cb-layer" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-layer">
       <div class="controls" id="modes"></div>
       <div class="methodrow"><span class="ui">Method</span><button class="btn info" id="methodbtn" type="button" aria-expanded="false" aria-controls="method" aria-label="Show the method" title="METHOD">i</button></div>
       <div class="method" id="method" hidden><div class="mtext clamped" id="methodtext"><p class="prov" id="methodintro"></p><p class="prov" id="layerprov"></p><h3 class="ui">Reading the atlas</h3><p class="prov" id="methodread"></p></div><button class="btn more" id="methodmore" type="button" aria-expanded="false">More</button></div>
       <div class="controls" id="layers"></div>
       <div class="yearrow" id="yearrow"><span class="ui" id="yearui">Year</span><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
+      </div>
     </section>
-    <section class="card go">
-      <h2>Go to</h2>
+    <section class="card go" id="card-goto">
+      <div class="chead" id="ch-goto"><h2 id="h2-goto">Go to</h2><button class="toggle ctoggle" id="ct-goto" type="button" aria-expanded="true" aria-controls="cb-goto" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-goto">
       <svg class="minimap" id="minimap" viewBox="0 0 376 232" role="group" aria-label="Minimap of the preset cities"></svg>
       <div class="presets" id="presets"></div>
       <div class="prov">Scroll or the + and − buttons zoom, drag pans, a click on a cell zooms to it (Shift+click zooms out). On a touch screen: drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
+      </div>
     </section>
-    <section class="card">
-      <h2>Under the cursor</h2>
+    <section class="card" id="card-cursor">
+      <div class="chead" id="ch-cursor"><h2 id="h2-cursor">Under the cursor</h2><button class="toggle ctoggle" id="ct-cursor" type="button" aria-expanded="true" aria-controls="cb-cursor" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-cursor">
       <div class="kv" id="cellinfo"><span class="muted">Hover a cell</span><b></b></div>
       <canvas class="chart" id="cellchart" aria-label="Share with a statement in the hovered cell, by year"></canvas>
       <div class="prov" id="cellprov">Cell series: located eligible firms with an original statement, by financial year (M5 pass over the foundation registry and payload; cells with 50 or more firms).</div>
+      </div>
     </section>
-    <section class="card">
-      <h2>National availability by year</h2>
+    <section class="card" id="card-national">
+      <div class="chead" id="ch-national"><h2 id="h2-national">National availability by year</h2><button class="toggle ctoggle" id="ct-national" type="button" aria-expanded="true" aria-controls="cb-national" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-national">
       <canvas class="chart" id="natchart" aria-label="Share of firms with a statement by year"></canvas>
       <div class="prov" id="natprov"></div>
+      </div>
     </section>
-    <section class="card">
-      <h2>Groups, 2021 to 2024</h2>
+    <section class="card" id="card-groups">
+      <div class="chead" id="ch-groups"><h2 id="h2-groups">Groups, 2021 to 2024</h2><button class="toggle ctoggle" id="ct-groups" type="button" aria-expanded="true" aria-controls="cb-groups" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-groups">
       <canvas class="chart" id="groupchart" aria-label="Share with a statement by ownership and legal form, 2021 and 2024"></canvas>
       <div class="prov" id="groupprov"></div>
+      </div>
     </section>
-    <section class="card">
-      <h2>Odds against the comparison group</h2>
+    <section class="card" id="card-odds">
+      <div class="chead" id="ch-odds"><h2 id="h2-odds">Odds against the comparison group</h2><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card">▾</button></div>
+      <div class="cbody" id="cb-odds">
       <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and the sanctions list (treated)"></canvas>
       <div class="prov" id="oddsprov"></div>
+      </div>
     </section>
   </aside>
 </main>
