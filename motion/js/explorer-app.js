@@ -356,7 +356,17 @@
   // meets a placed one (2 px gutter) tries below, right and left, then smaller sizes down to 26, and is dropped at that bucket if nothing fits; alpha 1 below
   // k 1 and 0 at k 3, linear in log k. Twenty-two fillText calls at most per frame; the layouts are cached per bucket.
   let GHOST_RANK = null;   // computed on first use: citySum's cache is declared later in the script
-  const ghostRank = () => GHOST_RANK || (GHOST_RANK = bmp.cities.map(city => ({ city, n: citySum(city.label, 2021) || 0 })).sort((a, b) => b.n - a.n).map((e, i, arr) => ({ city: e.city, size: Math.round(34 - 8 * i / Math.max(1, arr.length - 1)) })));
+  // The sizes (round 12, the author's item C of 26 October): a steeper weight on the 2021 located-firm count of each city's window, so the two capitals stand out
+  // without the rest looking small. Four anchors on the log of the count, linear between them: the smallest window 24 px, the third largest 30, St Petersburg 38,
+  // Moscow 44; so the other twenty lie on a gentle slope from 30 down to 24 by their counts (2021: Moscow 762,760, St Petersburg 262,429, Yekaterinburg 93,659,
+  // Murmansk 9,983 at the foot). Round 10 sized by rank alone, 34 down to 26.
+  const GHOST_MIN = 24, GHOST_SIZES = [24, 30, 38, 44];   // at the smallest count, the third largest, the second, the largest
+  const ghostRank = () => GHOST_RANK || (GHOST_RANK = (() => {
+    const rows = bmp.cities.map(city => ({ city, n: ((citySum(city.label, 2021) || {}).n) || 0 })).sort((a, b) => b.n - a.n);
+    const L = rows.map(r => Math.log(Math.max(1, r.n))), knots = [[L[L.length - 1], GHOST_SIZES[0]], [L[2], GHOST_SIZES[1]], [L[1], GHOST_SIZES[2]], [L[0], GHOST_SIZES[3]]];
+    const sizeOf = ln => { if (ln >= knots[3][0]) return knots[3][1]; for (let k = 3; k >= 1; k--) if (ln >= knots[k - 1][0]) { const [x0, s0] = knots[k - 1], [x1, s1] = knots[k]; return Math.round(x1 > x0 ? s0 + (s1 - s0) * (ln - x0) / (x1 - x0) : s0); } return knots[0][1]; };
+    return rows.map((r, i) => ({ city: r.city, n: r.n, size: sizeOf(L[i]) }));
+  })());
   const ghostCache = new Map();
   const ghostAlpha = k => Motion.clamp(1 - Math.log2(Math.max(k, 1e-9)) / Math.log2(3), 0, 1);
   function ghostLayout(k) {
@@ -367,7 +377,7 @@
     const at = (px, py, w, h, where) => where === 'above' ? { x: px - w / 2, y: py - 10 - h, w, h } : where === 'below' ? { x: px - w / 2, y: py + 10, w, h } : where === 'right' ? { x: px + 10, y: py - h / 2, w, h } : { x: px - 10 - w, y: py - h / 2, w, h };
     for (const g of ghostRank()) {
       const px = g.city.x * kb, py = -g.city.y * kb; let done = null;   // screen offsets from the km origin at the bucket's smallest k: the layout does not depend on the pan
-      for (let size = g.size; size >= 26 && !done; size -= 2) {
+      for (let size = g.size; size >= GHOST_MIN && !done; size -= 2) {
         const w = Motion.measure(mctx, g.city.label.toUpperCase(), size, 500, size * 0.12), h = Math.round(size * Motion.CAP);
         for (const where of ['above', 'below', 'right', 'left']) { const b = at(px, py, w, h, where), cand = { px, py, dx: b.x - px, dy: b.y - py, w, h }; if (!meetsAny(cand, placed)) { done = { city: g.city, size, where, dx: cand.dx, dy: cand.dy, w, h }; break; } }
       }
@@ -375,12 +385,12 @@
     }
     ghostCache.set(bucket, out); return out;
   }
-  let ghostDrawn = 0;
+  let ghostDrawn = 0; const GHOST_ALPHA = 0.12;
   function drawGhostNames(c) {
     ghostDrawn = 0; const a = ghostAlpha(c.k); if (a <= 0) return;
     const lay = ghostLayout(c.k); Motion.audit.scene = 'map';
     for (const g of lay) { const [px, py] = Motion.project(c, g.city.x, g.city.y), x = px + g.dx, y = py + g.dy; if (x < 0 || x + g.w > stage.width || y < 0 || y + g.h > stage.height) continue;
-      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.ghost, alpha: a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }
+      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.ramp6[1], alpha: GHOST_ALPHA * a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }   // the cyan ramp's second step at 12 percent (round 12): a cold tint of the land, never competing with a mark
   }
 
   // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
@@ -1977,6 +1987,7 @@ void main() {
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
     minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (26 October): true when it rebuilt
+    ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
     verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
