@@ -126,9 +126,9 @@
   let layersOn = true;   // the field and marks canvases are shown in the firms view only, so the cells view composites the two canvases it always had
   const stage = { width: 0, height: 0, scale: 1, base() { mctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); } };
   function sizeCanvases() {
-    const r = wrap.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const r = { width: wrap.clientWidth, height: wrap.clientHeight }, dpr = window.devicePixelRatio || 1;   // the content box inside the 1 px border (25 October 2026: the border box was read before, 2 px larger than the canvases' box, so the browser resampled every canvas by 0.17 %)
     stage.width = Math.max(1, Math.round(r.width)); stage.height = Math.max(1, Math.round(r.height)); stage.scale = dpr;
-    for (const c of [mapC, fieldC, marksC, ovC].concat(field2d ? [field2d.canvas] : [])) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
+    for (const c of [mapC, fieldC, marksC, ovC].concat(field2d ? [field2d.canvas] : [])) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); c.style.width = stage.width + 'px'; c.style.height = stage.height + 'px'; }   // an explicit CSS size, so a device pixel is a device pixel
     window.__atlasCanvases.marks = { w: stage.width, h: stage.height };
   }
   const cam = () => ({ cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k, ox: stage.width / 2, oy: stage.height / 2 });
@@ -164,7 +164,7 @@
 
   function drawMap(opts) {
     const flight = !!(opts && opts.flight);   // a flight frame skips the two DOM touches: the audit box and the legend
-    Motion.audit.scene = 'map'; if (!flight) { const r = wrap.getBoundingClientRect(); window.__atlasCanvases.map = { w: r.width, h: r.height }; }
+    Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height };   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 });
