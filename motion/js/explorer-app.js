@@ -1021,7 +1021,7 @@ void main() {
   const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
   function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
     if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
-    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = theme.dark ? REGION_FILL.dark : REGION_FILL.light; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore(); stage.base();
+    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = theme.dark ? REGION_FILL.dark : REGION_FILL.light; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore();   // the restore alone: drawBasemap strokes the graticule and the borders in km after this hook (a base() here redrew them in pixels on every hover, the glitch of 26 October)
   }
   const regionPaths = new Map();
   const regionPath = name => { if (!regionPaths.has(name)) regionPaths.set(name, MM.partsToPath(BM.lod0.parts.filter(p => p.name === name))); return regionPaths.get(name); };
@@ -1703,7 +1703,7 @@ void main() {
   const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover() { $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName) { hoverRegionName = null; updateContext(); drawMap(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -1809,7 +1809,7 @@ void main() {
   function showHoverAt(x, y, opts = {}) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     if (h.region === undefined) h.region = regionAt(x, y);
-    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); drawMap(); } }   // the map redraws with the region's fill on a region change only   // the strip follows the cursor's region (round 10)
+    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); requestDraw(); } }   // the map redraws with the region's fill on a region change only, coalesced with any queued draw   // the strip follows the cursor's region (round 10)
     const tip = $('tip'); $('tipbody').innerHTML = tipText(h); fillFoot(km, !!opts.tick); tip.style.display = 'block';
     const tw = tip.offsetWidth, th = tip.offsetHeight, obs = tileObstacles();   // one forced layout; the panels' boxes are read under it
     const mark = h.kind === 'firm' || h.kind === 'listed', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
@@ -1864,7 +1864,7 @@ void main() {
     const dy = ev.deltaY * (ev.deltaMode === 1 ? 20 : ev.deltaMode === 2 ? 400 : 1);
     const km = kmAt(ev); const f = Math.exp(-dy * (ev.ctrlKey ? PINCH_RATE : WHEEL_RATE)); const t = zoomStep(f, km);
     if (ev.pointerType !== 'touch') lastPointer = { x: km.px, y: km.py, inside: true };
-    hideHover();
+    hideHover({ keepRegion: true });
     if (atFloor(t.k)) { flyTo(t, { duration: 300 }); return; }   // fully zoomed out: settle on the country's centre
     state.cam = { cx: t.cx, cy: t.cy, k: t.k };
     requestDraw(afterCameraMove);
