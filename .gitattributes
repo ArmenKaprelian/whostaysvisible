@@ -1,0 +1,2 @@
+# Pinned external sources keep their bytes: no line-ending conversion (their sha256 is recorded in config/sources.json).
+data/external/** -text
