@@ -1206,7 +1206,8 @@ setting on their devices (one word in `explorer-app.js`; the field does not need
 Published as atlas v15 (version id 1792892885-2d7e) on 25 October 2026 after the author's confirmation, the sizing fix applied first and
 the checks re-run on it (smoke; audit 349 states, 12,600 boxes, zero findings; the audit's map-size record now follows the canvases); the page, the script and `data/firms.js` (the corrected
 manifest) uploaded, the twelve address scripts left as uploaded for v14 (M9 regenerated them with the same
-content; only gzip's header timestamp differs).
+content; only gzip's header timestamp differs). The author confirmed on 25 October that v15 loads and
+moves well on their devices.
 
 
 ### Publishing
