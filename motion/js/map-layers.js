@@ -230,9 +230,13 @@
   M.quietWeight = k => Motion.clamp(Math.log2(60 / k) / Math.log2(120), 0, 1);
   // The listed rule by zoom: the resting marks' floor, cap, halo and alpha and the rim (round 8, untouched), and the bloom's
   // ring reach Rmax (44 px at the reference zoom, up to 64), ring width W and the stagger spread (200 ms at the country, 60 at the street).
+  // The atlas's national extra (round 11, the author's item 2; M.listedQuiet is 1 on the atlas and 0 on the video): below the city zoom (the city preset's own k, which the
+  // atlas sets in M.listedCityK from the stage's size: 9.3 at 1,600 by 1,000, 3.9 on a phone) the resting alpha falls further to 0.60 at the country and the radius
+  // floor to 0.85 px, through the same weight; nothing changes from the city zoom up; the pulse is untouched.
+  M.listedQuiet = 0; M.listedCityK = 10;
   M.listedRule = function (rule, k, kRef) {
-    const q = M.quietWeight(k), lk = Math.log2(k / kRef);
-    return { q, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q,
+    const q = M.quietWeight(k), lk = Math.log2(k / kRef), qc = M.quietWeight(M.listedCityK), q2 = M.listedQuiet * Motion.clamp((q - qc) / Math.max(1e-9, 1 - qc), 0, 1);
+    return { q, q2, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q - (1 / 12) * q2), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q - 0.2 * q2,
              rimW: 1.5 * (1 - 0.33 * q), rimA: 0.8 * (1 - 0.15 * q), Rmax: Motion.clamp(44 + 2 * lk, 44, 64), W: Motion.clamp(3.5 - 0.2 * lk, 2.2, 3.5), spreadMs: 60 + 140 * q };
   };
   M.listedRadius = (L, n) => Math.max(L.floor, Math.min(L.cap, L.base + L.s * Math.sqrt(Math.max(0, n - 1))) / 2);

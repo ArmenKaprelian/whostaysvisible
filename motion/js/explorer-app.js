@@ -4,6 +4,7 @@
   'use strict';
   const D = window.MOTION_DATA, S = D.series, C100 = D.cells100, DEN = D.density, BM = D.basemap, CY = D.cellsyears;
   const F = S.facts, fmt = Motion.fmt, MM = MotionMap, CH = MotionCharts;
+  MM.listedQuiet = 1;   // the atlas's quieter resting listed marks at the national zoom (round 11, item 2); the video keeps round 8's rule
   const $ = id => document.getElementById(id);
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
@@ -179,6 +180,7 @@
     stage.width = Math.max(1, Math.round(r.width)); stage.height = Math.max(1, Math.round(r.height)); stage.scale = dpr;
     for (const c of [mapC, fieldC, marksC, ovC].concat(field2d ? [field2d.canvas] : [])) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); c.style.width = stage.width + 'px'; c.style.height = stage.height + 'px'; }   // an explicit CSS size, so a device pixel is a device pixel
     window.__atlasCanvases.marks = { w: stage.width, h: stage.height };
+    MM.listedCityK = Math.min(stage.width, stage.height) / 95;   // the city preset's zoom at this stage, where the listed marks' national extra ends (round 11, item 2)
   }
   const cam = () => ({ cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k, ox: stage.width / 2, oy: stage.height / 2 });
   // Camera targets (24 October 2026): pure helpers shared by the presets, the click ladder, the zoom buttons, the keys
@@ -186,12 +188,17 @@
   const SPAN_X = BM.extents.national.x[1] - BM.extents.national.x[0], SPAN_Y = BM.extents.national.y[1] - BM.extents.national.y[0], K_MAX = 200;
   const kFit = () => Math.min(stage.width / SPAN_X, stage.height / SPAN_Y) * 0.96;
   const minSide = () => Math.min(stage.width, stage.height);
-  const clampK = k => Motion.clamp(k, kFit(), K_MAX);
+  // The floor (round 11, the author's item 5): three-quarters of the fitted zoom, so the viewer can pull back a little past the fit; the fit button and the 0 key
+  // return exactly to the fit, the one-way re-centring band stays defined from the fit (so between the fit and the floor the centre is the country's), the
+  // wheel's settle lands on the floor's own target and the minus button disables there.
+  const FLOOR_FRACTION = 0.75, kFloor = () => kFit() * FLOOR_FRACTION;
+  const clampK = k => Motion.clamp(k, kFloor(), K_MAX);
   const fitTarget = () => ({ cx: NAT.cx, cy: NAT.cy, k: kFit() });
+  const floorTarget = () => ({ cx: NAT.cx, cy: NAT.cy, k: kFloor() });
   const cityTarget = city => ({ cx: city.x, cy: city.y, k: minSide() / 95 });          // the city window: 95 km across the shorter side
   const fineTarget = (cx, cy) => ({ cx, cy, k: minSide() / 20 });                       // the 250 m cells: 20 km across
   const cellTarget = (ix, iy) => ({ cx: (ix + 0.5) * 100, cy: (iy + 0.5) * 100, k: minSide() / 500 });   // a 100 km cell without a preset city: 500 km across
-  const atFloor = k => k <= kFit() * 1.001;   // fully zoomed out: the view re-centres on the country (a safe reset)
+  const atFloor = k => k <= kFloor() * 1.001;   // fully zoomed out: the view re-centres on the country (a safe reset)
   // Earlier re-centring (author's decision, 25 October 2026): on a zoom-out step whose new zoom lies in the band from
   // RECENTRE_FROM x kFit down to kFit, the stepped centre is blended toward the country's centre in proportion (none at
   // the band's top, all at the floor). Within one run of zoom-out steps inside the band an anchor holds the un-pulled
@@ -204,7 +211,7 @@
   let pullFrom = null;
   function zoomStep(f, km) {   // km: the point to hold under its pixel {x, y, px, py}, or null for a centre-anchored step
     const k1 = state.cam.k, k2 = clampK(k1 * f);
-    if (atFloor(k2)) { pullFrom = null; return fitTarget(); }
+    if (atFloor(k2)) { pullFrom = null; return floorTarget(); }
     const c = km ? { cx: km.x - (km.px - stage.width / 2) / k2, cy: km.y + (km.py - stage.height / 2) / k2 } : { cx: state.cam.cx, cy: state.cam.cy };   // the point under the cursor stays put, or the centre does
     const w = pullW(k2);
     if (k2 >= k1 || w <= 0) { pullFrom = null; return { cx: c.cx, cy: c.cy, k: k2 }; }   // zooming in, or above the band: nothing remembered
@@ -389,21 +396,22 @@
   const GL_VS = `
 attribute vec2 a_pos; attribute float a_n; attribute vec4 a_cls;
 uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size;
-uniform float u_mode; uniform float u_dpri; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16];
+uniform float u_mode; uniform float u_dpri; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_w;
 varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 rel = a_pos + u_shift;
   float dx = u_off.x + rel.x * u_kk, dy = u_off.y - rel.y * u_kk;
   float cls = u_which < 0.5 ? a_cls.x : (u_which < 1.5 ? a_cls.y : (u_which < 2.5 ? a_cls.z : 0.0));
   vec3 col = u_pal[int(cls + 0.5)];
-  if (u_mode < 0.5) {
+  if (u_mode < 0.5 || u_mode > 1.5) {
     float bw = u_dpri * (a_n >= 100.0 ? 3.0 : (a_n >= 10.0 ? 2.0 : 1.0));
     float h = floor((bw - 1.0) * 0.5);
     vec2 c = vec2(floor(dx) - h, floor(dy) - h) + bw * 0.5;
     gl_Position = vec4(c.x / u_size.x * 2.0 - 1.0, 1.0 - c.y / u_size.y * 2.0, 0.0, 1.0);
     gl_PointSize = bw;
-    float a = (a_n >= 100.0 ? 236.0 : (a_n >= 10.0 ? 200.0 : (a_n >= 2.0 ? 140.0 : 96.0))) / 256.0;
-    v_col = vec4(col * a, a); v_r = 0.0; v_half = bw * 0.5; v_square = 0.0;
+    if (u_mode > 1.5) { v_col = vec4(col * a_n, a_n); }
+    else { float a = (a_n >= 100.0 ? 236.0 : (a_n >= 10.0 ? 200.0 : (a_n >= 2.0 ? 140.0 : 96.0))) / 256.0; v_col = vec4(col * a, a) * u_w; }
+    v_r = 0.0; v_half = bw * 0.5; v_square = 0.0;
   } else {
     float r = max(u_rule.w, min(u_rule.z, u_rule.x + u_rule.y * sqrt(max(0.0, a_n - 1.0))) * 0.5);
     float rd = r * u_sc, size = ceil(rd * 2.0 + 3.0);
@@ -421,7 +429,40 @@ void main() {
   float cov = v_square > 0.5 ? clamp(v_r - max(abs(d.x), abs(d.y)) + 0.5, 0.0, 1.0) : clamp(v_r - length(d) + 0.5, 0.0, 1.0);
   gl_FragColor = v_col * cov;
 }`;
+  // The tone pass (round 11, the author's item 1): the additive accumulation (colour weighted by the firm count, the count in alpha) read back from the float
+  // texture and mapped through a log curve, so a pixel's brightness rises with the number of firms it holds: alpha 0.5 for one firm, rising by the log of the
+  // count to 1 at S_MAX, the densest pixel of the year at the fitted zoom (scaled by the pixel's area at other zooms), so the densest pixel alone reaches full
+  // strength and Moscow keeps its gradient; the colour the count-weighted mean of the marks' own colours.
+  const GL_VS2 = `
+attribute vec2 a_q; varying vec2 v_t;
+void main() { v_t = a_q * 0.5 + 0.5; gl_Position = vec4(a_q, 0.0, 1.0); }`;
+  const GL_FS2 = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform sampler2D u_tex; uniform float u_smax; uniform float u_w; varying vec2 v_t;
+void main() {
+  vec4 t = texture2D(u_tex, v_t); float S = t.a; if (S <= 0.0) discard;
+  vec3 col = t.rgb / S;
+  float a = S < 1.0 ? 0.5 * S : min(1.0, 0.5 + 0.5 * log(S) / log(u_smax));
+  gl_FragColor = vec4(col * a, a) * u_w;
+}`;
+  // The additive regime (round 11, item 1): below k 1.5 the blocks accumulate additively and the tone pass maps the sums; between k 1.5 and 3 the additive
+  // image fades out under the "over" image fading in, so individual marks take over; S_MAX follows the pixel's area, 10,000 firms at the fitted zoom.
+  const addFade = k => Motion.clamp((k - 1.5) / 1.5, 0, 1);
+  const maxAtFitCache = new Map();
+  function maxAtFit(y) {   // the densest pixel's firm count at the fitted zoom for the year, under the block rule at this stage size (cached per year and size)
+    const d = firmYears.get(y); if (!d) return 1e4; const sc = stage.scale, key = [y, stage.width, stage.height, sc].join('|'); if (maxAtFitCache.has(key)) return maxAtFitCache.get(key);
+    const k = kFit(), W = Math.round(stage.width * sc), H = Math.round(stage.height * sc), acc = new Float32Array(W * H), ax = (stage.width / 2 - NAT.cx * k) * sc, ay = (stage.height / 2 + NAT.cy * k) * sc, kk = k / 1000 * sc, dprI = Math.max(1, Math.round(sc)); let mx = 1;
+    for (let i = 0; i < d.nn.length; i++) { const n = d.nn[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1), bx = Math.floor(ax + d.x[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - d.y[i] * kk) - ((bw - 1) >> 1); for (let yy = Math.max(0, by); yy < Math.min(H, by + bw); yy++) for (let xx = Math.max(0, bx); xx < Math.min(W, bx + bw); xx++) { const v = acc[yy * W + xx] += n; if (v > mx) mx = v; } }
+    maxAtFitCache.set(key, mx); if (maxAtFitCache.size > 6) maxAtFitCache.delete(maxAtFitCache.keys().next().value); return mx;
+  }
+  const sMax = k => Math.max(100, maxAtFit(state.year) * Math.pow(kFit() / k, 2));
+  const toneOf = (S, smax) => (S < 1 ? 0.5 * S : Math.min(1, 0.5 + 0.5 * Math.log(S) / Math.log(smax)));
   let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null;
+  let glProg2 = null, glLoc2 = null, glQuad = null, glAcc = null, glFloat = null;   // the tone program, the quad, the accumulation target and its float format (round 11)
   const glYears = new Map();   // year -> { pos, n, cls, count }
   const useGL = () => !!gl && !glLost;
   function glInit() {
@@ -435,9 +476,20 @@ void main() {
     const vs = sh(g.VERTEX_SHADER, GL_VS), fs = sh(g.FRAGMENT_SHADER, GL_FS); if (!vs || !fs) return false;
     const p = g.createProgram(); g.attachShader(p, vs); g.attachShader(p, fs); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) { glError = 'link: ' + g.getProgramInfoLog(p); console.error(glError); return false; }
-    gl = g; glKind = kind; glProg = p; glIdx = g.createBuffer(); glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
+    const vs2 = sh(g.VERTEX_SHADER, GL_VS2), fs2 = sh(g.FRAGMENT_SHADER, GL_FS2); if (!vs2 || !fs2) return false;
+    const p2 = g.createProgram(); g.attachShader(p2, vs2); g.attachShader(p2, fs2); g.linkProgram(p2);
+    if (!g.getProgramParameter(p2, g.LINK_STATUS)) { glError = 'link (tone): ' + g.getProgramInfoLog(p2); console.error(glError); return false; }
+    // The accumulation needs a float render target: RGBA32F or RGBA16F on WebGL2 (EXT_color_buffer_float, EXT_color_buffer_half_float), the float or half-float
+    // extensions on WebGL1; without one the field falls back to the 2D path, which accumulates in a typed array (round 11, item 1).
+    const fmt = (() => { const tests = kind === 'webgl2' ? [['f32', g.RGBA32F, g.FLOAT, 'EXT_color_buffer_float'], ['f16', g.RGBA16F, g.HALF_FLOAT, 'EXT_color_buffer_half_float']] : [['f32', g.RGBA, g.FLOAT, 'OES_texture_float', 'WEBGL_color_buffer_float'], ['f16', g.RGBA, null, 'OES_texture_half_float', 'EXT_color_buffer_half_float']];
+      for (const t of tests) { const exts = t.slice(3); if (!exts.every(e => g.getExtension(e))) continue; const type = t[2] != null ? t[2] : g.getExtension('OES_texture_half_float').HALF_FLOAT_OES; const tex = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tex); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE); g.texImage2D(g.TEXTURE_2D, 0, t[1], 4, 4, 0, g.RGBA, type, null); const fb = g.createFramebuffer(); g.bindFramebuffer(g.FRAMEBUFFER, fb); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, tex, 0); const ok = g.checkFramebufferStatus(g.FRAMEBUFFER) === g.FRAMEBUFFER_COMPLETE; g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteTexture(tex); if (ok) return { name: t[0], internal: t[1], type }; }
+      return null; })();
+    if (!fmt) { glError = 'no float render target'; return false; }
+    gl = g; glKind = kind; glProg = p; glProg2 = p2; glFloat = fmt; glIdx = g.createBuffer(); glAcc = null; glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
     glLoc = { pos: g.getAttribLocation(p, 'a_pos'), n: g.getAttribLocation(p, 'a_n'), cls: g.getAttribLocation(p, 'a_cls') };
-    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_mode', 'u_dpri', 'u_sc', 'u_rule', 'u_which', 'u_pal']) glLoc[u] = g.getUniformLocation(p, u);
+    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_mode', 'u_dpri', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
+    glLoc2 = { q: g.getAttribLocation(p2, 'a_q'), u_tex: g.getUniformLocation(p2, 'u_tex'), u_smax: g.getUniformLocation(p2, 'u_smax'), u_w: g.getUniformLocation(p2, 'u_w') };
+    glQuad = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, glQuad); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), g.STATIC_DRAW);
     g.disable(g.DEPTH_TEST); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
     return true;
   }
@@ -450,25 +502,52 @@ void main() {
   }
   function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; gl.deleteBuffer(b.pos); gl.deleteBuffer(b.n); gl.deleteBuffer(b.cls); glYears.delete(y); }
   function glPalette(L) { const pal = L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.zero].concat(theme.div6) : L === 'industry' ? [theme.neutral].concat(theme.ind9) : [theme.neutral]; const out = new Float32Array(48); for (let i = 0; i < 16; i++) { const c = hex2rgb(pal[Math.min(i, pal.length - 1)]); out[3 * i] = c[0] / 255; out[3 * i + 1] = c[1] / 255; out[3 * i + 2] = c[2] / 255; } return out; }
+  function glAccTarget(W, Hh) {   // the accumulation texture and framebuffer at the canvas's device size, rebuilt on a size change
+    if (glAcc && glAcc.W === W && glAcc.H === Hh) return glAcc;
+    if (glAcc) { gl.deleteFramebuffer(glAcc.fbo); gl.deleteTexture(glAcc.tex); }
+    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, glFloat.internal, W, Hh, 0, gl.RGBA, glFloat.type, null);
+    const fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return glAcc = { fbo, tex, W, H: Hh };
+  }
+  let fieldRegime = { u: 1, smax: 0, additive: false, over: true };   // the last field draw's regime (the audit reads it)
   function glDraw(c, d, L, i0, i1, discs, idx) {
     const y = state.year; glUpload(y, d); const buf = glYears.get(y); if (!buf) return;
     const W = fieldC.width, Hh = fieldC.height, sc = stage.scale, kk = c.k / 1000 * sc;
     const camx = c.cx * 1000, camy = c.cy * 1000, Cx = Math.round(camx), Cy = Math.round(camy);
-    gl.viewport(0, 0, W, Hh); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.useProgram(glProg);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.enableVertexAttribArray(glLoc.pos); gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf.n); gl.enableVertexAttribArray(glLoc.n); gl.vertexAttribPointer(glLoc.n, 1, gl.UNSIGNED_SHORT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf.cls); gl.enableVertexAttribArray(glLoc.cls); gl.vertexAttribPointer(glLoc.cls, 4, gl.UNSIGNED_BYTE, false, 0, 0);
-    gl.uniform2f(glLoc.u_shift, GL_R[0] - Cx, GL_R[1] - Cy);   // a_pos + u_shift = (X - R) + (R - C) = X - C, exact integers
-    gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
-    gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh); gl.uniform1f(glLoc.u_mode, discs ? 1 : 0);
-    gl.uniform1f(glLoc.u_dpri, Math.max(1, Math.round(sc))); gl.uniform1f(glLoc.u_sc, sc);
-    const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
-    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L));
-    if (!discs) gl.drawArrays(gl.POINTS, i0, i1 - i0);
-    else { gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0); }
+    const u = discs ? 1 : addFade(c.k), smax = sMax(c.k); fieldRegime = { u, smax, additive: u < 1, over: u > 0 };
+    const bindPoints = () => {
+      gl.useProgram(glProg);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.enableVertexAttribArray(glLoc.pos); gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf.n); gl.enableVertexAttribArray(glLoc.n); gl.vertexAttribPointer(glLoc.n, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf.cls); gl.enableVertexAttribArray(glLoc.cls); gl.vertexAttribPointer(glLoc.cls, 4, gl.UNSIGNED_BYTE, false, 0, 0);
+      gl.uniform2f(glLoc.u_shift, GL_R[0] - Cx, GL_R[1] - Cy);   // a_pos + u_shift = (X - R) + (R - C) = X - C, exact integers
+      gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
+      gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh);
+      gl.uniform1f(glLoc.u_dpri, Math.max(1, Math.round(sc))); gl.uniform1f(glLoc.u_sc, sc);
+      const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
+      gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L));
+    };
+    const unbindPoints = () => { gl.disableVertexAttribArray(glLoc.pos); gl.disableVertexAttribArray(glLoc.n); gl.disableVertexAttribArray(glLoc.cls); };
+    gl.viewport(0, 0, W, Hh);
+    if (u < 1) {   // the additive accumulation into the float target, then the tone pass onto the cleared canvas at weight 1 - u
+      const acc = glAccTarget(W, Hh);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, acc.fbo); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE);
+      bindPoints(); gl.uniform1f(glLoc.u_mode, 2); gl.uniform1f(glLoc.u_w, 1); gl.drawArrays(gl.POINTS, i0, i1 - i0); unbindPoints();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(glProg2); gl.bindBuffer(gl.ARRAY_BUFFER, glQuad); gl.enableVertexAttribArray(glLoc2.q); gl.vertexAttribPointer(glLoc2.q, 2, gl.FLOAT, false, 0, 0);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, acc.tex); gl.uniform1i(glLoc2.u_tex, 0); gl.uniform1f(glLoc2.u_smax, smax); gl.uniform1f(glLoc2.u_w, 1 - u);
+      gl.drawArrays(gl.TRIANGLES, 0, 6); gl.disableVertexAttribArray(glLoc2.q); gl.bindTexture(gl.TEXTURE_2D, null);
+    } else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
+    if (u > 0) {   // the "over" marks at weight u (1 from k 3 up): the blocks, or the discs from 20 px per km
+      bindPoints(); gl.uniform1f(glLoc.u_mode, discs ? 1 : 0); gl.uniform1f(glLoc.u_w, u);
+      if (!discs) gl.drawArrays(gl.POINTS, i0, i1 - i0);
+      else { gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0); }
+      unbindPoints();
+    }
   }
   const glEvents = [];
-  fieldC.addEventListener('webglcontextlost', e => { e.preventDefault(); glEvents.push('lost'); glLost = true; glYears.clear(); ensureField2d(); drawMap(); });
+  fieldC.addEventListener('webglcontextlost', e => { e.preventDefault(); glEvents.push('lost'); glLost = true; glYears.clear(); glAcc = null; ensureField2d(); drawMap(); });
   fieldC.addEventListener('webglcontextrestored', () => { glEvents.push('restored'); if (glInit()) { glLost = false; if (field2d) field2d.canvas.hidden = true; drawMap(); } else glEvents.push('init failed: ' + glError); });
   glInit();
   // The 2D fallback: the same field into its own transparent canvas, created with willReadFrequently for the blit.
@@ -481,8 +560,10 @@ void main() {
   }
   // The blocks, composited "over" in premultiplied bytes on a transparent buffer, then written as straight colour.
   function blit2d(f, c, d, L, i0, i1) {
-    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, sc = stage.scale, k = c.k;
+    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, sc = stage.scale, k = c.k, u = addFade(k), smax = sMax(k), overOn = u > 0, addOn = u < 1;
+    fieldRegime = { u, smax, additive: addOn, over: overOn };
     if (!f.pm || f.pm.length !== W * H * 4) f.pm = new Uint8ClampedArray(W * H * 4); const pm = f.pm; pm.fill(0);
+    if (addOn && (!f.acc || f.acc.length !== W * H * 4)) f.acc = new Float32Array(W * H * 4); const acc = f.acc; if (addOn) acc.fill(0);
     const ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc;
     const pal = firmPalette(L), dprI = Math.max(1, Math.round(sc)), X = d.x, Y = d.y, N = d.nn;
     for (let i = i0; i < i1; i++) {
@@ -492,13 +573,22 @@ void main() {
       const col = pal[firmClass(d, i, L)] || pal[0], a8 = n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96, ia = 256 - a8;
       const sr = (col[0] * a8) >> 8, sg = (col[1] * a8) >> 8, sb = (col[2] * a8) >> 8;
       const x0 = bx < 0 ? 0 : bx, y0 = by < 0 ? 0 : by, x1 = bx + bw > W ? W : bx + bw, y1 = by + bw > H ? H : by + bw;
-      for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { pm[o] = sr + ((pm[o] * ia) >> 8); pm[o + 1] = sg + ((pm[o + 1] * ia) >> 8); pm[o + 2] = sb + ((pm[o + 2] * ia) >> 8); pm[o + 3] = a8 + ((pm[o + 3] * ia) >> 8); } }
+      if (overOn) for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { pm[o] = sr + ((pm[o] * ia) >> 8); pm[o + 1] = sg + ((pm[o + 1] * ia) >> 8); pm[o + 2] = sb + ((pm[o + 2] * ia) >> 8); pm[o + 3] = a8 + ((pm[o + 3] * ia) >> 8); } }
+      if (addOn) { const cr = col[0] * n, cg = col[1] * n, cb = col[2] * n; for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { acc[o] += cr; acc[o + 1] += cg; acc[o + 2] += cb; acc[o + 3] += n; } } }
     }
-    const img = ctx2.createImageData(W, H), px = img.data;
-    for (let o = 0; o < pm.length; o += 4) { const a = pm[o + 3]; if (!a) continue; px[o] = Math.min(255, Math.round(pm[o] * 255 / a)); px[o + 1] = Math.min(255, Math.round(pm[o + 1] * 255 / a)); px[o + 2] = Math.min(255, Math.round(pm[o + 2] * 255 / a)); px[o + 3] = a; }
+    // The tone curve on the sums, the "over" image on top at weight u (a premultiplied composite in 0 to 255), then straight colour for putImageData.
+    const img = ctx2.createImageData(W, H), px = img.data, lsm = Math.log(smax);
+    for (let o = 0; o < px.length; o += 4) {
+      let r = 0, g = 0, b = 0, a = 0;
+      if (addOn) { const S = acc[o + 3]; if (S > 0) { const t = (S < 1 ? 0.5 * S : Math.min(1, 0.5 + 0.5 * Math.log(S) / lsm)) * (1 - u); r = acc[o] / S * t; g = acc[o + 1] / S * t; b = acc[o + 2] / S * t; a = t; } }
+      if (overOn) { const ao = pm[o + 3] / 255 * u; if (ao > 0) { const keep = 1 - ao; r = pm[o] * u + r * keep; g = pm[o + 1] * u + g * keep; b = pm[o + 2] * u + b * keep; a = ao + a * keep; } }
+      if (a <= 0) continue;
+      px[o] = Math.min(255, Math.round(r / a)); px[o + 1] = Math.min(255, Math.round(g / a)); px[o + 2] = Math.min(255, Math.round(b / a)); px[o + 3] = Math.round(a * 255);
+    }
     ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, W, H); ctx2.putImageData(img, 0, 0);
   }
   function discs2d(f, c, d, L, idx) {
+    fieldRegime = { u: 1, smax: sMax(c.k), additive: false, over: true };
     const ctx2 = f.ctx, rule = markRule(c.k); ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, f.canvas.width, f.canvas.height); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     ctx2.globalAlpha = 0.9;
     for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill(); }
@@ -559,7 +649,7 @@ void main() {
     const y = state.year, d = firmYears.get(y), L = state.layer;
     if (!d) {
       firmStatus = `Loading ${y} addresses…`; clearField();
-      ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; drawMap(); } })
+      ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; drawMap(); countFirmsInView(); refreshHover(); } })
         .catch(e => { console.error(e); firmStatus = `Addresses for ${y} could not be loaded (${e.message}).`; if (state.mode === 'firms' && state.year === y) drawLegend(); });
       return;
     }
@@ -885,7 +975,12 @@ void main() {
   // from data/offwire.json with the prefix in the muted context colour (never a tip slot, never beside a named firm; the fact advancing by seven each
   // loop). Every string is a template over named fields of the shipped data; tools/wire_check.py re-derives each one for the audit.
   const WIRE_SPEED = 60, WIRE_HALF = 25, WIRE_RM_MS = 8000, OFFWIRE = D.offwire || null;
-  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0 };
+  // Round 11 (the author's item 6): the track is a queue of cycles scrolled by one linear Web Animations entry at 60 px per second, so the scroll is continuous
+  // across context changes. A change of region (hover or camera), layer or view appends the new context's cycle, the lead first, after the last item queued;
+  // the old items run off the left edge; a further change before the queued set has entered the view replaces the queued set, never the visible one; the
+  // queue tops itself up with the next cycle of the current context (the cat fact advancing by seven places) before it runs out and drops the sets that have
+  // passed. Only a year change rebuilds at once, under a 0.3 s crossfade of the whole track. The tips and the cat slot keep their places in every cycle.
+  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, topTimer: 0, vis: 0, builds: 0, resets: 0 };
   const wireScrolls = () => !reduceMotion();
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const fnv = str => { let h = 2166136261; for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
@@ -937,27 +1032,74 @@ void main() {
       const f = pool[(h + 7 * cycleIndex) % pool.length]; cycle[slot] = { kind: 'cat', text: `<span class="pre">${esc(OFFWIRE.prefix)}</span> <span class="cf">${esc(f.text)}</span>`, src: 'offwire:' + f.id }; }
     return cycle;
   }
-  const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark"/></svg>';
-  function renderWire() {
-    const tr = $('wiretrack'), box = $('ctxtext'); if (!tr) return; box.classList.toggle('rm', !wireScrolls());
-    if (!wireScrolls()) { tr.innerHTML = ''; return; }
-    const once = wireState.cycle.map(it => `<span class="wi ${it.kind}">${it.text}</span>`).join(SEP) + SEP;
-    tr.style.animation = 'none'; tr.innerHTML = once + once; void tr.offsetWidth; wireState.width = tr.scrollWidth / 2; tr.style.setProperty('--wire-dur', Math.max(10, wireState.width / WIRE_SPEED).toFixed(1) + 's'); tr.style.animation = '';
+  const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg>';   // the separator: the mark at 14 px with 2 px strokes in the full context green (round 11)
+  const wireTrack = () => $('wiretrack'), wireVisW = () => $('ctxtext').clientWidth;
+  const wirePos = el => { const tr = wireTrack().getBoundingClientRect(), r = el.getBoundingClientRect(); return [r.left - tr.left, r.right - tr.left]; };   // an item's edges along the track, whatever its transform (the separators are SVG, without offsetLeft)
+  function wireX() { const ws = wireState; if (ws.anim && !ws.pinned && ws.anim.currentTime != null) return ws.animX0 + WIRE_SPEED * (ws.anim.currentTime / 1000); return ws.x; }   // the scroll offset now, px
+  function wireStop() { const ws = wireState; if (ws.anim) { ws.x = wireX(); ws.anim.cancel(); ws.anim = null; } if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; } return ws.x; }
+  function wireAnimate(fromX) {   // one linear animation from fromX to the queue's end at the wire's speed; a top-up is scheduled before the end enters the view
+    const ws = wireState, tr = wireTrack(); wireStop(); ws.x = fromX; const end = ws.sets.length ? ws.sets[ws.sets.length - 1].x1 : 0, dist = end - fromX;
+    tr.style.transform = `translateX(${-fromX}px)`;
+    if (dist <= 0 || !tr.animate) return;
+    ws.animX0 = fromX; ws.anim = tr.animate([{ transform: `translateX(${-fromX}px)` }, { transform: `translateX(${-end}px)` }], { duration: dist / WIRE_SPEED * 1000, easing: 'linear', fill: 'forwards' });
+    if (ws.paused) ws.anim.pause();
+    ws.topTimer = setTimeout(wireTopUp, Math.max(0, end - wireVisW() - 300 - fromX) / WIRE_SPEED * 1000);
   }
-  function rebuildWire(band, name, force) {   // the cycle follows the lead fact; a change from a hover's region change waits 250 ms so the hover cost stays as it was (the lead line itself changes at once)
-    const key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|'); if (!force && key === wireState.key) return;
+  function wireAppend(cycle, key, ctx) {   // the cycle's items and separators after the queue's last item, their positions measured once
+    const ws = wireState, tr = wireTrack(), els = [];
+    for (const it of cycle) { const sp = document.createElement('span'); sp.className = 'wi ' + it.kind; sp.innerHTML = it.text; tr.appendChild(sp); els.push(sp); const hold = document.createElement('span'); hold.innerHTML = SEP; const svg = hold.firstChild; tr.appendChild(svg); els.push(svg); }
+    const x0 = wirePos(els[0])[0], x1 = wirePos(els[els.length - 1])[1];
+    ws.sets.push({ key, ctx, cycle, cycleIndex: ws.cycleIndex, els, x0, x1 }); ws.cycle = cycle; ws.width = x1 - x0; ws.key = key; ws.vis = wireVisW(); ws.builds++;
+  }
+  function wirePrune(x) {   // the sets that have passed the left edge leave the track; the ones behind them shift left by their width
+    const ws = wireState; let removed = 0;
+    while (ws.sets.length > 1 && ws.sets[0].x1 < x - 20) { const s0 = ws.sets.shift(); for (const el of s0.els) el.remove(); removed += s0.x1 - s0.x0; }
+    if (removed) for (const sset of ws.sets) { sset.x0 -= removed; sset.x1 -= removed; }
+    return removed;
+  }
+  function wireTopUp() {   // the queue is about to run out: the current context's next cycle joins it
+    const ws = wireState; ws.topTimer = 0; if (!wireScrolls() || ws.pinned || !ws.sets.length) return;
+    let x = wireStop(); x -= wirePrune(x); const last = ws.sets[ws.sets.length - 1];
+    ws.cycleIndex++; wireAppend(buildCycle(last.ctx.y, last.ctx.band, last.ctx.name, ws.cycleIndex), last.key, last.ctx); wireAnimate(x);
+  }
+  function wireReset(ctx, key, crossfade) {   // a fresh queue from x 0; under crossfade (a year change) a frozen copy of the old track fades out as the new one fades in, 0.3 s
+    const ws = wireState, tr = wireTrack(), box = $('ctxtext');
+    if (crossfade && ws.sets.length && !reduceMotion()) {
+      const x = wireX(), ghost = tr.cloneNode(true); ghost.removeAttribute('id'); ghost.classList.add('old'); ghost.classList.remove('in', 'pinned'); ghost.style.transform = `translateX(${-x}px)`; box.appendChild(ghost);
+      requestAnimationFrame(() => { ghost.classList.add('fade'); setTimeout(() => ghost.remove(), 400); });
+      tr.classList.add('in'); requestAnimationFrame(() => requestAnimationFrame(() => tr.classList.remove('in')));
+    }
+    wireStop(); for (const sset of ws.sets) for (const el of sset.els) el.remove(); ws.sets = []; tr.innerHTML = ''; ws.x = 0; ws.pinned = false; tr.classList.remove('pinned'); ws.resets++;
+    wireAppend(buildCycle(ctx.y, ctx.band, ctx.name, ws.cycleIndex), key, ctx); wireAnimate(0);
+  }
+  function wireContextNow(band, name, how) {   // how: 'append' (a region, layer or view change), 'year' (a rebuild under the crossfade), 'reset' (the first build, or a layout guard)
+    const ws = wireState, ctx = { y: state.year, band, name }, key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|');
+    if (stripState.tip && !wireScrolls()) endTip(false);
+    if (!wireScrolls()) { ws.key = key; ws.cycle = buildCycle(state.year, band, name, ws.cycleIndex); $('ctxtext').classList.add('rm'); wireTrack().innerHTML = ''; ws.sets = []; startRM(); return; }
+    $('ctxtext').classList.remove('rm');
+    const last = ws.sets[ws.sets.length - 1];
+    if (how === 'append' && last && last.key === key) return;
+    if (how !== 'append' || !last) { wireReset(ctx, key, how === 'year'); return; }
+    let x = wireStop(); x -= wirePrune(x);
+    const visEnd = x + wireVisW(); let cut = ws.sets.findIndex(sset => sset.x0 >= visEnd); if (cut === 0) cut = 1;   // the queued sets go, the visible one stays
+    if (cut > 0) for (const sset of ws.sets.splice(cut)) for (const el of sset.els) el.remove();
+    const kept = ws.sets[ws.sets.length - 1]; if (kept && kept.key === key) { ws.cycle = kept.cycle; ws.key = key; wireAnimate(x); return; }   // the visible set already carries this context: nothing to queue
+    ws.cycleIndex++; wireAppend(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx); wireAnimate(x);
+  }
+  function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead line itself changes at once); the rest at once
     if (wireState.timer) { clearTimeout(wireState.timer); wireState.timer = 0; }
-    const build = () => { wireState.timer = 0; wireState.key = key; wireState.cycle = buildCycle(state.year, band, name, wireState.cycleIndex); if (stripState.tip) endTip(false); renderWire(); startRM(); };
-    if (force || !wireState.cycle.length) build(); else wireState.timer = setTimeout(build, 250);
+    if (how !== 'append' || !wireState.sets.length) { wireContextNow(band, name, how); return; }
+    wireState.timer = setTimeout(() => { wireState.timer = 0; wireContextNow(band, name, 'append'); }, 250);
   }
+  { const bar = $('ctxstrip'), setPause = on => { const ws = wireState; ws.paused = on; if (ws.anim) { if (on) ws.anim.pause(); else ws.anim.play(); } };   // paused under the pointer or focus, as the CSS animation was
+    bar.addEventListener('mouseenter', () => setPause(true)); bar.addEventListener('mouseleave', () => setPause(false)); bar.addEventListener('focusin', () => setPause(true)); bar.addEventListener('focusout', () => setPause(false)); }
   function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
     if (wireState.rmTimer) { clearInterval(wireState.rmTimer); wireState.rmTimer = 0; } if (wireScrolls() || !wireState.cycle.length) return; wireState.rmIndex = 0;
     wireState.rmTimer = setInterval(() => { if (!stripOpen() || !stripState.fact) return; wireState.rmIndex = (wireState.rmIndex + 1) % wireState.cycle.length; const it = wireState.cycle[wireState.rmIndex]; stripState.tip = it.kind === 'tip' ? { i: -1, text: plainOf(it) } : null; setStripText({ kind: it.kind === 'lead' ? stripState.fact.kind : it.kind, name: '', text: it.text, nums: [] }, null); }, WIRE_RM_MS);
   }
   const plainOf = it => { const d = document.createElement('span'); d.innerHTML = it.text; return d.textContent.replace(/ /g, ' '); };
-  function pinTip() { const tr = $('wiretrack'), el = tr && tr.querySelector('.wi.tip'); if (!el) return false; tr.classList.add('pinned'); tr.style.transform = `translateX(${-el.offsetLeft}px)`; const i = [...tr.children].filter(e => e.classList.contains('wi')).indexOf(el); stripState.tip = { i, text: plainOf({ text: el.innerHTML }) }; return true; }
-  function unpinTip() { const tr = $('wiretrack'); if (!tr) return; tr.classList.remove('pinned'); tr.style.transform = ''; }
-  $('wiretrack').addEventListener('animationiteration', () => { wireState.cycleIndex++; const [band, name] = bandUnderCamera(); rebuildWire(band, name, true); });   // each loop advances the cat fact by seven places (the rebuild lands on the seam)
+  function pinTip() { const ws = wireState, tr = wireTrack(); if (!ws.sets.length) return false; const x = wireX(), tips = [...tr.querySelectorAll('.wi.tip')], el = tips.find(e => wirePos(e)[0] >= x - 1) || tips[0]; if (!el) return false; wireStop(); ws.x = wirePos(el)[0]; ws.pinned = true; tr.classList.add('pinned'); tr.style.transform = `translateX(${-ws.x}px)`; const i = [...tr.children].filter(e => e.classList.contains('wi')).indexOf(el); stripState.tip = { i, text: plainOf({ text: el.innerHTML }) }; return true; }
+  function unpinTip() { const ws = wireState, tr = wireTrack(); if (!tr) return; tr.classList.remove('pinned'); if (!ws.pinned) return; ws.pinned = false; if (wireScrolls() && ws.sets.length) wireAnimate(ws.x); }
 
   // The region glyph: one pre-simplified outline per region from the basemap's parts (the largest ring and any ring with at least a
   // quarter of its area, Douglas-Peucker to about 60 points, fitted into 22 by 22), built once on first use; Russia's outline traced
@@ -1289,7 +1431,7 @@ void main() {
   function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
-  function afterCameraMove() { syncZoomButtons(); refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { syncZoomButtons(); countFirmsInView(); refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -1366,15 +1508,26 @@ void main() {
     lam = ((lam * 180 / Math.PI + 540) % 360) - 180; return [phi * 180 / Math.PI, lam];
   }
   const scaleParts = k => { const m = 1000 / k; return m >= 1000 ? [(m / 1000).toFixed(1), ' km'] : m >= 10 ? [String(Math.round(m)), ' m'] : [m.toFixed(1), ' m']; };
-  const foot = { lat: 0, lon: 0, scale: 0, raf: 0 };
+  // Firms in view (round 11, the author's item 3): the firms on no list at the addresses inside the visible range plus the listed firms present in the year, counted
+  // once per settle (a camera move's end, a year's data arriving, a view switch), never per frame; the tile's footer shows the count in the Firms view and ticks it
+  // with the other figures when the camera moves under a still cursor.
+  let viewFirms = null;
+  function countFirmsInView() {
+    const d = state.mode === 'firms' ? firmYears.get(state.year) : null; if (!d) { viewFirms = null; return null; }
+    const c = cam(), k = c.k, x0 = (c.cx - c.ox / k) * 1000, x1 = (c.cx + (stage.width - c.ox) / k) * 1000, y0 = (c.cy - (stage.height - c.oy) / k) * 1000, y1 = (c.cy + c.oy / k) * 1000;
+    let n = 0; const i0 = lowerBound(d.x, x0), i1 = lowerBound(d.x, x1), Y = d.y, N = d.nn; for (let i = i0; i < i1; i++) { const yv = Y[i]; if (yv >= y0 && yv <= y1) n += N[i]; }
+    if (TRN) { const yi = state.year - 2014; for (let i = 0; i < TRN.n; i++) { if (TRN.filed[i][yi] === '-') continue; const xm = TRN.x[i] * 1000, ym = TRN.y[i] * 1000; if (xm >= x0 && xm <= x1 && ym >= y0 && ym <= y1) n++; } }
+    viewFirms = n; return n;
+  }
+  const foot = { lat: 0, lon: 0, scale: 0, firms: 0, raf: 0 };
   function fillFoot(km, tick) {
-    const [lat, lon] = inverseLAEA(km.x, km.y), [sv, su] = scaleParts(cam().k), target = { lat: Math.abs(lat), lon: Math.abs(lon), scale: +sv };
-    $('tlatH').textContent = lat >= 0 ? 'N' : 'S'; $('tlonH').textContent = lon >= 0 ? 'E' : 'W'; $('tunit').textContent = su;
-    const write = v => { $('tlat').textContent = v.lat.toFixed(2); $('tlon').textContent = v.lon.toFixed(2); $('tscale').textContent = su === ' km' || +sv % 1 ? v.scale.toFixed(1) : String(Math.round(v.scale)); };
+    const [lat, lon] = inverseLAEA(km.x, km.y), [sv, su] = scaleParts(cam().k), target = { lat: Math.abs(lat), lon: Math.abs(lon), scale: +sv, firms: viewFirms == null ? 0 : viewFirms };
+    $('tlatH').textContent = lat >= 0 ? 'N' : 'S'; $('tlonH').textContent = lon >= 0 ? 'E' : 'W'; $('tunit').textContent = su; $('tfirmsw').hidden = viewFirms == null;
+    const write = v => { $('tlat').textContent = v.lat.toFixed(2); $('tlon').textContent = v.lon.toFixed(2); $('tscale').textContent = su === ' km' || +sv % 1 ? v.scale.toFixed(1) : String(Math.round(v.scale)); $('tfirms').textContent = fmt.int(Math.round(v.firms)); };
     if (foot.raf) { cancelAnimationFrame(foot.raf); foot.raf = 0; }
     if (!tick || reduceMotion() || foot.scale === 0) { Object.assign(foot, target); write(foot); return; }
-    const from = { lat: foot.lat, lon: foot.lon, scale: foot.scale }, t0 = performance.now();   // a camera moved under a still cursor: the figures count to the new values
-    const step = () => { foot.raf = 0; const u = Math.min(1, (performance.now() - t0) / 200), e = Motion.ease.outCubic(u); const v = { lat: from.lat + (target.lat - from.lat) * e, lon: from.lon + (target.lon - from.lon) * e, scale: from.scale + (target.scale - from.scale) * e }; write(u >= 1 ? target : v); if (u < 1) foot.raf = requestAnimationFrame(step); else Object.assign(foot, target); };
+    const from = { lat: foot.lat, lon: foot.lon, scale: foot.scale, firms: foot.firms }, t0 = performance.now();   // a camera moved under a still cursor: the figures count to the new values
+    const step = () => { foot.raf = 0; const u = Math.min(1, (performance.now() - t0) / 200), e = Motion.ease.outCubic(u); const v = { lat: from.lat + (target.lat - from.lat) * e, lon: from.lon + (target.lon - from.lon) * e, scale: from.scale + (target.scale - from.scale) * e, firms: from.firms + (target.firms - from.firms) * e }; write(u >= 1 ? target : v); if (u < 1) foot.raf = requestAnimationFrame(step); else Object.assign(foot, target); };
     wrap.classList.add('cursor-live'); foot.raf = requestAnimationFrame(step); setTimeout(() => { if (cursorStill) wrap.classList.remove('cursor-live'); }, 220);
   }
   function tileObstacles() {
@@ -1386,8 +1539,8 @@ void main() {
   // Eight anchors around the cursor, each keeping d px of clearance on at least one axis so the tile never covers the hovered
   // mark; the first inside the map and clear of every panel wins; a second pass slides the anchors along their free axis.
   function placeTile(x, y, tw, th, obsAll, touch, r) {   // tiers: every panel; then without the note; then without the legend; then without both (the controls, the scale bar and the strip always stay clear)
-    const tiers = [[], ['mapnote'], ['legend'], ['mapnote', 'legend']];
-    for (const drop of tiers) { const obs = drop.length ? obsAll.filter(o => !drop.includes(o.id)) : obsAll; const b = placeTileAmong(x, y, tw, th, obs, touch, r); if (!b.fallback) { if (drop.length) b.relaxed = drop.map(id => id === 'mapnote' ? 'note' : id); return b; } }
+    const tiers = [[], ['mapnote'], ['legend'], ['mapnote', 'legend'], ['mixbox'], ['mapnote', 'mixbox'], ['legend', 'mixbox'], ['mapnote', 'legend', 'mixbox']];   // the mix box joins the readouts the tile may cover last (round 11: the footer's firms line made the tile 16 px taller, and a 400 px map with the industry mix open had no clear place)
+    for (const drop of tiers) { const obs = drop.length ? obsAll.filter(o => !drop.includes(o.id)) : obsAll; const b = placeTileAmong(x, y, tw, th, obs, touch, r); if (!b.fallback) { if (drop.length) b.relaxed = drop.map(id => id === 'mapnote' ? 'note' : id === 'mixbox' ? 'mix' : id); return b; } }
     return placeTileAmong(x, y, tw, th, obsAll, touch, r);
   }
   function placeTileAmong(x, y, tw, th, obs, touch, r) {
@@ -1520,7 +1673,7 @@ void main() {
   $('zoom-in').addEventListener('click', () => flyTo(stepCentre(2)));
   $('zoom-out').addEventListener('click', () => flyTo(stepCentre(0.5)));
   $('zoom-fit').addEventListener('click', () => flyTo(fitTarget()));
-  function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFit() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
+  function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFloor() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
   const SCALE_STEPS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.25, 0.1];
   let lastScale = '';
   function drawScaleBar() {
@@ -1640,18 +1793,18 @@ void main() {
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
   const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Listed firms are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters; the full filed name is shown in the Under the cursor panel. Firms on no list are never named. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share' || state.layer === 'industry'); }
   $('pulse').addEventListener('click', () => replayPulse());
   // The view switch (round 5): cells as before, or every registered address as a mark.
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); syncMix(); drawCellPanel(null); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 26 October)
-  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); drawNational(); syncMix(); });
+  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -1777,7 +1930,17 @@ void main() {
   applyMethod();
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });
   // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); verifyMinimap(); }
+  // Load-time measurements guarded (round 11, the author's item 7): a frame the host holds hidden at load leaves zero-width layouts behind, so every measurement
+  // taken at load (the canvases' size and the landing camera, the minimap's label boxes, the wire's track, the strip's short-form test, the tile's obstacles) is
+  // verified when the map's box changes (a ResizeObserver on the wrap, so a frame shown without a window resize event counts too) and after a late font load,
+  // and rebuilt where it disagrees; a stage that measured 1 px at load lands on the fit (or the link's preset) instead of scaling a degenerate zoom.
+  const layoutsVerified = [];
+  function verifyLayouts(reason) {
+    const fixed = []; if (verifyMinimap()) fixed.push('minimap');
+    if (wireScrolls() && stripOpen() && wireState.sets.length) { const first = wireState.sets[0].els[0]; if (wireVisW() !== wireState.vis || !(wireState.width > 0) || !first || first.getBoundingClientRect().width <= 0) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'reset'); fixed.push('wire'); } }
+    dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
+  }
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); updateContext(true); verifyLayouts('resize'); }
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
@@ -1795,7 +1958,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -1814,6 +1977,8 @@ void main() {
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
     minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (26 October): true when it rebuilt
+    layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
+    verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
@@ -1830,6 +1995,14 @@ void main() {
     frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
     field() { return useGL() ? glKind : '2d'; },
+    fieldRegime() { return Object.assign({ float: glFloat ? glFloat.name : null }, fieldRegime); },   // the additive and over weights of the last field draw (round 11, item 1)
+    fieldStats() {   // the per-pixel firm counts of the current view under the block rule (round 11, item 1): the maximum and percentiles, for the tone curve's record
+      const d = state.mode === 'firms' ? firmYears.get(state.year) : null; if (!d) return null; const c = cam(), k = c.k, sc = stage.scale, W = Math.round(stage.width * sc), H = Math.round(stage.height * sc), acc = new Float32Array(W * H), ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc, dprI = Math.max(1, Math.round(sc));
+      const i0 = lowerBound(d.x, (c.cx - c.ox / k) * 1000 - 1000), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + 1000);
+      for (let i = i0; i < i1; i++) { const n = d.nn[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1), bx = Math.floor(ax + d.x[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - d.y[i] * kk) - ((bw - 1) >> 1); for (let yy = Math.max(0, by); yy < Math.min(H, by + bw); yy++) for (let xx = Math.max(0, bx); xx < Math.min(W, bx + bw); xx++) acc[yy * W + xx] += n; }
+      const vals = Array.from(acc).filter(v => v > 0).sort((a, b) => a - b), q = p => vals[Math.min(vals.length - 1, Math.floor(p * vals.length))];
+      return { pixels: vals.length, max: vals[vals.length - 1], p50: q(0.5), p75: q(0.75), p90: q(0.9), p99: q(0.99), p999: q(0.999), smax: sMax(k), k };
+    },
     glState() { return { kind: glKind, lost: glLost, isContextLost: gl ? gl.isContextLost() : null, error: glError, events: glEvents.slice() }; },
     loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
@@ -1837,10 +2010,12 @@ void main() {
     pulse() { return replayPulse(); },
     hoverPx(px, py, opts) { return showHoverAt(px, py, opts || {}); },   // round 9: a hover at a map pixel (the tile placement states)
     tapAt(px, py) { return showHoverAt(px, py, { touch: true }); },
-    tile() { return tileState; },
+    tile() { return Object.assign({ firms: viewFirms }, tileState); },
+    firmsInView() { return countFirmsInView(); },   // the footer's count recomputed now (round 11, item 3)
+    floor() { return { kfit: kFit(), kfloor: kFloor(), fraction: FLOOR_FRACTION }; },   // the zoom floor (round 11, item 5)
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
     context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
-    wire() { const lead = $('wiretrack').querySelector('.wi.lead'); return { key: wireState.key, pending: !!wireState.timer, items: wireState.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: wireState.cycleIndex, width: wireState.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: $('wiretrack').style.getPropertyValue('--wire-dur') }; },   // the wire's cycle (round 10)
+    wire() { const ws = wireState, last = ws.sets[ws.sets.length - 1], lead = last ? last.els[0] : $('wiretrack').querySelector('.wi.lead'), x = wireX(), vis = wireVisW(); return { key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, sets: ws.sets.map(sset => ({ key: sset.key, x0: sset.x0, x1: sset.x1, entered: sset.x0 < x + vis, lead: plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) })) }; },   // the wire's current cycle and its queue (rounds 10 and 11)
     wireAt(y, region) { const keep = state.year; state.year = y; const c = buildCycle(y, region === 'Russia' ? 'national' : 'region', region, 0); state.year = keep; return c.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })); },
     tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
@@ -1875,7 +2050,8 @@ void main() {
     card(id, open, persist) { if (persist) writePref('atlas-card-' + id, open ? 'open' : 'closed'); setCard(id, open == null ? null : open ? 'open' : 'closed'); return cardOpen(id); },   // a card's collapse state (round 10)
     cards() { return Object.fromEntries(CARDS.map(id => [id, cardOpen(id)])); },
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
-    firmsLayers() { return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds }; },   // the two layers under the field (round 10)
+    firmsLayers() { const c = cam(), ext = BM.extents.national, pr = (x, y) => Motion.project(c, x, y), rect = b => { if (!b) return null; const f = c.k / b.cam.k, [px, py] = pr(b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k); return [px, py, px + b.W * f, py + b.H * f]; }, e0 = pr(ext.x[0], ext.y[1]), e1 = pr(ext.x[1], ext.y[0]), tb = tintCache.get(state.year + '|' + theme.dark) || null;
+      return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds, cover: { extent: [e0[0], e0[1], e1[0], e1[1]], view: [stage.width, stage.height], tint: rect(tb), glow: rect(glowCache), glowBlurPx: glowCache ? 2 * c.k / glowCache.cam.k : null } }; },   // the two layers' fades and caches, and where their bitmaps lie on screen against the country's extent (round 11, item 5)   // the two layers under the field (round 10)
     ghost() { const c = cam(); return { alpha: ghostAlpha(c.k), drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)) }; },   // the ghost names (round 10)
     hoverRegion() { return hoverRegionName; },
     regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
@@ -1885,5 +2061,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyMinimap()); });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); });
 })();
