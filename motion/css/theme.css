@@ -7,11 +7,11 @@
   --border: #495669;       /* region borders: thin pale lines, never heavier than the marks (1.94:1 on the land) */
   --graticule: #2E333D;    /* meridians and parallels: a whiter line at 1.55:1 on the stage, 1.14:1 over the land (round 9) */
   --ink: #ECEEF1;          /* text */
-  --muted: #B4C0D0;        /* secondary text, lifted one step on 25 October 2026 (7.8:1 on the land) */
+  --muted: #B4C0D0;        /* secondary text, lifted one step on 26 October 2026 (7.8:1 on the land) */
   --dim: #7D889C;          /* tertiary text, axes (4.8:1 on the panel, AA for the small text) */
   --grid: #0D162B;         /* chart grid lines */
   --panel: #091023;        /* control bar and cards: the stage plus 0.026 in OKLab lightness */
-  /* Data colours sit off the navy chrome: since round 10 (25 October 2026) a single-hue cyan ramp for ordered quantities
+  /* Data colours sit off the navy chrome: since round 10 (26 October 2026) a single-hue cyan ramp for ordered quantities
      (OKLCH L 0.556 to 0.940, hue 195 to 172) and an amber-to-orange against cyan pair for signed change, one red reserved for
      listed (treated) firms (rounds 2 to 9: ColorBrewer YlGnBu and PRGn). */
   --accent: #79CDBF;       /* principal series, density: the cyan ramp's step 4 */

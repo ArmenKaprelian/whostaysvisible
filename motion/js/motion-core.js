@@ -135,7 +135,7 @@
     return stage;
   };
 
-  // Text helpers in design space. One typeface on both pages since round 10 (25 October 2026): IBM Plex Mono, read from the
+  // Text helpers in design space. One typeface on both pages since round 10 (26 October 2026): IBM Plex Mono, read from the
   // page's --font token (the installed family for the lab's renders, Google Fonts on the published pages), 400 for prose,
   // 500 for labels and figures, 700 for headings and emphasis; the fallbacks are monospace faces of the same 0.6 em advance.
   Motion.family = (() => { try { const f = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (f) return f; } catch (e) { /* no document */ } return '"IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace'; })();

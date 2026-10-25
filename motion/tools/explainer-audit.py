@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The explainer page's player audit (round 10, the author's item 20; 25 October 2026): headless Brave at 1,600 by 1,000 and 400 by 844.
+"""The explainer page's player audit (round 10, the author's item 20; 26 October 2026): headless Brave at 1,600 by 1,000 and 400 by 844.
 
 Reads the overlay's boxes (the bar inside the stage box along its lower edge, the chapter list inside the stage when open, the buttons inside the bar,
 none overlapping the time or the scrub bar), the hidden state (opacity 0 and visibility hidden 2.5 s after play with no input), the shown state (paused,

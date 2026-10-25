@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-derives the atlas wire's cycle from the shipped data files (round 10, the author's items 14 and 15; 25 October 2026).
+"""Re-derives the atlas wire's cycle from the shipped data files (round 10, the author's items 14 and 15; 26 October 2026).
 
 The generator in js/explorer-app.js (wireFacts, wireFirms, buildCycle) and this module share only the data: every data item is a template over
 named fields of data/*.json, formatted here with the same rules (en-US grouping, one-decimal percentages rounded half up, the minus sign U+2212).
