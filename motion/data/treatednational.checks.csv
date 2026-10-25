@@ -1,0 +1,14 @@
+"check","expected","observed","tolerance","pass"
+"names: one per firm",4803,4803,0,TRUE
+"names: the DuckDB join equals an R match against the list files (differences)",0,0,0,TRUE
+"names: no run of nine or more digits",0,0,0,TRUE
+"names: no display equals a list identifier",0,0,0,TRUE
+"names: no personal name of an entrepreneur",0,0,0,TRUE
+"names: unnamed firms at most 54",1,1,0,TRUE
+"names: every display within 60 characters",0,0,0,TRUE
+"names: no control characters or angle brackets",0,0,0,TRUE
+"names: shared count at least 1 when named",0,0,0,TRUE
+"lists: every treated firm carries at least one membership code",0,0,0,TRUE
+"lists: only the codes s, d, r, g, p in that order",0,0,0,TRUE
+"lists: the resident code agrees with the firms table",0,0,0,TRUE
+"lists: the other-list codes agree with the firms table",0,0,0,TRUE

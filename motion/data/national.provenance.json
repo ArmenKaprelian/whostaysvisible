@@ -1,16 +1,16 @@
 {
   "id": "national",
-  "run_id": "20261023T083138Z-run-M8-national.R",
+  "run_id": "20261025T055425Z-run-M8-national.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T08:32:21Z",
+  "time_utc": "2026-10-25T05:55:27Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M8-national.R",
-    "sha256": "f5a077be9c1b72b5ff770c9e927e01d04648a570076cc0742e3d8e93b35f15c2"
+    "sha256": "def8be38a5978b9d21b02069d441678883afecb503d4e492bfae2b89459faa32"
   },
-  "lab_commit": "efc6324c1fab6309367b6327c3969dc52ce248f5",
+  "lab_commit": "450cdc5aa8b4a0a399fdf89892c165619f04aa20",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
-    "dirty_files": 18,
+    "dirty_files": 20,
     "pinned_utc": "2026-10-18T19:22:42Z"
   },
   "sources": [
@@ -32,6 +32,26 @@
       "size": 5157116,
       "mtime": 1770857578,
       "sha256": "e5a7440ddfcabee9b3afe03bd7feffbbf7f63f22780477e5147a8f2f8e150eae",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.putin-decree-list",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/putin_decree_list.xlsx",
+      "kind": "xlsx",
+      "generation": null,
+      "size": 14726,
+      "mtime": 1770857578,
+      "sha256": "b64de34a3353422ef49741590bc0f78ca670817411dc5f442b45e2694cd76578",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.strateg-government",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/strateg_government.xlsx",
+      "kind": "xlsx",
+      "generation": null,
+      "size": 61694,
+      "mtime": 1770857578,
+      "sha256": "41beeffec98145cbd80b3e52c1560ca6a23b81b4663f5b452d3ca53104cab48d",
       "sha256_source": "computed"
     },
     {
@@ -280,6 +300,11 @@
   "r_version": "R version 4.5.2 (2025-10-31)",
   "packages": [
     {
+      "package": "cellranger",
+      "version": "1.1.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
       "package": "cli",
       "version": "3.6.6",
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
@@ -385,6 +410,11 @@
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
     },
     {
+      "package": "readxl",
+      "version": "1.5.0.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
       "package": "rlang",
       "version": "1.3.0",
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
@@ -426,9 +456,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "6GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-sdmMiGIx/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-jLZBUSd4/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -436,10 +466,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/national.json",
-    "json_sha256": "06fa99acb1735d66b43192d678a90bddb1b11f0dfda474852cd8f4930feaaa8e",
-    "json_bytes": 12993,
+    "json_sha256": "3325f6953862c03fd23cbe2241bdbf7d58336da83d1a0213365ce412cc5de9e5",
+    "json_bytes": 12994,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/national.js",
-    "js_sha256": "9d3369fece5b5037febe9fcafc2718544aa82b7413a0b66df20aa91210e5bd3f",
+    "js_sha256": "ca0b9c20e97483d0ffa484410a64847915d8b7f82f945f3f31762fbf8ed67108",
     "names": ["scope", "camera", "extent", "years", "breaks", "class_colours", "neutral", "backdrop_alpha", "layer_alpha", "treated", "metric_kind", "metric", "metric_median_by_year", "moscow_median_by_year", "files", "counts", "classes", "moscow_pixel", "moscow_counters_minus_m6", "moscow_rectangle", "pile_check", "rules", "notes", "cx", "cy", "k", "ox", "oy", "xmin", "xmax", "ymin", "ymax", "w_km", "h_km", "mark", "px_km", "base", "s", "cap", "year", "med", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "backdrop", "layer", "firms", "city_level", "drawn", "filers_base", "nonfilers_base", "nobase", "nobase_filed", "base_filed_novalue", "with_base_all", "located_all", "located_no_id", "piles", "piles_outcome", "marks_firms", "marks_firms_base", "marks_firms_f", "blocks_2x2", "blocks_3x3", "red", "red_nonfilers", "red_undated", "filers", "quantiles", "current", "previous", "c2", "c3", "col", "row", "px", "py", "firms_with_a_row", "firms_by_latest_coordinates", "m6_treated", "n", "pixel", "median", "excluded"]
   }
 }

@@ -3,8 +3,8 @@
 # k = 0.168 px per km: one pixel is 5.95 km), built as the region extent's rasters are: one pixel per
 # address pixel, the outcome layer in the median relative class of the firms with a statement and a
 # value there, 2x2 and 3x3 blocks for 10+ and 100+ firms, a neutral backdrop for every drawn firm; and
-# the listed firms nationwide as vector-mark data for the page (coordinates, red-from, filing string, no
-# identifiers). Same baseline, metric, breaks and checks as M6 (M6-common.R with the national scope: the
+# the listed firms nationwide as vector-mark data for the page (coordinates, red-from, filing string, display
+# names from the list files since 25 October 2026, no identifiers). Same baseline, metric, breaks and checks as M6 (M6-common.R with the national scope: the
 # relative metric subtracts the year's median of the drawn firms on no list nationwide); reconciled
 # against M5's annual located totals, the density pass's 2021 count and M6's Moscow outputs.
 # Run: scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 8 --cpu 800% Rscript --vanilla R/motion/M8-national.R a rel charcoal national
@@ -52,10 +52,10 @@ for (yy in years) {
 
 # ---- listed firms nationwide: coordinates, red-from, filing and state strings, pile size ---------------
 cls_sql <- paste0("1", paste(sprintf(" + CAST(y.%s > %d AS INTEGER)", PCOL, BREAKS), collapse = ""))
-tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred,
+tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, coalesce(nm.name, '') AS name, coalesce(nm.name_filed, '') AS name_filed, coalesce(nm.name_case, 0) AS name_case, coalesce(nm.name_shared, 0) AS name_shared, coalesce(ms.lists, '') AS lists,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.filed THEN '1' ELSE '0' END, '' ORDER BY g.year) AS filed,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
-                 FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year
+                 FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year LEFT JOIN listnames nm ON nm.inn = m.inn_key LEFT JOIN memberships ms ON ms.inn_key = m.inn_key
                  WHERE m.treated GROUP BY ALL", cls_sql), "treated firms nationwide")
 piles <- lab_query(con, "SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n FROM fy WHERE year = 2021 GROUP BY 1, 2", "2021 piles")
 tr$pile <- piles$n[match(paste(round(tr$x_km, 3), round(tr$y_km, 3)), paste(piles$px, piles$py))]; tr$pile[is.na(tr$pile)] <- 1L
@@ -124,8 +124,12 @@ manifest <- list(
             "Descriptive: the control metric is a firm's own revenue path, not an estimate of any effect."))
 motion_save_json(manifest, "national", checks = checks, rows = length(years))
 treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
+                      name = tr$name, name_filed = tr$name_filed, name_case = as.integer(tr$name_case), name_shared = as.integer(tr$name_shared), lists = tr$lists, names_summary = motion_names_summary(tr),
                     red_from_counts = as.list(stats::setNames(as.integer(red_hist), names(red_hist))), n = nrow(tr), inferred_n = sum(tr$inferred), undated_n = sum(tr$undated),
                     moscow_rectangle_n = sum(inside_of(EXT$region)),
                     state_key = list(`-` = "absent from the registry", b = "no usable baseline (backdrop only)", d = "baseline, no statement", `1-6` = "revenue-change class, national median"))
-motion_save_json(treated_out, "treatednational", rows = nrow(tr))
+motion_save_json(treated_out, "treatednational", rows = nrow(tr),
+                 checks = motion_checks(motion_name_checks(tr),
+                                        motion_check("lists: the resident code agrees with the firms table", 0, sum(grepl("r", tr$lists, fixed = TRUE) != tr_keys$residents[match(tr$inn_key, tr_keys$inn_key)])),
+                                        motion_check("lists: the other-list codes agree with the firms table", 0, sum(grepl("[sdgp]", tr$lists) != tr_keys$other_lists[match(tr$inn_key, tr_keys$inn_key)]))))
 message(sprintf("  listed firms nationwide: %d (%d in the Moscow rectangle); Moscow point at pixel %d,%d (camera %.1f,%.1f)", nrow(tr), sum(inside_of(EXT$region)), mcol, mrow, mpx, mpy))

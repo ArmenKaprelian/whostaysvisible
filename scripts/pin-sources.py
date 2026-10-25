@@ -158,6 +158,8 @@ add_small("motion.margin-change-cells", f"{pass2data}/geo-margin-change-from-202
 # Round 2 (23 October 2026): the supplied sanctions list (dates, names, jurisdictions), the World Bank
 # deflator download, and the archived OKVED name dictionary for the treated-firm sequence.
 add_small("motion.sanctioned-list", f"{PROG}/data/raw_files/sanctioned_strategic/sanctioned/ru_sanctioned.csv", "motion")
+add_small("motion.putin-decree-list", f"{PROG}/data/raw_files/sanctioned_strategic/strategic/putin_decree_list.xlsx", "motion", kind="xlsx")   # the names of listed firms (25 October 2026)
+add_small("motion.strateg-government", f"{PROG}/data/raw_files/sanctioned_strategic/strategic/strateg_government.xlsx", "motion", kind="xlsx")
 add_small("motion.deflator", f"{PROG}/data/raw_files/RF_GDP_deflator/API_NY.GDP.DEFL.ZS.AD_DS2_en_csv_v2_35893.csv", "motion")
 add_small("motion.okved-names", f"{ROOT}/Claude Code/2026-09-24-before-migration/programming/data/raw_files/okved/okved_names.xlsx", "motion", kind="xlsx")
 add_small("motion.okfs", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okfs.csv", "motion")

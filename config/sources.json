@@ -2,7 +2,7 @@
  "pinned_utc": "2026-10-18T19:22:42Z",
  "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
  "programming_dirty_files": 8,
- "count": 178,
+ "count": 180,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -1918,6 +1918,28 @@
    "sha256_source": "computed",
    "stage": "motion"
   },
+  "motion.putin-decree-list": {
+   "name": "motion.putin-decree-list",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/putin_decree_list.xlsx",
+   "kind": "xlsx",
+   "generation": null,
+   "size": 14726,
+   "mtime": 1770857578,
+   "sha256": "b64de34a3353422ef49741590bc0f78ca670817411dc5f442b45e2694cd76578",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.strateg-government": {
+   "name": "motion.strateg-government",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/strateg_government.xlsx",
+   "kind": "xlsx",
+   "generation": null,
+   "size": 61694,
+   "mtime": 1770857578,
+   "sha256": "41beeffec98145cbd80b3e52c1560ca6a23b81b4663f5b452d3ca53104cab48d",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
   "motion.deflator": {
    "name": "motion.deflator",
    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/RF_GDP_deflator/API_NY.GDP.DEFL.ZS.AD_DS2_en_csv_v2_35893.csv",
@@ -2051,6 +2073,40 @@
     "motion.size-changes",
     "motion.size-odds-ratios",
     "motion.size-raw-changes"
+   ]
+  },
+  {
+   "prefix": "motion",
+   "pinned_utc": "2026-10-25T04:45:32Z",
+   "programming_head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+   "programming_dirty_files": 20,
+   "entries": [
+    "motion.annual-cell-totals",
+    "motion.change-cells",
+    "motion.change-class-counts",
+    "motion.coordinate-piles",
+    "motion.deflator",
+    "motion.dot-accounting",
+    "motion.flow-counts",
+    "motion.histories",
+    "motion.history-bins",
+    "motion.industry-year",
+    "motion.legal-year",
+    "motion.margin-change-cells",
+    "motion.okfs",
+    "motion.okopf",
+    "motion.okved-names",
+    "motion.ownership-year",
+    "motion.printed-names",
+    "motion.putin-decree-list",
+    "motion.reference-points",
+    "motion.revenue-change-cells",
+    "motion.sanctioned-list",
+    "motion.selection-cells",
+    "motion.size-changes",
+    "motion.size-odds-ratios",
+    "motion.size-raw-changes",
+    "motion.strateg-government"
    ]
   }
  ]

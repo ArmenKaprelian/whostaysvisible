@@ -164,44 +164,46 @@
   // Listed firms as vector marks: their own class until the red-from year, then red: solid when a
   // statement is available, a ring when it is absent (the change fades over the year transition),
   // a stroke of at least 1.5 px and a radius floor per scale, blooming once with an expanding ring.
-  function redMark(ctx, px, py, rr, fill, alpha, theme) {
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, rr + 1, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
-    if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = Math.max(1.5, Math.min(2.2, rr * 0.5)); ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, rr - ctx.lineWidth / 2), 0, TAU); ctx.stroke(); }
-  }
+  // The red mark is MM.listedMark (shared with the atlas); its size, halo and opacity follow MM.listedRule by zoom (25 October 2026).
+  const listedRuleAt = (ext, k) => { const m = P.extents[ext].mark; return MM.listedRule([m.base, m.s, m.cap, RING_FLOOR[ext]], k, K.national); };
+  // The year runs' schedule (section-relative start of the first year's hold, the hold, the transition), shared by the
+  // keyframes and the pulse's ring decay: tStart(Y, ext) is when the transition into year Y begins.
+  let RUNS = null;   // filled beside SEC below, once the section's times exist
+  const tStart = (Y, ext) => { const [t0, hold, trans] = RUNS[ext]; return t0 + (Y - Y0) * (hold + trans) - trans; };
   // rewind: while the year runs backwards (the pull-backs), a listing is a plain crossfade, not a bloom.
-  function drawTreated(ctx, cam, v, alpha, theme, rewind = false) {
+  function drawTreated(ctx, cam, v, alpha, theme, rewind = false, l = null) {   // l: the section clock, for the ring decay (null: the bloom's own clock)
     alpha *= 1 - ramp(cam.k, 110, 150);
     if (alpha <= 0) return;
     const wNat = extentAlpha(cam.k).national;
-    if (wNat < 1) drawMarkSet(ctx, cam, v, alpha * (1 - wNat), theme, TR, rewind);
-    if (wNat > 0) drawMarkSet(ctx, cam, v, alpha * wNat, theme, TRN, rewind);
+    if (wNat < 1) drawMarkSet(ctx, cam, v, alpha * (1 - wNat), theme, TR, rewind, l);
+    if (wNat > 0) drawMarkSet(ctx, cam, v, alpha * wNat, theme, TRN, rewind, l);
   }
-  function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind) {
+  function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind, l = null) {
     const [y0, y1, u] = yearPair(v); const vy = y0 + (y1 - y0) * u;   // the year value of the pair (equal to v without a kept-year list)
-    const ext = extentOf(cam.k); const hw = 960 / cam.k + 1, hh = 540 / cam.k + 1, floor = RING_FLOOR[ext];
+    const ext = extentOf(cam.k), LR = listedRuleAt(ext, cam.k); const hw = (960 + 48) / cam.k + 1, hh = (540 + 48) / cam.k + 1;   // 48 px beyond the frame: the largest ring stays inside
     for (let i = 0; i < MARKS.n; i++) {
       const x = MARKS.x[i], y = MARKS.y[i];
       if (x < cam.cx - hw || x > cam.cx + hw || y < cam.cy - hh || y > cam.cy + hh) continue;
       const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0];
       const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
-      const [px, py] = Motion.project(cam, x, y); const r = markRadius(ext, MARKS.pile[i]);
+      const [px, py] = Motion.project(cam, x, y); const r = MM.listedRadius(LR, MARKS.pile[i]);   // the listed rule's floor and cap by zoom
       const bloom = Motion.clamp(vy - (MARKS.red_from[i] - 1), 0, 1);
       if (bloom < 1) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
-        const pre = (1 - E.outCubic(bloom)) * present * alpha, rp = Math.max(floor, r);   // the ordinary fill at the scale's floor radius
-        if (c0 && u < 1) { ctx.globalAlpha = pre * (1 - u); ctx.fillStyle = c0; ctx.beginPath(); ctx.arc(px, py, rp, 0, TAU); ctx.fill(); }
-        if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, rp, 0, TAU); ctx.fill(); }
-        if (c0 || c1) { ctx.globalAlpha = pre * 0.8; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rp + 0.75, 0, TAU); ctx.stroke(); }   // the rim outside the fill: membership visible from the first frame (25 October 2026)
+        const pre = (1 - E.outCubic(bloom)) * present * alpha;   // the ordinary fill at the listed radius
+        if (c0 && u < 1) { ctx.globalAlpha = pre * (1 - u); ctx.fillStyle = c0; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
+        if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
+        if (c0 || c1) { ctx.globalAlpha = pre * LR.rimA; ctx.strokeStyle = theme.treated; ctx.lineWidth = LR.rimW; ctx.beginPath(); ctx.arc(px, py, r + LR.rimW / 2, 0, TAU); ctx.stroke(); }   // the rim outside the fill: membership visible from the first frame (25 October 2026)
       }
       if (bloom > 0) {
         const f0 = MARKS.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = MARKS.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
-        const grow = rewind ? bloom : E.outCubic(bloom), flash = rewind ? 1 : 1 + 0.9 * Math.sin(Math.PI * bloom), rr = Math.max(floor, r) * flash;
-        if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: rr + 1 });
-        redMark(ctx, px, py, rr, fill, alpha * present * grow, theme);
-        if (bloom < 1 && !rewind) { ctx.globalAlpha = alpha * present * (1 - bloom) * 0.9; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rr + 4 + 22 * E.outCubic(bloom), 0, TAU); ctx.stroke(); }
+        const grow = rewind ? bloom : E.outCubic(bloom), swell = rewind ? 0 : Math.sin(Math.PI * bloom), rr = r + Math.max(1.2 * r, 2.5) * swell;
+        if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: rr + LR.halo });
+        MM.listedMark(ctx, px, py, rr, fill, alpha * present * grow * (1 - (1 - LR.alpha) * bloom), theme, LR.halo);
+        if (!rewind) {   // the rings: on the section clock the decay runs 0.6 s into the hold; without it, the bloom's own clock
+          const p = l != null ? Motion.clamp((l - tStart(MARKS.red_from[i], ext)) / 0.6, 0, 1) : bloom;
+          if (p > 0 && p < 1) { ctx.globalAlpha = alpha * present; MM.pulseRing(ctx, px, py, r, MM.pulseRings(LR, p, false), theme); }
+        }
       }
     }
     ctx.globalAlpha = 1;
@@ -213,7 +215,8 @@
   const restCam = ext => ({ cx: MX, cy: MY, k: K[ext], ox: 960, oy: 540 });
   function redMarks2025(ext) {
     const cam = restCam(ext), out = [];
-    for (let i = 0; i < TR.n; i++) { if (TR.filed[i][Y1 - Y0] === '-' || TR.red_from[i] > Y1 || !inExtent(ext, TR.x[i], TR.y[i])) continue; const [px, py] = Motion.project(cam, TR.x[i], TR.y[i]); out.push({ x: px, y: py, r: Math.max(RING_FLOOR[ext], markRadius(ext, TR.pile[i])) + 1 }); }
+    const LR = listedRuleAt(ext, cam.k);
+    for (let i = 0; i < TR.n; i++) { if (TR.filed[i][Y1 - Y0] === '-' || TR.red_from[i] > Y1 || !inExtent(ext, TR.x[i], TR.y[i])) continue; const [px, py] = Motion.project(cam, TR.x[i], TR.y[i]); out.push({ x: px, y: py, r: MM.listedRadius(LR, TR.pile[i]) + LR.halo }); }
     return out;
   }
   const hits = (box, marks) => marks.reduce((s, m) => s + (box.x <= m.x + m.r && box.x1 >= m.x - m.r && box.y <= m.y + m.r && box.y1 >= m.y - m.r ? 1 : 0), 0);
@@ -430,18 +433,19 @@
   // downtown 58-72, city 72-84, region 84-96, close 96-103, out 103-108 (the camera leaves for the
   // country; the explainer's keyframes continue from the last one here).
   const SEC = { street: 0, profiles: 12, designation: 28, comparison: 36, back: 50, downtown: 58, city: 72, region: 84, national: 96, close: 108, out: 115, end: 120 };
+  RUNS = { downtown: [SEC.downtown + 0.8, 0.75, 0.3], city: [SEC.city + 2.5, 0.55, 0.25], region: [SEC.region + 2.5, 0.5, 0.25], national: [SEC.national + 2.5, 0.5, 0.25] };   // the year runs: start of the first hold, hold, transition
   const MID = { cx: (AX + BX) / 2, cy: (AY + BY) / 2, ox: 960, oy: 540 };
   function journeyKeyframes(S, YL = null) {
     // With a kept-year list the v channel carries list positions (a year not in the list takes the nearest kept year's position).
     const pv = y => { if (!YL) return y; let b = 0; YL.forEach((x, j) => { if (Math.abs(x - y) < Math.abs(YL[b] - y)) b = j; }); return b; };
     const kf = []; const at = (t, k, v, base, easing) => kf.push(Object.assign({ t: S + t, k, v: pv(v) }, base || REST, easing ? { easing } : {}));
     at(SEC.street, K.region, 2021); at(SEC.profiles, 1200, 2021, MID); at(SEC.back, 1200, 2021, MID); at(SEC.back + 5, K.downtown, 2021); at(SEC.downtown, K.downtown, 2021);
-    runYears(kf, S + SEC.downtown + 0.8, K.downtown, 0.75, 0.3, REST, YL); at(SEC.city, K.downtown, Y1);
-    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + SEC.city + 2.5, K.city, 0.55, 0.25, REST, YL); at(SEC.region, K.city, Y1);
-    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + SEC.region + 2.5, K.region, 0.5, 0.25, REST, YL); at(SEC.national, K.region, Y1);
+    runYears(kf, S + RUNS.downtown[0], K.downtown, RUNS.downtown[1], RUNS.downtown[2], REST, YL); at(SEC.city, K.downtown, Y1);
+    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + RUNS.city[0], K.city, RUNS.city[1], RUNS.city[2], REST, YL); at(SEC.region, K.city, Y1);
+    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + RUNS.region[0], K.region, RUNS.region[1], RUNS.region[2], REST, YL); at(SEC.national, K.region, Y1);
     // Two segments so Moscow stays on screen: zoom out in place to k 1 (the region raster leaves, the national
     // raster arrives, both centred on Moscow), then slide to the left framing while the zoom completes.
-    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + SEC.national + 2.5, K.national, 0.5, 0.25, NATBASE, YL); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
+    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + RUNS.national[0], K.national, RUNS.national[1], RUNS.national[2], NATBASE, YL); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
     return kf;
   }
   // The anchors between their projected positions and the card headers; the dot grows from the mark's
@@ -470,7 +474,7 @@
       drawField(ctx, cam, v, backAlpha, layerReveal);
       drawCells(ctx, stage, cam, v, layerReveal);
       const rewind = [[SEC.downtown, SEC.downtown + 0.8], [SEC.city, SEC.city + 2.5], [SEC.region, SEC.region + 2.5], [SEC.national, SEC.national + 2.5]].some(([a, b]) => l >= a && l < b);
-      drawTreated(ctx, cam, v, layerReveal, theme, rewind);
+      drawTreated(ctx, cam, v, layerReveal, theme, rewind, YL ? null : l);   // the section clock drives the ring decay (not for a kept-year cut)
       // The two anchors: vector dots from k 60, the red listing ring at the designation, gliding to
       // the card headers and back, then the fixed-size markers once the field is drawn.
       const ap = anchorPositionsJourney(l, cam); const dotsAlpha = ramp(k, 60, 80) * (1 - layerReveal);

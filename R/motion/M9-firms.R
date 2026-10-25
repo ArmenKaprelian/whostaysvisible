@@ -7,7 +7,7 @@
 # the national scope (M6-common.R, as M8). Output: one gzipped little-endian binary per year under
 # motion/data/firms/ (32-byte header, then the columns as a struct of arrays: x i32, y i32 in metres
 # of the km plane, n u16, a u16, f u16, cls u8) and the manifest firms.json. No identifiers leave
-# DuckDB; nothing names a firm. Listed firms are not in these files (treatednational.json).
+# DuckDB; these files name no firm (they hold firms on no list). Listed firms, with their names, are in treatednational.json.
 # Run: scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800% Rscript --vanilla R/motion/M9-firms.R a rel charcoal national
 source(file.path(Sys.getenv("LAB_ROOT"), "R", "lab.R")); lab_init()
 source(lab_path("R", "motion", "motion-common.R"))

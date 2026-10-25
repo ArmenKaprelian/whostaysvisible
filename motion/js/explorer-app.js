@@ -11,7 +11,8 @@
   window.__atlasCanvases = {};
   // Firms view (round 5, 23 October 2026): every registered address per year from M9 (data/firms/*.bin.gz,
   // manifest data/firms.js) and the listed firms from treatednational.js; off when either is absent or the
-  // browser cannot inflate gzip. Nothing here names a firm: the files carry counts and classes only.
+  // browser cannot inflate gzip. Nothing here names a firm on no list: the address files carry counts and classes only;
+  // listed firms carry their list-file names (25 October 2026).
   const FM = D.firms || null, TRN = D.treatednational || null;
   const FIRMS_OK = !!(FM && TRN && typeof DecompressionStream === 'function');
   const CLASS_LABELS = ['≤ −50%', '−50 to −20%', '−20 to 0%', '0 to +50%', '+50 to +150%', '> +150%'];
@@ -425,11 +426,13 @@ void main() {
   // Listed firms on the marks layer, above the field (25 October 2026): before its listing year a firm keeps its ordinary
   // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
   // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
-  // and never rimmed or pulsed. On a forward year change the firms newly red bloom once as in the video (24 October
-  // 2026): the mark swells to 1.9 times and back while a thin red ring expands by 26 px and fades, over 0.9 s; backward
-  // changes and the cells view show nothing. The pulse button beside the year slider replays the bloom for the firms
+  // and never rimmed or pulsed. The marks' size, halo, opacity and rim follow MM.listedRule by zoom (25 October 2026):
+  // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red bloom
+  // once as in the video: over 1.2 s the mark swells by at least 2.5 px and back while two rings expand from it, the red one
+  // to r + 2 + Rmax(k) with an eased decay and a pale trailing one at 0.7 of its radius; backward changes and the cells view
+  // show nothing. The pulse button beside the year slider replays the bloom for the firms
   // listed in the shown year; under prefers-reduced-motion a pulse is a still highlight held for the same 0.9 s.
-  const PULSE_MS = 900; let pulse = null, pulseRaf = 0, pulseTimer = 0;
+  const PULSE_MS = 1200; let pulse = null, pulseRaf = 0, pulseTimer = 0;   // 1.2 s since 25 October 2026 (0.9 before)
   function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; }
   function beginPulse(mask, count) {
     endPulse();
@@ -458,32 +461,36 @@ void main() {
     b.hidden = !show; b.disabled = !count;
     const label = count ? `Replay the bloom of the firms listed in ${y}` : `No firm on these lists was listed in ${y}`; b.title = label; b.setAttribute('aria-label', label);
   }
+  const MARK_MARGIN = 48;   // the cull margin in CSS px: the largest mark, its flash and the pulse ring stay inside it
   function drawMarks(c) {
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
-    const year = state.year, yi = year - 2014, rule = markRule(c.k), L = state.layer, now = performance.now();
-    const st = !!(pulse && pulse.static), b = pulse ? (st ? 1 : Motion.clamp((now - pulse.t0) / PULSE_MS, 0, 1)) : 1, grow = st ? 1 : Motion.ease.outCubic(b), flash = st ? 1 : 1 + 0.9 * Math.sin(Math.PI * b);
+    const year = state.year, yi = year - 2014, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), L = state.layer, now = performance.now();
+    const st = !!(pulse && pulse.static), b = pulse ? (st ? 1 : Motion.clamp((now - pulse.t0) / PULSE_MS, 0, 1)) : 1, grow = st ? 1 : Motion.ease.outCubic(b), swell = st ? 0 : Math.sin(Math.PI * b);
+    const rings = pulse ? MM.pulseRings(LR, b, st) : null, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN;
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
-      const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]); if (px < -40 || px > stage.width + 40 || py < -40 || py > stage.height + 40) continue;
-      const r = markRadius(rule, TRN.pile[i]), pulsing = pulse && pulse.mask[i];
+      const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue;   // projected in place: no array per mark
+      const r = MM.listedRadius(LR, TRN.pile[i]), pulsing = pulse && pulse.mask[i];
       if (TRN.red_from[i] > year || pulsing) {
-        const st = TRN.state[i][yi], col = L === 'fin' && st >= '1' && st <= '6' ? theme.blue6[+st - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
-        const fade = pulsing ? 1 - grow : 1; MM.rimmedMark(kctx, px, py, r, col, 0.9 * fade, 0.8 * fade, theme);   // the ordinary fill with the rim; both fade as the bloom takes over
+        const sc = TRN.state[i][yi], col = L === 'fin' && sc >= '1' && sc <= '6' ? theme.blue6[+sc - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
+        const fade = pulsing ? 1 - grow : 1; MM.rimmedMark(kctx, px, py, r, col, 0.9 * fade, LR.rimA * fade, theme, LR.rimW);   // the ordinary fill with the rim; both fade as the bloom takes over
       }
       if (TRN.red_from[i] <= year) {
         if (pulsing) {
-          const rr = r * flash;
-          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, grow, theme);
-          if (st || b < 1) { kctx.save(); kctx.globalAlpha = st ? 0.9 : (1 - b) * 0.9; kctx.strokeStyle = theme.treated; kctx.lineWidth = 1.5; kctx.beginPath(); kctx.arc(px, py, rr + 4 + 22 * grow, 0, Math.PI * 2); kctx.stroke(); kctx.restore(); }   // a still pulse holds the ring at its largest
-        } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, 1, theme);
+          const rr = r + Math.max(1.2 * r, 2.5) * swell;   // the flash: at least 2.5 px beyond the resting radius
+          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, grow * (1 - (1 - LR.alpha) * b), theme, LR.halo);
+          if (st || b < 1) MM.pulseRing(kctx, px, py, r, rings, theme);   // the rings grow from the resting radius; a still pulse holds them at their largest
+        } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo);
       }
     }
     drawLabels(kctx, c, 'marks');
   }
-  // Hover in firms mode: the nearest address within its mark radius plus 2 px, found through the sorted x column,
-  // and the listed firms at the cursor; counts only, never a firm.
+  // Hover in firms mode: the nearest address within its mark radius plus 2 px, found through the sorted x column, and the
+  // listed firms at the cursor (within their mark radius plus 2 px, at least 6 px; a listed mark wins over an address):
+  // counts, and for listed firms their list-file names (25 October 2026).
+  const LISTED_HIT = 6;   // the listed marks' hit radius floor in CSS px (25 October 2026): a red dot is hovered within 6 px, and it wins over an address mark
   function firmAt(km) {
-    const c = cam(), k = c.k, rule = markRule(k), yi = state.year - 2014;
+    const c = cam(), k = c.k, rule = markRule(k), LR = MM.listedRule(rule, k, kFit()), yi = state.year - 2014;
     const out = { kind: 'none', region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y, ix: Math.floor(km.x / 100), iy: Math.floor(km.y / 100), grid: 100 };
     const d = firmYears.get(state.year);
     if (d) {
@@ -497,14 +504,23 @@ void main() {
       if (best >= 0) { const [px, py] = Motion.project(c, d.x[best] / 1000, d.y[best] / 1000); Object.assign(out, { kind: 'firm', n: d.nn[best], a: d.a[best], f: d.f[best], cls: d.cls[best], px, py, r: br - 2 }); }
     }
     let ln = 0, lred = 0, lring = 0, lrim = 0, rimA = Infinity, rimB = 0, lpx = 0, lpy = 0, lr = 0, ld = Infinity;
+    const top = [-1, -1, -1], topKey = [Infinity, Infinity, Infinity];   // the three listed firms shown by name: red first, then by listing year, then by distance
+    const ox = c.ox - c.cx * k, oy = c.oy + c.cy * k;
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
-      const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]), r = markRadius(rule, TRN.pile[i]) + 2, dist = Math.hypot(px - km.px, py - km.py);
-      if (dist > r) continue;
-      ln++; if (TRN.red_from[i] <= state.year) { lred++; if (ch === '0') lring++; } else { lrim++; const yf = TRN.red_from[i]; if (yf < rimA) rimA = yf; if (yf > rimB) rimB = yf; }
-      if (dist < ld) { ld = dist; lpx = px; lpy = py; lr = r - 2; }
+      const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k, r = MM.listedRadius(LR, TRN.pile[i]), hit = Math.max(r + 2, LISTED_HIT), dist = Math.hypot(px - km.px, py - km.py);
+      if (dist > hit) continue;
+      const red = TRN.red_from[i] <= state.year;
+      ln++; if (red) { lred++; if (ch === '0') lring++; } else { lrim++; const yf = TRN.red_from[i]; if (yf < rimA) rimA = yf; if (yf > rimB) rimB = yf; }
+      if (dist < ld) { ld = dist; lpx = px; lpy = py; lr = r; }
+      const key = (red ? 0 : 1e6) + TRN.red_from[i] * 100 + Math.min(99, dist);
+      for (let s = 0; s < 3; s++) if (key < topKey[s]) { for (let q = 2; q > s; q--) { top[q] = top[q - 1]; topKey[q] = topKey[q - 1]; } top[s] = i; topKey[s] = key; break; }
     }
-    if (ln) { out.listed = { n: ln, red: lred, ring: lring, rim: lrim, rim_from: lrim ? rimA : null, rim_to: lrim ? rimB : null, within_km: k < 20 ? (markRadius(rule, 1) + 2) / k : 0 }; if (out.kind === 'none') Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr }); }
+    if (ln) {
+      out.listed = { n: ln, red: lred, ring: lring, rim: lrim, rim_from: lrim ? rimA : null, rim_to: lrim ? rimB : null, within_km: k < 20 ? Math.max(MM.listedRadius(LR, 1) + 2, LISTED_HIT) / k : 0, top: top.filter(i => i >= 0) };
+      if (out.kind === 'firm') out.address = { n: out.n, a: out.a, f: out.f, cls: out.cls, px: out.px, py: out.py, r: out.r };   // the address under the same cursor keeps its line and its panel row
+      Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr });   // a listed mark wins the tie
+    }
     return out;
   }
   const hitAt = km => (state.mode === 'firms' ? firmAt(km) : cellAt(km));
@@ -539,7 +555,7 @@ void main() {
       else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.blue6.map((col, i) => `<div class="row">${sw(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a usable baseline</div>`; }
       else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
       html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
-      note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.`;
+      note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.` + (TRN.name ? ' Hover a listed firm for its name.' : '');
     } else if (L === 'density') {
       title = '<b>Firms per cell</b> (' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')';
       html = MM.countClassLabels.map((lab, i) => `<div class="row">${sw(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
@@ -618,19 +634,40 @@ void main() {
     return out;
   }
   const band = n => (n < 10 ? 'fewer than 10' : fmt.int(n));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // One listed firm as a tooltip line: its mark's glyph (solid red with a statement, hollow red without one, a dotted ring before
+  // its listing year), its display name from the list file (a shared name marked), and its listing year.
+  // The listed glyphs of the tooltip and the panel are the legend's own three dots at 11 px (author's fix, 25 October 2026):
+  // red with a statement, the land-filled ring without one that year, the neutral fill with a red rim before the listing year.
+  const GLYPH = { red: () => `<span class="gl" style="background:${theme.treated}"></span>`,
+                  hollow: () => `<span class="gl" style="background:${theme.land};border:2px solid ${theme.treated}"></span>`,
+                  rim: () => `<span class="gl" style="background:${theme.neutral};border:2px solid rgba(227,26,28,0.8)"></span>` };
+  function listedGlyph(i, year) { const yi = year - 2014; return TRN.red_from[i] > year ? GLYPH.rim() : TRN.filed[i][yi] === '1' ? GLYPH.red() : GLYPH.hollow(); }
+  const listedYear = i => (TRN.undated[i] ? 'undated' : String(TRN.red_from[i]));
+  const listedState = (i, year) => `${TRN.filed[i][year - 2014] === '1' ? '' : 'no '}${year} statement`;
+  const LIST_WORDS = { s: 'sanctions', d: 'decree', r: 'resident', g: 'government strategic', p: 'presidential strategic' };
+  const listedLists = i => (TRN.lists ? Array.from(TRN.lists[i] || '', c => LIST_WORDS[c]).filter(Boolean).join(', ') : '');
+  const listedName = i => (TRN.name && TRN.name[i] ? esc(TRN.name[i]) : '<i>unnamed</i>');
+  // The tooltip's short line (the glance view): the glyph, the display name and the listing year.
+  function listedLine(i) { return `${listedGlyph(i, state.year)}${listedName(i)} · ${listedYear(i)}`; }
   function tipText(h) {
     const L = state.layer; const lines = [];
     if (h.region) lines.push(`<b>${h.region}</b>`);
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none') {
-      if (h.kind === 'firm') {
-        lines.push(`Coordinate pair: ${fmt.int(h.n)} located firm${h.n === 1 ? '' : 's'}, ${fmt.int(h.a)} with a ${state.year} statement` + (h.n > 1 ? ` (${fmt.pct(100 * h.a / h.n)})` : ''));
-        if (state.layer === 'fin') lines.push(h.f ? `${fmt.int(h.f)} with a baseline and a value; median change ${CLASS_LABELS[h.cls - 1]}` : 'No firm with a usable baseline and a value');
+      const ad = h.kind === 'firm' ? h : h.address;
+      if (ad) {   // the glance view (author's rule, 25 October 2026): one figures line, one listed line, the named lines in their short form; the detail stays in the panel
+        lines.push(ad.n === 1 ? `1 firm, ${ad.a ? '' : 'no '}${state.year} statement` : `${fmt.int(ad.n)} firms, ${fmt.int(ad.a)} with a ${state.year} statement, ${fmt.pct(100 * ad.a / ad.n)}`);
+        if (state.layer === 'fin') lines.push(ad.f ? `${fmt.int(ad.f)} with a baseline and a value, median change ${CLASS_LABELS[ad.cls - 1]}` : 'No firm with a usable baseline and a value');
       }
       if (h.listed) {
-        const Ls = h.listed, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'} of the cursor` : 'at this coordinate pair';
-        const years = Ls.rim ? (Ls.rim_from === Ls.rim_to ? String(Ls.rim_from) : `${Ls.rim_from}–${Ls.rim_to}`) : '', head = `${fmt.int(Ls.n)} firm${Ls.n === 1 ? '' : 's'} on one of the five lists (treated) ${where}`;
-        if (Ls.rim === Ls.n) lines.push(`${head}, listed in ${years}`);   // rimmed: on a list, not yet red
-        else lines.push(`${head}: ${fmt.int(Ls.red)} red this year` + (Ls.ring ? `, ${fmt.int(Ls.ring)} without a ${state.year} statement` : '') + (Ls.rim ? `, ${fmt.int(Ls.rim)} before ${Ls.rim === 1 ? 'its' : 'their'} listing year (${years})` : ''));
+        const Ls = h.listed, parts = [];
+        if (Ls.n === 1) parts.push(Ls.ring ? 'hollow' : Ls.red ? 'red' : 'before listing');
+        else { if (Ls.red) parts.push(`${fmt.int(Ls.red)} red`); if (Ls.ring) parts.push(`${fmt.int(Ls.ring)} hollow`); if (Ls.rim) parts.push(`${fmt.int(Ls.rim)} before listing`); }
+        lines.push(`${fmt.int(Ls.n)} on the lists: ${parts.join(', ')}`);
+        if (TRN.name && Ls.top && Ls.top.length) {   // red first, then before their listing year; up to three
+          for (const i of Ls.top) lines.push(listedLine(i));
+          if (Ls.n > Ls.top.length) lines.push(`and ${fmt.int(Ls.n - Ls.top.length)} more`);
+        }
       }
       return lines.join('<br>');
     }
@@ -831,9 +868,22 @@ void main() {
   function drawCellPanel(h) {
     const info = $('cellinfo'); const rows = [];
     if (h && h.region) rows.push(['Region', h.region]);
-    if (h && h.kind === 'firm') rows.push(['Coordinate pair', `${fmt.int(h.n)} firm${h.n === 1 ? '' : 's'}`]);
+    const ad = h && (h.kind === 'firm' ? h : h.address);
+    if (ad) { rows.push(['Coordinate pair', `${fmt.int(ad.n)} firm${ad.n === 1 ? '' : 's'}`]); rows.push([`${state.year} statement`, ad.n === 1 ? (ad.a ? 'available' : 'absent') : `${fmt.int(ad.a)} (${fmt.pct(100 * ad.a / ad.n)})`]); }
+    if (h && h.listed && h.listed.top && TRN.name) {   // the detail view (author's rule, 25 October 2026): the display name, the filed name beneath, the listing year and the statement state on one line, the list memberships
+      const Ls = h.listed, y = state.year, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'}` : 'at this pair';
+      rows.push(['On the lists (treated)', `${fmt.int(Ls.n)} ${where}`]);
+      const blocks = Ls.top.map(i => {
+        const filed = TRN.name_filed ? TRN.name_filed[i] : '', nm = TRN.name[i], cs = TRN.name_case ? TRN.name_case[i] : 0, shared = TRN.name_shared ? TRN.name_shared[i] : 0, lists = listedLists(i);
+        return `<div class="lf"><div class="lf-h"><b>${listedGlyph(i, y)}${listedName(i)}${cs === 2 ? ' <span class="muted">(transliterated)</span>' : ''}</b>${lists ? `<span class="muted lists">${lists}</span>` : ''}</div>`
+          + (filed && filed !== nm ? `<div class="muted filed">${esc(filed)}</div>` : '') + (shared > 1 ? `<div class="muted filed">one of ${fmt.int(shared)} entries under this name</div>` : '')
+          + `<div class="lf-s"><span>${TRN.undated[i] ? 'undated listing' : 'listed ' + TRN.red_from[i]}</span><span>${listedState(i, y)}</span></div></div>`;
+      });
+      if (Ls.n > Ls.top.length) blocks.push(`<div class="lf more">and ${fmt.int(Ls.n - Ls.top.length)} more</div>`);
+      rows.push(['', blocks.join(''), 'block']);
+    }
     if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `${h.grid} km (${h.ix}, ${h.iy})`]);
-    info.innerHTML = rows.length ? rows.map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('') : '<span>Hover a cell</span><b></b>';
+    info.innerHTML = rows.length ? rows.map(([k, v, t]) => (t === 'block' ? `<div class="listed">${v}</div>` : `<span>${k}</span><b>${v}</b>`)).join('') : '<span>Hover a cell</span><b></b>';
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
     if (!h) return;
     const note = t => Motion.text(ctx, t, 8, 24, { size: 13, color: theme.muted });
@@ -887,7 +937,7 @@ void main() {
   // ---- controls -------------------------------------------------------------------------------------
   const layersEl = $('layers');
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
-  const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
+  const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Listed firms are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters; the full filed name is shown in the Under the cursor panel. Firms on no list are never named. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
   LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share'); }
@@ -935,7 +985,7 @@ void main() {
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
-    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
+    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
     zoomBy(f, km) { const c = cam(); const p = km ? { x: km[0], y: km[1], px: c.ox + (km[0] - c.cx) * c.k, py: c.oy - (km[1] - c.cy) * c.k } : null; return flyTo(p ? stepAt(p, f) : stepCentre(f), { instant: true }).then(() => this.camera()); },   // an instant step by a factor, anchored at a km point or the centre (the audit's wheel)
@@ -955,6 +1005,8 @@ void main() {
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
     pulsing() { return pulse ? pulse.count : 0; },
     pulse() { return replayPulse(); },
+    listedRule() { const c = cam(), L = MM.listedRule(markRule(c.k), c.k, kFit()); return Object.assign({ k: c.k, rMin: MM.listedRadius(L, 1), rMax: MM.listedRadius(L, 65535), cull: MARK_MARGIN, pulseMs: PULSE_MS }, L); },
+    pulseAt(ms) { if (ms == null) { endPulse(); drawMarks(cam()); return 0; } const m = manualMask(state.year); if (!m.count) return 0; endPulse(); pulse = { t0: performance.now() - ms, mask: m.mask, count: m.count, static: false }; drawMarks(cam()); return m.count; },   // a frozen pulse frame at ms, for the comparison pictures; pulseAt(null) clears it
     ready() { return state.mode === 'firms' ? ensureYear(state.year).then(() => {}) : Promise.resolve(); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
   };

@@ -189,23 +189,50 @@
   };
   // Location schedule: entries [{start, name, size}] on the caller's clock; returns the previous
   // and current entries and the flip progress (0.5 s plus 30 ms per extra glyph, a pure function of time).
-  // A listed firm's mark: a pale halo, the land disc, the red fill when a statement is available (fill 1)
-  // and a red ring when it is absent (fill 0); fill between the two fades one into the other.
-  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme) {
-    const TAU = Math.PI * 2; ctx.save();
-    ctx.globalAlpha = alpha; ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, rr + 1, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
-    if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = Math.max(1.5, Math.min(2.2, rr * 0.5)); ctx.beginPath(); ctx.arc(px, py, Math.max(0.8, rr - ctx.lineWidth / 2), 0, TAU); ctx.stroke(); }
+  // A listed firm's mark: a pale halo of the given width (0 removes it), the land disc, the red fill when a statement is
+  // available (fill 1) and a red ring when it is absent (fill 0); fill between the two fades one into the other. A hollow
+  // mark keeps a land core of at least 0.75 px inside a stroke of at least 1 px, so it stays a ring at every zoom (its outer
+  // radius grows above the solid mark's at the floor; 25 October 2026).
+  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme, halo = 1) {
+    const TAU = Math.PI * 2, w = Math.max(1.0, Math.min(2.2, rr * 0.45)), R = rr + (1 - fill) * Math.max(0, 0.75 + w - rr);
+    ctx.save(); ctx.globalAlpha = alpha;
+    if (halo > 0.05) { ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, R + halo, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill();
+    if (fill > 0) { ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill(); }
+    if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(px, py, R - w / 2, 0, TAU); ctx.stroke(); }
     ctx.restore();
   };
   // A listed firm before its listing year (25 October 2026): its ordinary fill at the scale's radius and a thin rim in the
-  // listed red stroked outside the fill (width 1.5 px), so the fill stays visible at the 1.5 px floor and the mark never
-  // reads as hollow red; no halo. The callers pass the fill's and the rim's opacity (the rim at about 0.8 at rest).
-  M.rimmedMark = function (ctx, px, py, r, colour, fillAlpha, rimAlpha, theme) {
+  // listed red stroked outside the fill, so the fill stays visible at the floor and the mark never reads as hollow red; no
+  // halo. The callers pass the fill's and the rim's opacity and the rim's width (1.5 px at 0.8 at rest, quieter with q).
+  M.rimmedMark = function (ctx, px, py, r, colour, fillAlpha, rimAlpha, theme, rimW = 1.5) {
     const TAU = Math.PI * 2; ctx.save();
     ctx.globalAlpha = fillAlpha; ctx.fillStyle = colour; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill();
-    ctx.globalAlpha = rimAlpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, r + 0.75, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = rimAlpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = rimW; ctx.beginPath(); ctx.arc(px, py, r + rimW / 2, 0, TAU); ctx.stroke();
+    ctx.restore();
+  };
+  // Listed marks by zoom (author's decision, 25 October 2026): quieter where they are many. The quiet weight q is 1 at
+  // k ≤ 0.5 px per km (the national view) and 0 at k ≥ 60 (the street zoom), interpolated in log k. The listed rule shrinks
+  // the address rule's floor and cap, thins the halo, lowers the resting opacity and the rim with q, and sets the pulse's
+  // ring reach and width from log k against the fitted zoom kRef, capped. The address field keeps its own rule.
+  M.quietWeight = k => Motion.clamp(Math.log2(60 / k) / Math.log2(120), 0, 1);
+  M.listedRule = function (rule, k, kRef) {
+    const q = M.quietWeight(k), lk = Math.log2(k / kRef);
+    return { q, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q,
+             rimW: 1.5 * (1 - 0.33 * q), rimA: 0.8 * (1 - 0.15 * q), Rmax: Motion.clamp(10 + 3 * lk, 12, 30), W: Motion.clamp(3 - 0.25 * lk, 1.5, 3) };
+  };
+  M.listedRadius = (L, n) => Math.max(L.floor, Math.min(L.cap, L.base + L.s * Math.sqrt(Math.max(0, n - 1))) / 2);
+  // The pulse's two rings for one frame: ring 1 in the listed red reaches r + 2 + Rmax with an eased decay, ring 2 trails at
+  // 0.7 of its radius in the pale outline colour (the red at half opacity on a light theme). still: the reduced-motion hold.
+  M.pulseRings = function (L, b, still) {
+    if (still) return { r1: 2 + L.Rmax, w1: L.W, a1: 0.9, r2: 0.7 * (2 + L.Rmax), w2: 0.8 * L.W, a2: 0.6 };
+    const g = Motion.ease.outCubic(b), r1 = 2 + L.Rmax * g, b2 = Motion.clamp((b - 0.2) / 0.8, 0, 1), fade2 = Motion.clamp((b - 0.2) / 0.1, 0, 1);
+    return { r1, w1: L.W * (1 - 0.5 * b), a1: (1 - b) * (1 - b), r2: 0.7 * r1, w2: 0.8 * L.W, a2: 0.7 * fade2 * (1 - b2) * (1 - b2) };
+  };
+  M.pulseRing = function (ctx, px, py, r, g, theme) {
+    const TAU = Math.PI * 2, light = theme.dark === false; ctx.save();
+    ctx.lineWidth = g.w1; ctx.globalAlpha = g.a1; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + g.r1, 0, TAU); ctx.stroke();
+    if (g.a2 > 0.01) { ctx.lineWidth = g.w2; ctx.globalAlpha = light ? g.a2 * 0.5 : g.a2; ctx.strokeStyle = light ? theme.treated : theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + g.r2, 0, TAU); ctx.stroke(); }
     ctx.restore();
   };
   M.locationAt = function (entries, l) {

@@ -48,6 +48,54 @@ san_first <- san[!duplicated(san$inn), c("inn", "start_year", "inferred", "count
 san_first$countries_all <- vapply(split(san$countries, san$inn)[san_first$inn], function(v) { tok <- unlist(strsplit(v, "[|[:space:]]+")); paste(sort(unique(tok[nzchar(tok)])), collapse = " ") }, "")   # the file writes "gb | us"
 DBI::dbWriteTable(con, "san", san_first[, c("inn", "start_year", "inferred", "countries_all")], temporary = TRUE, overwrite = TRUE)
 
+# ---- listed firms' names (author's rule, 25 October 2026): the decree and government strategic workbooks' name columns,
+# then the sanctions file's name; one display name per INN through motion_display_names() (motion-common.R); into DuckDB as
+# listnames for the treated queries. The identifier stays in R memory and the in-memory database, as san does.
+read_list_xlsx <- function(src) {
+  x <- readxl::read_xlsx(lab_source(src), col_types = "list")
+  cell <- function(v) vapply(v, function(c) if (is.null(c) || (length(c) == 1L && is.na(c))) "" else if (is.numeric(c)) format(c, scientific = FALSE, trim = TRUE, digits = 17L) else trimws(as.character(c)), "")
+  data.frame(inn = trimws(cell(x$inn)), raw = cell(x$name), stringsAsFactors = FALSE)
+}
+ln_decree <- read_list_xlsx("motion.putin-decree-list"); ln_decree$source <- "decree"
+ln_gov <- read_list_xlsx("motion.strateg-government"); ln_gov$source <- "government"
+ln_san <- data.frame(inn = san_first$inn, raw = san_first$name, source = "sanctions", stringsAsFactors = FALSE)
+ln <- rbind(ln_decree, ln_gov, ln_san); ln <- ln[nzchar(ln$inn) & nzchar(trimws(ln$raw)), ]
+ln <- ln[order(match(ln$source, c("decree", "government", "sanctions"))), ]; ln <- ln[!duplicated(ln$inn), ]
+ln_alias <- lapply(san_first$name_alt[match(ln$inn, san_first$inn)], function(a) if (is.na(a) || !nzchar(a)) character() else trimws(strsplit(a, " | ", fixed = TRUE)[[1]]))
+LIST_NAMES <- cbind(ln, motion_display_names(ln$raw, ln_alias), stringsAsFactors = FALSE)
+DBI::dbWriteTable(con, "listnames", LIST_NAMES[, c("inn", "name", "name_filed", "name_case", "name_shared")], temporary = TRUE, overwrite = TRUE)
+message(sprintf("  list names: %d members, %d named (decree %d, government %d, sanctions %d); cases: alias %d, transliterated %d, Latin as filed %d; shared display names: %d firms",
+                nrow(LIST_NAMES), sum(nzchar(LIST_NAMES$name)), sum(LIST_NAMES$source == "decree"), sum(LIST_NAMES$source == "government"), sum(LIST_NAMES$source == "sanctions"),
+                sum(LIST_NAMES$name_case == 1), sum(LIST_NAMES$name_case == 2), sum(LIST_NAMES$name_case == 3), sum(LIST_NAMES$name_shared > 1)))
+sims <- LIST_NAMES$similarity[!is.na(LIST_NAMES$similarity)]
+message(sprintf("  alias similarity (Cyrillic cores with Latin aliases, %d): at least 0.90 %d, 0.85 to 0.90 %d, 0.80 to 0.85 %d, below 0.80 %d",
+                length(sims), sum(sims >= 0.9), sum(sims >= 0.85 & sims < 0.9), sum(sims >= 0.8 & sims < 0.85), sum(sims < 0.8)))
+motion_name_checks <- function(tr) {
+  r <- LIST_NAMES$name[match(tr$inn_key, LIST_NAMES$inn)]; r[is.na(r)] <- ""
+  motion_checks(
+    motion_check("names: one per firm", nrow(tr), length(tr$name)),
+    motion_check("names: the DuckDB join equals an R match against the list files (differences)", 0, sum(r != tr$name)),
+    motion_check("names: no run of nine or more digits", 0, sum(grepl("[0-9]{9,}", tr$name))),
+    motion_check("names: no display equals a list identifier", 0, sum(tr$name %in% LIST_NAMES$inn)),
+    motion_check("names: no personal name of an entrepreneur", 0, sum(grepl(", IP$", tr$name))),
+    motion_check("names: unnamed firms at most 54", 1, as.integer(sum(!nzchar(tr$name)) <= 54)),
+    motion_check("names: every display within 60 characters", 0, sum(nchar(tr$name) > 60)),
+    motion_check("names: no control characters or angle brackets", 0, sum(grepl("[[:cntrl:]<>]", tr$name))),
+    motion_check("names: shared count at least 1 when named", 0, sum(nzchar(tr$name) & tr$name_shared < 1)),
+    motion_check("lists: every treated firm carries at least one membership code", 0, sum(!nzchar(tr$lists))),
+    motion_check("lists: only the codes s, d, r, g, p in that order", 0, sum(!grepl("^s?d?r?g?p?$", tr$lists))))
+}
+motion_names_summary <- function(tr) {
+  sims <- LIST_NAMES$similarity[match(tr$inn_key, LIST_NAMES$inn)]; sims <- sims[!is.na(sims)]
+  list(named = sum(nzchar(tr$name)), unnamed = sum(!nzchar(tr$name)),
+       by_case = list(alias = sum(tr$name_case == 1), transliterated = sum(tr$name_case == 2), latin_as_filed = sum(tr$name_case == 3)),
+       by_source = as.list(table(factor(LIST_NAMES$source[match(tr$inn_key, LIST_NAMES$inn)], levels = c("decree", "government", "sanctions")))),
+       shared_firms = sum(tr$name_shared > 1), capped = sum(LIST_NAMES$capped[match(tr$inn_key, LIST_NAMES$inn)], na.rm = TRUE), threshold = 0.85,
+       alias_similarity = list(n = length(sims), ge_090 = sum(sims >= 0.9), s085_090 = sum(sims >= 0.85 & sims < 0.9), s080_085 = sum(sims >= 0.8 & sims < 0.85), lt_080 = sum(sims < 0.8)),
+       scheme = "BGN/PCGN 1947 (Russian), plain form",
+       rule = "the core name without its legal-form phrase, quotes and region qualifier, with the legal form abbreviated after a comma (Russian forms transliterated: AO, PAO, OOO, ZAO, OAO, FGUP, GUP, IP; English sources keep LLC, JSC, PJSC, Ltd); Latin on screen: the sanctions file's alias that transliterates the filed Cyrillic core (case 1), else our transliteration (case 2), else the Latin name as filed (case 3); 60 characters at most; name_filed is the full filed name")
+}
+
 # ---- firm-years inside the region rectangle, 2014-2025 ------------------------------------------
 # One SQL text per year (the nationwide join of twelve years in one statement exceeds the DuckDB memory
 # grant; the union of the per-year selects is the same table), inserted into fy_all year by year.
@@ -90,6 +138,15 @@ exec("CREATE TEMP TABLE firms AS
               ELSE 2014 END AS red_from,
          f.treated AND s.start_year IS NULL AND NOT (f.residents AND NOT f.other_lists) AS undated
   FROM f LEFT JOIN b USING (inn_key) LEFT JOIN san s ON s.inn = f.inn_key", "firm attributes")
+
+# ---- list memberships of the treated firms (author's request, 25 October 2026): one code per list, s d r g p ----
+# Read from the registry files for the treated keys only, so the firm-year tables keep their columns.
+lists_union <- paste(vapply(years, function(y) sprintf("SELECT inn_key, member_sanctioned AS s, member_putin_decree AS d, member_residents AS r, member_strateg_government AS g, member_strateg_putin AS p FROM %s WHERE eligible_raw = 1 AND inn_key IS NOT NULL", pq(paste0("registry.", y))), ""), collapse = " UNION ALL ")
+exec(sprintf("CREATE TEMP TABLE memberships AS
+  SELECT inn_key, concat(CASE WHEN bool_or(coalesce(s, 0) > 0) THEN 's' ELSE '' END, CASE WHEN bool_or(coalesce(d, 0) > 0) THEN 'd' ELSE '' END,
+                         CASE WHEN bool_or(coalesce(r, 0) > 0) THEN 'r' ELSE '' END, CASE WHEN bool_or(coalesce(g, 0) > 0) THEN 'g' ELSE '' END,
+                         CASE WHEN bool_or(coalesce(p, 0) > 0) THEN 'p' ELSE '' END) AS lists
+  FROM (%s) WHERE inn_key IN (SELECT inn_key FROM firms WHERE treated) GROUP BY inn_key", lists_union), "list memberships of the treated firms")
 
 exec("CREATE TEMP TABLE fym0 AS
   SELECT y.*, m.treated, m.red_from, m.undated, m.inferred, m.base,

@@ -186,7 +186,8 @@ every drawn firm and an outcome layer of the baseline firms), `points.json` (man
 rule, colours, per-year counts and states, class counts under the current and three candidate break
 sets, the pile hand-check, the deflator, rules), `treated.json` (2,220 listed firms: coordinates to
 0.1 m, red-from year, flags, a 12-character filing string and a 12-character state string, pile size;
-no identifiers) and `anchors.json` (Aeroflot's facts with its listing date and jurisdictions from the
+no identifiers; since 25 October 2026 a display name per firm from the list files, with the full filed name, the
+script case and the count of list entries sharing the name) and `anchors.json` (Aeroflot's facts with its listing date and jurisdictions from the
 file; the neighbour's facts rounded to two significant figures, never named). Marks: one per distinct
 coordinate; the backdrop disc is sized by all firms at the address, `min(cap, base + s * sqrt(n - 1))`
 px with (2, 0.6, 8) at the city extent and (3, 1.1, 14) downtown; the outcome disc is sized by its
@@ -546,8 +547,8 @@ its left framing. The national medians of the relative metric lie within 3.7 poi
 year, so a Moscow pixel keeps its class across the two scales in nearly every case. Class shares of
 the national filers under the breaks, 2022 / 2023 / 2024: 27.0, 11.5, 11.5, 21.7, 16.0, 12.3 /
 31.1, 10.6, 8.3, 15.8, 15.3, 19.0 / 35.4, 8.8, 5.8, 11.7, 13.8, 24.6 percent. Outputs: `data/national.json`
-(manifest, counts, classes, checks), `data/treatednational.json` (4,803 firms, no identifiers), 24 rasters
-under `data/points-national/`; all local, refused by `publish-set.py`.
+(manifest, counts, classes, checks), `data/treatednational.json` (4,803 firms, no identifiers; display names from the list
+files since 25 October 2026), 24 rasters under `data/points-national/`; in the publish set since round 5.
 
 ### 3. The lists scene (all cuts that carry it)
 
@@ -646,7 +647,10 @@ Author's decision, 23 October 2026: the motion study's published artifacts may c
 video under CC BY 4.0; the "aggregates only" constraint and the publish set's refusal of firm-level
 files are withdrawn for the motion study. Two rules stay and are checked at publish time by
 `tools/publish-set.py`: no shipped data file carries an identifier key (`inn`, `ogrn`; the R save
-helper refuses them too) and the neighbour firm (`anchors.b`) carries no name. The citation now reads
+helper refuses them too) and the neighbour firm (`anchors.b`) carries no name. On 25 October 2026 the author added the
+naming rule: firms on the five lists are named from the list files (the round of 25 October below); the save helper and
+`publish-set.py` allow the name keys on `treated.json` and `treatednational.json` only, so firms on no list are never
+named. The citation now reads
 "RFSD v3.1.0, CC BY 4.0" on both pages and "(Bondarkov et al. 2025, CC BY 4.0)" in the atlas footer; the
 video credits line reads "Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual
 records, financial years 2011–2025, values deflated and classed by the author", one line at 22 px.
@@ -731,7 +735,7 @@ ramp with the 100 km breaks (one firm: absent or available at the two ends), the
 address's class in the blue ramp (neutral when no firm there has a baseline and a value), every other
 layer the neutral tone; listed firms from `treatednational.js` draw last as vector marks (the Moscow
 `redMark` style, now `MM.listedMark` in `map-layers.js`): red from their listing year, a ring when the
-year's statement is absent, their own state's colour before (with a thin red rim since 25 October). Hover gives counts, never a firm: the
+year's statement is absent, their own state's colour before (with a thin red rim since 25 October). Hover gives counts and, for listed firms, their list-file names (up to three, red first, then "and k more"; 25 October 2026): the
 nearest address within its mark radius plus 2 px (found through the sorted x column), "Address: n located
 firms, a with a YEAR statement (share)" and on the revenue layer the filers and the median class, plus
 the listed firms at the address (below 20 px per km, within the mark's radius in km, which the tooltip
@@ -970,6 +974,11 @@ explainer artifact is at v19 with the new teaser asset, the atlas at v11.
 Correction (author, 25 October 2026): the atlas rows now read "On one of the five lists (treated), before its
 listing year", "Listed (treated), red from its listing year, statement available" and "Listed (treated), no
 statement that year"; the tooltip names rimmed firms "on one of the five lists (treated), listed in YYYY".
+
+Correction (author, 25 October 2026, evening): the firms tooltip of the table above is the glance view now: "N firms, A with a
+YEAR statement, P%", "N on the lists: R red, H hollow, B before listing", one short line per named firm (the glyph, the name, the
+listing year) and "and k more"; "(treated)", the cursor radius and the year words moved to the Under the cursor panel (the round-8
+section).
 
 ### Atlas: pinch zoom, the hand-over between grids, and 25 km cells (author's requests, 24 October 2026)
 
@@ -1295,14 +1304,112 @@ the inferred share, the undated firms red throughout) is unchanged.
 Published on 25 October 2026 after the author's confirmation: atlas v16 (version id 1792898590-9ef6) (the page, `js/explorer-app.js`,
 `js/map-layers.js`) and explainer v20 (version id 1792898612-816b) (the page, `js/map-layers.js`, `js/treated-scenes.js`); the
 teaser asset kept, the committed round c12d966. The author confirmed on 25 October that v16 and v20 load and
-behave well on their devices.
+behave well on their devices. Round 8 published on 25 October 2026 after the author's three display fixes: atlas v17
+(version id 1792908012-6e4e) (the page, `js/explorer-app.js`, `js/map-layers.js`, `data/treatednational.js`) and explainer v21
+(version id 1792908009-6d9c) (the page, `js/map-layers.js`, `js/treated-scenes.js`, `data/treated.js`, `data/treatednational.js`,
+the 27 Moscow rasters changed by the M6 re-run); the teaser asset kept; the cuts not re-rendered.
+
+### Atlas and video: quieter resting red marks, a stronger pulse, a hover floor, names for listed firms (author's requests, 25 October 2026)
+
+A. Resting red marks by zoom. The listed marks no longer share the address field's size rule: `MM.listedRule(rule, k, kRef)`
+in `map-layers.js` derives their rule from it with a quiet weight q = clamp(log2(60 / k) / log2(120), 0, 1), 1 at k ≤ 0.5 px
+per km (the national view) and 0 at k ≥ 60 (the street zoom): the floor × (1 − 0.35 q), the cap × (1 − 0.30 q), the pale
+halo (1 − q) px wide (none at the national view), the resting opacity 1 − 0.2 q, the pre-listing rim 1.5 (1 − 0.33 q) px wide
+at 0.8 (1 − 0.15 q) (the rim quieted with the same weight, the author's choice). At 1,600 px: the Russia preset q 1, radius
+0.975 px, no halo, opacity 0.80; Moscow q 0.40, 1.29 px, halo 0.6 px, 0.92; Central Moscow q 0.07, 1.95 to 3.92 px, halo 0.93,
+0.99; the street zoom as before. `MM.listedMark` keeps a hollow mark a ring at every zoom: the stroke w = clamp(0.45 rr, 1, 2.2)
+and the outer radius rr + (1 − fill) · max(0, 0.75 + w − rr), so a hollow mark holds a land core of at least 0.75 px (at the
+floor a 1.75 px ring beside 0.975 px solid dots; before, the stroke covered the core below 20 px per km and hollow equalled
+solid there). The colour is untouched; the address field, its shader and the discs are untouched.
+
+B. The pulse. 1.2 s (0.9 before): the mark swells by max(1.2 r, 2.5) px and back, two rings grow from the resting radius:
+ring 1 in the listed red to r + 2 + Rmax(k) with an eased decay (width W (1 − 0.5 b), opacity (1 − b)²) and ring 2 trailing
+at 0.7 of its radius in the pale outline colour (the red at half opacity on the light theme), Rmax = clamp(10 + 3 log2(k / kFit),
+12, 30) (12 at the country, 28 at Moscow, 30 from Central Moscow) and W = clamp(3 − 0.25 log2(k / kFit), 1.5, 3) (3 at the
+country, 1.5 from the city zoom); the cull margin 48 px; the projection inlined so no array is allocated per mark; the still
+highlight under reduced motion holds both rings at their largest. In the video the same rule by extent (national k 0.168,
+region 12, city 30, downtown 90) and the rings' decay on the section clock: `tStart(Y, ext)` from the run table `RUNS`
+(the keyframes read the same table) and p = (l − tStart) / 0.6, so the rings outlast the 0.25 s year transition into the hold
+(frame 5778, 0.1 s after the national 2022 transition, now shows the tail where it showed nothing). The flash and the mark's
+opacity keep the bloom's own clock; rewinds draw no ring. Frame costs in the atlas (20 draws of the marks layer, software rendering at 1,600 px, mean ms): at rest the Russia preset 3.5 (3.2 before),
+Moscow 1.0 (1.1), Central Moscow 1.8 (2.1); during a pulse of the 732 firms listed in 2022, Russia 8.8 (largest 16.6), Moscow 5.5,
+Central Moscow 1.6: the two thick rings cost more than the one thin ring for the 1.2 s of a pulse and stay inside a 60 fps
+frame on average; the resting cost, which is what every other frame pays, is unchanged.
+
+C. Hover. A listed mark is hovered within max(r + 2, 6) px (`LISTED_HIT`) and wins over an address mark; the address under the
+same cursor keeps its tooltip line and its panel row (`h.address`); the overlay ring stays on the drawn radius. Audit states
+`redhov` (a red mark 4.5 px off the cursor at Moscow 2022: kind listed) and `rules` (q, Rmax, W and the cull margin at the
+three presets); `btn0` waits 1.5 s for the longer automatic pulse.
+
+D. Names for listed firms (the author's standing rule of 25 October 2026: firms on the five lists are named wherever
+appropriate in the Claude Code materials; firms on no list are never named or given identifiers; the neighbour firm stays
+anonymous). Sources: the decree workbook (118 names), the government strategic workbook (1,039), the sanctions file's `name`
+(5,743 rows, lower-case) and its `name_alt` aliases; the residents and presidential strategic workbooks carry no names.
+Over the list union of 6,372 INNs, 6,318 (99.2 %) have a name; the 54 without are on the two nameless lists only. Display
+rule (`motion_display_names` in `motion-common.R`, probed by `R/tests/display-name-probe.R` over eleven filed strings):
+look-alike Latin letters inside Cyrillic words folded; footnote markers, a trailing stop, a locality in parentheses and a
+region after a comma dropped; ";"-joined entries keep the segment that starts with a legal form; the leading legal-form
+phrase (Cyrillic and Latin tables, spelled out, abbreviated or transliterated, with an optional parenthesised abbreviation)
+or a trailing abbreviation stripped and kept as a tag after a comma, transliterated for Russian forms (AO, PAO, OAO, ZAO, OOO,
+FGUP, GUP, MUP, ANO, IP, NP) and English where the source string is English (LLC, JSC, PJSC, OJSC, CJSC, Ltd, Inc, GmbH);
+quotes and guillemets trimmed with balanced inner pairs kept; "научно-исследовательский институт" and the like abbreviated;
+then the Latin display: (1) the sanctions file's Latin alias that transliterates the filed Cyrillic core (both normalised to
+letters and digits, the alias's legal-form words removed, the core transliterated with BGN/PCGN 1947 for Russian in its
+plain form, accepted at a similarity of 0.85 or above by 1 − Levenshtein / length), the alias's own core title-cased; (2)
+else our transliteration, title-cased, case 2; (3) a name filed in Latin, title-cased (a short all-caps name kept), case 3;
+60 characters at most including the tag, cut at a word boundary with an ellipsis. The join: `M6-common.R` builds the union
+(decree, then government, then sanctions by priority; the lab's INN cell rule), writes a temporary DuckDB table and both
+treated queries `LEFT JOIN` it, so the identifier stays in R memory and the in-memory database; the two treated files gain
+`name`, `name_filed` (the full filed string), `name_case` (0 unnamed, 1 alias, 2 transliterated, 3 Latin as filed),
+`name_shared` (the list members sharing the display name) and a `names_summary`. Nine checks per file (one name per firm,
+the join equal to an R match, no nine-digit run, no identifier as a name, no entrepreneur's personal name, unnamed at most
+54, 60 characters, no control characters, the shared count). The save helper and `publish-set.py` now state a positive rule:
+the name keys ship only on `treated.json` and `treatednational.json` (and the anchor's hand-typed `label_long`; `basemap.json`'s
+`name` keys are the place names of regions and city windows from M1 and stay allowed), refused elsewhere; `publish-set.py` also checks the count, the digit run and the length. The two workbooks were pinned
+(`motion.putin-decree-list`, `motion.strateg-government`); the re-pin found `motion.printed-names` changed on disk in
+`programming/metadata/` since its pin (an uncommitted change there, not the lab's), and its pin was put back so the drift
+surfaces on use. Run figures: the lab guard first refused both passes (SwapFree 1,022 MiB against the 1,024 MiB floor, the author's crash guard, not lowered), the author freed memory, and a first attempt to wait for a running capture hung on its own command line (`pgrep -f motion/tools/capture.py` matched the waiting shell; the rule is in the lab README's working notes), so the passes ran directly: M6 in 47 s at a peak of 11.6 GB (163 of 163 points checks, 9 of 9 name checks), M8 in 61 s at 12.9 GB (74 of 74 national checks, 9 of 9 name checks). The list union: 6,318 of 6,372 members named (decree 118, government 1,034, sanctions 5,166); cases alias 2,249, transliterated 2,694, Latin as filed 1,375; 1,930 members share a display name with another; the alias similarity over the 4,367 Cyrillic cores with a Latin alias: 2,149 at 0.90 or above, 100 between 0.85 and 0.90, 71 between 0.80 and 0.85, 2,047 below 0.80 (threshold 0.85, so the last two groups are transliterated by the lab). The national file: 4,753 of 4,803 named (99.0 %), 50 unnamed (members of the two nameless lists only); cases 1,879, 1,588 and 1,286; by source decree 113, government 993, sanctions 3,647; 729 firms share a display name (the largest group holds 478 list entries, branches under one parent's name); 401 names cut at 60 characters; similarity over 2,921 cores: 1,795, 84, 53 and 989. The Moscow file: 2,190 of 2,220 named (98.6 %), 30 unnamed; cases 892, 676 and 622; decree 19, government 314, sanctions 1,857; 302 shared; 200 cut; similarity over 1,396 cores: 852, 40, 24 and 480. A read-back of both files agreed with every figure (a count of names ending in the ellipsis, 168 and 88, misses the cut names that end in a tag; `capped` counts the ellipsis anywhere). The sha256 of M6's 78 other outputs: 44 unchanged (every region raster, the anchors, the alignment raster and the twins); `points.json` differs by one "-0" in the 2016 quantiles (a rounded negative zero, the same value); 32 rasters differ (every city and downtown backdrop, the city outcome layers 2021 to 2025, the downtown outcome layers 2021 to 2023) by 72 to 1,674 pixels of 2,073,600 (at most 0.08 %), the largest channel difference 2 of 255 on the backdrops and 1 of 255 on the one or two pixels of an outcome layer: the discs are drawn in DuckDB's output order, which varies between runs with six threads, and the 8-bit rounding at the edges of overlapping discs follows that order; the region rasters are per-pixel arrays and do not depend on it. Invisible at any zoom, but the 27 published rasters among them go up with explainer v21 so the artifact equals the lab's files; the renders of this round were captured before the pass, from the previous rasters, and are not re-rendered for it. The positive name rule refused the first publish set on `basemap.json`, whose region and window parts carry a `name` (place names from M1); both guards now allow that key there. Atlas: the tooltip's listed line drops its year parenthesis and is followed by one
+line per listed firm at the hovered coordinate pair, each with its mark's glyph (● red with a statement, ○ red without one
+that year, ◌ before its listing year), its display name (a shared name marked "one of k entries under this name") and its
+listing year ("listed 2022", "listed 2022, no 2022 statement", "listed in 2024", "on a list, undated"), up to three then "and
+k more on these lists"; the "Under the cursor" panel gets one row per such firm with the Latin name, "(transliterated)" for
+case 2 and the full filed name beneath (the tooltip follows the cursor and cannot carry a title attribute, the author's
+correction at approval); the legend note says "Hover a listed firm for its name." and the provenance names the sources and
+the rule. Video: no change; the one place considered, labels on the ten largest listed piles of the downtown run, is not
+recommended (an 11 px mark field and a text audit already carrying 17 counted lines).
+
+Author's three display fixes after the report (25 October, evening). (1) The tooltip is the glance view and the panel the detail view: the firms-view tooltip keeps the region line, one figures line ("32 firms, 21 with a 2022 statement, 65.6%"; "1 firm, no 2022 statement" for a single firm), one listed line ("15 on the lists: 9 red, 3 hollow, 6 before listing", the hollow among the red; "1 on the lists: red", "hollow" or "before listing" for one firm) and the named lines in their short form ("Veb Lizing, OAO · 2015", the glyph before the name, "undated" for an undated member), then "and 12 more"; "(treated)", "within 663 m of the cursor", "Coordinate pair:", the shared-name marker and the repeated year words left the tooltip for the panel; the cells-view tooltips are unchanged. (2) The Under the cursor panel: the rows Region, Coordinate pair ("32 firms"), "2022 statement" ("21 (65.6%)") and "On the lists (treated)" ("15 within 663 m" or "1 at this pair"), then one block per named firm spanning both columns: the glyph and the display name in bold with "(transliterated)" for case 2 and the list memberships right-aligned in the muted ink ("sanctions", "decree", "resident", "government strategic", "presidential strategic"), the filed name beneath in the muted ink, "one of k entries under this name" when shared, and a tabular line with the listing year ("listed 2015", "undated listing") and the statement state ("2022 statement", "no 2022 statement"); then "and 12 more" and the Cell row. The memberships come from a new `lists` column on both treated files (the codes s, d, r, g, p in that order, read from the registry files' membership columns for the treated keys inside `M6-common.R`, so the firm-year tables keep their columns; two checks per file and, nationally, two more against the firms table's resident and other-list flags): nationally 3,625 firms on the sanctions list only, 487 on the sanctions and government strategic lists, 435 on the government strategic list only, 77 on the decree list only, 48 on the presidential strategic list only, 34 on both strategic lists, 32 on the sanctions and both strategic lists, 30 on the sanctions and decree lists. (3) The glyphs of the tooltip and the panel are the legend's own three dots drawn in CSS at 11 px (`.gl`: red; the land fill with a red border; the neutral fill with a red rim at 0.8), so the rimmed glyph can no longer be read as the hollow one; and a display name cut inside a quoted part drops the orphan opening quote (`motion_drop_orphan` in `motion-common.R`; a twelfth probe case, "Politicheskaya Partiya Kommunisticheskaya Partiya…"). Both passes re-run (M6 48 s at a peak of 11.6 GB, 163 of 163 and 11 of 11 checks; M8 63 s at 12.6 GB, 74 of 74 and 13 of 13); the names and their counts unchanged but for the orphan quotes (none left); the same 32 rasters changed again at rounding level (against the first run: the same files except the downtown outcome layers of 2021 and 2022, which matched this time), as the disc-order explanation predicts. The audit's `names` state now counts the glyph spans in the tooltip and the firm blocks in the panel.
+
+Verification. Atlas audit (run before and after the three display fixes, the same figures both times) 449 states,
+16,685 boxes and zero findings at 400, 768, 1,200, 1,600 and 2,000 px on both field
+renderers (2d and webgl2) (the states of this round: `redhov`, `rules`, `names`, the longer `btn0` wait). Frame costs at 1,600 px (`frameCost(20)`, mean and largest of 20 frames in ms, the committed code then the
+working tree): Russia at rest 3.3 and 5.7 then 3.7 and 6.0, during the 2022 pulse of 732 marks 4.2 and 5.7 then 4.8 and 6.0;
+Moscow at rest 0.9 and 1.0 then 1.0 and 1.2, pulsing 1.4 and 2.0 then 1.2 and 1.5; Central Moscow at rest 1.6 and 3.9 then
+1.6 and 2.9, pulsing 2.2 and 2.5 then 1.0 and 1.3: the second ring costs about half a millisecond at the national view and
+nothing at the city zooms, where the halo and the hollow fills are now skipped. The hover (`hoverKm`) averages 0.6 ms, at
+most 4.4 ms.
+Video: both probes pass; the full cut's text audit has 1,435 frames, 29,702 boxes and the 17 counted box-over-mark lines
+only (the rule counts mark centres, which the rims and the smaller radii do not move); the teaser 460 frames and zero.
+Renders at 4 shards (an 8-shard run had crashed the desktop app): the full cut 8,610 frames, 287.000 s (316 s to render,
+88.4 MB; the two rings add detail); the teaser 1,380 frames, 46.000 s. The teaser's frames 300, 700 and 1,300 are byte-
+identical to the round-7 baseline: the teaser's beats (the hook, the years, the street zoom and the designation excerpt)
+draw no listed mark, so A and B leave it unchanged, and its 720p copy and its asset stay as they were (4,991,065 bytes
+again); the author had expected a change, and the test says there is none. 720p copies: the full cut 23.1 MB, the teaser
+4.99 MB. The frames sent to the author before continuing: the atlas at the Russia, Moscow and Central Moscow presets in
+2021 at rest and at the 2022 bloom mid-pulse (the committed code served from a copy beside the working tree), with 3x
+crops, a light-theme pair and a ratio-2 pair; the video's frames 4651, 4653, 5771, 5774 and 5778 before and after.
+
+Published: atlas v17 (version id 1792908012-6e4e) with the page, `explorer-app.js`, `map-layers.js` and `treatednational.js`;
+explainer v21 (version id 1792908009-6d9c) with the page, `map-layers.js`, `treated-scenes.js`, `treated.js`, `treatednational.js` and
+the 27 changed Moscow rasters; the teaser asset unchanged; the cuts not re-rendered (the author's decision: the raster
+differences lie below the codec's quantisation).
 
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
-journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
-key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked, v14 with the pinch rate, the zoom floor and the smoothness fixes, v15 with the address field in WebGL, the pulse of newly listed firms, the corrected address manifest and the canvas-sizing fix (the page, the script and `data/firms.js`; the address scripts kept from v14), v16 with the rim before the listing year, the three legend rows, the pulse button and the earlier re-centring; explainer v20 with the rim, the three legend rows and the ringed ticker line (the teaser asset unchanged). The published pages could not be opened from the lab's headless
+journey loads, the 24 national rasters and the 12 address scripts (113.1 MB with the names) and refuses an identifier
+key, a firm-name key outside the two listed-firm files, or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked, v14 with the pinch rate, the zoom floor and the smoothness fixes, v15 with the address field in WebGL, the pulse of newly listed firms, the corrected address manifest and the canvas-sizing fix (the page, the script and `data/firms.js`; the address scripts kept from v14), v16 with the rim before the listing year, the three legend rows, the pulse button and the earlier re-centring, v17 with the quieter marks, the prominent pulse, the hover floor and the names; explainer v20 with the rim, the three legend rows and the ringed ticker line (the teaser asset unchanged), v21 with the quieter marks, the pulse, the names data and the 27 re-run Moscow rasters (the teaser asset unchanged again). The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions
@@ -1310,7 +1417,7 @@ browser (the links need a claude.ai session), so the load on the host is the aut
 - Dark cinematic stage held to Tufte: no glows, gradients or 3D; motion only reveals data or moves the camera; every rate carries its denominator; one message per scene in the title line; the sequential ramp brightens with the value on the dark ground; the change ramp keeps purple for falling shares and green for rising ones with lightness rising with magnitude (round 2; round 1 used brick and blue).
 - Discrete labelled annual snapshots; crossfades are presentation, never interpolation of values. Camera moves are pure functions of time (position cubic, zoom in log k).
 - Wording stays descriptive: absence is not withdrawal or concealment; supplied lists are fixed memberships; no regional reading is put on the change map; the size widening is marked provisional.
-- Disclosure: shares need 50 firms (the project's support rule); 250 m cells under 3 firms are dropped; fine-cell counts under 10 are banded in tooltips; list counts under 5 per cell are suppressed. No firm identifiers or coordinates leave the lab.
+- Disclosure: shares need 50 firms (the project's support rule); 250 m cells under 3 firms are dropped; fine-cell counts under 10 are banded in tooltips; list counts under 5 per cell are suppressed. No firm identifiers leave the lab; coordinates and per-firm states ship since round 5; firms on the five lists are named from the list files since 25 October 2026, firms on no list never.
 - Type: Nimbus Sans locally with Arimo (metric-compatible) as the web fallback; text at or above 22 px at 1080p, titles 54-78 px.
 
 ## Possibilities not built (ideas for a later pass)
