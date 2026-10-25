@@ -32,7 +32,7 @@ NAME_ALLOWED = {"treated.json": {"name", "name_filed", "name_case", "name_shared
 # The video asset of the explainer artifact (the teaser's 720p cut under the 15 MB asset cap; the Moscow and 55 s
 # cuts were retired on 24 October 2026, and the 25 October re-render was byte-identical, so the asset stayed): the
 # published page links it; the local page keeps its build/ files instead.
-VIDEOS = [("Teaser, 46 s", "/_blob/bc8d172861eeffb686718f551c873b0f")]
+VIDEOS = [("Teaser, 46 s", "/_blob/221e92f4dc668c3f67425f354a3ce31a")]   # the round-10 teaser asset (26 October 2026; bc8d1728… before it)
 VIDEO_NOTE = '<p class="note">Video at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) is larger than the asset cap and travels as a file.</p>'
 
 def convert(name):
@@ -49,7 +49,9 @@ def convert(name):
         css = open(os.path.join(MOTION, "css", "theme.css"), encoding="utf-8").read()
         parts.append("<style>\n" + css + "\n</style>")
     if name == "explainer.html":
-        body = body.replace("</p>\n<script", "</p>\n" + VIDEO_NOTE + "\n<script", 1)
+        anchor = "</p>\n<footer class=\"efoot\">" if "</p>\n<footer class=\"efoot\">" in body else "</p>\n<script"   # the note sits before the footer since round 10 (before the scripts until round 9)
+        if anchor not in body: raise SystemExit("publish-set: the video note found no place in the explainer page")
+        body = body.replace(anchor, "</p>\n" + VIDEO_NOTE + "\n" + anchor[len("</p>\n"):], 1)
     out = "\n".join(parts) + "\n" + body.strip() + "\n"
     with open(os.path.join(OUT, name), "w", encoding="utf-8") as fh:
         fh.write(out)
