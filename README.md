@@ -1,3 +1,15 @@
+# Who stays visible?
+
+The data-visualization lab behind "Who stays visible?", a code-driven explainer, and the Visibility Atlas, an interactive atlas of where Russian firms file their financial statements and where those statements stop appearing (financial years 2014 to 2025). Built by Armen G. Kaprelian (PhD Candidate, Claremont Graduate University) for the dissertation *Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms*, with Claude Code as the implementer in this folder; the dissertation's chapters and its programming project live outside it and are read-only to the lab.
+
+**Data and licences as shipped.** Every number on the pages is an aggregate or a per-address count computed by the lab's passes from the Russian Financial Statements Database, RFSD v3.1.0 (Bondarkov et al. 2025), licensed CC BY 4.0; boundaries from geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL 1.0, © OpenStreetMap contributors); division names from Eurostat's NACE Rev. 2 codelist; the typeface IBM Plex Mono under the SIL Open Font License 1.1 (`data/external/fonts`). Firms on the five lists the chapter uses are named from the list files; no firm on no list is named or identified anywhere, no INN or OGRN is stored, and the neighbour firm of the Moscow sequence stays anonymous.
+
+**Pinned sources.** Every input the passes read is pinned in `config/sources.json` (188 entries: path, generation, size, modification time and hash) by `scripts/pin-sources.py`: the programming project's accounting tables and chapter tables, the foundation registry and payload partitions, the five list files, the deflator, the NACE Rev. 2 codelist and the OKVED names dictionary, the fonts, and the region crosswalk. Copies of the public reference files live under `data/external` with their own READMEs.
+
+**What is not in this repository.** The renders (`motion/build`), the firm-level files (the address files `motion/data/firms`, the Moscow and national rasters `motion/data/points*`), the data twins (`motion/data/*.js`), the publish copies' scripts and data, the logs and the scratch are ignored; the passes `R/motion/M1` to `M11` and the capture tool `motion/tools/capture.py` reproduce them from the pinned inputs (`motion/README.md` records every run with its checks). The JSON manifests the passes write are tracked and carry the aggregates the pages ship.
+
+---
+
 # Data-visualization lab (Claude-only)
 
 An isolated sandbox for exploring novel, Tufte-grade displays of the dissertation's
