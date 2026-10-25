@@ -13,7 +13,10 @@ fig28_land <- "#F1F2EF"          # production land fill; the surface the palette
 fig28_production <- function() {
   env <- new.env(parent = globalenv())
   sys.source(lab_source("fig28.script"), envir = env)
-  lab_source("fig28.script-programming")
+  # programming's copy is a hash record only (nothing is drawn from it); since 18 October it may
+  # be mid-migration by Codex, so drift there is reported, not fatal.
+  tryCatch(lab_source("fig28.script-programming"),
+           error = function(e) message("note: programming copy not registered: ", conditionMessage(e)))
   env
 }
 
@@ -171,7 +174,8 @@ fig28_legend <- function(spec, cuts, range, cex = .96) {
   if (spec$kind == "continuous") {                       # production lines 253-255 verbatim
     x <- seq(.12, .88, length.out = 102)
     graphics::rect(head(x, -1), .123, tail(x, -1), .139, col = spec$hex, border = NA)
-    graphics::text(seq(.12, .88, length.out = 5), .111, paste0(seq(0, 100, 25), "%"), cex = .85)
+    graphics::text(seq(.12, .88, length.out = 5), .111, paste0(seq(0, 100, 25), "%"),
+                   cex = if (is.null(spec$legend_cex)) .85 else spec$legend_cex)   # production .85; polish .96
     return(invisible())
   }
   if (identical(spec$legend, "boundaries")) {   # polish: five touching classes, values at the boundaries
