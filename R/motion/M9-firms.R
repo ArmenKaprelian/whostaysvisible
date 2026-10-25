@@ -106,7 +106,7 @@ manifest <- list(
   years = years, files = files, files_js = lapply(files, function(f) sub("\\.bin\\.gz$", ".js", f)), by_year = years_out, breaks = BREAKS, class_colours = list(dark = CLASS_COLS, light = LOOKS$light$cols), neutral = list(dark = COL_NEUTRAL, light = LOOKS$light$neutral),
   metric = METRIC_TEXT$description, median_by_year = nat$metric_median_by_year,
   rules = list(address = "one record per distinct registered address at 1 m rounding of firms on no supplied list with below-city-level geocodes; city-level geocodes and listed firms are counted in by_year and not in the files (listed firms: treatednational.json)",
-               marks = "below 6 px per km: 1 px marks, 2x2 blocks for 10 or more firms, 3x3 for 100 or more, alpha by count; from 6 px per km: discs of radius min(cap, base + s * sqrt(n - 1)) / 2 with (base, s, cap) = (2, 0.6, 8) below 24 px per km and (3, 1.1, 11) above",
+               marks = "below 20 px per km: 1 px marks, 2x2 blocks for 10 or more firms, 3x3 for 100 or more, alpha by count; from 20 px per km: discs of radius min(cap, base + s * sqrt(n - 1)) / 2 with (base, s, cap) = (2, 0.6, 8) below 60 px per km and (3, 1.1, 11) above (the thresholds the atlas draws with, aligned with the Moscow extents, 24 October 2026)",
                colours = "share layer: the address's statement share in the six-class ramp with the 100 km breaks; revenue layer: cls in the blue ramp, 0 neutral; other layers neutral",
                addresses_2021 = list(all_located_exact = loc21$addresses[1], all_located_1m = loc21r$addresses[1])),
   notes = c("Registered addresses, not operating sites; firms at one address are one record.", "No firm is named or identified; the files carry counts and classes only."))

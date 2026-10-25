@@ -1,16 +1,16 @@
 {
   "id": "firms",
-  "run_id": "20261023T105125Z-run-M9-firms.R",
+  "run_id": "20261025T011253Z-run-M9-firms.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T10:53:12Z",
+  "time_utc": "2026-10-25T01:14:36Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M9-firms.R",
-    "sha256": "840033bc00fa3fbd56405d679d02d1b5750fc10fadcb51dc4a0d54872c294335"
+    "sha256": "6049f936b777f8d680e40ca59d390a28a0eef47d8956b87747b5802c4603d7db"
   },
-  "lab_commit": "4888e53e05891b1d50e769f3193689eeb63fc112",
+  "lab_commit": "b28c873f6648496857b91e44675cc797da08a33b",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
-    "dirty_files": 18,
+    "dirty_files": 20,
     "pinned_utc": "2026-10-18T19:22:42Z"
   },
   "sources": [
@@ -426,9 +426,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-m0xeoDRv/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-UGZ3xNSA/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -436,10 +436,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/firms.json",
-    "json_sha256": "433ad88636b95614d0ac928eb1665793bef5673fbab6fb7baae0e768330107d4",
-    "json_bytes": 6029,
+    "json_sha256": "be7e483f0cd83b61e296bc0b2a32a24dd2694a0f13d862a30c100d497704deed",
+    "json_bytes": 6480,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/firms.js",
-    "js_sha256": "bf23b66d6a86d5a8754bb74937f5e40ce7e80432ec42c8367553c97ffcffed46",
-    "names": ["layout", "years", "files", "by_year", "breaks", "class_colours", "neutral", "metric", "median_by_year", "rules", "notes", "header_bytes", "header", "columns", "byte_order", "record_bytes", "x", "y", "n", "a", "f", "cls", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "addresses", "firms", "statements", "filers", "by_cls", "max_at_address", "addresses_100plus", "firms_at_100plus", "city_level", "listed", "bytes_raw", "bytes_gz", "dark", "light", "year", "med", "address", "marks", "colours", "addresses_2021", "all_located_exact", "all_located_1m"]
+    "js_sha256": "506c7f2bed3e49fb0eb22039a322e65f42d529ae6f892b55aaf3d63b710ba6c3",
+    "names": ["layout", "years", "files", "files_js", "by_year", "breaks", "class_colours", "neutral", "metric", "median_by_year", "rules", "notes", "header_bytes", "header", "columns", "byte_order", "record_bytes", "x", "y", "n", "a", "f", "cls", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "addresses", "firms", "statements", "filers", "by_cls", "max_at_address", "addresses_100plus", "firms_at_100plus", "city_level", "listed", "bytes_raw", "bytes_gz", "dark", "light", "year", "med", "address", "marks", "colours", "addresses_2021", "all_located_exact", "all_located_1m"]
   }
 }

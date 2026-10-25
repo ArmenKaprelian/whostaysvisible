@@ -46,7 +46,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap.zoomable { cursor: zoom-in; }
 .mapwrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#overlay { pointer-events: none; }
+#field, #field2d, #marks, #overlay { pointer-events: none; }
 .maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 136px); box-sizing: border-box; }   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
@@ -95,6 +95,8 @@ footer a { color: var(--accent); }
 <main>
   <div class="mapwrap" id="mapwrap" tabindex="0" role="group" aria-label="Map of Russia. Plus and minus zoom, 0 fits the whole country, the arrow keys pan; click a cell to zoom to it.">
     <canvas id="map" aria-label="Map of Russia with firm cells"></canvas>
+    <canvas id="field" aria-hidden="true"></canvas>
+    <canvas id="marks" aria-hidden="true"></canvas>
     <canvas id="overlay"></canvas>
     <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend">▾</button></div><div class="lbody" id="legendbody"></div></div>
     <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>

@@ -1077,6 +1077,135 @@ the disc rendering between k 19 and 43 (up to 42,000 arcs a frame), and they wer
 author's choice among the options reported to them (leave as is; thin or halve the resolution of the field on
 flight frames only; a cached national field picture per year for k under 0.3; WebGL point rendering).
 
+### Atlas: the pulse of newly listed firms and the address field in WebGL (author's decisions, 24 October 2026)
+
+The pulse. In the firms view a move of the year slider to a later year makes every listed firm that turns red
+in the new year (its listing year after the old year and up to the new one, with a statement in the new year)
+bloom once as in the video: over 0.9 s the mark swells to 1.9 times its radius and back while its pre-listing
+disc fades and a thin red ring expands by 26 px and fades (`startPulse`, `drawMarks`, `PULSE_MS`). A move to an
+earlier year starts no pulse and ends a running one, the cells view never pulses, and the marks, the terms and
+the legend are otherwise as they were. 732 marks pulse from 2021 to 2022, 3,300 from 2021 to 2024.
+
+The renderer (the author's review of 24 October, seven findings checked against the working copy, which was
+the published version). The map is now four canvases: the basemap and the cells on `#map` (a plain 2D context,
+no `willReadFrequently`), the address field on `#field` (WebGL 2, or WebGL 1 with `OES_element_index_uint`),
+the listed marks and the city labels on `#marks`, the hover outline on `#overlay`; the field and marks canvases
+are shown in the firms view only, so the cells view composites the two canvases it always had. Every address
+is one vertex (metres relative to the Moscow point, exact in single precision; the firm count; the statement
+share class and the revenue class). Below 20 px per km the vertex shader snaps each address to the device pixel
+the earlier blit chose (`floor`, blocks of 1, 2 and 3 device pixels per device-pixel ratio for 1, 10 and 100 or
+more firms, alphas 96, 140, 200 and 236 of 256) and draws it as a point sprite, composited "over" in index
+order with premultiplied blending, which is the blit's arithmetic; from 20 px per km the same vertices become
+discs sized by the mark rule (a square under 1.75 px), drawn largest first through an index sorted by radius
+(the counting sort), each at alpha 0.9 with an antialiased edge (coverage per fragment), overlaps compounding.
+The switch from blocks to discs depends on the zoom alone (the earlier 120,000-address condition is gone), the
+thresholds stay at 20 and 60 px per km, and M9 was re-run to say so in its manifest (173 checks, 103 s, 11.0 GB
+peak; every per-year count unchanged, the twelve year files regenerated with the same raw and gzipped sizes;
+the script's `files_js` key, absent from the earlier manifest, is now in it). Each frame uploads only uniforms:
+the camera's integer metres as a shift (so the GPU adds and multiplies small exact integers) and its fraction as
+an offset, the zoom, the layer, the palette of up to eight colours, the mark rule. One buffer set is kept per
+loaded year and freed with the three-year cache. Without WebGL (the context refused, lost, or `?__nogl=1`) a
+2D fallback draws the same field into a transparent canvas of its own (`blit2d`: the blocks composited in
+premultiplied bytes, then written as straight colour; `discs2d`: the discs in the same order); a lost context
+switches to it at once and a restored one returns to WebGL (the `WEBGL_lose_context` extension is kept from
+the live context, since a lost one returns none).
+
+Precision. The old blit floored a double; the GPU floors a single. The scheme above keeps every term exact
+except the product of the relative position and the zoom, so the two agree unless an address lies within about
+0.0001 px of a pixel boundary; at a zoom where a metre is a round fraction of a pixel (k 2: 0.002 px) one address
+in 500 lies exactly on a boundary and single precision rounds either way. Counted on the 2021 file: 46 of
+692,057 addresses in view at the country view, 230 of 115,523 at k 2, 4 of 61,358 at the Moscow preset move by
+one pixel. No single-precision scheme can reproduce the double's tie-breaking at exact boundaries, so this is
+the floor of what a GPU renderer can match; the eye cannot see it.
+
+A defect found on the way, not fixed (the author decides). `sizeCanvases` reads the map wrap's border box
+(`getBoundingClientRect`), 2 px wider and taller than the content box the canvases fill inside the 1 px border,
+so every canvas has been drawn at, for example, 1,156 by 862 device pixels and shown in 1,154 by 859.6 CSS px:
+the browser resamples the whole map by 0.17 % (0.28 % vertically), which blurs 1 px marks a little and shifts
+the far edges by up to 2 px. This is in the published atlas and in every earlier version. The fix is two lines
+(the content box, `clientWidth` and `clientHeight`, and an explicit CSS size on the canvases so a device pixel
+is a device pixel at any ratio), but it changes every pixel of both views slightly, which the verification below
+was told to forbid for the cells view, so it waits for the author's word. The comparison below was therefore
+run twice: on the page as published, and on two temporary copies (the committed renderer and the new one) with
+the sizing fix applied to both, which compares the renderers alone.
+
+Verification (headless Brave, 1,600 by 1,000 px, device-pixel ratios 1, 2 and 3, both themes; 252 pictures per
+set: nine cameras (the country, k 2, the Moscow preset, k 20, 30, 45, 60, 100 at Moscow, Central Moscow 250 m)
+by three layers (share, revenue, density as the neutral layer) for the firms view, five cameras by three layers
+for the cells view).
+
+- Cells view: all 90 pictures identical to the committed page (largest per-channel difference 0), with and
+  without the sizing fix.
+- Block range (the country, k 2, Moscow), renderers alone: the share of pixels differing by more than 2 of 255
+  is 0.000 to 0.043 % per picture (at most 1 pixel in 2,300); the pixels differing by 3 to 8 levels number 34 to
+  2,559 of 1.0 to 8.9 million (the compositing's rounding: the blit truncated at every step, the GPU rounds);
+  the largest per-channel difference is 4 to 172 and comes from the boundary addresses above (0 to about 380
+  pixels per picture). On the page as published the same comparison shows 0.6 to 6.6 % of pixels differing by
+  3 to 16 levels (largest 156): the resampling defect, which the earlier single canvas suffered once and the
+  layered canvases suffer once each, differently at every mark edge.
+- Disc range (k 20 to Central Moscow): 6 to 27 % of pixels differ on the share and revenue layers (largest
+  223) and on the neutral layer (largest 53 to 83), most at k 20 to 45 where the discs are densest. Two reasons the author accepted: the earlier renderer filled
+  one path per colour class, so a later class covered the earlier ones whatever the disc sizes, and now the
+  largest disc draws first and the smallest last; and two overlapping discs of one class now compound
+  (0.9 to 0.99) where one fill left 0.9. Crops where the size order changed: `motion/build/r6-webgl-crops/`.
+- The 2D fallback against WebGL (both copies sized alike): the cells view identical; the block range differs at
+  0.01 to 0.71 % of pixels, nearly all by 3 to 8 levels (the fallback composites in bytes and writes straight
+  colour, which the browser premultiplies again), the largest differences 61 to 172 at the boundary addresses
+  (the fallback floors doubles as the blit did); the disc range at 18 to 20 % of pixels with a largest
+  difference of 64 to 87: the order and the compounding agree and only the edge antialiasing differs (Canvas 2D
+  arcs against the shader's coverage).
+- Audit (`tools/atlas-audit.py`, now with the field renderer asserted on every firms state, the same states
+  again on the fallback (`?__nogl=1`), a lost and a restored context, the pulse forward, backward and in the
+  cells view, and a narrower viewport): 349 states and 12,600 text boxes at 400, 768, 1,200, 1,600 and 2,000 px, zero findings, renderers seen `webgl2` and `2d` (`build/audit-atlas.txt`).
+- Smoke (`atlas-gl-smoke.py`, kept in the session's scratch): WebGL 2 in use; the fallback start with
+  `?__nogl=1` marks the same 23,819 pixels at the country view; a lost context draws through the fallback and
+  a restored one through WebGL 2 again; a resize keeps the four canvases at one size; the theme toggle,
+  the year, layer and mode switches and `#Moscow-firms` (the firms view at Moscow, WebGL 2) all draw.
+
+Cadence (`profileFlight`, three moves per view on the share layer, frames over 25 ms counted; the pan at
+Moscow is 60 km). Headless Brave's default renderer is SwiftShader, a CPU emulation of the GPU, which makes the
+WebGL figures below pessimistic (it rasterises 700,000 point sprites in software); the second table uses the
+machine's Intel Arc (Panther Lake) through Vulkan, closer to a laptop:
+
+| view, move | ratio 1, before to after | ratio 2 | ratio 3 |
+|---|---|---|---|
+| cells, Russia to Moscow | 60 to 60 fps | 21 to 21 | 14 to 14 |
+| cells, Moscow to Central | 61 to 61 | 44 to 42 | 23 to 23 |
+| cells, 60 km pan at Moscow | 61 to 61 | 33 to 32 | 21 to 21 |
+| firms, Russia to Moscow | 46 to 57 (worst frame 233 to 83 ms) | 15 to 23 (850 to 267) | 10 to 16 (1,133 to 317) |
+| firms, Moscow to Central | 41 to 61 (83 to 17) | 19 to 46 (250 to 83) | 11 to 26 (383 to 100) |
+| firms, 60 km pan at Moscow | 62 to 62 (133 to 17) | 25 to 37 (317 to 83) | 15 to 24 (483 to 100) |
+
+On the GPU the cells view keeps the committed page's cadence at every ratio and the firms view gains most where
+it was slowest: the disc range from 41 to 61 fps at ratio 1 and from 19 to 46 at ratio 2, the national field
+from 46 to 57 and 15 to 23, with the worst frame of every firms move cut by two thirds or more (the first
+frame of a national flight uploads the year's buffers once). Ratios 2 and 3 are slow in both views on both
+pages here because headless Brave composites its large frames through a read-back; the ratios' relative
+figures are what the table shows, not what a phone will do. The software (SwiftShader) figures, where the
+GPU work of the field runs on the CPU and the firms view looks worse than it is, for the record:
+
+| view, move | ratio 1, before to after (fps; worst frame ms) | ratio 2 | ratio 3 |
+|---|---|---|---|
+| cells, Russia to Moscow | 60 to 60 (33 to 33) | 24 to 25 (167 to 183) | 18 to 18 (233 to 217) |
+| cells, Moscow to Central | 60 to 60 (17 to 17) | 51 to 51 (33 to 33) | 37 to 38 (50 to 50) |
+| firms, Russia to Moscow | 47 to 33 (50 to 83) | 17 to 13 (133 to 167) | 11 to 8 (183 to 217) |
+| firms, Moscow to Central | 40 to 60 (83 to 17) | 21 to 25 (117 to 50) | 13 to 15 (183 to 83) |
+
+In software the cells view is the committed page's to the frame, the disc range gains as on the GPU, and the
+national field loses (47 to 33 fps at ratio 1) because SwiftShader rasterises the 700,000 point sprites on the
+CPU, which no device with a GPU does.
+
+Review finding 2 (the map context's `willReadFrequently`, needed only by the blit's read-back) was applied
+and then reverted on measurement: the flag also selects the canvas's raster path (CPU with it, GPU without),
+and without it the cells view's flights ran two to three times slower at ratios 2 and 3 on the Intel GPU
+(the 60 km pan at Moscow from 32 to 10 fps at ratio 2) with nothing else changed; with the flag the cells
+view's cadence is the committed page's at every ratio, as the table shows. The author may try the other
+setting on their devices (one word in `explorer-app.js`; the field does not need either).
+
+Not published: the author confirms first. The publish set's content is unchanged in kind (the page, the
+script, `data/firms.js` and the twelve address scripts regenerated by M9).
+
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the

@@ -115,12 +115,21 @@
   ];
 
   // ---- map canvas ------------------------------------------------------------------------------
-  const wrap = $('mapwrap'), mapC = $('map'), ovC = $('overlay'), mctx = mapC.getContext('2d', { willReadFrequently: true }), octx = ovC.getContext('2d');
+  // Four layers (24 October 2026): #map (the stage, the basemap and every cells-mode layer), #field (the firms view's
+  // address field, WebGL), #marks (the listed marks and, in the firms view, the city labels) and #overlay (the hover).
+  // #map no longer reads its pixels back, so it may be hardware-rendered; the field has its own canvas.
+  const wrap = $('mapwrap'), mapC = $('map'), fieldC = $('field'), marksC = $('marks'), ovC = $('overlay');
+  const mctx = mapC.getContext('2d', { willReadFrequently: true }), kctx = marksC.getContext('2d'), octx = ovC.getContext('2d');
+  // The map context keeps willReadFrequently although nothing reads it back any more: the flag also selects the canvas's raster
+  // path (CPU with it, GPU without), and without it the cells view's flights ran two to three times slower at device-pixel
+  // ratios 2 and 3 in the lab's headless browser on the Intel GPU (measured 24 October 2026); the author may test the other setting.
+  let layersOn = true;   // the field and marks canvases are shown in the firms view only, so the cells view composites the two canvases it always had
   const stage = { width: 0, height: 0, scale: 1, base() { mctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); } };
   function sizeCanvases() {
     const r = wrap.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     stage.width = Math.max(1, Math.round(r.width)); stage.height = Math.max(1, Math.round(r.height)); stage.scale = dpr;
-    for (const c of [mapC, ovC]) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
+    for (const c of [mapC, fieldC, marksC, ovC].concat(field2d ? [field2d.canvas] : [])) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
+    window.__atlasCanvases.marks = { w: stage.width, h: stage.height };
   }
   const cam = () => ({ cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k, ox: stage.width / 2, oy: stage.height / 2 });
   // Camera targets (24 October 2026): pure helpers shared by the presets, the click ladder, the zoom buttons, the keys
@@ -160,7 +169,7 @@
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 });
     const L = state.layer;
-    if (state.mode === 'firms') drawFirms(c);
+    if (state.mode === 'firms') { if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; } drawFirms(c); drawMarks(c); }
     else if (L === 'density') {
       const ga = gridAlphas(c.k), near = nearestCity(c).city.label, w1 = win1[near] ? winRect(win1[near].d, 90) : null, w025 = win025[near] ? winRect(win025[near].d, 24) : null;
       drawAround(c, w1, ga.one, (a, region) => drawNat(c, a, region, false));
@@ -195,7 +204,7 @@
       MM.drawTiles(mctx, stage, c, paths, cl => theme.change6[cl]);
     }
     stage.base();
-    if (c.k > 0.6) for (const city of bmp.cities) { const [px, py] = Motion.project(c, city.x, city.y); if (px > -50 && px < stage.width + 50 && py > -20 && py < stage.height + 20) MM.cityLabel(mctx, c, city, theme, { size: 13, dot: 3, dx: 7, dy: -5 }); }
+    if (state.mode !== 'firms') { if (layersOn) { endPulse(); clearField(); clearMarks(); fieldC.hidden = true; marksC.hidden = true; if (field2d) field2d.canvas.hidden = true; layersOn = false; } drawLabels(mctx, c, 'map'); }   // in the firms view the labels sit on the marks layer, above the field
     if (!flight) { drawLegend(); drawScaleBar(); }
   }
 
@@ -224,7 +233,7 @@
   function ensureYear(y) {
     if (firmYears.has(y)) return Promise.resolve(firmYears.get(y));
     if (firmPending.has(y)) return firmPending.get(y);
-    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); while (firmOrder.length > 3) firmYears.delete(firmOrder.shift()); firmPending.delete(y); return d; }, e => { firmPending.delete(y); throw e; });
+    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); } firmPending.delete(y); return d; }, e => { firmPending.delete(y); throw e; });
     firmPending.set(y, p); return p;
   }
   // Mark rules by zoom (base, s, cap, floor), the Moscow rasters' three extents: pixel marks with blocks below
@@ -236,10 +245,151 @@
   const firmClass = (d, i, L) => (L === 'share' ? d.share[i] : L === 'fin' ? d.cls[i] : 0);
   const firmColour = (L, cl) => (L === 'share' ? theme.ramp6[cl] : L === 'fin' ? (cl ? theme.blue6[cl - 1] : theme.neutral) : theme.neutral);
   const firmPalette = L => (L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.neutral].concat(theme.blue6) : [theme.neutral]).map(hex2rgb);
+  function clearField() { if (gl && !glLost) { gl.viewport(0, 0, fieldC.width, fieldC.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); } if (field2d) { field2d.ctx.setTransform(1, 0, 0, 1, 0, 0); field2d.ctx.clearRect(0, 0, field2d.canvas.width, field2d.canvas.height); } }
+  function clearMarks() { kctx.setTransform(1, 0, 0, 1, 0, 0); kctx.clearRect(0, 0, marksC.width, marksC.height); }
+  function drawLabels(ctx, c, scene) { Motion.audit.scene = scene; if (c.k > 0.6) for (const city of bmp.cities) { const [px, py] = Motion.project(c, city.x, city.y); if (px > -50 && px < stage.width + 50 && py > -20 && py < stage.height + 20) MM.cityLabel(ctx, c, city, theme, { size: 13, dot: 3, dx: 7, dy: -5 }); } Motion.audit.scene = 'map'; }
+
+  // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
+  // Below 20 px per km every address is a point of 1, 2 or 3 device pixels (10 and 100 or more firms), snapped to
+  // whole pixels and composited "over" with an alpha by count (96, 140, 200, 236 of 256), the earlier blit's rule
+  // exactly; from 20 px per km a disc (a square under 1.75 px) sized by the mark rule, drawn largest first at alpha
+  // 0.9 with an antialiased edge, overlaps compounding (the author's choice). Positions travel as metres relative to
+  // the Moscow point; each frame the camera's integer metres shift them on the GPU and the fraction comes as a small
+  // offset, so the GPU multiplies only small exact integers. One buffer set per loaded year, freed with the cache;
+  // the layer and the palette are uniforms. Without WebGL, or after a lost context, the 2D fallback below draws the
+  // same field into a transparent canvas of its own, composited by the browser ("over" is associative).
+  const GL_R = [Math.round(bmp.cities[0].x * 1000), Math.round(bmp.cities[0].y * 1000)];
+  const GL_VS = `
+attribute vec2 a_pos; attribute float a_n; attribute vec2 a_cls;
+uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size;
+uniform float u_mode; uniform float u_dpri; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[8];
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
+void main() {
+  vec2 rel = a_pos + u_shift;
+  float dx = u_off.x + rel.x * u_kk, dy = u_off.y - rel.y * u_kk;
+  float cls = u_which < 0.5 ? a_cls.x : (u_which < 1.5 ? a_cls.y : 0.0);
+  vec3 col = u_pal[int(cls + 0.5)];
+  if (u_mode < 0.5) {
+    float bw = u_dpri * (a_n >= 100.0 ? 3.0 : (a_n >= 10.0 ? 2.0 : 1.0));
+    float h = floor((bw - 1.0) * 0.5);
+    vec2 c = vec2(floor(dx) - h, floor(dy) - h) + bw * 0.5;
+    gl_Position = vec4(c.x / u_size.x * 2.0 - 1.0, 1.0 - c.y / u_size.y * 2.0, 0.0, 1.0);
+    gl_PointSize = bw;
+    float a = (a_n >= 100.0 ? 236.0 : (a_n >= 10.0 ? 200.0 : (a_n >= 2.0 ? 140.0 : 96.0))) / 256.0;
+    v_col = vec4(col * a, a); v_r = 0.0; v_half = bw * 0.5; v_square = 0.0;
+  } else {
+    float r = max(u_rule.w, min(u_rule.z, u_rule.x + u_rule.y * sqrt(max(0.0, a_n - 1.0))) * 0.5);
+    float rd = r * u_sc, size = ceil(rd * 2.0 + 3.0);
+    gl_Position = vec4(dx / u_size.x * 2.0 - 1.0, 1.0 - dy / u_size.y * 2.0, 0.0, 1.0);
+    gl_PointSize = size;
+    v_col = vec4(col * 0.9, 0.9); v_r = rd; v_half = size * 0.5; v_square = r < 1.75 ? 1.0 : 0.0;
+  }
+}`;
+  const GL_FS = `
+precision mediump float;
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
+void main() {
+  if (v_r <= 0.0) { gl_FragColor = v_col; return; }
+  vec2 d = (gl_PointCoord - 0.5) * (v_half * 2.0);
+  float cov = v_square > 0.5 ? clamp(v_r - max(abs(d.x), abs(d.y)) + 0.5, 0.0, 1.0) : clamp(v_r - length(d) + 0.5, 0.0, 1.0);
+  gl_FragColor = v_col * cov;
+}`;
+  let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null;
+  const glYears = new Map();   // year -> { pos, n, cls, count }
+  const useGL = () => !!gl && !glLost;
+  function glInit() {
+    if (new URLSearchParams(location.search).get('__nogl') === '1') return false;
+    const opts = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' };
+    let g = fieldC.getContext('webgl2', opts), kind = 'webgl2';
+    if (!g) { g = fieldC.getContext('webgl', opts); kind = 'webgl'; if (g && !g.getExtension('OES_element_index_uint')) g = null; }
+    if (!g) { glError = 'no context'; return false; }
+    glError = null;
+    const sh = (type, src) => { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) { glError = 'shader: ' + g.getShaderInfoLog(s); console.error(glError); return null; } return s; };
+    const vs = sh(g.VERTEX_SHADER, GL_VS), fs = sh(g.FRAGMENT_SHADER, GL_FS); if (!vs || !fs) return false;
+    const p = g.createProgram(); g.attachShader(p, vs); g.attachShader(p, fs); g.linkProgram(p);
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) { glError = 'link: ' + g.getProgramInfoLog(p); console.error(glError); return false; }
+    gl = g; glKind = kind; glProg = p; glIdx = g.createBuffer(); glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
+    glLoc = { pos: g.getAttribLocation(p, 'a_pos'), n: g.getAttribLocation(p, 'a_n'), cls: g.getAttribLocation(p, 'a_cls') };
+    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_mode', 'u_dpri', 'u_sc', 'u_rule', 'u_which', 'u_pal']) glLoc[u] = g.getUniformLocation(p, u);
+    g.disable(g.DEPTH_TEST); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
+    return true;
+  }
+  function glUpload(y, d) {
+    if (!useGL() || glYears.has(y)) return;
+    const n = d.n, pos = new Float32Array(2 * n), cls = new Uint8Array(2 * n);
+    for (let i = 0; i < n; i++) { pos[2 * i] = d.x[i] - GL_R[0]; pos[2 * i + 1] = d.y[i] - GL_R[1]; cls[2 * i] = d.share[i]; cls[2 * i + 1] = d.cls[i]; }
+    const mk = (data) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); return b; };
+    glYears.set(y, { pos: mk(pos), n: mk(d.nn), cls: mk(cls), count: n });
+  }
+  function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; gl.deleteBuffer(b.pos); gl.deleteBuffer(b.n); gl.deleteBuffer(b.cls); glYears.delete(y); }
+  function glPalette(L) { const pal = L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.neutral].concat(theme.blue6) : [theme.neutral]; const out = new Float32Array(24); for (let i = 0; i < 8; i++) { const c = hex2rgb(pal[Math.min(i, pal.length - 1)]); out[3 * i] = c[0] / 255; out[3 * i + 1] = c[1] / 255; out[3 * i + 2] = c[2] / 255; } return out; }
+  function glDraw(c, d, L, i0, i1, discs, idx) {
+    const y = state.year; glUpload(y, d); const buf = glYears.get(y); if (!buf) return;
+    const W = fieldC.width, Hh = fieldC.height, sc = stage.scale, kk = c.k / 1000 * sc;
+    const camx = c.cx * 1000, camy = c.cy * 1000, Cx = Math.round(camx), Cy = Math.round(camy);
+    gl.viewport(0, 0, W, Hh); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.useProgram(glProg);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.enableVertexAttribArray(glLoc.pos); gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.n); gl.enableVertexAttribArray(glLoc.n); gl.vertexAttribPointer(glLoc.n, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.cls); gl.enableVertexAttribArray(glLoc.cls); gl.vertexAttribPointer(glLoc.cls, 2, gl.UNSIGNED_BYTE, false, 0, 0);
+    gl.uniform2f(glLoc.u_shift, GL_R[0] - Cx, GL_R[1] - Cy);   // a_pos + u_shift = (X - R) + (R - C) = X - C, exact integers
+    gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
+    gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh); gl.uniform1f(glLoc.u_mode, discs ? 1 : 0);
+    gl.uniform1f(glLoc.u_dpri, Math.max(1, Math.round(sc))); gl.uniform1f(glLoc.u_sc, sc);
+    const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
+    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : 2); gl.uniform3fv(glLoc.u_pal, glPalette(L));
+    if (!discs) gl.drawArrays(gl.POINTS, i0, i1 - i0);
+    else { gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0); }
+  }
+  const glEvents = [];
+  fieldC.addEventListener('webglcontextlost', e => { e.preventDefault(); glEvents.push('lost'); glLost = true; glYears.clear(); ensureField2d(); drawMap(); });
+  fieldC.addEventListener('webglcontextrestored', () => { glEvents.push('restored'); if (glInit()) { glLost = false; if (field2d) field2d.canvas.hidden = true; drawMap(); } else glEvents.push('init failed: ' + glError); });
+  glInit();
+  // The 2D fallback: the same field into its own transparent canvas, created with willReadFrequently for the blit.
+  function ensureField2d() {
+    if (field2d) { field2d.canvas.hidden = false; return field2d; }
+    const cv = document.createElement('canvas'); cv.id = 'field2d'; cv.setAttribute('aria-hidden', 'true'); fieldC.insertAdjacentElement('afterend', cv);
+    cv.width = fieldC.width; cv.height = fieldC.height;
+    field2d = { canvas: cv, ctx: cv.getContext('2d', { willReadFrequently: true }), pm: null };
+    return field2d;
+  }
+  // The blocks, composited "over" in premultiplied bytes on a transparent buffer, then written as straight colour.
+  function blit2d(f, c, d, L, i0, i1) {
+    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, sc = stage.scale, k = c.k;
+    if (!f.pm || f.pm.length !== W * H * 4) f.pm = new Uint8ClampedArray(W * H * 4); const pm = f.pm; pm.fill(0);
+    const ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc;
+    const pal = firmPalette(L), dprI = Math.max(1, Math.round(sc)), X = d.x, Y = d.y, N = d.nn;
+    for (let i = i0; i < i1; i++) {
+      const n = N[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1);
+      const bx = Math.floor(ax + X[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - Y[i] * kk) - ((bw - 1) >> 1);
+      if (bx >= W || by >= H || bx + bw <= 0 || by + bw <= 0) continue;
+      const col = pal[firmClass(d, i, L)] || pal[0], a8 = n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96, ia = 256 - a8;
+      const sr = (col[0] * a8) >> 8, sg = (col[1] * a8) >> 8, sb = (col[2] * a8) >> 8;
+      const x0 = bx < 0 ? 0 : bx, y0 = by < 0 ? 0 : by, x1 = bx + bw > W ? W : bx + bw, y1 = by + bw > H ? H : by + bw;
+      for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { pm[o] = sr + ((pm[o] * ia) >> 8); pm[o + 1] = sg + ((pm[o + 1] * ia) >> 8); pm[o + 2] = sb + ((pm[o + 2] * ia) >> 8); pm[o + 3] = a8 + ((pm[o + 3] * ia) >> 8); } }
+    }
+    const img = ctx2.createImageData(W, H), px = img.data;
+    for (let o = 0; o < pm.length; o += 4) { const a = pm[o + 3]; if (!a) continue; px[o] = Math.min(255, Math.round(pm[o] * 255 / a)); px[o + 1] = Math.min(255, Math.round(pm[o + 1] * 255 / a)); px[o + 2] = Math.min(255, Math.round(pm[o + 2] * 255 / a)); px[o + 3] = a; }
+    ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, W, H); ctx2.putImageData(img, 0, 0);
+  }
+  function discs2d(f, c, d, L, idx) {
+    const ctx2 = f.ctx, rule = markRule(c.k); ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, f.canvas.width, f.canvas.height); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
+    ctx2.globalAlpha = 0.9;
+    for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill(); }
+    ctx2.globalAlpha = 1;
+  }
+  // The discs' order: the largest first, by a counting sort on the radius in tenths of a pixel, over the x-band and the y-range.
+  function discOrder(c, d, i0, i1) {
+    const k = c.k, rule = markRule(k), pad = markRadius(rule, 65535) / k * 1000 + 500;
+    const ym0 = (c.cy - (stage.height - c.oy) / k) * 1000 - pad, ym1 = (c.cy + c.oy / k) * 1000 + pad;
+    const buckets = []; let count = 0;
+    for (let i = i0; i < i1; i++) { const yv = d.y[i]; if (yv < ym0 || yv > ym1) continue; const r10 = Math.round(markRadius(rule, d.nn[i]) * 10); (buckets[r10] || (buckets[r10] = [])).push(i); count++; }
+    const idx = new Uint32Array(count); let j = 0; for (let r10 = buckets.length - 1; r10 >= 0; r10--) if (buckets[r10]) for (const i of buckets[r10]) idx[j++] = i;
+    return idx;
+  }
   function drawFirms(c) {
     const y = state.year, d = firmYears.get(y), L = state.layer;
     if (!d) {
-      firmStatus = `Loading ${y} addresses…`;
+      firmStatus = `Loading ${y} addresses…`; clearField();
       ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; drawMap(); } })
         .catch(e => { console.error(e); firmStatus = `Addresses for ${y} could not be loaded (${e.message}).`; if (state.mode === 'firms' && state.year === y) drawLegend(); });
       return;
@@ -247,54 +397,47 @@
     firmStatus = null;
     const k = c.k, pad = markRadius(markRule(k), 65535) / k * 1000 + 1000;
     const i0 = lowerBound(d.x, (c.cx - c.ox / k) * 1000 - pad), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + pad);
-    if (k < 20 || i1 - i0 > 120000) blitFirms(c, d, L, i0, i1); else discFirms(c, d, L, i0, i1);
-    drawListed(c, y);
+    const discs = k >= 20, idx = discs ? discOrder(c, d, i0, i1) : null;   // the switch depends on the zoom alone (author's decision, 24 October 2026)
+    if (useGL()) { if (field2d) field2d.canvas.hidden = true; glDraw(c, d, L, i0, i1, discs, idx); }
+    else { const f = ensureField2d(); if (discs) discs2d(f, c, d, L, idx); else blit2d(f, c, d, L, i0, i1); }
   }
-  // Below 20 px per km: every address as a 1 px mark (2x2 and 3x3 blocks for 10 and 100 or more firms) composited
-  // by hand into the map's device pixels, alpha rising with the count, so a million addresses draw in one pass.
-  function blitFirms(c, d, L, i0, i1) {
-    const W = mapC.width, H = mapC.height, sc = stage.scale, k = c.k;
-    const img = mctx.getImageData(0, 0, W, H), px = img.data;
-    const ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc;
-    const pal = firmPalette(L), dprI = Math.max(1, Math.round(sc)), X = d.x, Y = d.y, N = d.nn;
-    for (let i = i0; i < i1; i++) {
-      const n = N[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1);
-      const bx = Math.floor(ax + X[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - Y[i] * kk) - ((bw - 1) >> 1);
-      if (bx >= W || by >= H || bx + bw <= 0 || by + bw <= 0) continue;
-      const col = pal[firmClass(d, i, L)] || pal[0], r = col[0], g = col[1], b = col[2], a8 = n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96, ia = 256 - a8;
-      const x0 = bx < 0 ? 0 : bx, y0 = by < 0 ? 0 : by, x1 = bx + bw > W ? W : bx + bw, y1 = by + bw > H ? H : by + bw;
-      for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { px[o] = (r * a8 + px[o] * ia) >> 8; px[o + 1] = (g * a8 + px[o + 1] * ia) >> 8; px[o + 2] = (b * a8 + px[o + 2] * ia) >> 8; } }
-    }
-    mctx.putImageData(img, 0, 0); stage.base();
+  // Listed firms on the marks layer, above the field: red from their listing year, a ring when the year's statement is
+  // absent; before that year a plain mark in the layer's colour for their own state. On a forward year change the firms
+  // newly red bloom once as in the video (24 October 2026): the mark swells to 1.9 times and back while a thin red ring
+  // expands by 26 px and fades, over 0.9 s; backward changes and the cells view show nothing.
+  const PULSE_MS = 900; let pulse = null, pulseRaf = 0;
+  function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; pulse = null; }
+  function startPulse(yPrev, yNew) {
+    if (yNew === yPrev) return;
+    endPulse();   // any change of year ends a running pulse; a backward one starts none
+    if (!TRN || yNew < yPrev) return;
+    const mask = new Uint8Array(TRN.n), yi = yNew - 2014; let any = 0;
+    for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] > yPrev && TRN.red_from[i] <= yNew && TRN.filed[i][yi] !== '-') { mask[i] = 1; any++; }
+    if (!any) return;
+    pulse = { t0: performance.now(), mask, count: any }; pulseRaf = requestAnimationFrame(pulseTick);
   }
-  // From 20 px per km: discs sized by the firms at the address, the largest first so small discs sit on big ones.
-  function discFirms(c, d, L, i0, i1) {
-    const k = c.k, rule = markRule(k), pad = markRadius(rule, 65535) / k * 1000 + 500;
-    const ym0 = (c.cy - (stage.height - c.oy) / k) * 1000 - pad, ym1 = (c.cy + c.oy / k) * 1000 + pad;
-    // the largest discs first, by a counting sort on the radius in tenths of a pixel (discs of equal radius may draw in any order)
-    const buckets = []; for (let i = i0; i < i1; i++) { const yv = d.y[i]; if (yv < ym0 || yv > ym1) continue; const r10 = Math.round(markRadius(rule, d.nn[i]) * 10); (buckets[r10] || (buckets[r10] = [])).push(i); }
-    const idx = []; for (let r10 = buckets.length - 1; r10 >= 0; r10--) if (buckets[r10]) for (const i of buckets[r10]) idx.push(i);
-    const paths = new Map();
-    for (const i of idx) {
-      const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000), cl = firmClass(d, i, L);
-      let path = paths.get(cl); if (!path) { path = new Path2D(); paths.set(cl, path); }
-      if (r < 1.75) path.rect(px - r, py - r, 2 * r, 2 * r); else { path.moveTo(px + r, py); path.arc(px, py, r, 0, Math.PI * 2); }
-    }
-    mctx.save(); mctx.globalAlpha = 0.9; for (const [cl, path] of paths) { mctx.fillStyle = firmColour(L, cl); mctx.fill(path); } mctx.restore();
-  }
-  // Listed firms on top: red from their listing year, a ring when the year's statement is absent; before that
-  // year, a plain mark in the layer's colour for their own state.
-  function drawListed(c, year) {
-    const yi = year - 2014, rule = markRule(c.k), L = state.layer;
+  function pulseTick() { pulseRaf = 0; if (!pulse) return; if (performance.now() - pulse.t0 >= PULSE_MS) pulse = null; if (state.mode === 'firms') drawMarks(cam()); if (pulse) pulseRaf = requestAnimationFrame(pulseTick); }
+  function drawMarks(c) {
+    clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
+    const year = state.year, yi = year - 2014, rule = markRule(c.k), L = state.layer, now = performance.now();
+    const b = pulse ? Motion.clamp((now - pulse.t0) / PULSE_MS, 0, 1) : 1, grow = Motion.ease.outCubic(b), flash = 1 + 0.9 * Math.sin(Math.PI * b);
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
-      const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]); if (px < -20 || px > stage.width + 20 || py < -20 || py > stage.height + 20) continue;
-      const r = markRadius(rule, TRN.pile[i]);
-      if (TRN.red_from[i] > year) {
+      const [px, py] = Motion.project(c, TRN.x[i], TRN.y[i]); if (px < -40 || px > stage.width + 40 || py < -40 || py > stage.height + 40) continue;
+      const r = markRadius(rule, TRN.pile[i]), pulsing = pulse && pulse.mask[i];
+      if (TRN.red_from[i] > year || pulsing) {
         const st = TRN.state[i][yi], col = L === 'fin' && st >= '1' && st <= '6' ? theme.blue6[+st - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
-        mctx.save(); mctx.globalAlpha = 0.9; mctx.fillStyle = col; mctx.beginPath(); mctx.arc(px, py, r, 0, Math.PI * 2); mctx.fill(); mctx.restore();
-      } else MM.listedMark(mctx, px, py, r, ch === '1' ? 1 : 0, 1, theme);
+        kctx.save(); kctx.globalAlpha = 0.9 * (pulsing ? 1 - grow : 1); kctx.fillStyle = col; kctx.beginPath(); kctx.arc(px, py, r, 0, Math.PI * 2); kctx.fill(); kctx.restore();
+      }
+      if (TRN.red_from[i] <= year) {
+        if (pulsing) {
+          const rr = r * flash;
+          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, grow, theme);
+          if (b < 1) { kctx.save(); kctx.globalAlpha = (1 - b) * 0.9; kctx.strokeStyle = theme.treated; kctx.lineWidth = 1.5; kctx.beginPath(); kctx.arc(px, py, rr + 4 + 22 * grow, 0, Math.PI * 2); kctx.stroke(); kctx.restore(); }
+        } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, 1, theme);
+      }
     }
+    drawLabels(kctx, c, 'marks');
   }
   // Hover in firms mode: the nearest address within its mark radius plus 2 px, found through the sorted x column,
   // and the listed firms at the cursor; counts only, never a firm.
@@ -709,7 +852,7 @@
     [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); drawMap(); drawCellPanel(null); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   $('layerprov').textContent = LAYERS[1].prov;
-  $('year').addEventListener('input', () => { state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); drawMap(); drawNational(); });
+  $('year').addEventListener('input', () => { const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); drawMap(); drawNational(); });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -757,6 +900,11 @@
     note(open) { setNote(open == null ? null : open ? 'open' : 'closed'); },
     frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
+    field() { return useGL() ? glKind : '2d'; },
+    glState() { return { kind: glKind, lost: glLost, isContextLost: gl ? gl.isContextLost() : null, error: glError, events: glEvents.slice() }; },
+    loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
+    restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
+    pulsing() { return pulse ? pulse.count : 0; },
     ready() { return state.mode === 'firms' ? ensureYear(state.year).then(() => {}) : Promise.resolve(); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
   };

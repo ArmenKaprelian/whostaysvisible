@@ -69,7 +69,7 @@ def main():
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
     url = a.url + ("&" if "?" in a.url else "?") + "__audit=1"
-    findings = []; n_boxes = 0; n_states = 0
+    findings = []; n_boxes = 0; n_states = 0; fields = set()
     for w in [int(x) for x in a.widths.split(",")]:
         profile = tempfile.mkdtemp(prefix="atlas-audit-")
         proc = subprocess.Popen(brave_flags(profile, w, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -86,7 +86,7 @@ def main():
             side = min(round(P["W"]), round(P["H"])); mx, my = P["m"]   # the page rounds the map's size to whole CSS px
             def state(layer, year, setup, tag, check=None):
                 nonlocal n_boxes, n_states
-                r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases }; })()" % (setup, layer, year), await_promise=True, timeout=180)
+                r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null }; })()" % (setup, layer, year), await_promise=True, timeout=180)
                 n_boxes += len(r["boxes"]); n_states += 1
                 found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"])
                 if check: found += check(r)
@@ -139,13 +139,40 @@ def main():
                 bad = [i for i in range(1, len(d)) if d[i] > d[i - 1] + 0.5]
                 n_states += 1
                 if bad or d[-1] > 0.5: findings.append("%-11s width %d  %-7s %-5s %-8s %-10s %s" % ("path", w, "share", 2021, tag, "flight", "the subject moved away from the centre at samples %s; end offset %.2f px" % (bad[:5], d[-1])))
-            # firms mode (round 5): the address marks by layer at three presets, two hovers, and a ladder step
+            # firms mode (round 5): the address marks by layer at three presets, two hovers, and a ladder step; since the
+            # WebGL field (24 October 2026) the same states run on the renderer the page chose and again on the 2D
+            # fallback (?__nogl=1), with the renderer asserted, plus a forward year change (the pulse) and a backward one
             F = "A.mode('firms'); "
-            for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia")]:
-                state(layer, year, F + "A.preset(%r);" % preset, "firms")
-            state("share", 2021, F + "A.preset('Central Moscow (250 m)'); A.hoverKm(m[0] + 1.2, m[1] + 0.4);", "fhov")
-            state("fin", 2021, F + "A.preset('Moscow'); A.hoverKm(m[0], m[1]);", "fhov2")
-            state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0], m[1]);", "fclk", cam_k(min(2.5 * P["moscow"]["k"], 200), "a click in the firms view steps x2.5"))
+            GL = ("webgl2", "webgl")
+            def field_is(expect, label): return lambda r: [] if r["field"] in expect else [("field", "gl", "%s: expected %s, got %s" % (label, "/".join(expect), r["field"]))]
+            def pulsing_is(expect, label): return lambda r: [] if bool(r["pulsing"]) == expect else [("pulse", "marks", "%s: expected pulsing %s, got %s" % (label, expect, r["pulsing"]))]
+            def both(f, g): return lambda r: f(r) + g(r)
+            def firms_states(expect, tag):
+                for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia")]:
+                    state(layer, year, F + "A.preset(%r);" % preset, tag, field_is(expect, "the firms view draws on " + "/".join(expect)))
+                state("share", 2021, F + "A.preset('Central Moscow (250 m)'); A.hoverKm(m[0] + 1.2, m[1] + 0.4);", tag + "hov", field_is(expect, "hover"))
+                state("fin", 2021, F + "A.preset('Moscow'); A.hoverKm(m[0], m[1]);", tag + "hov2", field_is(expect, "hover"))
+                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0], m[1]);", tag + "clk", both(cam_k(min(2.5 * P["moscow"]["k"], 200), "a click in the firms view steps x2.5"), field_is(expect, "click")))
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2022); await new Promise(r => setTimeout(r, 250));", tag + "pulse", both(pulsing_is(True, "a forward year change pulses the newly red marks"), field_is(expect, "pulse")))
+                state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready();", tag + "back", pulsing_is(False, "a backward year change does not pulse"))
+                state("share", 2025, "A.mode('cells'); A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2025); await A.ready();", tag + "cells", pulsing_is(False, "a forward year change in the cells view does not pulse"))
+            F0 = cdp.evaluate("window.__atlas.field()", await_promise=False); fields.add(F0)
+            firms_states(GL if F0 in GL else ("2d",), "firms")
+            # a lost context falls back to the 2D field and a restored one returns to WebGL (on a page that had it)
+            state("share", 2021, F + "A.preset('Moscow'); A.loseContext(); await new Promise(r => setTimeout(r, 300));", "flost", field_is(("2d",), "after a lost context the 2D fallback draws"))
+            state("share", 2021, F + "A.preset('Moscow'); A.restoreContext(); await new Promise(r => setTimeout(r, 600));", "frestore", field_is(GL if F0 in GL else ("2d",), "after a restored context WebGL draws again"))
+            # a narrower viewport: every canvas follows the map's new size
+            if w >= 768:
+                cdp.call("Emulation.setDeviceMetricsOverride", {"width": w - 200, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.4)
+                state("share", 2021, F + "A.preset('Moscow');", "fresize", lambda r: [] if r["canvases"]["map"]["w"] < P["W"] and round(r["canvases"]["map"]["w"]) == r["canvases"]["marks"]["w"] and round(r["canvases"]["map"]["h"]) == r["canvases"]["marks"]["h"] else [("resize", "map", "after a resize the canvases are %s (the map was %s wide)" % (json.dumps(r["canvases"]), P["W"]))])
+                cdp.call("Emulation.setDeviceMetricsOverride", {"width": w, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.4)
+            # the same firms states on the 2D fallback
+            cdp.call("Page.navigate", {"url": url + "&__nogl=1"}); cdp.wait_event("Page.loadEventFired", timeout=60)
+            cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.5)
+            fields.add(cdp.evaluate("window.__atlas.field()", await_promise=False))
+            firms_states(("2d",), "nogl")
+            cdp.call("Page.navigate", {"url": url}); cdp.wait_event("Page.loadEventFired", timeout=60)
+            cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.5)
             # the legend and the note, collapsed and expanded, at the national and the Moscow views
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.legend(true); A.note(true);", "open")
             state("share", 2021, "A.mode('cells'); A.preset('Moscow'); A.legend(true); A.note(true);", "open")
@@ -154,7 +181,7 @@ def main():
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.legend(null); A.note(null);", "-")
         finally:
             proc.terminate()
-    head = "atlas audit: %d states, %d boxes, %d finding(s)" % (n_states, n_boxes, len(findings))
+    head = "atlas audit: %d states, %d boxes, %d finding(s); field renderers seen: %s" % (n_states, n_boxes, len(findings), ", ".join(sorted(fields)))
     text = "\n".join([head] + sorted(set(findings))) + "\n"
     if a.out:
         with open(a.out, "w") as fh: fh.write(text)
