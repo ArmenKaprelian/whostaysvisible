@@ -1535,31 +1535,50 @@ void main() {
   function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); Motion.audit.scene = id; window.__atlasCanvases[id] = { w: r.width, h: r.height }; return { ctx, w: r.width, h: r.height }; }
   function drawCellPanel(h) {
     if (!cardOpen('cursor')) return;
-    const info = $('cellinfo'); const rows = [];
-    if (h && h.region) rows.push(['Region', esc(h.region), 'loc']);
-    const ad = h && (h.kind === 'firm' ? h : h.address);
-    if (ad) { rows.push(['Coordinate pair', `${fmt.int(ad.n)} firm${ad.n === 1 ? '' : 's'}`]); rows.push([`${state.year} statement`, ad.n === 1 ? (ad.a ? 'available' : 'absent') : `${fmt.int(ad.a)} (${fmt.pct(100 * ad.a / ad.n)})`]); }
-    if (h && h.listed && h.listed.top && TRN.name) {   // the detail view (author's rule, 25 October 2026): the display name, the filed name beneath, the listing year and the statement state on one line, the list memberships
-      const Ls = h.listed, y = state.year, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'}` : 'at this pair';
-      rows.push(['On the lists (treated)', `${fmt.int(Ls.n)} ${where}`]);
+    // The panel's rows (the author's correction of 26 October): one short label per row in tracked capitals, the value at the left and wrapping, the leading division as its
+    // short name with the code and the share and its class beneath, the ranked mix as swatch rows, each listed firm as a name line with its listing year and one muted line
+    // of state, memberships and revenue; the cell-series provenance lives in the method block. The tooltip keeps the glance view; this is the detail view.
+    const info = $('cellinfo'); const rows = [], y = state.year, L = state.layer;
+    const row = (k, v, t) => rows.push([k, v, t]);
+    const pct = (a, n) => fmt.pct(100 * a / n);
+    const lead = (code, share) => (code === 0 ? `no OKVED 2 division code&nbsp;·&nbsp;${share}%` : `<span class="ksw" style="background:${mixColour(code)}"></span>${esc(divShort(code))} (${divPad(code)})&nbsp;·&nbsp;${share}%<span class="sub">${esc(indClassLabel(code))}</span>`);
+    const mixRows = (list, rest) => '<div class="mix">' + list.map(m => `<div class="r"><span class="ksw" style="background:${mixColour(m.code)}"></span><span class="nm" title="${esc(m.title)} (${divPad(m.code)})">${esc(m.short)} (${divPad(m.code)})</span><span class="pc">${m.share ? m.share + '%' : '<1%'}</span></div>`).join('') + (rest ? `<div class="r"><span class="ksw"></span><span class="nm">other divisions</span><span class="pc">${rest}%</span></div>` : '') + '</div>';
+    if (h && h.region) row('Region', esc(h.region), 'loc');
+    const cellHit = !!h && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none', ad = h && (h.kind === 'firm' ? h : h.address);
+    if (cellHit) {
+      row('Cell', h.fine ? (h.grid < 1 ? '250 m' : `${h.grid} km`) : `${h.grid} km (${h.ix}, ${h.iy})`);
+      if (L === 'industry') {
+        if (h.dom == null || h.dom === 255) row('Leading', h.dom === 255 || h.nrev === 0 ? 'no firm with a revenue value' : 'no located firms');
+        else { row('With revenue', `${fmt.int(h.nrev)} firms`); row('Leading', lead(h.dom, h.share)); if (h.mix && h.mix.length > 1) { const shown = h.mix.slice(1, 5), rest = (h.rest || 0) + h.mix.slice(5).reduce((t, m) => t + m.share, 0); row('', mixRows(shown, rest), 'full'); }   /* four ranked rows after the leader; the divisions past them fold into the remainder */ if (h.lsh != null) row('Listed (treated)', `${h.lsh}% of revenue`); }
+      }
+      else if (h.fine) { const ys = h.yearShown || 2021; if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${band(h.n)} located`); row(`${ys} statement`, h.a != null ? `${fmt.int(h.a)} (${pct(h.a, h.n)})` : h.n >= 50 ? 'not available' : 'share not shown under 50 firms'); } }
+      else if (L === 'share') { if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${fmt.int(h.n)} located`); row(`${y} statement`, `${fmt.int(h.a)}` + (h.n >= 50 ? ` (${pct(h.a, h.n)})` : ', share not shown under 50 firms')); if (h.ns) row('Sanctions', `${fmt.int(h.ns)} members (treated)`); } }
+      else if (L === 'change') { if (h.n21 == null) row('Firms', 'none located'); else { row('2021', `${fmt.int(h.a21)} of ${fmt.int(h.n21)} (${pct(h.a21, h.n21)})`); row('2024', `${fmt.int(h.a24)} of ${fmt.int(h.n24)} (${pct(h.a24, h.n24)})`); row('Change', h.supported ? `${fmt.signed(h.change)} points` : 'not classed, under 50 firms in a year'); } }
+      else if (L === 'cohort') { if (h.n == null) row('Firms', 'none located'); else row('Cohort', `${fmt.int(h.c)} of ${fmt.int(h.n)} eligible` + (h.supported ? ` (${fmt.pct(h.pct)})` : ', not classed under 50')); }
+      else if (L === 'lists') { if (h.n == null) row('Firms', 'no list members shown'); else { row('Firms', `${fmt.int(h.n)} located`); row('Sanctions', h.sanctioned == null ? 'under 5 or none' : `${fmt.int(h.sanctioned)} members (treated)`); row('Gov strategic', h.gov == null ? 'under 5 or none' : `${fmt.int(h.gov)} members (treated)`); } }
+      else if (L === 'fin') { if (h.n_base == null) row('Cohort', 'no supported cell'); else { row('Observed', `${fmt.int(h.n_obs)} of ${fmt.int(h.n_base)} cohort firms in 2024`); row('Median revenue', `${fmt.signed(h.change)}% against the cell’s 2021 median`); } }
+      else if (h.n != null) { row('Firms', `${fmt.int(h.n)} located`); if (h.a != null) row(`${y} statement`, `${fmt.int(h.a)} (${pct(h.a, h.n)})`); }
+    }
+    if (ad) {
+      row('Coordinate pair', `${fmt.int(ad.n)} firm${ad.n === 1 ? '' : 's'}`);
+      row(`${y} statement`, ad.n === 1 ? (ad.a ? 'available' : 'absent') : `${fmt.int(ad.a)} (${pct(ad.a, ad.n)})`);
+      if (L === 'fin') { if (ad.f) { row('Baseline', `${fmt.int(ad.f)} with a value`); row('Median change', CLASS_LABELS[ad.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'industry' && ad.ind != null) row('Leading', ad.ind === 255 ? 'no firm with a revenue value' : lead(ad.ind, ad.ish));
+    }
+    if (h && h.listed && h.listed.top && TRN.name) {   // the detail view (author's rule, 25 October 2026): the display name, the filed name beneath, the listing year, one line of state, memberships and revenue
+      const Ls = h.listed, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'}` : 'at this pair';
+      row('Listed (treated)', `${fmt.int(Ls.n)} ${where}`);
       const blocks = Ls.top.map(i => {
-        const filed = TRN.name_filed ? TRN.name_filed[i] : '', nm = TRN.name[i], cs = TRN.name_case ? TRN.name_case[i] : 0, shared = TRN.name_shared ? TRN.name_shared[i] : 0, lists = listedLists(i);
-        return `<div class="lf"><div class="lf-h"><b>${listedGlyph(i, y)}${listedName(i)}${cs === 2 ? ' <span class="muted">(transliterated)</span>' : ''}</b>${lists ? `<span class="muted lists">${lists}</span>` : ''}</div>`
-          + (filed && filed !== nm ? `<div class="muted filed">${esc(filed)}</div>` : '') + (shared > 1 ? `<div class="muted filed">one of ${fmt.int(shared)} entries under this name</div>` : '')
-          + `<div class="lf-s"><span>${TRN.undated[i] ? 'undated listing' : 'listed ' + TRN.red_from[i]}</span><span>${listedState(i, y)}</span></div>` + (listedRevenue(i, y) ? `<div class="muted filed">${listedRevenue(i, y)}</div>` : '') + `</div>`;
+        const filed = TRN.name_filed ? TRN.name_filed[i] : '', nm = TRN.name[i], cs = TRN.name_case ? TRN.name_case[i] : 0, shared = TRN.name_shared ? TRN.name_shared[i] : 0;
+        const tail = [listedState(i, y), listedLists(i), listedRevenue(i, y)].filter(Boolean).join(' · ');
+        return `<div class="lf"><div class="lf-h"><b>${listedGlyph(i, y)}${listedName(i)}${cs === 2 ? ' <span class="muted">(transliterated)</span>' : ''}</b><span class="muted yr">${TRN.undated[i] ? 'undated' : 'listed ' + TRN.red_from[i]}</span></div>`
+          + (filed && filed !== nm ? `<div class="muted filed">${esc(filed)}</div>` : '') + (shared > 1 ? `<div class="muted filed">one of ${fmt.int(shared)} entries under this name</div>` : '') + `<div class="muted filed">${tail}</div></div>`;
       });
       if (Ls.n > Ls.top.length) blocks.push(`<div class="lf more">and ${fmt.int(Ls.n - Ls.top.length)} more</div>`);
-      rows.push(['', blocks.join(''), 'block']);
+      row('', blocks.join(''), 'block');
     }
-    if (h && state.layer === 'industry' && h.kind !== 'listed' && h.kind !== 'firm' && h.dom != null && h.dom !== 255) {   // the detail view of a cell's industry mix (round 9)
-      rows.push(['Leading division', `${esc(divTitle(h.dom))} (${divPad(h.dom)})`]); rows.push(['Share of revenue', `${h.share}%`]); rows.push(['Class', esc(indClassLabel(h.dom))]);
-      if (h.mix.length > 1) rows.push(['', '<div class="lf">' + h.mix.slice(1).map(m => `<div class="lf-s"><span>${m.share}%</span><span>${esc(m.title)} (${divPad(m.code)})</span></div>`).join('') + (h.rest ? `<div class="lf-s"><span>${h.rest}%</span><span>other divisions</span></div>` : '') + '</div>', 'block']);
-      if (h.lsh != null) rows.push(['On the lists (treated)', `${h.lsh}% of revenue`]);
-      rows.push(['With a revenue value', fmt.int(h.nrev)]);
-    }
-    if (ad && state.layer === 'industry' && ad.ind != null && ad.ind !== 255) { rows.push(['Leading division', `${esc(divTitle(ad.ind))} (${divPad(ad.ind)})`]); rows.push(['Share of revenue', `${ad.ish}%`]); rows.push(['Class', esc(indClassLabel(ad.ind))]); }
-    if (h && (h.fine || h.n != null || h.n21 != null || h.n_base != null || h.dom != null)) rows.push(['Cell', h.fine ? (h.grid < 1 ? '250 m' : h.grid + ' km') : `${h.grid} km (${h.ix}, ${h.iy})`]);
-    info.innerHTML = rows.length ? rows.map(([k, v, t]) => (t === 'block' ? `<div class="listed">${v}</div>` : t === 'loc' ? `<span>${k}</span><b class="loc">${v}</b>` : `<span>${k}</span><b>${v}</b>`)).join('') : '<span>Hover a cell</span><b></b>';
+    if (h && !cellHit && h.ix != null) row('Cell', `100 km (${h.ix}, ${h.iy})`);   // the chart's cell under the cursor in the Firms view
+    info.innerHTML = rows.length ? rows.map(([k, v, t]) => (t === 'block' ? `<div class="listed">${v}</div>` : t === 'full' ? `<div class="full">${v}</div>` : t === 'loc' ? `<span>${k}</span><b class="loc">${v}</b>` : `<span>${k}</span><b>${v}</b>`)).join('') : `<span class="muted">${state.mode === 'firms' ? 'Hover a mark' : 'Hover a cell'}</span><b></b>`;
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
     if (!h) return;
     const note = t => Motion.paragraph(ctx, t, 8, 24, w - 16, { size: 13, color: theme.muted });
@@ -1570,7 +1589,7 @@ void main() {
     };
     if (h.fine) {
       // 1 km city cells carry year series for 2019 to 2024 (cellsyears.city_1km); 250 m cells and the 5 km density cells carry 2021 only.
-      if (h.n == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);
+      if (h.n == null && h.nrev == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);   // the industry layer's 1 km hit carries the revenue count, not n: its series comes from the city grid below (26 October)
       if (h.grid !== 1 || !cityYear[h.city]) return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');
       const pts = [];
       for (const [y, L1] of Object.entries(cityYear[h.city])) { const d = L1.d, jx = Math.floor((h.kmx - d.origin[0]) / 1), jy = Math.floor((h.kmy - d.origin[1]) / 1); for (let i = 0; i < d.count; i++) if (d.ix[i] === jx && d.iy[i] === jy) { if (d.n[i] >= 50 && d.a[i] >= 0) pts.push({ x: +y, y: 100 * d.a[i] / d.n[i] }); break; } }
@@ -1654,7 +1673,7 @@ void main() {
     'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
     'Murmansk': ['X', 190, 25], 'Nizhny Novgorod': ['X', 158, 60], 'Perm': ['X', 161, 74], 'Yekaterinburg': ['X', 196, 80], 'Tyumen': ['X', 196, 97], 'Krasnoyarsk': ['X', 206, 111], 'Omsk': ['X', 178, 127], 'Novosibirsk': ['X', 182, 141], 'Irkutsk': ['X', 272, 137], 'Khabarovsk': ['R', 372, 117],
     'Chelyabinsk': ['X', 100, 182], 'Vladivostok': ['R', 372, 182] };   // the column holds the west and the Volga, the north-east the Urals and Siberia, the band two
-  let MMAP = null;   // the built geometry, for the checker and the audit
+  let MMAP = null, mmBuilds = 0;   // the built geometry, for the checker and the audit; the build count (a verify may rebuild once)
   function mooreTrace(land, W, H, sx, sy) {   // the outer contour of the component holding (sx, sy), Moore neighbourhood, as pixel pairs
     const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], path = []; let x = sx, y = sy, dir = 6, guard = 0;
     do { path.push([x, y]); let found = false; for (let k = 0; k < 8; k++) { const nd = (dir + 5 + k) % 8, nx = x + dirs[nd][0], ny = y + dirs[nd][1]; if (land(nx, ny)) { x = nx; y = ny; dir = nd; found = true; break; } } if (!found) break; } while ((x !== sx || y !== sy) && ++guard < 200000);
@@ -1673,9 +1692,9 @@ void main() {
     return order.map(i => mooreTrace((x, y) => land(x, y) && comp[y * W + x] === i, W, H, starts[i][0], starts[i][1]).map(([px, py]) => [x0 + (px - 2) / S, y0 + (H - 2 - py) / S]));
   }
   function buildMinimap() {
-    const svg = $('minimap'); if (!svg || MMAP) return; const gob = $('cb-goto'), gobWas = gob.hidden; gob.hidden = false;   // the labels are measured in a shown subtree (a collapsed GO TO card at load)
+    const svg = $('minimap'); if (!svg || MMAP) return;
     const NS = 'http://www.w3.org/2000/svg', el = (t, at, parent) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(at || {})) e.setAttribute(k, String(v)); (parent || svg).appendChild(e); return e; };
-    MMAP = { cities: [], rings: 0 };
+    MMAP = { cities: [], rings: 0, widths: {}, builds: ++mmBuilds };
     const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
     const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
     const rings = landRings(0.03, 4); MMAP.rings = rings.length;
@@ -1687,7 +1706,11 @@ void main() {
     const fr = el('g', { class: 'frame', id: 'mm-russia', tabindex: 0, role: 'button', 'aria-label': 'Go to Russia', 'aria-pressed': 'false' });
     const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
     el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
-    const measure = txt => { const t = el('text', { x: -999, y: -999 }); t.textContent = txt; const w = t.getComputedTextLength(); t.remove(); return w; };
+    // The label widths come from the canvas, never from the SVG's own layout (the author's report of 26 October: a browser that lays the page out hidden at load
+    // answered 0 from getComputedTextLength() on the published page and every box collapsed to its padding, the text spilling over the outline). The canvas measure
+    // reproduces the rendered advance within 0.12 px on all 23 labels (the same font stack, the tracking counted after every glyph as the SVG lays it), and
+    // verifyMinimap() rebuilds the boxes should the rendered text ever disagree, as after a late font load.
+    const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
     { const w = Math.ceil(measure('RUSSIA') + 2 * MM_PAD); MMAP.russia = labelBox(fr, 'RUSSIA', X1 - A - 4 - w, MM_Y0 + 2); }   // inside the frame's top-right corner, clear of the bracket's arms
     const flyRussia = () => flyTo(fitTarget()); fr.addEventListener('click', flyRussia); fr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyRussia(); } });
@@ -1706,7 +1729,14 @@ void main() {
       MMAP.cities.push({ label: city.label, dot: [dx, dy], box, leader: [dx, dy, end[0], end[1]] });
     }
     if (!reduceMotion()) svg.classList.add('drawn');
-    gob.hidden = gobWas; syncPresetPressed();
+    syncPresetPressed();
+  }
+  function verifyMinimap() {   // the rendered labels against the widths the boxes were built from: a rebuild (at most twice) when the text draws wider or narrower than measured
+    const svg = $('minimap'); if (!svg || !MMAP || mmBuilds >= 3) return false;
+    if (getComputedStyle(svg).display === 'none' || svg.getBoundingClientRect().width === 0) return false;   // hidden: nothing to read, the canvas measure stands
+    let off = 0; for (const t of svg.querySelectorAll('text')) { const r = t.getComputedTextLength(), w = MMAP.widths[t.textContent]; if (r > 0 && w != null && Math.abs(r - w) > off) off = Math.abs(r - w); }
+    if (off <= 0.75) return false;
+    while (svg.firstChild) svg.removeChild(svg.firstChild); svg.classList.remove('drawn'); MMAP = null; buildMinimap(); return true;
   }
   function minimapCheck() {   // the layout rules, as the audit tests them; returns the violations (empty when clean)
     if (!MMAP) return null; const out = [], C = MMAP.cities, clear = 2, near = 2;   // 2 px between a box and anything, 2 px between a leader and another city's dot edge (5 from its centre)
@@ -1747,12 +1777,12 @@ void main() {
   applyMethod();
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });
   // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); }
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width; sizeCanvases(); if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); verifyMinimap(); }
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
   function overflowing() {
-    const out = [], sels = ['#theme', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '.methodrow .ui', '#methodbtn', '#methodmore'];
+    const out = [], sels = ['#theme', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#cellinfo b', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '.methodrow .ui', '#methodbtn', '#methodmore'];
     for (const sel of sels) for (const el of document.querySelectorAll(sel)) {
       if (!el.offsetParent) continue;
       const host = el.closest('.card, .maplegend, .mixbox, .mapnote, header, footer'); if (!host) continue;
@@ -1782,7 +1812,8 @@ void main() {
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
-    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [] }; },   // the minimap's geometry and the layout rules (round 10)
+    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null }; },   // the minimap's geometry and the layout rules (round 10)
+    minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (26 October): true when it rebuilt
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
@@ -1854,5 +1885,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyMinimap()); });
 })();
