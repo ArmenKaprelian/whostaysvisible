@@ -20,4 +20,4 @@ The count lines keep their ink box ("1,819 firms on at least one of the five lis
 
 ## On the atlas
 
-The METHOD block under the layer buttons is collapsed by default and opens on a click (the author's own correction of 26 October); the legend notes and the footer are one sentence each; the wire carries one fact at a time.
+The METHOD block under the layer buttons is collapsed by default and opens on a click (the author's own correction of 25 October); the legend notes and the footer are one sentence each; the wire carries one fact at a time.

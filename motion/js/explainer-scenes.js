@@ -25,7 +25,7 @@
   // ---- palette (charcoal ground: lightness rises with the value) ---------------------------------
   // Ordered quantities use ColorBrewer YlGnBu (teal to pale yellow), signed change uses PRGn
   // (purple declines, green rises). Red is reserved for listed firms.
-  const RAMP6 = ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'];   // availability share, 6 fixed classes: the single-hue cyan ramp (round 10, 26 October 2026; OKLCH L 0.556 to 0.940 in even steps, hue 195 to 172; YlGnBu before it)
+  const RAMP6 = ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'];   // availability share, 6 fixed classes: the single-hue cyan ramp (round 10, 25 October 2026; OKLCH L 0.556 to 0.940 in even steps, hue 195 to 172; YlGnBu before it)
   const RAMP5 = RAMP6.slice(1);                                                        // 5 classes (fine cells, cohort inclusion)
   const CHANGE6 = ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3']; // <= -5, -5..-2, -2..0, 0..2, 2..5, > 5 points: amber to orange for declines, the cyan ramp's steps 3 to 5 for rises (round 10; PRGn before it)
   const YEAR_BREAKS = [20, 35, 50, 60, 70];

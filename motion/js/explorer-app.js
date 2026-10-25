@@ -57,7 +57,7 @@
 
   // ---- data ------------------------------------------------------------------------------------
   const bmp = MM.buildBasemap(BM);
-  const partPaths = BM.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } } return { name: p.name, path: MM.partsToPath([p]), x0, y0, x1, y1 }; });   // each part with its km bounds: the region lookup under the cursor tests the bounds before the path (26 October 2026)
+  const partPaths = BM.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } } return { name: p.name, path: MM.partsToPath([p]), x0, y0, x1, y1 }; });   // each part with its km bounds: the region lookup under the cursor tests the bounds before the path (25 October 2026)
   const nat = MM.decodeDensity(DEN.national);
   const FINE_BREAKS = [55, 62, 68, 74], YEAR_BREAKS = [20, 35, 50, 60, 70], FIN_BREAKS = [-20, -10, 0, 10, 20];
   // The national 5 km grid (36,585 cells) is split into 500 km blocks, so a draw touches only the blocks in view and
@@ -361,7 +361,7 @@
   // meets a placed one (2 px gutter) tries below, right and left, then smaller sizes down to 26, and is dropped at that bucket if nothing fits; alpha 1 below
   // k 1 and 0 at k 3, linear in log k. Twenty-two fillText calls at most per frame; the layouts are cached per bucket.
   let GHOST_RANK = null;   // computed on first use: citySum's cache is declared later in the script
-  // The sizes (round 12, the author's item C of 26 October): a steeper weight on the 2021 located-firm count of each city's window, so the two capitals stand out
+  // The sizes (round 12, the author's item C of 25 October): a steeper weight on the 2021 located-firm count of each city's window, so the two capitals stand out
   // without the rest looking small. Four anchors on the log of the count, linear between them: the smallest window 24 px, the third largest 30, St Petersburg 38,
   // Moscow 44; so the other twenty lie on a gentle slope from 30 down to 24 by their counts (2021: Moscow 762,760, St Petersburg 262,429, Yekaterinburg 93,659,
   // Murmansk 9,983 at the foot). Round 10 sized by rank alone, 34 down to 26.
@@ -624,14 +624,14 @@ void main() {
     return idx;
   }
   // Two layers under the dot field at the national zoom (round 10, the author's item 12), drawn through drawBasemap's afterLand hook: right after the land fill and
-  // before the graticule, the region borders and the ghost names, so every line stays readable over them (the author's correction of 26 October). (a) The region tint: each region filled in its leading industry's
+  // before the graticule, the region borders and the ghost names, so every line stays readable over them (the author's correction of 25 October). (a) The region tint: each region filled in its leading industry's
   // class colour at 0.18 alpha, full below k 0.5 and gone by k 1.5, from a km-space bitmap at 0.175 px per km built once per year and theme (two cached), one
   // drawImage per frame. (b) The glow in the field's own colours (the author's answer): the year's addresses accumulated as 1 px points in the layer's palette with
   // the field's alpha-by-count rule into a km-space buffer at one eighth of the fitted zoom, blurred once with a two-pass box blur of radius 2 in JS (the same bytes
   // in every engine), drawn per frame with one drawImage at 0.35 alpha, full below k 1.5 and gone by k 3; cached per year, layer, theme and fitted zoom (a resize
   // rebuilds), never rebuilt within a frame. Both sit on the map canvas, under the field canvas and the marks by DOM order.
   const TINT_K = 0.175, tintCache = new Map(); let glowCache = null, glowBuilds = 0, firmsFade = { tint: 0, glow: 0 }, firmsLayersOff = false;   // firmsLayersOff: the audit's no-tint, no-glow comparison
-  let TINT_A = 0.08, GLOW_A = 0.06;   // pulled back by the author on 26 October (from 0.18 and 0.35, then the glow to 5 to 8 percent as a visibility assist drawn under every line); settable through __atlas.firmsLayerAlphas for the contrast measurements
+  let TINT_A = 0.08, GLOW_A = 0.06;   // pulled back by the author on 25 October (from 0.18 and 0.35, then the glow to 5 to 8 percent as a visibility assist drawn under every line); settable through __atlas.firmsLayerAlphas for the contrast measurements
   function desat(hex, f) {   // the colour with its OKLab chroma scaled by f (lightness and hue kept), for the tint's class colours (half)
     const s2l = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }, l2s = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); };
     const [r, g, b] = hex2rgb(hex).map(s2l), l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s3 = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
@@ -901,7 +901,7 @@ void main() {
 
   // The legend and the note (24 October 2026): a title row with a toggle and a body, collapsible; collapsed by default
   // on a narrow map (under 600 px) and remembered per viewer; written only when the text changes.
-  // The cards' collapse toggles (the author's addition of 26 October): a toggle per card, the state remembered per viewer, a collapsed card's chart not drawn (its canvas has no size) and redrawn on opening.
+  // The cards' collapse toggles (the author's addition of 25 October): a toggle per card, the state remembered per viewer, a collapsed card's chart not drawn (its canvas has no size) and redrawn on opening.
   const CARDS = ['layer', 'goto', 'cursor', 'national', 'groups', 'odds'], cardUI = {};
   const cardOpen = id => (cardUI[id] ? cardUI[id] === 'open' : true);
   function applyCards() { for (const id of CARDS) { const sec = $('card-' + id), body = $('cb-' + id), t = $('ct-' + id), open = cardOpen(id); body.hidden = !open; sec.classList.toggle('collapsed', !open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + $('h2-' + id).textContent.trim().toLowerCase()); } }
@@ -911,7 +911,7 @@ void main() {
   const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note'), ctx: readPref('atlas-context') };
   CARDS.forEach(id => { cardUI[id] = readPref('atlas-card-' + id); $('ct-' + id).addEventListener('click', () => { const v = cardOpen(id) ? 'closed' : 'open'; writePref('atlas-card-' + id, v); setCard(id, v); }); }); applyCards();
   const legendOpen = () => (ui.legend ? ui.legend === 'open' : stage.width >= 600);
-  // The note (round 10, the author's correction of 26 October): without a stored choice it starts collapsed at the national and regional zooms while the strip is open (the strip carries the fact)
+  // The note (round 10, the author's correction of 25 October): without a stored choice it starts collapsed at the national and regional zooms while the strip is open (the strip carries the fact)
   // and expanded inside a city window or when the strip is closed; a narrow map keeps it collapsed; the viewer's own toggle is remembered and wins.
   const noteDefault = () => { try { return !stripOpen() || bandUnderCameraOwn()[0] === 'city'; } catch (e) { return true; } };
   const noteOpen = () => (ui.note ? ui.note === 'open' : stage.width >= 600 && noteDefault());
@@ -1021,7 +1021,7 @@ void main() {
   const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
   function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
     if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
-    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = theme.dark ? REGION_FILL.dark : REGION_FILL.light; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore();   // the restore alone: drawBasemap strokes the graticule and the borders in km after this hook (a base() here redrew them in pixels on every hover, the glitch of 26 October)
+    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = theme.dark ? REGION_FILL.dark : REGION_FILL.light; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore();   // the restore alone: drawBasemap strokes the graticule and the borders in km after this hook (a base() here redrew them in pixels on every hover, the glitch of 25 October)
   }
   const regionPaths = new Map();
   const regionPath = name => { if (!regionPaths.has(name)) regionPaths.set(name, MM.partsToPath(BM.lod0.parts.filter(p => p.name === name))); return regionPaths.get(name); };
@@ -1210,11 +1210,11 @@ void main() {
   }
   function wirePrune(x) {   // the items that have passed the left edge leave the track, orphans and the committed set's alike; the offset shifts by the width removed
     const ws = wireState, tr = wireTrack(); let removed = 0;
-    while (tr.firstElementChild) { const el = tr.firstElementChild, [l, r] = wirePos(el); if (r + removed >= x - 20) break;   // an element's place in the track's original frame: what has left so far shifted it left by that much (26 October 2026: compared unshifted, the loop emptied the whole track once the first item had passed, and the new set leapt into view on every region change)
+    while (tr.firstElementChild) { const el = tr.firstElementChild, [l, r] = wirePos(el); if (r + removed >= x - 20) break;   // an element's place in the track's original frame: what has left so far shifted it left by that much (25 October 2026: compared unshifted, the loop emptied the whole track once the first item had passed, and the new set leapt into view on every region change)
       const next = el.nextElementSibling, nl = next ? wirePos(next)[0] : null; el.remove(); removed += next ? nl - wirePos(next)[0] : r - l;   // the exact shift of what follows, margins included
       if (ws.orphans[0] === el) ws.orphans.shift(); else for (const set of ws.sets) if (set.els[0] === el) { set.els.shift(); break; } }
     while (ws.sets.length > 1 && !ws.sets[0].els.length) { ws.sets.shift(); ws.sets[0].status = 'committed'; ws.commits++; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } }   // the committed set has played out: the pending one plays now
-    ws.x -= removed;   // the stored offset moves with the track (26 October 2026): a caller that reads it again after pruning and before animating kept the old value, and every item jumped left by the width removed on each region change
+    ws.x -= removed;   // the stored offset moves with the track (25 October 2026): a caller that reads it again after pruning and before animating kept the old value, and every item jumped left by the width removed on each region change
     return removed;
   }
   function wireAutoCommit(x) {   // a pending set whose items have entered the view is playing: it is the committed set now, the old one's remaining items orphans
@@ -1596,7 +1596,7 @@ void main() {
       octx.beginPath(); octx.moveTo(cx, 0); octx.lineTo(cx, stage.height); octx.moveTo(0, cy); octx.lineTo(stage.width, cy); octx.stroke(); octx.globalAlpha = 1;
     }
     if (!h) return; const c = cam();
-    if (hoverRegionName && state.hover && regIndex.has(hoverRegionName)) {   // the region under the cursor outlined in the cursor colour at every zoom and in both views, inside a city window included (round 10, G13b as corrected 26 October): the cached region path, stroked with the overlay
+    if (hoverRegionName && state.hover && regIndex.has(hoverRegionName)) {   // the region under the cursor outlined in the cursor colour at every zoom and in both views, inside a city window included (round 10, G13b as corrected 25 October): the cached region path, stroked with the overlay
       octx.save(); Motion.camTransform(octx, stage, c); octx.strokeStyle = theme.cursor; octx.lineWidth = 1 / c.k; octx.lineJoin = 'round'; octx.stroke(regionPath(hoverRegionName)); octx.restore(); octx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     }
     // The hover ring and the cell square in the cursor colour, cased in the stage colour so they read on lilac and pale cells too (round 9).
@@ -1918,7 +1918,7 @@ void main() {
   function chartCtx(id) { const c = $(id); const r = c.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height); Motion.audit.scene = id; window.__atlasCanvases[id] = { w: r.width, h: r.height }; return { ctx, w: r.width, h: r.height }; }
   function drawCellPanel(h) {
     if (!cardOpen('cursor')) return;
-    // The panel's rows (the author's correction of 26 October): one short label per row in tracked capitals, the value at the left and wrapping, the leading division as its
+    // The panel's rows (the author's correction of 25 October): one short label per row in tracked capitals, the value at the left and wrapping, the leading division as its
     // short name with the code and the share and its class beneath, the ranked mix as swatch rows, each listed firm as a name line with its listing year and one muted line
     // of state, memberships and revenue; the cell-series provenance lives in the method block. The tooltip keeps the glance view; this is the detail view.
     const info = $('cellinfo'); const rows = [], y = state.year, L = state.layer;
@@ -1977,7 +1977,7 @@ void main() {
     };
     if (h.fine) {
       // 1 km city cells carry year series for 2019 to 2024 (cellsyears.city_1km); 250 m cells and the 5 km density cells carry 2021 only.
-      if (h.n == null && h.nrev == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);   // the industry layer's 1 km hit carries the revenue count, not n: its series comes from the city grid below (26 October)
+      if (h.n == null && h.nrev == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);   // the industry layer's 1 km hit carries the revenue count, not n: its series comes from the city grid below (25 October)
       if (h.grid !== 1 || !cityYear[h.city]) return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');
       const pts = [];
       for (const [y, L1] of Object.entries(cityYear[h.city])) { const d = L1.d, jx = Math.floor((h.kmx - d.origin[0]) / 1), jy = Math.floor((h.kmy - d.origin[1]) / 1); for (let i = 0; i < d.count; i++) if (d.ix[i] === jx && d.iy[i] === jy) { if (d.n[i] >= 50 && d.a[i] >= 0) pts.push({ x: +y, y: 100 * d.a[i] / d.n[i] }); break; } }
@@ -2038,7 +2038,7 @@ void main() {
     [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
-  function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 26 October)
+  function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
   $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
@@ -2123,7 +2123,7 @@ void main() {
     el('title', {}, fr).textContent = MM_FACTS.Russia;   // the native tooltip (item 3)
     const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
     el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
-    // The label widths come from the canvas, never from the SVG's own layout (the author's report of 26 October: a browser that lays the page out hidden at load
+    // The label widths come from the canvas, never from the SVG's own layout (the author's report of 25 October: a browser that lays the page out hidden at load
     // answered 0 from getComputedTextLength() on the published page and every box collapsed to its padding, the text spilling over the outline). The canvas measure
     // reproduces the rendered advance within 0.12 px on all 23 labels (the same font stack, the tracking counted after every glyph as the SVG lays it), and
     // verifyMinimap() rebuilds the boxes should the rendered text ever disagree, as after a late font load.
@@ -2243,7 +2243,7 @@ void main() {
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
     minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
-    minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (26 October): true when it rebuilt
+    minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (25 October): true when it rebuilt
     ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
     verifyLayouts() { return verifyLayouts('api'); },
@@ -2331,7 +2331,7 @@ void main() {
       let so = 0, sf = 0, mx = 0; for (let i = 0; i < on.length; i++) { so += on[i]; sf += off[i]; mx = Math.max(mx, Math.abs(on[i] - off[i])); }
       return { n: on.length, on: so / on.length, off: sf / off.length, diff: so / on.length - sf / off.length, maxDiff: mx, layer: L, year: y, level: T };
     },
-    dotContrast(n = 300) {   // the dots' WCAG contrast against the composite beneath them with the two layers on and off (round 10, the author's check of 26 October)
+    dotContrast(n = 300) {   // the dots' WCAG contrast against the composite beneath them with the two layers on and off (round 10, the author's check of 25 October)
       if (state.mode !== 'firms') return null; const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return null; const c = cam(), W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(d.nn.length / n));
       for (let i = 0; i < d.nn.length && pts.length < n; i += step) { const [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(firmColour(L, firmClass(d, i, L)))]); }
       const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }, ratio = (a, b) => { const x = lum(a), z = lum(b); return (Math.max(x, z) + 0.05) / (Math.min(x, z) + 0.05); };

@@ -1,4 +1,4 @@
-Round 10, the author's corrections of 26 October 2026: the muted tone lifted one step; the GO TO card's ice-blue neutral. Figures from scripts/validate_palette.py (contrast = WCAG ratio; dE = OKLab distance x 100, normal / protan / deutan).
+Round 10, the author's corrections of 25 October 2026: the muted tone lifted one step; the GO TO card's ice-blue neutral. Figures from scripts/validate_palette.py (contrast = WCAG ratio; dE = OKLab distance x 100, normal / protan / deutan).
 
 1. Text contrast, both themes, before and after the muted lift (ink and dim unchanged). Grounds: dark stage #060B18, land #172A45, panel #091023, panel-2 #0D162B; light stage #FFFFFF, land #F1F2EF, panel #F6F7F6, panel-2 #ECEFEE.
   dark theme       stage        land       panel     panel-2      L

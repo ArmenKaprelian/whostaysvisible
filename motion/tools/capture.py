@@ -73,7 +73,7 @@ def browser_version(port):
     except Exception:
         return None
 
-AUTHOR_TAGS = ["-metadata", "artist=Armen G. Kaprelian", "-metadata", "copyright=\u00a9 2026 Armen G. Kaprelian", "-metadata", "comment=by Armen G. Kaprelian; Who stays visible? (RFSD v3.1.0, CC BY 4.0)"]   # the authorship tags on every render (round 10, the author's item 17): artist, copyright and comment, which the MP4 muxer keeps (a generic author key is dropped; found in step 5, 26 October 2026)
+AUTHOR_TAGS = ["-metadata", "artist=Armen G. Kaprelian", "-metadata", "copyright=\u00a9 2026 Armen G. Kaprelian", "-metadata", "comment=by Armen G. Kaprelian; Who stays visible? (RFSD v3.1.0, CC BY 4.0)"]   # the authorship tags on every render (round 10, the author's item 17): artist, copyright and comment, which the MP4 muxer keeps (a generic author key is dropped; found in step 5, 25 October 2026)
 
 def ffmpeg_cmd(fps, out, crf, preset):
     return ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "image2pipe", "-framerate", str(fps), "-i", "-",
