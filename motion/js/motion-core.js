@@ -155,12 +155,35 @@
     A.boxes.push({ scene: A.scene, str, size, weight, para: group || A.para, kind: kind || 'text', seq: A.seq++, eff: Math.round(ctx.globalAlpha * 1000) / 1000,
                    x: Math.min(...xs), y: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), ax: anchor[0], ay: anchor[1] });
   };
-  Motion.text = function (ctx, str, x, y, { size = 28, weight = 400, color = '#fff', align = 'left', baseline = 'alphabetic', alpha = 1, letterSpacing = 0, group = null, kind = null } = {}) {
+  // The striped display style (round 10, the author's item 18): large type cut by horizontal hairline gaps in the IBM manner, eight bars per
+  // capital height (IBM Plex Mono's cap height is 0.698 em), the gaps cut out of the drawn shape on an offscreen canvas so the true background
+  // shows through them; the audit's ink boxes are recorded before the cut and do not change. Nothing under about 28 px takes it.
+  Motion.CAP = 0.698;
+  let stripeCv = null;
+  Motion.striped = function (ctx, x0, y0, w, h, pitch, gap, draw) {
+    const tr = ctx.getTransform(), s = Math.hypot(tr.a, tr.b) || 1, W = Math.ceil(w * s) + 2, H = Math.ceil(h * s) + 2;
+    if (!stripeCv) stripeCv = document.createElement('canvas');
+    if (stripeCv.width < W || stripeCv.height < H) { stripeCv.width = Math.max(W, stripeCv.width); stripeCv.height = Math.max(H, stripeCv.height); }
+    const oc = stripeCv.getContext('2d'); oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, stripeCv.width, stripeCv.height);
+    oc.setTransform(s, 0, 0, s, 1 - x0 * s, 1 - y0 * s); oc.globalAlpha = 1; draw(oc);
+    oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = '#000';
+    const g = Math.max(1, Math.round(gap * s));
+    for (let yy = pitch - gap; yy < h; yy += pitch) oc.fillRect(0, Math.round(yy * s) + 1, W, g);
+    oc.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.drawImage(stripeCv, 0, 0, W, H, x0 - 1 / s, y0 - 1 / s, W / s, H / s); ctx.restore();
+  };
+  Motion.text = function (ctx, str, x, y, { size = 28, weight = 400, color = '#fff', align = 'left', baseline = 'alphabetic', alpha = 1, letterSpacing = 0, group = null, kind = null, stripe = null } = {}) {
     if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha *= alpha; ctx.font = Motion.font(size, weight); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = baseline;
     if (letterSpacing && 'letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
     Motion.recordText(ctx, str, x, y, size, weight, group, kind);
-    ctx.fillText(str, x, y); ctx.restore();
+    if (stripe && size >= 28) {
+      const m = ctx.measureText(str), cap = size * Motion.CAP, x0 = x - m.actualBoundingBoxLeft, w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+      const top = baseline === 'alphabetic' ? y - cap : y - m.actualBoundingBoxAscent, h = (y - top) + m.actualBoundingBoxDescent;
+      const font = ctx.font, fill = ctx.fillStyle, ta = ctx.textAlign, tb = ctx.textBaseline;
+      Motion.striped(ctx, x0, top, w, h, cap / 8, stripe.gap || 1, oc => { oc.font = font; oc.fillStyle = fill; oc.textAlign = ta; oc.textBaseline = tb; if (letterSpacing && 'letterSpacing' in oc) oc.letterSpacing = letterSpacing + 'px'; oc.fillText(str, x, y); });
+    } else ctx.fillText(str, x, y);
+    ctx.restore();
   };
   // A translucent panel in the stage colour behind a block of text; in audit mode its rectangle is
   // recorded so audit.py can test that the text drawn after it stays inside it (panel-clip).

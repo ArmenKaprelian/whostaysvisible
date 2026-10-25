@@ -1,0 +1,28 @@
+Round 10, the author's corrections of 26 October 2026: the muted tone lifted one step; the GO TO card's ice-blue neutral. Figures from scripts/validate_palette.py (contrast = WCAG ratio; dE = OKLab distance x 100, normal / protan / deutan).
+
+1. Text contrast, both themes, before and after the muted lift (ink and dim unchanged). Grounds: dark stage #060B18, land #172A45, panel #091023, panel-2 #0D162B; light stage #FFFFFF, land #F1F2EF, panel #F6F7F6, panel-2 #ECEFEE.
+  dark theme       stage        land       panel     panel-2      L
+  ink #ECEEF1           16.90       12.43       16.28       15.48  0.948
+  muted before #9EABBD         8.43        6.20        8.12        7.73  0.737
+  muted after #B4C0D0        10.66        7.84       10.26        9.76  0.804
+  dim #7D889C            5.50        4.04        5.29        5.03  0.625
+  muted-to-ink dE before 21.3 after 14.7; muted-to-dim dE before 11.2 after 17.9
+
+  light theme       stage        land       panel     panel-2      L
+  ink #24323D           13.14       11.69       12.23       11.35  0.309
+  muted before #657680         4.71        4.19        4.39        4.07  0.555
+  muted after #52636D         6.24        5.55        5.81        5.39  0.489
+  dim #8A98A4            2.95        2.63        2.75        2.55  0.672
+  muted-to-ink dE before 24.6 after 18.0; muted-to-dim dE before 11.7 after 18.3
+
+  AA (4.5:1) holds for the ink and the muted tones on every ground in both themes and for the dark dim; the light dim #8A98A4 reads 2.6 to 3.0:1, as it did before this round (the author keeps the dim tone; a light-theme item for a later round). The lift raises the muted figures by about 1.6 on the dark grounds and 1.9 on the light ones. The light step equals the dark step in OKLab lightness (0.067), darker on the light ground.
+
+2. The GO TO card's neutral (item 21 as amended): the author's #CFE6FF against the cyan ramp's pale end #C7F8E7, the Manufacturing blue #2882F9, the fuchsia #FF45C8 and the green #4DFF7F; floors 15 normal and 10 under colour-vision deficiency. Candidates bluer and darker within pale blue-white follow.
+  hex       vs pale end        vs Manufacturing   vs fuchsia         vs green                L   land  stage
+  #CFE6FF     6.7/ 6.0/ 5.3     33.4/31.1/35.3     33.5/33.2/20.7     23.8/17.4/14.8     0.916  11.29  15.36
+  #C7E0FF     8.1/ 7.6/ 7.1     31.4/29.2/33.3     32.4/31.4/18.8     24.2/18.3/15.4     0.898  10.69  14.53
+  #C2DCFF     9.2/ 8.8/ 8.3     30.1/28.0/31.9     31.6/30.2/17.6     24.6/19.0/16.0     0.887  10.30  14.01
+  #BDD8FF    10.3/ 9.9/ 9.6     28.9/26.8/30.6     30.9/29.0/16.4     25.0/19.7/16.7     0.875   9.93  13.50
+  #B8D4FF    11.4/11.1/10.9     27.6/25.6/29.3     30.2/27.8/15.3     25.5/20.5/17.4     0.864   9.56  13.00
+  #AECCFF    13.8/13.5/13.5     25.0/23.2/26.6     28.9/25.4/13.1     26.7/22.2/19.1     0.841   8.86  12.05
+  Reading: the Manufacturing blue and both accents pass at every candidate (the green under deutan at 14.8 or more). The pale end fails at every pale blue-white: two pale tints differ only by hue, and at L 0.84 the distance is still 13.8; clearing 15 needs L near 0.80, which is no longer on the white side. The author's #CFE6FF therefore stands, with the pair recorded as a UI-over-data adjacency: the card and its buttons sit in the side column and the minimap draws in the ice blue over the card's land fill, so the ice blue and the ramp's pale end never meet in one region. The pressed fill carries the stage text #060B18 at 15.4:1; the hover is the full white #FFFFFF. Light theme: #22364D (10.97:1 on #F1F2EF; white text 12.3:1; 18.1/19.1/17.9 from the light Manufacturing blue #2550B4, 33.3 from the light cursor, 23.5/21.7 deutan from the light context green, 14.2 from the light ramp's dark end #196369, the mirrored adjacency); hover #000000.

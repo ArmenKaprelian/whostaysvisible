@@ -7,7 +7,7 @@
   --border: #495669;       /* region borders: thin pale lines, never heavier than the marks (1.94:1 on the land) */
   --graticule: #2E333D;    /* meridians and parallels: a whiter line at 1.55:1 on the stage, 1.14:1 over the land (round 9) */
   --ink: #ECEEF1;          /* text */
-  --muted: #9EABBD;        /* secondary text (6.2:1 on the land) */
+  --muted: #B4C0D0;        /* secondary text, lifted one step on 26 October 2026 (7.8:1 on the land) */
   --dim: #7D889C;          /* tertiary text, axes (4.8:1 on the panel, AA for the small text) */
   --grid: #0D162B;         /* chart grid lines */
   --panel: #091023;        /* control bar and cards: the stage plus 0.026 in OKLab lightness */
@@ -28,6 +28,7 @@
   --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   --highlight: rgba(121, 205, 191, 0.10);   /* the cyan ramp's step 4 at 0.10 */
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22) */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets (W14b) */
   --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;   /* one typeface since round 10: IBM Plex Mono, installed for the renders and linked from Google Fonts on the published page */
   color-scheme: dark;
@@ -38,11 +39,23 @@ body {
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0;
 }
-.stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
-canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 100%; display: block; background: var(--stage); }
+.stage-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-start; justify-content: center; }
+/* The player (round 10, the author's item 20): the stage box fills the viewport width at 16:9, capped by the viewport height less the header, caption and footer
+   (--chrome-h, measured by the page once per resize); the control bar overlays its lower edge on the panel colour at 92 percent with the 3 px fuchsia border,
+   shown on load and whenever paused, hidden 2.5 s after the last input while playing, back on any mouse movement, key or touch, with 0.3 s fades and none
+   under reduced motion; the chapter list opens upward over the stage; full screen through the Fullscreen API or a fixed-to-viewport fallback. */
+.stage-box { position: relative; width: min(100%, calc((100vh - var(--chrome-h, 240px)) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; }
+canvas.stage { width: 100%; height: 100%; display: block; background: var(--stage); }
+.stage-box:fullscreen { display: flex; align-items: center; justify-content: center; background: var(--stage); width: 100%; height: 100%; aspect-ratio: auto; }
+.stage-box:fullscreen canvas.stage { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
+.stage-box.fs-fallback { position: fixed; inset: 0; width: auto; height: auto; aspect-ratio: auto; z-index: 50; background: var(--stage); display: flex; align-items: center; justify-content: center; margin: 0; }
+.stage-box.fs-fallback canvas.stage { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
 /* The chrome (round 10, the author's item 10 as corrected from the mock): the control bar acts on the stage, so it and its buttons carry the fuchsia role
    border, 3 px at rest, the live variant on hover, the current chapter and a pressed cut in the solid fill; no left-edge bar; focus shows the mark's corners. */
-.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; background: var(--panel); border-radius: 0; border: 3px solid var(--cursor); padding: 10px 14px; font-size: 14px; }
+.controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); border-radius: 0; border: 3px solid var(--cursor); padding: 8px 12px; font-size: 14px; opacity: 1; visibility: visible; transition: opacity 0.3s, visibility 0.3s; }
+.controls.away { opacity: 0; visibility: hidden; }
+.controls #fsbtn { min-width: 40px; padding: 4px 8px; }
+.controls #fsbtn svg { width: 16px; height: 16px; display: block; }
 .controls button { background: transparent; color: var(--ink); border: 3px solid var(--cursor); border-radius: 0; padding: 4px 10px; font: inherit; cursor: pointer; min-width: 64px; position: relative; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* interface labels in tracked capitals (round 10) */
 .controls button:hover { border-color: var(--cursor-live); }
 .controls button[aria-pressed="true"], .chapters button[aria-current="true"] { background: var(--cursor); color: var(--stage); border-color: var(--cursor); }
@@ -50,7 +63,7 @@ canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 1
 .controls button:focus-visible::after, .efoot .btn:focus-visible::after { content: ""; position: absolute; inset: -6px; pointer-events: none; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
 .controls .time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; }
 .controls input[type=range] { flex: 1 1 240px; min-width: 120px; accent-color: var(--cursor); }
-.chapters { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.chapters { position: absolute; left: -3px; right: -3px; bottom: calc(100% + 3px); box-sizing: border-box; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 10px 12px; overflow-y: auto; background: color-mix(in srgb, var(--panel) 92%, transparent); border: 3px solid var(--cursor); }   /* the chapter list opens upward over the stage (round 10) */
 .chapters button { font-size: 13px; padding: 4px 10px; min-width: 0; color: var(--muted); }
 .note { color: var(--muted); font-size: 13px; line-height: 1.45; }
 /* The page's header and footer (round 10, the author's item 16): the title with the mark, the byline on its baseline at the right, the about line beneath; the footer line with the
@@ -58,12 +71,19 @@ canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 1
 .ehead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; min-height: 44px; flex: 0 0 auto; }
 .efoot { flex: 0 0 auto; }
 .hleft { display: grid; gap: 0; min-width: 0; }
-.etitle { font-size: 20px; line-height: 24px; margin: 0; font-weight: 700; text-transform: uppercase; }
+.etitle { font-size: 28px; line-height: 28px; margin: 0; font-weight: 700; text-transform: uppercase; }
+@supports (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000)) {
+  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); -webkit-mask-position: 0 5px; mask-position: 0 5px; }
+}
 .tagline { color: var(--muted); font-size: 12px; line-height: 16px; }
 .hright { margin-left: auto; display: flex; align-items: center; gap: 18px; min-width: 0; }
 .byline { text-align: right; min-width: 0; }
 .byline .who { font-size: 12px; line-height: 16px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); white-space: nowrap; }
 .byline .what { font-size: 12px; line-height: 16px; color: var(--muted); max-width: 640px; }
+[hidden] { display: none !important; }   /* as the published host's skeleton rules (round 10) */
+/* The surface grain (round 10, item 22): the control bar, the chapter list, the header and the footer; never the stage. */
+.controls, .chapters, .ehead, .efoot { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
+.nograin .controls, .nograin .chapters, .nograin .ehead, .nograin .efoot { background-image: none; }
 .mk { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; color: currentColor; }
 .etitle .mk { width: 16px; height: 16px; margin-right: 8px; vertical-align: -2px; }
 .byline .mk, .efoot .mk { width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
@@ -80,6 +100,7 @@ canvas.stage { width: 100%; max-width: 100%; aspect-ratio: 16 / 9; max-height: 1
 html[data-render] .controls, html[data-render] .note, html[data-render] .ehead, html[data-render] .efoot { display: none !important; }
 html[data-render] body { padding: 0; gap: 0; }
 html[data-render] canvas.stage { width: 1920px; height: 1080px; max-height: none; aspect-ratio: auto; }
+html[data-render] .stage-box { width: 1920px; height: 1080px; aspect-ratio: auto; max-width: none; margin: 0; }
 html[data-render] * { transition: none !important; animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .controls button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .controls button, .controls { transition: none; } }
 

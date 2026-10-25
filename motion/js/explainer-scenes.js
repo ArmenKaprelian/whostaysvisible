@@ -115,7 +115,7 @@
   const groundScene = (sch, duration, timeMap) => ({ id: 'ground', title: 'Ground', start: 0, end: duration, z: 0, fadeIn: 0, fadeOut: 0, draw({ ctx, t, cam, stage, theme }) { drawGround(ctx, stage, cam, theme, timeMap ? timeMap(t) : t, sch); } });
 
   // ---- helpers ---------------------------------------------------------------------------------
-  const title = (ctx, s, t, t0, theme, y = 118, size = 54) => Motion.reveal(ctx, s.toUpperCase(), 80, y, t, t0, { size, weight: 700, color: theme.ink });   // scene titles in capitals (round 10)
+  const title = (ctx, s, t, t0, theme, y = 118, size = 54) => Motion.reveal(ctx, s.toUpperCase(), 80, y, t, t0, { size, weight: 700, color: theme.ink, stripe: { gap: 2 } });   // striped display type (round 10)   // scene titles in capitals (round 10)
   const subtitle = (ctx, s, t, t0, theme, y = 164) => Motion.revealParagraph(ctx, s, 80, y, 1760, t, t0, { size: 28, color: theme.muted, lineHeight: 1.35 });   // wrapped inside 1,760 px (round 10)
   const eyebrow = (ctx, s, x, y, theme, alpha = 1) => Motion.text(ctx, s.toUpperCase(), x, y, { size: 22, weight: 500, color: theme.muted, alpha, letterSpacing: 22 * 0.08 });
   // The location line of a map beat without a panel: the name and the window under it.
@@ -133,7 +133,7 @@
   // ---- scenes (beat-local time l) --------------------------------------------------------------
   const DEFS = {};
   DEFS.hook = { z: 1, fadeIn: 0, draw({ ctx, local: l, theme }) {
-    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 80, 128, l, 0.9, { size: 78, weight: 700, color: theme.ink });
+    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 80, 128, l, 0.9, { size: 78, weight: 700, color: theme.ink, stripe: { gap: 2 } });
     Motion.reveal(ctx, 'Financial statements of Russian firms under sanctions, 2012–2025', 80, 184, l, 1.8, { size: 30, color: theme.muted });
     if (l > 5.2) {
       const v = Motion.counter(l, 5.2, 3.2, F.located_2021);
@@ -367,7 +367,7 @@
   } };
 
   DEFS.credits = { z: 1, draw({ ctx, local: l, theme }) {
-    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 960, 400, l, 0.3, { size: 40, weight: 700, color: theme.ink, align: 'center' });
+    Motion.reveal(ctx, 'WHO STAYS VISIBLE?', 960, 400, l, 0.3, { size: 40, weight: 700, color: theme.ink, align: 'center', stripe: { gap: 2 } });
     { const u = Motion.step(l, 0.5, 0.5, Motion.ease.outCubic); if (u > 0) { const name = 'ARMEN G. KAPRELIAN · PHD CANDIDATE, CLAREMONT GRADUATE UNIVERSITY', w = Motion.measure(ctx, name, 22, 500, 22 * 0.08); MM.mark(ctx, 960 - w / 2 - 22, 446 - 8 + 10 * (1 - u), 22, theme.muted, u); } }   // the mark before the name line (round 10, the author's items 14 and 16)
     Motion.reveal(ctx, 'ARMEN G. KAPRELIAN · PHD CANDIDATE, CLAREMONT GRADUATE UNIVERSITY', 960, 446, l, 0.5, { size: 22, weight: 500, color: theme.muted, align: 'center', letterSpacing: 22 * 0.08 });
     Motion.revealParagraph(ctx, 'Data: RFSD v3.1.0 (Bondarkov et al. 2025, CC BY 4.0), 63,308,662 annual records, financial years 2011–2025, values deflated and classed by the author', 960, 490, 1760, l, 0.8, { size: 22, color: theme.muted, align: 'center', lineHeight: 1.35, group: 'credits-data' });

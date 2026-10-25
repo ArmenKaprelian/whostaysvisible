@@ -36,6 +36,7 @@
              ramp5: dark ? ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
              change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : dark ? ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3'] : ['#854505', '#9D5E01', '#B27901', '#1C989E', '#0A7E83', '#196369']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
              density: dark ? '#79CDBF' : '#16436E',
+             ghost: tok('ghost') || (dark ? '#1F3350' : '#E4E7E4'),   // one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders
              neutral: FM ? (dark ? FM.neutral.dark : FM.neutral.light) : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? (dark ? FM.zero.dark : FM.zero.light) : (dark ? '#6B7482' : '#727C86')), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
     t.div6 = t.change6;   // the revenue classes of the Firms view and the Cells view's fin layer share the Change layer's pair (round 10; the blue six of rounds 3 to 9 stay in the manifests' class_colours)
     return Object.assign(t, MM.coreRamp(t));   // the bloom's pale-core tables (round 9)
@@ -223,11 +224,13 @@
   const winRect = (d, size) => ({ origin: d.origin, size });
   // Draws a coarser layer around a finer window: at full alpha outside the window's square and, while the window fades
   // in, at (1 - w) inside it, so a zoom into open country never leaves blank ground (hand-over fix, 24 October 2026).
-  function drawAround(c, win, w, draw) {   // draw(alpha, region): region is the window's square on the inside pass, null outside
-    if (!win || w <= 0) { draw(1, null); return; }
+  let handover = { one: 0, outsideAlpha: 1, outline: false };   // the last draw's hand-over state (round 10, the author's item 19; the audit reads it)
+  function drawAround(c, win, w, draw, rec = true) {   // draw(alpha, region, w): region is the window's square on the inside pass, null outside; w the window's strength; rec: this pass is the 1 km hand-over the audit reads (the 250 m passes pass false)
+    if (!win || w <= 0) { draw(1, null, 0); if (rec) handover = { one: 0, outsideAlpha: 1, outline: false }; return; }
+    if (rec) handover = { one: w, outsideAlpha: 1 - 0.75 * w, outline: w > 0 };
     const [px, py] = Motion.project(c, win.origin[0], win.origin[1] + win.size), s = win.size * c.k;
-    mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(0, 0, stage.width, stage.height); mctx.rect(px, py, s, s); mctx.clip('evenodd'); draw(1, null); mctx.restore();
-    if (w < 1) { mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(px, py, s, s); mctx.clip(); draw(1 - w, win); mctx.restore(); }
+    mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(0, 0, stage.width, stage.height); mctx.rect(px, py, s, s); mctx.clip('evenodd'); draw(1 - 0.75 * w, null, w); mctx.restore();   // outside the window the coarser layer fades to a quarter as the fine grid comes in (round 10)
+    if (w < 1) { mctx.save(); stage.base(); mctx.beginPath(); mctx.rect(px, py, s, s); mctx.clip(); draw(1 - w, win, 0); mctx.restore(); }
     stage.base();
   }
 
@@ -238,14 +241,15 @@
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8 }); drawLog.push('basemap');
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: state.mode === 'firms' ? () => drawFirmsGround(c) : null }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
+    drawGhostNames(c); drawLog.push('ghost');
     const L = state.layer;
     if (state.mode === 'firms') { drawLog.push('firms'); if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; } drawFirms(c); drawMarks(c); }
     else if (L === 'density') { drawLog.push('density');
       const ga = gridAlphas(c.k), near = nearestCity(c).city.label, w1 = win1[near] ? winRect(win1[near].d, 90) : null, w025 = win025[near] ? winRect(win025[near].d, 24) : null;
       drawAround(c, w1, ga.one, (a, region) => drawNat(c, a, region, false));
-      if (ga.one > 0 && win1[near]) drawAround(c, w025, ga.fine, a => MM.drawDensityCounts(mctx, stage, c, win1[near].paths, theme.density, a * ga.one));
+      if (ga.one > 0 && win1[near]) drawAround(c, w025, ga.fine, a => MM.drawDensityCounts(mctx, stage, c, win1[near].paths, theme.density, a * ga.one), false);
       if (ga.fine > 0 && win025[near]) MM.drawDensityCounts(mctx, stage, c, win025[near].paths, theme.density, ga.fine);
     } else if (L === 'share') { drawLog.push('share');
       // 100 km cells, then the 25 km cells, the national 5 km shares (2021), the city 1 km window of the year and the 250 m window (2021).
@@ -256,9 +260,9 @@
       if (a25 < 1) { const paths = tiles('share' + y, () => { const idx = yearIndex[y]; return MM.buildTiles(idx.length, idx.map(i => CY.avail.ix[i]), idx.map(i => CY.avail.iy[i]), j => classOfShare(CY.avail.n[idx[j]], CY.avail.a[idx[j]], YEAR_BREAKS), { gapKm: 15 }); }); MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: 1 - a25, alphaOf: shareAlpha }); }
       const a25e = a25 * (1 - a5);
       if (c25[y]) { const d = c25[y], paths = tiles('share25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfShare(d.n[i], d.a[i], YEAR_BREAKS), { sizeKm: G25, gapKm: G25 * 0.12 }));   // built now, not mid-flight
-        if (a25e > 0) drawAround(c, w1, ga.one, a => MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: a * a25e, alphaOf: shareAlpha })); }
+        if (a25e > 0) drawAround(c, w1, ga.one, (a, region, w) => MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: a * a25e, alphaOf: shareAlpha, outline: w > 0 ? { colour: theme.ghost, alpha: w, px: 1 } : null })); }
       if (a5 > 0) drawAround(c, w1, ga.one, (a, region) => drawNat(c, a * a5, region, true));
-      if (ga.one > 0 && win) drawAround(c, w025, ga.fine, a => MM.drawDensityShares(mctx, stage, c, win.paths, theme.ramp5, theme.below, a * ga.one));
+      if (ga.one > 0 && win) drawAround(c, w025, ga.fine, a => MM.drawDensityShares(mctx, stage, c, win.paths, theme.ramp5, theme.below, a * ga.one), false);
       if (ga.fine > 0 && w025) MM.drawDensityShares(mctx, stage, c, win025[near].paths, theme.ramp5, theme.below, ga.fine);
     } else if (L === 'change') { drawLog.push('change');
       const a25 = chg25 ? alpha25(c.k) : 0, colour = cl => (cl === 'below' ? theme.below : theme.change6[cl - 1]), alphaOf = cl => (cl === 'below' ? 0.5 : 1);
@@ -278,7 +282,7 @@
       const win = indCity[near] && indCity[near][y] ? indCity[near][y] : null, w1 = win ? winRect(win, 90) : null;
       const indColour = cl => (cl === 'below' ? theme.below : theme.ind9[cl - 1]), indAlpha = cl => (cl === 'below' ? 0.5 : 1), classOfDom = dom => (dom === 255 ? 'below' : IND_CLASS[dom]);
       if (a25 < 1 && ind100[y]) { const d = ind100[y], paths = tiles('ind' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: 1 - a25, alphaOf: indAlpha }); }
-      if (ind25[y]) { const d = ind25[y], paths = tiles('ind25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 > 0) drawAround(c, w1, ga.one, a => MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: a * a25, alphaOf: indAlpha })); }
+      if (ind25[y]) { const d = ind25[y], paths = tiles('ind25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 > 0) drawAround(c, w1, ga.one, (a, region, w) => MM.drawTiles(mctx, stage, c, paths, indColour, { outline: w > 0 ? { colour: theme.ghost, alpha: w, px: 1 } : null, alpha: a * a25, alphaOf: indAlpha })); }
       if (ga.one > 0 && win) { const paths = tiles('ind1-' + near + '-' + y, () => MM.buildTiles(win.count, win.ix, win.iy, i => classOfDom(win.dom[i]), { sizeKm: 1, gapKm: 0.1, origin: win.origin })); MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: ga.one, alphaOf: indAlpha }); }
     } else if (L === 'fin') { drawLog.push('fin');
       const paths = tiles('fin', () => MM.buildTiles(finIdx.length, finIdx.map(i => fin.ix[i]), finIdx.map(i => fin.iy[i]), j => { const v = fin.change_pct[finIdx[j]]; let cl = 0; while (cl < FIN_BREAKS.length && v >= FIN_BREAKS[cl]) cl++; return cl; }, { gapKm: 15 }));
@@ -336,8 +340,40 @@
   function clearMarks() { kctx.setTransform(1, 0, 0, 1, 0, 0); kctx.clearRect(0, 0, marksC.width, marksC.height); }
   function drawLabels(ctx, c, scene) {   // a label is drawn only when its text sits wholly inside the canvas (the audit's offcanvas rule; the video's 300 px edge fade is sized for its own frame)
     Motion.audit.scene = scene;
-    if (c.k > 0.6) for (const city of bmp.cities) { const [px, py] = Motion.project(c, city.x, city.y); if (px < 0 || px >= stage.width || py < 0 || py >= stage.height) continue; const tw = Motion.measure(ctx, city.label, 13, 400); if (px + 7 + tw > stage.width - 1 || py - 5 - 13 < 0 || py - 5 + 4 > stage.height) continue; MM.cityLabel(ctx, c, city, theme, { size: 13, dot: 3, dx: 7, dy: -5 }); }
+    const la = Motion.clamp((Math.log2(c.k) - Math.log2(1.5)) / (Math.log2(3) - Math.log2(1.5)), 0, 1);   // the small labels begin at k 1.5 and are full at k 3, where the ghost names have gone (round 10)
+    if (la > 0) for (const city of bmp.cities) { const [px, py] = Motion.project(c, city.x, city.y); if (px < 0 || px >= stage.width || py < 0 || py >= stage.height) continue; const tw = Motion.measure(ctx, city.label, 13, 400); if (px + 7 + tw > stage.width - 1 || py - 5 - 13 < 0 || py - 5 + 4 > stage.height) continue; MM.cityLabel(ctx, c, city, theme, { size: 13, dot: 3, dx: 7, dy: -5, alpha: la }); }
     Motion.audit.scene = 'map';
+  }
+  // Ghost names (round 10, the author's item 13a): the 22 preset cities in large tracked capitals one step above the land, under every data layer, sized by
+  // the rank of their 2021 located firms in the 90 km window (34 px for the first, 26 for the last), placed once per zoom bucket in rank order; a name that
+  // meets a placed one (2 px gutter) tries below, right and left, then smaller sizes down to 26, and is dropped at that bucket if nothing fits; alpha 1 below
+  // k 1 and 0 at k 3, linear in log k. Twenty-two fillText calls at most per frame; the layouts are cached per bucket.
+  let GHOST_RANK = null;   // computed on first use: citySum's cache is declared later in the script
+  const ghostRank = () => GHOST_RANK || (GHOST_RANK = bmp.cities.map(city => ({ city, n: citySum(city.label, 2021) || 0 })).sort((a, b) => b.n - a.n).map((e, i, arr) => ({ city: e.city, size: Math.round(34 - 8 * i / Math.max(1, arr.length - 1)) })));
+  const ghostCache = new Map();
+  const ghostAlpha = k => Motion.clamp(1 - Math.log2(Math.max(k, 1e-9)) / Math.log2(3), 0, 1);
+  function ghostLayout(k) {
+    const bucket = Math.floor(Math.log2(k)); if (ghostCache.has(bucket)) return ghostCache.get(bucket);
+    const kb = Math.pow(2, bucket);   // the layout is resolved across the bucket's zoom range: a box placed on the far side of another city's dot crosses that city's box as the dots spread, so each candidate is tested at the bucket's floor, its middle and its top
+    const placed = [], out = [], gutter = 2, meets = (a, b) => a.x < b.x + b.w + gutter && a.x + a.w + gutter > b.x && a.y < b.y + b.h + gutter && a.y + a.h + gutter > b.y;
+    const atR = (p, r) => ({ x: p.px * r + p.dx, y: p.py * r + p.dy, w: p.w, h: p.h }), meetsAny = (cand, others) => [1, 1.5, 2].some(r => { const a = atR(cand, r); return others.some(o => meets(a, atR(o, r))); });   // the boxes at the dots scaled by r over the bucket
+    const at = (px, py, w, h, where) => where === 'above' ? { x: px - w / 2, y: py - 10 - h, w, h } : where === 'below' ? { x: px - w / 2, y: py + 10, w, h } : where === 'right' ? { x: px + 10, y: py - h / 2, w, h } : { x: px - 10 - w, y: py - h / 2, w, h };
+    for (const g of ghostRank()) {
+      const px = g.city.x * kb, py = -g.city.y * kb; let done = null;   // screen offsets from the km origin at the bucket's smallest k: the layout does not depend on the pan
+      for (let size = g.size; size >= 26 && !done; size -= 2) {
+        const w = Motion.measure(mctx, g.city.label.toUpperCase(), size, 500, size * 0.12), h = Math.round(size * Motion.CAP);
+        for (const where of ['above', 'below', 'right', 'left']) { const b = at(px, py, w, h, where), cand = { px, py, dx: b.x - px, dy: b.y - py, w, h }; if (!meetsAny(cand, placed)) { done = { city: g.city, size, where, dx: cand.dx, dy: cand.dy, w, h }; break; } }
+      }
+      if (done) { placed.push({ px, py, dx: done.dx, dy: done.dy, w: done.w, h: done.h }); out.push(done); }
+    }
+    ghostCache.set(bucket, out); return out;
+  }
+  let ghostDrawn = 0;
+  function drawGhostNames(c) {
+    ghostDrawn = 0; const a = ghostAlpha(c.k); if (a <= 0) return;
+    const lay = ghostLayout(c.k); Motion.audit.scene = 'map';
+    for (const g of lay) { const [px, py] = Motion.project(c, g.city.x, g.city.y), x = px + g.dx, y = py + g.dy; if (x < 0 || x + g.w > stage.width || y < 0 || y + g.h > stage.height) continue;
+      Motion.text(mctx, g.city.label.toUpperCase(), x, y + g.h, { size: g.size, weight: 500, color: theme.ghost, alpha: a, letterSpacing: g.size * 0.12, kind: 'ghost', group: 'ghost-' + g.city.label }); ghostDrawn++; }
   }
 
   // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
@@ -476,6 +512,48 @@ void main() {
     for (let i = i0; i < i1; i++) { const yv = d.y[i]; if (yv < ym0 || yv > ym1) continue; const r10 = Math.round(markRadius(rule, d.nn[i]) * 10); (buckets[r10] || (buckets[r10] = [])).push(i); count++; }
     const idx = new Uint32Array(count); let j = 0; for (let r10 = buckets.length - 1; r10 >= 0; r10--) if (buckets[r10]) for (const i of buckets[r10]) idx[j++] = i;
     return idx;
+  }
+  // Two layers under the dot field at the national zoom (round 10, the author's item 12), drawn through drawBasemap's afterLand hook: right after the land fill and
+  // before the graticule, the region borders and the ghost names, so every line stays readable over them (the author's correction of 26 October). (a) The region tint: each region filled in its leading industry's
+  // class colour at 0.18 alpha, full below k 0.5 and gone by k 1.5, from a km-space bitmap at 0.175 px per km built once per year and theme (two cached), one
+  // drawImage per frame. (b) The glow in the field's own colours (the author's answer): the year's addresses accumulated as 1 px points in the layer's palette with
+  // the field's alpha-by-count rule into a km-space buffer at one eighth of the fitted zoom, blurred once with a two-pass box blur of radius 2 in JS (the same bytes
+  // in every engine), drawn per frame with one drawImage at 0.35 alpha, full below k 1.5 and gone by k 3; cached per year, layer, theme and fitted zoom (a resize
+  // rebuilds), never rebuilt within a frame. Both sit on the map canvas, under the field canvas and the marks by DOM order.
+  const TINT_K = 0.175, tintCache = new Map(); let glowCache = null, glowBuilds = 0, firmsFade = { tint: 0, glow: 0 }, firmsLayersOff = false;   // firmsLayersOff: the audit's no-tint, no-glow comparison
+  let TINT_A = 0.08, GLOW_A = 0.06;   // pulled back by the author on 26 October (from 0.18 and 0.35, then the glow to 5 to 8 percent as a visibility assist drawn under every line); settable through __atlas.firmsLayerAlphas for the contrast measurements
+  function desat(hex, f) {   // the colour with its OKLab chroma scaled by f (lightness and hue kept), for the tint's class colours (half)
+    const s2l = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }, l2s = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); };
+    const [r, g, b] = hex2rgb(hex).map(s2l), l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s3 = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s3, A = f * (1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s3), B = f * (0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s3);
+    const l2 = L + 0.3963377774 * A + 0.2158037573 * B, m2 = L - 0.1055613458 * A - 0.0638541728 * B, s4 = L - 0.0894841775 * A - 1.2914855480 * B, l3 = l2 * l2 * l2, m3 = m2 * m2 * m2, s5 = s4 * s4 * s4;
+    return 'rgb(' + [4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s5, -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s5, -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s5].map(l2s).join(',') + ')';
+  }
+  const tintFade = k => Motion.clamp(1 - (k - 0.5) / 1.0, 0, 1), glowFade = k => Motion.clamp(1 - (k - 1.5) / 1.5, 0, 1);
+  function kmBitmapCam(k, pad) { const ext = BM.extents.national, W = Math.ceil((ext.x[1] - ext.x[0]) * k) + pad, H = Math.ceil((ext.y[1] - ext.y[0]) * k) + pad; return { W, H, cam: { cx: (ext.x[0] + ext.x[1]) / 2, cy: (ext.y[0] + ext.y[1]) / 2, k, ox: W / 2, oy: H / 2 } }; }
+  function drawKmBitmap(b, alpha, smooth) { const c = cam(), f = c.k / b.cam.k, [px, py] = Motion.project(c, b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k); mctx.save(); stage.base(); mctx.globalAlpha *= alpha; mctx.imageSmoothingEnabled = !!smooth; mctx.drawImage(b.cv, px, py, b.W * f, b.H * f); mctx.restore(); }
+  function regionTint(y) {
+    const key = y + '|' + theme.dark; if (tintCache.has(key)) return tintCache.get(key);
+    const { W, H, cam: camB } = kmBitmapCam(TINT_K, 4), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), st = { width: W, height: H, scale: 1, base() { g.setTransform(1, 0, 0, 1, 0, 0); } };
+    Motion.camTransform(g, st, camB);
+    for (const name of regIndex.keys()) { if (name === 'Russia' || name === 'outside the basemap outline' || name === 'region not recorded') continue; const i = regRow(name, y); if (i == null) continue; const d = REG.d1[i]; if (d === 255) continue; const cls = IND_CLASS[d] || 9; g.fillStyle = desat(theme.ind9[cls - 1], 0.5); g.fill(regionPath(name), 'evenodd'); }
+    st.base(); const out = { cv, cam: camB, W, H }; tintCache.set(key, out); if (tintCache.size > 2) tintCache.delete(tintCache.keys().next().value); return out;
+  }
+  function glowFor(y, L, d) {
+    const kg = kFit() / 8, key = [y, L, theme.dark, kg.toFixed(6)].join('|'); if (glowCache && glowCache.key === key) return glowCache;
+    const { W, H, cam: camB } = kmBitmapCam(kg, 8), buf = new Float32Array(W * H * 4), pal = firmPalette(L), alphaOf = n => (n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96) / 255;
+    for (let i = 0; i < d.nn.length; i++) { const px = Math.floor(camB.ox + (d.x[i] / 1000 - camB.cx) * kg), py = Math.floor(camB.oy - (d.y[i] / 1000 - camB.cy) * kg); if (px < 0 || py < 0 || px >= W || py >= H) continue; const col = pal[firmClass(d, i, L)] || pal[0], a = alphaOf(d.nn[i]), o = 4 * (py * W + px), rem = 1 - buf[o + 3]; buf[o] += col[0] * a * rem; buf[o + 1] += col[1] * a * rem; buf[o + 2] += col[2] * a * rem; buf[o + 3] += a * rem; }
+    const blur = (src, dst, horiz) => { const r = 2, n = 2 * r + 1; for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) { let s0 = 0, s1 = 0, s2 = 0, s3 = 0; for (let t = -r; t <= r; t++) { const x2 = horiz ? xx + t : xx, y2 = horiz ? yy : yy + t; if (x2 < 0 || y2 < 0 || x2 >= W || y2 >= H) continue; const o = 4 * (y2 * W + x2); s0 += src[o]; s1 += src[o + 1]; s2 += src[o + 2]; s3 += src[o + 3]; } const o = 4 * (yy * W + xx); dst[o] = s0 / n; dst[o + 1] = s1 / n; dst[o + 2] = s2 / n; dst[o + 3] = s3 / n; } };
+    const tmp = new Float32Array(W * H * 4); blur(buf, tmp, true); blur(tmp, buf, false);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), img = g.createImageData(W, H), p8 = img.data;
+    for (let o = 0; o < buf.length; o += 4) { const a = Math.min(1, buf[o + 3]); if (a <= 0) continue; p8[o] = Math.round(buf[o] / a); p8[o + 1] = Math.round(buf[o + 1] / a); p8[o + 2] = Math.round(buf[o + 2] / a); p8[o + 3] = Math.round(a * 255); }
+    g.putImageData(img, 0, 0); glowBuilds++; glowCache = { key, cv, cam: camB, W, H }; return glowCache;
+  }
+  function drawFirmsGround(c) {
+    const y = state.year, d = firmYears.get(y), L = state.layer, tf = tintFade(c.k), gf = glowFade(c.k); firmsFade = { tint: tf, glow: gf };
+    if (firmsLayersOff) { firmsFade = { tint: 0, glow: 0 }; return; }
+    if (tf > 0 && REG) drawKmBitmap(regionTint(y), TINT_A * tf, false);
+    if (gf > 0 && d) drawKmBitmap(glowFor(y, L, d), GLOW_A * gf, true);
   }
   function drawFirms(c) {
     const y = state.year, d = firmYears.get(y), L = state.layer;
@@ -620,7 +698,11 @@ void main() {
   function writePref(key, v) { try { localStorage.setItem(key, v); } catch (e) { /* no storage */ } }
   const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note'), ctx: readPref('atlas-context') };
   const legendOpen = () => (ui.legend ? ui.legend === 'open' : stage.width >= 600);
-  const noteOpen = () => (ui.note ? ui.note === 'open' : stage.width >= 600);
+  // The note (round 10, the author's correction of 26 October): without a stored choice it starts collapsed at the national and regional zooms while the strip is open (the strip carries the fact)
+  // and expanded inside a city window or when the strip is closed; a narrow map keeps it collapsed; the viewer's own toggle is remembered and wins.
+  const noteDefault = () => { try { return !stripOpen() || bandUnderCameraOwn()[0] === 'city'; } catch (e) { return true; } };
+  const noteOpen = () => (ui.note ? ui.note === 'open' : stage.width >= 600 && noteDefault());
+  function syncNoteDefault() { if (ui.note) return; if ($('notebody').hidden === noteOpen()) applyPanels(); }
   function applyPanels() {
     dropObstacles();
     const lo = legendOpen(), no = noteOpen();
@@ -694,13 +776,13 @@ void main() {
   try { const v = JSON.parse(sessionStorage.getItem('atlas-tips') || '[]'); if (Array.isArray(v)) v.forEach(i => stripState.seen.add(+i)); } catch (e) { /* no storage */ }
   const stripOpen = () => (ui.ctx ? ui.ctx === 'open' : true);
   function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'); el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.textContent = open ? '▾' : '▸'; t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
-  $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); if (v === 'open') updateContext(true); });
+  $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); syncNoteDefault(); if (v === 'open') updateContext(true); });
   const pts = (n, d) => `${fmt.signed(d)} points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
   // The fact under the camera: {band, name, kind, text (HTML with the figures in .num spans), nums (the figures, for the tick)}
-  function factFor(band, name) {
+  function factFor(band, name, full) {   // full: the wire's lead item takes the full form whatever the map's width (round 10)
     const y = state.year, L = state.layer, ys = y + (y === 2025 ? '*' : ''), N = [], num = (v, f) => { N.push(v); return `<span class="num">${f}</span>`; };
-    const nw = narrow();   // the short forms: no change clause, no basis words
+    const nw = !full && narrow();   // the short forms: no change clause, no basis words
     const loc = s => `<span class="loc">${esc(s)}</span>`;   // the place name in tracked capitals (round 10)
     const sp = (f) => `<span class="num">${f}</span>`;   // the short forms (a second tier under the narrow ones): used only when the narrow text overflows the strip, measured once per fact change
     const shareLine = (label, n, a, n21, a21, what) => { const sh = shareOf(a, n), s21 = shareOf(a21, n21), Nf = [], nf = (v, f) => { Nf.push(v); return sp(f); }; let t = `${label}, ${ys}: ${nf(n, fmt.int(n))} ${nw ? 'firms' : what}, ${nf(sh, fmt.pct(sh))} with a statement`; if (!nw && y !== 2021 && s21 != null && sh != null) t += `, ${nf(sh - s21, pts(0, sh - s21))} against 2021`; return { text: t, nums: Nf, short: `${label}, ${ys}: ${sp(fmt.pct(sh))} with a statement`, shortNums: [sh] }; };
@@ -721,8 +803,19 @@ void main() {
     if (L === 'change') { const i24 = regRow(name, 2024); if (i24 != null && i21 != null) { const s21 = shareOf(REG.a[i21], REG.n[i21]), s24 = shareOf(REG.a[i24], REG.n[i24]); return { band, name, kind: 'change', text: `${loc(name)}: ${num(s21, fmt.pct(s21))} with a statement in 2021, ${num(s24, fmt.pct(s24))} in 2024, ${num(s24 - s21, pts(0, s24 - s21))}`, nums: N, short: `${loc(name)}: ${sp(fmt.pct(s21))} in 2021, ${sp(fmt.pct(s24))} in 2024`, shortNums: [s21, s24] }; } }
     return Object.assign({ band, name, kind: 'share' }, shareLine(loc(name), n, a, n21, a21, what));
   }
+  let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it
+  const regionPaths = new Map();
+  const regionPath = name => { if (!regionPaths.has(name)) regionPaths.set(name, MM.partsToPath(BM.lod0.parts.filter(p => p.name === name))); return regionPaths.get(name); };
   function bandUnderCamera() {
     const c = cam();
+    if (hoverRegionName && regIndex.has(hoverRegionName) && !(c.k >= 1.5 && bandUnderCameraOwn()[0] === 'city')) return ['region', hoverRegionName];
+    return bandUnderCameraOwn();
+  }
+  let bandOwnMemo = { key: '', v: null };   // the camera's own band, computed once per settled camera, year and layer (the note's default and the strip ask on every hover-driven region change)
+  function bandUnderCameraOwn() {
+    const c = cam(), key = c.cx + '|' + c.cy + '|' + c.k + '|' + state.year + '|' + state.layer; if (bandOwnMemo.key === key) return bandOwnMemo.v; const v = bandUnderCameraOwnCalc(c); bandOwnMemo = { key, v }; return v;
+  }
+  function bandUnderCameraOwnCalc(c) {
     if (c.k < 3 * kFit()) return ['national', 'Russia'];
     const near = nearestCity(c).city.label, w = win1[near] ? win1[near].d : null;
     if (c.k >= 1.5 && w && c.cx >= w.origin[0] && c.cx < w.origin[0] + 90 && c.cy >= w.origin[1] && c.cy < w.origin[1] + 90 && cityYear[near] && cityYear[near][state.year]) return ['city', near];
@@ -730,6 +823,7 @@ void main() {
     return rn && regIndex.has(rn) ? ['region', rn] : ['national', 'Russia'];
   }
   function updateContext(force) {
+    syncNoteDefault();
     if (!stripOpen()) return;
     const [band, name] = bandUnderCamera(), f = factFor(band, name);
     const same = stripState.fact && stripState.fact.kind === f.kind && stripState.fact.name === f.name && (stripState.fact.full || stripState.fact.text) === f.text;
@@ -737,7 +831,7 @@ void main() {
     const prev = stripState.fact; stripState.fact = f; stripState.lastFactAt = performance.now();
     if (stripState.tip) endTip(false);
     setStripText(f, prev); setGlyph(band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name);
-    scheduleTip();
+    rebuildWire(band, name); scheduleTip();
   }
   function setStripText(f, prev) {   // crossfade the two stacked spans; when the previous fact had the same figures, the numbers count to the new values
     const ina = stripState.cur === 'A' ? $('ctxB') : $('ctxA'), out = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); stripState.cur = stripState.cur === 'A' ? 'B' : 'A';
@@ -757,6 +851,7 @@ void main() {
   const TIPS = [   // each at most 72 characters (round 10: tracked capitals in the strip's slot at 768 px and the two-line phone strip); the two long round-9 tips split in two
     { text: 'A click on a cell flies to it: the city window from the country.', touch: 'Tap a cell for its values, double-tap to zoom, pinch to zoom.' },
     { text: 'From a city, a click flies to the 20 km scale, then steps of 2.5.', mouse: true },
+    { text: 'In the Firms view a click climbs the same rungs, then steps of 4.', mouse: true, firms: true },
     { text: 'Shift+click steps the zoom out at the point.', mouse: true },
     { text: 'The pulse button by the year replays the bloom of its listed firms.', firms: true },
     { text: 'The Firms view draws every registered address by year.', firms: true },
@@ -767,15 +862,97 @@ void main() {
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
   function nextTip() { for (let i = 0; i < TIPS.length; i++) { const t = TIPS[i]; if (stripState.seen.has(i)) continue; if (t.firms && !FIRMS_OK) continue; if (t.mouse && coarse()) continue; return [i, coarse() && t.touch ? t.touch : t.text]; } return null; }
-  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }
+  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); if (wireScrolls()) return; stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }   // the scrolling wire carries its tips itself
   function maybeTip(force) {
+    if (wireScrolls()) return force ? pinTip() : false;   // the wire: a forced tip pins the next tip item at the window's left edge (the audit's tip states)
     if (!stripOpen() || stripState.tip || (!force && (flight || press || pinch || !cursorStill || performance.now() - stripState.lastFactAt < 12000))) return false;
     const nt = nextTip(); if (!nt) return false;
     const [i, text] = nt; stripState.seen.add(i); try { sessionStorage.setItem('atlas-tips', JSON.stringify([...stripState.seen])); } catch (e) { /* no storage */ }
     stripState.tip = { i, text }; setStripText({ kind: 'tip', name: '', text: units(esc(text)), nums: [] }, null);
     stripState.tipEnd = setTimeout(() => endTip(true), 8000); return true;
   }
-  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
+  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (wireScrolls()) { unpinTip(); return; } if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
+  // ---- the data wire (round 10, the author's item 14a) and the cat facts (item 15) -------------------------------------------------------------
+  // A cycle is 50 items in two halves of 25: each half opens with the lead fact (the band's own fact), carries the data facts below in one order (the
+  // second half reversed), five named listed firms that turned red that year at data slots 2, 6, 10, 14 and 18 (the halves taking alternate picks of the
+  // ten, chosen at floor(i n / 10) over the names sorted), and a tip at every fifth slot; one slot keyed to the year and the region carries a cat fact
+  // from data/offwire.json with the prefix in the muted context colour (never a tip slot, never beside a named firm; the fact advancing by seven each
+  // loop). Every string is a template over named fields of the shipped data; tools/wire_check.py re-derives each one for the audit.
+  const WIRE_SPEED = 60, WIRE_HALF = 25, WIRE_RM_MS = 8000, OFFWIRE = D.offwire || null;
+  const wireState = { cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0 };
+  const wireScrolls = () => !reduceMotion();
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const fnv = str => { let h = 2166136261; for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
+  const dateOf = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : ''; };
+  const regRowsOf = y => { const out = []; for (let i = 0; i < REG.region.length; i++) if (REG.year[i] === y && REG.region[i] !== 'Russia' && REG.region[i] !== 'outside the basemap outline' && REG.region[i] !== 'region not recorded') out.push(i); return out; };
+  function wireFacts(y, band, name) {
+    const ys = y + (y === 2025 ? '*' : ''), out = [], loc = s => `<span class="loc">${esc(s)}</span>`, num = f => `<span class="num">${f}</span>`, add = (src, html) => out.push({ kind: 'data', text: html, src });
+    const nat = band === 'national', reg = !nat && regIndex.has(name) ? name : null;
+    if (TRN) { let n = 0, nr = 0; const ri = reg ? TRN.regions.indexOf(reg) : -1; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i]) { n++; if (ri >= 0 && TRN.reg[i] === ri) nr++; }
+      add('treatednational.red_from', `${ys}: ${num(fmt.int(n))} firms listed (treated) nationally`); if (reg) add('treatednational.reg', `${ys}: ${num(fmt.int(nr))} firms listed (treated) in ${loc(reg)}`); }
+    { const t = totals[y]; if (t) { const k = CY.totals.year.indexOf(y), na = CY.totals.n_available[k], nla = CY.totals.n_located_available[k];
+      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.eligible))} eligible firms, ${num(fmt.int(na))} with a statement (${num(fmt.pct(t.share))})`);
+      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} located firms, ${num(fmt.int(nla))} with a statement and ${num(fmt.int(t.located - nla))} without`);
+      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`); } }
+    if (REG) { const iN = regRow('Russia', y); if (iN != null && REG.d1[iN] !== 255) { const d = REG.d1[iN], rows = regRowsOf(y), k = rows.filter(i => REG.d1[i] === d).length;
+        add('regions.d1', `${ys}: ${esc(divShort(d))} (division ${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
+        if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (division ${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
+      if (reg) { const ir = regRow(reg, y); if (ir != null) { add('regions.lsh', `${loc(reg)}, ${ys}: firms on the lists (treated) hold ${num(REG.lsh[ir] + '%')} of the region's revenue`); add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region on the five lists (treated)`); } } }
+    if (FM && FM.by_year[y]) { const b = FM.by_year[y];
+      add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
+      add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated); ${num(fmt.int(b.city_level))} firms with other geocodes`);
+      add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list; ${num(fmt.int(b.firms_at_100plus))} firms at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
+      const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their 2019 to 2021 average`); }
+    if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms at the largest coordinate pair; ${num(fmt.int(F.firms_at_100plus_locations))} at pairs shared by 100 or more, over every located firm`);
+    { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} supported 100 km cells; ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms with a statement in 2021, ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
+    { const k = C100.lists.sanctioned.filter(v => v >= 5).length; add('cells100.lists', `2021: ${num(fmt.int(k))} cells with 5 or more sanctions-list members (treated)`); }
+    add('series.facts.cohorts', `2021: ${num(fmt.int(F.cohorts.revenue_cash))} located eligible firms in the revenue cohort by cash share`);
+    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of ${num(fmt.int(TRN.n))} listed firms (treated) red`); add('treatednational', `${num(fmt.int(TRN.undated_n))} firms on the undated lists are red from 2014; ${num(fmt.int(TRN.inferred_n))} listing dates are inferred`); }
+    return out;
+  }
+  function wireFirms(y, band, name) {
+    if (!TRN) return []; const ri = band !== 'national' && regIndex.has(name) ? TRN.regions.indexOf(name) : -1, ys = y + (y === 2025 ? '*' : '');
+    const pick = useReg => { const idx = []; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.name[i] && (!useReg || TRN.reg[i] === ri)) idx.push(i); idx.sort((a, b) => (TRN.name[a] < TRN.name[b] ? -1 : TRN.name[a] > TRN.name[b] ? 1 : a - b)); return idx; };
+    let idx = ri >= 0 ? pick(true) : []; if (idx.length < 2) idx = pick(false); if (!idx.length) return [];
+    const picks = []; for (let i = 0; i < 10; i++) { const j = idx[Math.floor(i * idx.length / 10)]; if (!picks.includes(j)) picks.push(j); }
+    return picks.map(j => { const ch = TRN.filed[j][y - 2014], st = ch === '1' ? 'available' : ch === '0' ? 'absent' : 'not in the registry', d = dateOf(TRN.red_date[j]);
+      return { kind: 'firm', text: `${esc(TRN.name[j])} · ${d ? 'listed ' + d : 'listed in ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j }; });
+  }
+  const wireTipsList = () => { const out = []; TIPS.forEach(t => { if (t.firms && !FIRMS_OK) return; if (t.mouse && coarse()) return; out.push(coarse() && t.touch ? t.touch : t.text); }); return out; };
+  function buildCycle(y, band, name, cycleIndex) {
+    const lf = factFor(band, name, true), lead = { kind: 'lead', text: lf.text, src: 'lead:' + lf.kind }, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
+    const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([2, 6, 10, 14, 18]);
+    const half = (fo, fh, tipStart) => { const data = []; let fi = 0, di = 0;
+      for (let sl = 0; sl < 20; sl++) { if (sl === 0) { data.push(lead); continue; } if (firmSlots.has(sl) && fi < fh.length) { data.push(fh[fi++]); continue; } if (di < fo.length) { data.push(fo[di++]); continue; } if (fi < fh.length) { data.push(fh[fi++]); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
+      const items = []; let ti = tipStart, dj = 0; for (let p = 0; p < WIRE_HALF; p++) { if (p % 5 === 4) { const t = tipsL[ti % tipsL.length]; items.push({ kind: 'tip', text: units(esc(t)), src: 'tips:' + (ti % tipsL.length) }); ti++; } else items.push(data[dj++]); } return items; };
+    const cycle = half(facts, firmsA, 0).concat(half(facts.slice().reverse(), firmsB, 5));
+    if (OFFWIRE && OFFWIRE.facts && OFFWIRE.facts.length) { const h = fnv(`${y}|${name}`), pool = OFFWIRE.facts, isFirm = i => i >= 0 && i < cycle.length && cycle[i].kind === 'firm'; let slot = 12 + (h % 26), guard = 0;
+      while (guard++ < 60 && (cycle[slot].kind === 'tip' || isFirm(slot) || isFirm(slot - 1) || isFirm(slot + 1))) { slot++; if (slot >= cycle.length) slot = 12; }
+      const f = pool[(h + 7 * cycleIndex) % pool.length]; cycle[slot] = { kind: 'cat', text: `<span class="pre">${esc(OFFWIRE.prefix)}</span> <span class="cf">${esc(f.text)}</span>`, src: 'offwire:' + f.id }; }
+    return cycle;
+  }
+  const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark"/></svg>';
+  function renderWire() {
+    const tr = $('wiretrack'), box = $('ctxtext'); if (!tr) return; box.classList.toggle('rm', !wireScrolls());
+    if (!wireScrolls()) { tr.innerHTML = ''; return; }
+    const once = wireState.cycle.map(it => `<span class="wi ${it.kind}">${it.text}</span>`).join(SEP) + SEP;
+    tr.style.animation = 'none'; tr.innerHTML = once + once; void tr.offsetWidth; wireState.width = tr.scrollWidth / 2; tr.style.setProperty('--wire-dur', Math.max(10, wireState.width / WIRE_SPEED).toFixed(1) + 's'); tr.style.animation = '';
+  }
+  function rebuildWire(band, name, force) {   // the cycle follows the lead fact; a change from a hover's region change waits 250 ms so the hover cost stays as it was (the lead line itself changes at once)
+    const key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|'); if (!force && key === wireState.key) return;
+    if (wireState.timer) { clearTimeout(wireState.timer); wireState.timer = 0; }
+    const build = () => { wireState.timer = 0; wireState.key = key; wireState.cycle = buildCycle(state.year, band, name, wireState.cycleIndex); if (stripState.tip) endTip(false); renderWire(); startRM(); };
+    if (force || !wireState.cycle.length) build(); else wireState.timer = setTimeout(build, 250);
+  }
+  function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
+    if (wireState.rmTimer) { clearInterval(wireState.rmTimer); wireState.rmTimer = 0; } if (wireScrolls() || !wireState.cycle.length) return; wireState.rmIndex = 0;
+    wireState.rmTimer = setInterval(() => { if (!stripOpen() || !stripState.fact) return; wireState.rmIndex = (wireState.rmIndex + 1) % wireState.cycle.length; const it = wireState.cycle[wireState.rmIndex]; stripState.tip = it.kind === 'tip' ? { i: -1, text: plainOf(it) } : null; setStripText({ kind: it.kind === 'lead' ? stripState.fact.kind : it.kind, name: '', text: it.text, nums: [] }, null); }, WIRE_RM_MS);
+  }
+  const plainOf = it => { const d = document.createElement('span'); d.innerHTML = it.text; return d.textContent.replace(/ /g, ' '); };
+  function pinTip() { const tr = $('wiretrack'), el = tr && tr.querySelector('.wi.tip'); if (!el) return false; tr.classList.add('pinned'); tr.style.transform = `translateX(${-el.offsetLeft}px)`; const i = [...tr.children].filter(e => e.classList.contains('wi')).indexOf(el); stripState.tip = { i, text: plainOf({ text: el.innerHTML }) }; return true; }
+  function unpinTip() { const tr = $('wiretrack'); if (!tr) return; tr.classList.remove('pinned'); tr.style.transform = ''; }
+  $('wiretrack').addEventListener('animationiteration', () => { wireState.cycleIndex++; const [band, name] = bandUnderCamera(); rebuildWire(band, name, true); });   // each loop advances the cat fact by seven places (the rebuild lands on the seam)
+
   // The region glyph: one pre-simplified outline per region from the basemap's parts (the largest ring and any ring with at least a
   // quarter of its area, Douglas-Peucker to about 60 points, fitted into 22 by 22), built once on first use; Russia's outline traced
   // once from the filled parts on an offscreen canvas (the mainland's outer boundary).
@@ -874,6 +1051,7 @@ void main() {
       else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm at the coordinate pair has a usable baseline</div>`; }
       else if (L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a revenue value</div>`; }
       else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
+      if (firmsFade.tint > 0 && REG) html += `<div class="row p">Regions tinted by their leading industry at the national zoom.</div>`;   // the tint under the field (round 10)
       html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each dot is one coordinate pair. Dots widen at 10 and 100 or more firms.'}</div>`;
       note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.` + (TRN.name ? ' Hover a listed firm for its name.' : '');
     } else if (L === 'density') {
@@ -1052,6 +1230,9 @@ void main() {
       octx.beginPath(); octx.moveTo(cx, 0); octx.lineTo(cx, stage.height); octx.moveTo(0, cy); octx.lineTo(stage.width, cy); octx.stroke(); octx.globalAlpha = 1;
     }
     if (!h) return; const c = cam();
+    if (hoverRegionName && state.hover && regIndex.has(hoverRegionName)) {   // the region under the cursor outlined in the cursor colour at every zoom and in both views, inside a city window included (round 10, G13b as corrected 26 October): the cached region path, stroked with the overlay
+      octx.save(); Motion.camTransform(octx, stage, c); octx.strokeStyle = theme.cursor; octx.lineWidth = 1 / c.k; octx.lineJoin = 'round'; octx.stroke(regionPath(hoverRegionName)); octx.restore(); octx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
+    }
     // The hover ring and the cell square in the cursor colour, cased in the stage colour so they read on lilac and pale cells too (round 9).
     const cased = draw => { octx.strokeStyle = theme.stage; octx.globalAlpha = 0.6; octx.lineWidth = 4.5; draw(); octx.globalAlpha = 1; octx.strokeStyle = cursorStill ? theme.cursor : theme.cursorLive; octx.lineWidth = 2.5; draw(); };
     if (h.kind === 'firm' || h.kind === 'listed') { cased(() => { octx.beginPath(); octx.arc(h.px, h.py, h.r + 3, 0, Math.PI * 2); octx.stroke(); }); return; }
@@ -1099,7 +1280,10 @@ void main() {
   // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
   let drawQueued = false, drawAfter = null;
   function requestDraw(after) { if (after) drawAfter = after; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(); const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
-  function afterCameraMove() { syncZoomButtons(); refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); }
+  function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
+    const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
+  }
+  function afterCameraMove() { syncZoomButtons(); refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -1107,11 +1291,28 @@ void main() {
   // 100 km, a 5 km cell at 100 km as well, a 1 km cell at 20 km. When the rung is deeper than the view the camera flies in and
   // centres on the subject; when it is not, the view pans to the subject at its zoom, or, when the subject already sits
   // near the centre, zooms x2.5 on it. Shift+click steps out at the point. From the country an empty cell does nothing.
+  // The Firms view's click ladder (round 10, the author's item): the Cells rungs by zoom alone, every landing centred on the click, and a x4 step where
+  // no rung applies; Shift+click returns along the rungs (a quarter above the 20 km rung and never below it, the city rung from between the city window
+  // and the 20 km rung, the fit otherwise). The Cells path below is untouched.
+  function ladderTargetFirms(km, shift) {
+    const k = state.cam.k, side = minSide(), kCity = side / 95, k500 = side / 500, kFine = side / 20, at = kk => ({ cx: km.x, cy: km.y, k: clampK(kk) });
+    if (shift) {
+      if (k > kFine * 1.02) return { target: at(Math.max(k / 4, kFine)), rung: k / 4 > kFine ? 'out' : 'fine' };
+      if (k > kCity * 1.02) return { target: at(kCity), rung: 'city' };
+      return { target: fitTarget(), rung: 'fit' };
+    }
+    if (k >= kFine * 0.98) return { target: at(k * 4), rung: 'zoom' };
+    if (k >= kCity * 0.98) return { target: at(kFine), rung: 'fine' };
+    const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), cells = yearCells[state.year] || yearCells[2021];
+    if (!cells.has(cellKey(ix, iy))) return { target: at(k * 4), rung: 'zoom' };
+    if (cityInCell(ix, iy) || k >= k500 * 0.98) return { target: at(kCity), rung: 'city' };
+    return { target: at(k500), rung: 'cell' };
+  }
   function ladderTarget(h, km, shift) {
+    if (state.mode === 'firms') return ladderTargetFirms(km, shift);
     if (shift) return { target: stepAt(km, 1 / 2.5), rung: 'out' };
     const k = state.cam.k, c = cam(), near = Math.hypot(km.px - c.ox, km.py - c.oy) < 0.15 * minSide();
     const zoomOn = (x, y) => ({ target: { cx: x, cy: y, k: clampK(k * 2.5) }, rung: 'zoom' });
-    if (state.mode === 'firms') return zoomOn(km.x, km.y);
     const ix = Math.floor(h.kmx / 100), iy = Math.floor(h.kmy / 100), city = cityInCell(ix, iy);
     let t;
     if (k < 1.5) {
@@ -1139,7 +1340,7 @@ void main() {
   const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover() { $('tip').style.display = 'none'; state.hover = null; crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
+  function hideHover() { $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName) { hoverRegionName = null; updateContext(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -1233,6 +1434,8 @@ void main() {
   }
   function showHoverAt(x, y, opts = {}) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
+    if (h.region === undefined) h.region = regionAt(x, y);
+    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); } }   // the strip follows the cursor's region (round 10)
     const tip = $('tip'); $('tipbody').innerHTML = tipText(h); fillFoot(km, !!opts.tick); tip.style.display = 'block';
     const tw = tip.offsetWidth, th = tip.offsetHeight, obs = tileObstacles();   // one forced layout; the panels' boxes are read under it
     const mark = h.kind === 'firm' || h.kind === 'listed', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
@@ -1417,8 +1620,9 @@ void main() {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
     [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); syncMix(); drawCellPanel(null); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
-  syncProv(); syncYearRow();
-  $('year').addEventListener('input', () => { const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); drawNational(); syncMix(); });
+  syncProv(); syncYearRow(); syncYearPos();
+  function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 26 October)
+  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); drawNational(); syncMix(); });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -1426,7 +1630,91 @@ void main() {
   const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
   addPreset('Russia', fitTarget);
   for (const city of bmp.cities) addPreset(city.label, () => cityTarget(city));
-  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); });
+  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }); PRESETS[PRESETS.length - 1].button.classList.add('keep');   // the one button that stays under the minimap (round 10)
+
+  // ---- the minimap (round 10, the author's item 12; the GO TO card's ice-blue neutral, item 21) ---------------------------------------------------
+  // A 376 by 232 viewBox: the national extent in a 272 by 154 box at the right (0.033397 px per km), a 100 px label column at the left and a 56 px band
+  // below. The outline is the basemap's land traced at 0.03 px per km (every component of four pixels or more; the mainland first) and simplified; the
+  // graticule is the basemap's own polylines clipped to the box. Each city is a focusable group (dot, leader, label box); the layout table below places
+  // the boxes by hand against the rules the audit checks (no box meets another box or a dot within 2 px, no leader crosses another, none passes within
+  // 4 px of another city's dot or through another box, every box inside the viewBox). Clicking a city flies to its preset; the frame fits the country.
+  const MM_W = 376, MM_H = 232, MM_X0 = 104, MM_Y0 = 10, MM_S = 272 / SPAN_X, MM_BOX_H = 12, MM_PAD = 4, MM_R = 3;
+  const mmX = x => MM_X0 + (x - BM.extents.national.x[0]) * MM_S, mmY = y => MM_Y0 + (BM.extents.national.y[1] - y) * MM_S;
+  const MM_LAYOUT = {   // ['L', top]: the left column, the box's right edge at x 98; ['X', left, top]: the box's left edge and top; ['R', right, top]: the box's right edge and top
+    'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
+    'Murmansk': ['X', 190, 25], 'Nizhny Novgorod': ['X', 158, 60], 'Perm': ['X', 161, 74], 'Yekaterinburg': ['X', 196, 80], 'Tyumen': ['X', 196, 97], 'Krasnoyarsk': ['X', 206, 111], 'Omsk': ['X', 178, 127], 'Novosibirsk': ['X', 182, 141], 'Irkutsk': ['X', 272, 137], 'Khabarovsk': ['R', 372, 117],
+    'Chelyabinsk': ['X', 100, 182], 'Vladivostok': ['R', 372, 182] };   // the column holds the west and the Volga, the north-east the Urals and Siberia, the band two
+  let MMAP = null;   // the built geometry, for the checker and the audit
+  function mooreTrace(land, W, H, sx, sy) {   // the outer contour of the component holding (sx, sy), Moore neighbourhood, as pixel pairs
+    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], path = []; let x = sx, y = sy, dir = 6, guard = 0;
+    do { path.push([x, y]); let found = false; for (let k = 0; k < 8; k++) { const nd = (dir + 5 + k) % 8, nx = x + dirs[nd][0], ny = y + dirs[nd][1]; if (land(nx, ny)) { x = nx; y = ny; dir = nd; found = true; break; } } if (!found) break; } while ((x !== sx || y !== sy) && ++guard < 200000);
+    return path;
+  }
+  function landRings(S, minPx) {   // every land component at S px per km traced and returned as km rings, largest first
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of BM.lod0.parts) for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } }
+    const W = Math.ceil((x1 - x0) * S) + 4, H = Math.ceil((y1 - y0) * S) + 4, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
+    g.setTransform(S, 0, 0, -S, 2 - x0 * S, H - 2 + y0 * S); g.fillStyle = '#fff'; g.fill(MM.partsToPath(BM.lod0.parts), 'evenodd');
+    const a = g.getImageData(0, 0, W, H).data, land = (x, y) => x >= 0 && y >= 0 && x < W && y < H && a[4 * (y * W + x) + 3] > 127;
+    const comp = new Int32Array(W * H).fill(-1), sizes = [], starts = []; let n = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (!land(x, y) || comp[y * W + x] >= 0) continue; const st = [[x, y]], rows = new Map(); comp[y * W + x] = n; let size = 0; while (st.length) { const [cx, cy] = st.pop(); size++; const rw = rows.get(cy); if (!rw) rows.set(cy, [1, cx]); else { rw[0]++; if (cx < rw[1]) rw[1] = cx; } for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (land(nx, ny) && comp[ny * W + nx] < 0) { comp[ny * W + nx] = n; st.push([nx, ny]); } } }
+      let best = null; for (const [ry, [cnt, minx]] of rows) if (!best || cnt > best[0]) best = [cnt, minx, ry]; sizes.push(size); starts.push([best[1], best[2]]); n++; }   // the start: the leftmost pixel of the component's fullest row
+    const order = sizes.map((sz, i) => i).filter(i => sizes[i] >= minPx).sort((i, j) => sizes[j] - sizes[i]);
+    return order.map(i => mooreTrace((x, y) => land(x, y) && comp[y * W + x] === i, W, H, starts[i][0], starts[i][1]).map(([px, py]) => [x0 + (px - 2) / S, y0 + (H - 2 - py) / S]));
+  }
+  function buildMinimap() {
+    const svg = $('minimap'); if (!svg || MMAP) return; const NS = 'http://www.w3.org/2000/svg', el = (t, at, parent) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(at || {})) e.setAttribute(k, String(v)); (parent || svg).appendChild(e); return e; };
+    MMAP = { cities: [], rings: 0 };
+    const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
+    const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
+    const rings = landRings(0.03, 4); MMAP.rings = rings.length;
+    let d = ''; for (const ring of rings) { const r = simplify(ring, ring === rings[0] ? 12 : 8); if (r.length < 3) continue; d += 'M' + r.map(([x, y]) => mmX(x).toFixed(1) + ' ' + mmY(y).toFixed(1)).join('L') + 'Z'; }
+    el('path', { class: 'land', d, 'fill-rule': 'evenodd' }, land);
+    let gd = ''; for (const line of BM.graticule) { const r = MM.decodeRing(line); gd += 'M' + r.xs.map((x, i) => mmX(x).toFixed(1) + ' ' + mmY(r.ys[i]).toFixed(1)).join('L'); }
+    el('path', { class: 'grat', d: gd }, land);
+    // the Russia frame: the mark's four brackets at the outline box's corners (10 px arms), a focusable group with the label box at the top-right corner
+    const fr = el('g', { class: 'frame', id: 'mm-russia', tabindex: 0, role: 'button', 'aria-label': 'Go to Russia', 'aria-pressed': 'false' });
+    const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
+    el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
+    const measure = txt => { const t = el('text', { x: -999, y: -999 }); t.textContent = txt; const w = t.getComputedTextLength(); t.remove(); return w; };
+    const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
+    { const w = Math.ceil(measure('RUSSIA') + 2 * MM_PAD); MMAP.russia = labelBox(fr, 'RUSSIA', X1 - A - 4 - w, MM_Y0 + 2); }   // inside the frame's top-right corner, clear of the bracket's arms
+    const flyRussia = () => flyTo(fitTarget()); fr.addEventListener('click', flyRussia); fr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyRussia(); } });
+    PRESETS.find(p => p.label === 'Russia').node = fr;
+    for (const city of bmp.cities) {
+      const lay = MM_LAYOUT[city.label]; if (!lay) continue; const txt = city.label.toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
+      const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
+      const dx = mmX(city.x), dy = mmY(city.y), box = { x: left, y: top, x1: left + w, y1: top + MM_BOX_H };
+      const mids = [[box.x, (box.y + box.y1) / 2], [box.x1, (box.y + box.y1) / 2], [(box.x + box.x1) / 2, box.y], [(box.x + box.x1) / 2, box.y1]];   // the edge midpoints: left, right, top, bottom
+      const ccx = (box.x + box.x1) / 2, ccy = (box.y + box.y1) / 2, end = Math.abs(dx - ccx) > Math.abs(dy - ccy) ? (dx < ccx ? mids[0] : mids[1]) : (dy < ccy ? mids[2] : mids[3]);   // the edge facing the dot
+      const g = el('g', { class: 'city', id: 'mm-' + slugOf(city.label).toLowerCase(), tabindex: 0, role: 'button', 'aria-label': 'Go to ' + city.label, 'aria-pressed': 'false' });
+      el('line', { class: 'ld', x1: dx.toFixed(1), y1: dy.toFixed(1), x2: end[0].toFixed(1), y2: end[1].toFixed(1), pathLength: 1 }, g);
+      el('circle', { class: 'dot', cx: dx.toFixed(1), cy: dy.toFixed(1), r: MM_R }, g);
+      labelBox(g, txt, left, top);
+      const p = PRESETS.find(p => p.label === city.label); p.node = g; const go = () => flyTo(p.target()); g.addEventListener('click', go); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      MMAP.cities.push({ label: city.label, dot: [dx, dy], box, leader: [dx, dy, end[0], end[1]] });
+    }
+    if (!reduceMotion()) svg.classList.add('drawn');
+    syncPresetPressed();
+  }
+  function minimapCheck() {   // the layout rules, as the audit tests them; returns the violations (empty when clean)
+    if (!MMAP) return null; const out = [], C = MMAP.cities, clear = 2, near = 2;   // 2 px between a box and anything, 2 px between a leader and another city's dot edge (5 from its centre)
+    const inter = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x, b.x)) > -clear && Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y, b.y)) > -clear && Math.min(a.x1, b.x1) - Math.max(a.x, b.x) > -clear && Math.min(a.y1, b.y1) - Math.max(a.y, b.y) > -clear;
+    const boxes = C.map(c => Object.assign({ label: c.label }, c.box)).concat([Object.assign({ label: 'Russia' }, MMAP.russia)]);
+    for (const b of boxes) if (b.x < 0 || b.y < 0 || b.x1 > MM_W || b.y1 > MM_H) out.push(['outside', b.label]);
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) if (inter(boxes[i], boxes[j])) out.push(['box-box', boxes[i].label, boxes[j].label]);
+    const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)); return Math.hypot(a[0] + t * dx - p[0], a[1] + t * dy - p[1]); };
+    const cross = (p1, p2, p3, p4) => { const d = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); const d1 = d(p3, p4, p1), d2 = d(p3, p4, p2), d3 = d(p1, p2, p3), d4 = d(p1, p2, p4); return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0)); };
+    const segBox = (a, b, bx) => { const pts = [[bx.x, bx.y], [bx.x1, bx.y], [bx.x1, bx.y1], [bx.x, bx.y1]]; if (a[0] > bx.x && a[0] < bx.x1 && a[1] > bx.y && a[1] < bx.y1) return true; for (let i = 0; i < 4; i++) if (cross(a, b, pts[i], pts[(i + 1) % 4])) return true; return false; };
+    for (const c of C) for (const b of boxes) if (b.label !== c.label) { const dotBox = { x: c.dot[0] - MM_R, y: c.dot[1] - MM_R, x1: c.dot[0] + MM_R, y1: c.dot[1] + MM_R }; if (inter(dotBox, b)) out.push(['box-dot', b.label, c.label]); }
+    for (const c of C) { const dotBox = { x: c.dot[0] - MM_R, y: c.dot[1] - MM_R, x1: c.dot[0] + MM_R, y1: c.dot[1] + MM_R }; if (inter(dotBox, c.box)) out.push(['box-own-dot', c.label]); }
+    for (let i = 0; i < C.length; i++) { const a = [C[i].leader[0], C[i].leader[1]], b = [C[i].leader[2], C[i].leader[3]];
+      for (let j = 0; j < C.length; j++) { if (i === j) continue; const a2 = [C[j].leader[0], C[j].leader[1]], b2 = [C[j].leader[2], C[j].leader[3]];
+        if (j > i && cross(a, b, a2, b2)) out.push(['leader-cross', C[i].label, C[j].label]);
+        if (segDist(C[j].dot, a, b) < near + MM_R) out.push(['leader-dot', C[i].label, C[j].label, +segDist(C[j].dot, a, b).toFixed(1)]); }
+      for (const bx of boxes) if (bx.label !== C[i].label && segBox(a, b, bx)) out.push(['leader-box', C[i].label, bx.label]); }
+    return out;
+  }
   function presetFromHash() {
     const raw = decodeURIComponent(location.hash.slice(1)).trim(); if (!raw || !/^[A-Za-z0-9_-]+$/.test(raw)) return null;
     let s = raw.toLowerCase(), firms = false; if (s.endsWith('-firms')) { firms = true; s = s.slice(0, -6); }
@@ -1466,7 +1754,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), minimap: rel('minimap'), presets: (() => { const b = PRESETS[0].button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -1483,6 +1771,8 @@ void main() {
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
+    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [] }; },   // the minimap's geometry and the layout rules (round 10)
+    minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
@@ -1507,7 +1797,10 @@ void main() {
     tapAt(px, py) { return showHoverAt(px, py, { touch: true }); },
     tile() { return tileState; },
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
-    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
+    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
+    wire() { const lead = $('wiretrack').querySelector('.wi.lead'); return { key: wireState.key, pending: !!wireState.timer, items: wireState.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: wireState.cycleIndex, width: wireState.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: $('wiretrack').style.getPropertyValue('--wire-dur') }; },   // the wire's cycle (round 10)
+    wireAt(y, region) { const keep = state.year; state.year = y; const c = buildCycle(y, region === 'Russia' ? 'national' : 'region', region, 0); state.year = keep; return c.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })); },
+    tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
     glyph(name) { return regionGlyph(name); },
     jump(t) { return flyTo(t, { instant: true }).then(() => cam()); },
@@ -1525,10 +1818,28 @@ void main() {
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
     drawOrder() { return drawLog.slice(); },   // the last drawMap's steps: basemap, mark, then the layer
+    handover() { return Object.assign({}, handover); },
+    dotContrast(n = 300) {   // the dots' WCAG contrast against the composite beneath them with the two layers on and off (round 10, the author's check of 26 October)
+      if (state.mode !== 'firms') return null; const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return null; const c = cam(), W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(d.nn.length / n));
+      for (let i = 0; i < d.nn.length && pts.length < n; i += step) { const [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(firmColour(L, firmClass(d, i, L)))]); }
+      const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }, ratio = (a, b) => { const x = lum(a), z = lum(b); return (Math.max(x, z) + 0.05) / (Math.min(x, z) + 0.05); };
+      const sample = () => { const img = mctx.getImageData(0, 0, W, mctx.canvas.height).data, rs = []; for (const [px, py, col] of pts) { const o = 4 * (py * W + px), a = img[o + 3] / 255, ground = [img[o], img[o + 1], img[o + 2]].map((v, k) => Math.round(v * a + stg[k] * (1 - a))); rs.push(ratio(col, ground)); } return rs; };
+      drawMap(); const on = sample(); firmsLayersOff = true; drawMap(); const off = sample(); firmsLayersOff = false; drawMap();
+      let so = 0, sf = 0, mx = 0; for (let i = 0; i < on.length; i++) { so += on[i]; sf += off[i]; mx = Math.max(mx, Math.abs(on[i] - off[i])); }
+      return { n: on.length, on: so / on.length, off: sf / off.length, diff: so / on.length - sf / off.length, maxDiff: mx, layer: L, year: y };
+    },
+    firmsLayerAlphas(o) { if (o) { if (o.tint != null) TINT_A = o.tint; if (o.glow != null) GLOW_A = o.glow; glowCache = null; tintCache.clear(); drawMap(); } return { tint: TINT_A, glow: GLOW_A }; },   // the two layers' strengths (the audit's and the author's tuning)
+    grain(on) { document.documentElement.classList.toggle('nograin', on === false); return !document.documentElement.classList.contains('nograin'); },   // the surface grain on or off, for the audit's contrast guard (round 10)
+    noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
+    firmsLayers() { return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds }; },   // the two layers under the field (round 10)
+    ghost() { const c = cam(); return { alpha: ghostAlpha(c.k), drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)) }; },   // the ghost names (round 10)
+    hoverRegion() { return hoverRegionName; },
+    regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
+    pixelsAt(id, px, py) { const cv = $(id), d = window.devicePixelRatio || 1, g = cv.getContext('2d'), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(Array.from(g.getImageData(Math.round((px + dx) * d), Math.round((py + dy) * d), 1, 1).data)); return out; },   // the 3 by 3 pixels of a canvas around a point   // the city-window hand-over (round 10): the window's strength, the outside layer's alpha and whether it is outlined
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     methodMore(more) { if (more != null) { ui.methodMore = more ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); });
 })();

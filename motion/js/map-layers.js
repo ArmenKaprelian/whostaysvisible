@@ -65,18 +65,20 @@
     ctx.moveTo(x0 + 2 * s, y0 + 8 * s); ctx.lineTo(x0 + 2 * s, y0 + 2 * s); ctx.lineTo(x0 + 8 * s, y0 + 2 * s); ctx.moveTo(x1 - 8 * s, y0 + 2 * s); ctx.lineTo(x1 - 2 * s, y0 + 2 * s); ctx.lineTo(x1 - 2 * s, y0 + 8 * s);
     ctx.moveTo(x1 - 2 * s, y1 - 8 * s); ctx.lineTo(x1 - 2 * s, y1 - 2 * s); ctx.lineTo(x1 - 8 * s, y1 - 2 * s); ctx.moveTo(x0 + 8 * s, y1 - 2 * s); ctx.lineTo(x0 + 2 * s, y1 - 2 * s); ctx.lineTo(x0 + 2 * s, y1 - 8 * s); ctx.stroke(); }
   M.mark = function (ctx, cx, cy, size, colour, alpha = 1) { ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.beginPath(); ctx.arc(cx, cy, 2.5 * size / 24, 0, Math.PI * 2); ctx.fill(); ctx.restore(); };
-  M.markAGK = function (ctx, cx, cy, size, colour, alpha = 1) { ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.font = Motion.font(Math.round(size * 0.3), 500); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AGK', cx, cy + size * 0.02); ctx.restore(); };
-  M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true } = {}) {
+  M.markAGK = function (ctx, cx, cy, size, colour, alpha = 1) {   // drawn whole at every size: no symbol takes the striped style (the author's correction of 26 October to item 18)
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.font = Motion.font(Math.round(size * 0.3), 500); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AGK', cx, cy + size * 0.02); ctx.restore(); };
+  M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true, lod0Colour = null, lod0Alpha = 1, lod0Px = null, afterLand = null } = {}) {   // afterLand(ctx): drawn right after the land fill and before every line (round 10: the Firms view's tint and glow)   // lod0Colour, lod0Alpha, lod0Px: the national regional borders' own tone, fade and width (round 10, G13b; the atlas passes the ghost tone fading by k 3)
     Motion.camTransform(ctx, stage, cam);
     const fine = M.windowLod(bmp, cam, stage);
     const w1 = fine ? Motion.clamp((cam.k - 6) / 6, 0, 1) : 0;
     const path = w1 >= 0.5 && fine ? fine : bmp.lod0;
     ctx.save(); ctx.globalAlpha *= landAlpha;
     ctx.fillStyle = theme.land; ctx.fill(path, 'evenodd');
+    if (afterLand) afterLand(ctx);
     if (graticule) { ctx.strokeStyle = theme.graticule; ctx.lineWidth = 1.0 / cam.k; ctx.stroke(bmp.grat); }   // a whiter 1 px line since round 9 (0.7 px before)
     if (borders) {
       ctx.strokeStyle = theme.border; ctx.lineWidth = Math.min(borderPx, 1) / cam.k; ctx.lineJoin = 'round';
-      if (w1 < 1) { ctx.save(); ctx.globalAlpha *= 1 - w1; ctx.stroke(bmp.lod0); ctx.restore(); }
+      if (w1 < 1 && lod0Alpha > 0) { ctx.save(); ctx.globalAlpha *= (1 - w1) * lod0Alpha; if (lod0Colour) ctx.strokeStyle = lod0Colour; if (lod0Px) ctx.lineWidth = lod0Px / cam.k; ctx.stroke(bmp.lod0); ctx.restore(); }
       if (w1 > 0 && fine) { ctx.save(); ctx.globalAlpha *= w1; ctx.stroke(fine); ctx.restore(); }
     }
     ctx.restore();
@@ -96,14 +98,16 @@
     return paths;
   };
   // Classes listed in `stroke` are outlined (strokePx design pixels, strokeAlpha) instead of filled.
-  M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null, stroke = null, strokePx = 1, strokeAlpha = 0.3 } = {}) {
+  M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null, stroke = null, strokePx = 1, strokeAlpha = 0.3, outline = null } = {}) {   // outline: { colour, alpha, px } strokes every filled tile after its fill (round 10, the city-window hand-over)
     Motion.camTransform(ctx, stage, cam);
     ctx.save(); ctx.globalAlpha *= alpha;
     for (const [c, p] of paths) {
       if (stroke && stroke.has(c)) { ctx.save(); ctx.globalAlpha *= strokeAlpha; ctx.strokeStyle = colorOf(c); ctx.lineWidth = strokePx / cam.k; ctx.stroke(p); ctx.restore(); continue; }
       ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p);
     }
-    ctx.restore(); stage.base();
+    ctx.restore();
+    if (outline && outline.alpha > 0) { ctx.save(); ctx.globalAlpha *= outline.alpha; ctx.strokeStyle = outline.colour; ctx.lineWidth = (outline.px || 1) / cam.k; for (const [c, p] of paths) ctx.stroke(p); ctx.restore(); }
+    stage.base();
   };
 
   // --- density layers (base64 typed arrays) --------------------------------------------------
@@ -193,8 +197,8 @@
     }
     if (year) {
       const u = year.b == null ? 0 : year.u;
-      Motion.text(ctx, year.a, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * (1 - u), group: 'year' });
-      if (u > 0) Motion.text(ctx, year.b, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * u, group: 'year' });
+      Motion.text(ctx, year.a, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * (1 - u), group: 'year', stripe: { gap: 2 } });   // the large year, striped (round 10)
+      if (u > 0) Motion.text(ctx, year.b, 1836, 212, { size: 84, weight: 700, color: theme.ink, align: 'right', alpha: alpha * u, group: 'year', stripe: { gap: 2 } });
     }
     M.infoLines(ctx, theme, lines, alpha);
   };

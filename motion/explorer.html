@@ -14,23 +14,27 @@
    something moves or has focus (the author's correction, 25 October 2026). */
 :root {
   --stage: #060B18; --land: #172A45; --border: #495669; --graticule: #2E333D;
-  --ink: #ECEEF1; --muted: #9EABBD; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
+  --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #79CDBF; --accent-strong: #C7F8E7; --fall: #F39523; --rise: #79CDBF; --below: #3C4852; --highlight: rgba(121,205,191,0.10);   /* the cyan ramp's steps 4 and 6; the diverging pair's classes 2 and 5 (round 10) */
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
   --div-1: #FFB000; --div-2: #F39523; --div-3: #EA7719; --div-4: #50B5AA; --div-5: #79CDBF; --div-6: #A1E4D3; --zero: #6B7482;   /* the signed layers' pair (round 10): declines amber to orange, rises the cyan ramp's steps 3 to 5, the slate for no usable baseline */
   --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
+  --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 26 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
+  --ghost: #1F3350;   /* one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22): 2.5 percent on the dark theme */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets in the live cursor colour (W14b) */
   color-scheme: dark;
 }
 :root[data-theme="light"] {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
-  --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
+  --ink: #24323D; --muted: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
   --ind-1: #936E16; --ind-2: #2550B4; --ind-3: #973001; --ind-4: #1A7F7A; --ind-5: #6D6816; --ind-6: #7B3FD1; --ind-7: #5D4E78; --ind-8: #537A9B; --ind-9: #5B6470;
   --div-1: #854505; --div-2: #9D5E01; --div-3: #B27901; --div-4: #1C989E; --div-5: #0A7E83; --div-6: #196369; --zero: #727C86; --fall: #9D5E01; --rise: #0A7E83;
-  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light;
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; --go: #22364D; --go-leader: #22364D; --go-live: #000000; --ghost: #E4E7E4;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.016 0 0.44'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");
   --by: "Armen G. Kaprelian"; --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 html, body { height: 100%; }
 body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums;
@@ -40,7 +44,13 @@ body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(
 header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; min-height: 44px; flex: 0 0 auto; }   /* never shrinks over the map */
 footer { flex: 0 0 auto; }
 .hleft { display: grid; gap: 0; min-width: 0; }
-header h1 { font-size: 20px; line-height: 24px; margin: 0; font-weight: 700; text-transform: uppercase; }   /* VISIBILITY ATLAS (round 10) */
+header h1 { font-size: 28px; line-height: 28px; margin: 0; font-weight: 700; text-transform: uppercase; }   /* VISIBILITY ATLAS (round 10); 28 px, the striped display size */
+/* The striped display style (round 10, item 18): large type cut by hairline gaps; on canvas eight bars per capital height, on the page a 3 px pitch (2 px bars, 1 px gaps,
+   six and a half bars over the 19.5 px cap of a 28 px line) because a fractional pitch blurs under the mask's antialiasing; the mask's phase starts at the cap top (the
+   baseline sits 24.5 px down a 28 px line box); on a span around the text, so the 18 px mark beside it stays whole; plain where masks are unsupported. */
+@supports (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000)) {
+  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); -webkit-mask-position: 0 5px; mask-position: 0 5px; }
+}
 .tagline { color: var(--muted); font-size: 12px; line-height: 16px; }
 .hright { margin-left: auto; display: flex; align-items: center; gap: 18px; min-width: 0; }   /* the theme button and the byline; below about 1,400 px the group wraps as a whole to a second row at the right */
 /* The byline and the about line (round 10, the author's item 16): the name line on the title's baseline at the right, the dissertation title beneath, nothing larger. */
@@ -82,7 +92,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #field, #field2d, #marks, #overlay { pointer-events: none; }
 .mapwrap { --lift: 0px; }
-.mapwrap.strip-open { --lift: 26px; }   /* the context strip lifts the legend, the zoom box and the scale bar while it is open (round 9) */
+.mapwrap.strip-open { --lift: 34px; }   /* the wire lifts the legend, the zoom box and the scale bar while it is open (round 9's strip at 26 px; the 34 px wire since round 10) */
 .maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
@@ -96,16 +106,16 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .kv b.loc { font-size: 12px; }
 .maplegend .row { margin: 2px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; padding-left: 20px; text-indent: -20px; }   /* legend row labels in tracked capitals (round 10); a wrapped row hangs under its text, not under the swatch */
 .maplegend .row.p { text-transform: none; letter-spacing: 0; font-weight: 400; padding-left: 0; text-indent: 0; }   /* the legend's sentence lines stay mixed case */
-.lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }   /* the overlays' titles in the neon green (26 October) */
 .lhead .ltitle b { font-weight: 500; }
 .mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; color: var(--muted); max-width: 43%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }   /* 43 percent beside the legend's 53 (round 10: the wider type) */
 .mapwrap.narrow .mapnote { font-size: 11.5px; line-height: 1.3; max-width: 62%; }   /* a phone-width map: a smaller, wider note that ends above the scale bar (round 10) */
 .mapwrap:not(.narrow) .maplegend { max-width: min(calc(100% - 136px), 53%); }   /* the legend and the note never share the map's width (round 10) */
 .mapwrap.mix-on .maplegend { max-height: calc(100% - 74px - var(--lift)); }   /* with the mix box present the legend ends below its stub and scrolls inside (round 10) */
-.mapnote .nlabel { color: var(--muted); align-self: center; }
+.mapnote .nlabel { color: var(--context); align-self: center; }
 .mixbox { position: absolute; left: 12px; top: 12px; z-index: 3; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px 8px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; width: 340px; max-width: calc(100% - 24px); box-sizing: border-box; }   /* the revenue mix (round 9: the industry layer's live breakdown */
 .mixbox .mhead { display: flex; align-items: center; gap: 6px; }
-.mixbox .mhead b { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.mixbox .mhead b { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }
 .mixbox .r { display: flex; align-items: baseline; gap: 6px; line-height: 1.45; }
 .mixbox .r .sw { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 0; align-self: center; }
 .mixbox .r .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -129,12 +139,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .t-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
 .mapwrap.cursor-live .t-foot { color: var(--context-live); }
 /* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
-.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }
+.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the data wire (round 10, item 14): 34 px */
 .ctx .toggle { pointer-events: auto; color: var(--context); }
-.ctx.narrow { font-size: 11.5px; height: 44px; }   /* a phone-width map: the strip wraps to two lines (round 10) */
-.ctx.narrow .ctxt { height: 32px; line-height: 16px; }
-.ctx.narrow .ctxt .t { white-space: normal; }
-.mapwrap.narrow.strip-open { --lift: 44px; }
+.ctx.narrow .ctxt.rm .t { white-space: normal; }   /* the phone's two-line form stays for the reduced-motion path only; the wire scrolls on a phone as on a desktop */
 .ctx .toggle:hover { color: var(--context-live); }
 .ctx.closed { left: auto; right: 76px; bottom: 12px; height: auto; padding: 2px; border-top: 0; border-radius: 0; }
 .ctx.closed .glyph, .ctx.closed .ctxt { display: none; }
@@ -143,23 +150,55 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctx .glyph path.live { stroke: var(--context-live); }
 .ctx .glyph path.nt { transition: none; }
 .ctx .glyph path.out { opacity: 0; }
-.ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 20px; line-height: 20px; }
+/* The data wire (round 10, the author's item 14a): one row of short dated statements written twice in a track that a transform animation scrolls at
+   60 px per second (the duration set from the track's width), paused under the pointer or keyboard focus; the text row takes pointer events, so the
+   map's bottom 34 px are not hoverable under it (round 9's strip passed hovers through). Place names in tracked capitals, figures tabular; the mark at
+   10 px as the separator; a cat fact's prefix in the muted context colour and its text in the ink (item 15). The two stacked spans serve the
+   reduced-motion path only (one item at a time, 8 s each, round 9's crossfade). */
+.ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; line-height: 24px; font-size: 14px; overflow: hidden; pointer-events: auto; }
+.ctxt .t { display: none; }
+.ctxt.rm .t { display: block; }
+.ctxt.rm .track { display: none; }
+.ctxt .track { position: absolute; left: 0; top: 0; height: 24px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--context); will-change: transform; animation: wire var(--wire-dur, 300s) linear infinite; }
+.ctx:hover .track, .ctx:focus-within .track, .ctxt .track.pinned { animation-play-state: paused; }
+@keyframes wire { to { transform: translateX(-50%); } }
+.wi { display: inline-block; padding: 0 12px; }
+.wi .num { font-variant-numeric: tabular-nums; }
+.wi.tip, .wi.cat .pre { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.wi.cat .pre { color: var(--context-muted); }
+.wi.cat .cf { color: var(--ink); }
+.wsep { width: 10px; height: 10px; color: var(--context-muted); flex: 0 0 auto; }
+@media (prefers-reduced-motion: reduce) { .ctxt .track { animation: none; } }
 .ctxt .t { position: absolute; left: 0; right: 0; top: 0; bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
 .ctxt .t.hid { opacity: 0; }
 .ctxt .t.live { color: var(--context-live); }
 .ctxt .num { font-variant-numeric: tabular-nums; }
 .ctxt .t.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the strip's tips in tracked capitals (round 10) */
-@media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } .slider .thumb path { transition: none !important; transform: none !important; } .yearrow .yr, .slider .thumb, .yearrow .pulse { transition: none !important; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
 .card { background: var(--panel); border-radius: 0; border: 3px solid var(--context); padding: 8px 10px; min-width: 0; }
 .card.act { border-color: var(--cursor); }
-.card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
+/* The GO TO card (round 10, the author's item 21): travel neither acts on the data nor reads it, so the card and its buttons take the page's neutral, the ink,
+   with the pressed city (the preset the camera sits at) in a solid ink fill and the hover in full white; every other panel keeps its role colour. */
+.card.go { border-color: var(--go); }   /* the GO TO card's neutral (item 21, amended 26 October): travel neither acts on the data nor reads it */
+.card.go .btn { border-color: var(--go); }
+.card.go .btn:hover { border-color: var(--go-live); }
+.card.go .btn[aria-pressed="true"] { background: var(--go); color: var(--stage); border-color: var(--go); }
+.card.go .btn[aria-pressed="true"]:hover { background: var(--go-live); border-color: var(--go-live); }
+.card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--context); margin: 0 0 8px; font-weight: 500; }   /* the card titles in the neon green at rest (the author's correction of 26 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 /* The method block (round 10, the author's correction): under VIEW, a green i button toggles the block, collapsed by default and remembered; the block shows two lines
    under a fade with a More toggle (remembered too); the first section follows the view and the layer, the second holds the reading notes. */
 .methodrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .method { display: grid; gap: 6px; margin-top: 6px; margin-bottom: 8px; }
 .method[hidden] { display: none; }   /* the hidden attribute must win over the grid display */
+[hidden] { display: none !important; }   /* as the published host's skeleton rules (round 10): a hidden element never shows through its own display rule, the pulse button in the Cells view included */
+/* The surface grain (round 10, the author's item 22): one 128 px fractal-noise tile (feTurbulence, two octaves, stitched, desaturated) as a second background layer on every
+   chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels on the dark theme, 2.5 percent of the range, and 4 on the light, 1.5 percent), composited normally; never on the map
+   canvas or in the video; the audit's guard measures the text contrast on a grained patch against the plain surface (within 0.05). The nograin class clears it for that measure. */
+.card, .maplegend, .tooltip, .mixbox, .ctx, .scalebar, .zoombox, .mapnote, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
+.nograin .card, .nograin .maplegend, .nograin .tooltip, .nograin .mixbox, .nograin .ctx, .nograin .scalebar, .nograin .zoombox, .nograin .mapnote, .nograin header, .nograin footer { background-image: none; }
+
 .method .mtext p { margin: 0 0 6px; }
 .method .mtext h3 { font-size: 12px; margin: 6px 0 2px; color: var(--muted); }
 .method .mtext.clamped { max-height: calc(2 * 1.35 * 12px); overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%); mask-image: linear-gradient(to bottom, black 45%, transparent 100%); }
@@ -169,20 +208,68 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 #modes { margin-bottom: 8px; }
 #modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
-.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 60px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
-/* The context layer's live marker (round 9): while a pulse runs the slider and the year take the context colour and a dot follows the year. */
-.yearrow .yr::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: 1px; background: var(--context-live); opacity: 0; }
-.yearrow.live .yr::after { opacity: 1; }
+/* The year row (round 10, the author's corrections of 26 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Plex Mono 700 in tracked capitals on one
+   baseline, the value in tabular figures and unstriped (under the display floor); the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
+   neon green, drawn whole as every symbol is; while a pulse runs the value and the thumb step up to the live green and settle back over 0.3 s; the track and its fill stay fuchsia;
+   the brackets open outward by 2 px over 0.12 s while hovered or dragged and close on release, no motion at rest and none under reduced motion; the native thumb is a 24 px
+   transparent hit area under the mark. The mark repeats the #mark symbol's geometry inline so its four brackets can move apart. The pulse button is the one red control: a red
+   border and the red ring-and-dot glyph, filled red while a pulse runs, since it belongs to the red marks. */
+.yearrow .ui, .yearrow .yr { font-size: 16px; line-height: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 56px; color: var(--context); transition: color 0.3s; }
 .yearrow.live .yr { color: var(--context-live); }
-.yearrow.live input[type=range] { accent-color: var(--context-live); }
-.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--cursor); flex: 0 0 auto; }
-.yearrow .pulse:hover, .yearrow .pulse:focus-visible, .yearrow.live .pulse { color: var(--cursor-live); }
+.slider { position: relative; flex: 1 1 120px; min-width: 80px; height: 24px; }
+.slider input[type=range] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 24px; margin: 0; background: transparent; cursor: pointer; }
+.slider input[type=range]:focus-visible { outline: none; }
+.slider input[type=range]::-webkit-slider-runnable-track { height: 2px; border: 0; background: linear-gradient(to right, var(--cursor) calc(var(--pct, 0) * 100%), var(--border) 0); }
+.slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; margin-top: -11px; background: transparent; border: 0; border-radius: 0; }
+.slider input[type=range]::-moz-range-track { height: 2px; border: 0; background: var(--border); }
+.slider input[type=range]::-moz-range-progress { height: 2px; background: var(--cursor); }
+.slider input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: transparent; border: 0; border-radius: 0; }
+.slider .thumb { position: absolute; top: 0; left: calc(var(--pct, 0) * (100% - 24px)); width: 24px; height: 24px; pointer-events: none; color: var(--context); overflow: visible; transition: color 0.3s; }   /* the 24-unit mark in a 28.8-unit box: 20 px on screen */
+.slider .thumb path { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.12s ease-out; }   /* 3 units are 2.5 px */
+.slider .thumb .dot { fill: currentColor; }
+.yearrow.live .thumb { color: var(--context-live); }
+.slider input[type=range]:hover ~ .thumb, .slider input[type=range]:active ~ .thumb { color: var(--context-live); }
+.slider input[type=range]:hover ~ .thumb .tl, .slider input[type=range]:active ~ .thumb .tl { transform: translate(-2.4px, -2.4px); }   /* 2.4 user units are 2 px at the 20 px size */
+.slider input[type=range]:hover ~ .thumb .tr, .slider input[type=range]:active ~ .thumb .tr { transform: translate(2.4px, -2.4px); }
+.slider input[type=range]:hover ~ .thumb .br, .slider input[type=range]:active ~ .thumb .br { transform: translate(2.4px, 2.4px); }
+.slider input[type=range]:hover ~ .thumb .bl, .slider input[type=range]:active ~ .thumb .bl { transform: translate(-2.4px, 2.4px); }
+.slider:has(input:focus-visible)::after { content: ""; position: absolute; inset: -6px; pointer-events: none; z-index: 6; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
+.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--treated); border-color: var(--treated); flex: 0 0 auto; transition: background-color 0.3s, color 0.3s; }   /* the one red control */
+.yearrow .pulse:hover, .yearrow .pulse:focus-visible { background: color-mix(in srgb, var(--treated) 18%, var(--control)); }
+.yearrow.live .pulse { background: var(--treated); color: var(--stage); }
 .yearrow .pulse svg { width: 16px; height: 16px; display: block; }
 .yearrow .pulse:disabled { opacity: 0.4; cursor: default; }
 @media (pointer: coarse) { .yearrow .pulse { width: 36px; height: 36px; } }
 .presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .presets .btn { font-size: 12px; padding: 2px 6px; }
+/* The minimap (round 10, the author's item 12, in the GO TO card's ice-blue neutral of item 21): the outline and the graticule from the basemap, the 22 preset cities as dots
+   with leaders to label boxes in tracked capitals, the mark's four brackets as the Russia frame; shown above 900 px, where the button list keeps only Central Moscow; the
+   phone keeps the buttons. Hover and focus take the full white; the city the camera sits at reads as pressed (its box filled). The leaders draw on once at load (0.6 s). */
+.minimap { display: block; width: 100%; height: auto; overflow: visible; margin: 2px 0 8px; color: var(--go); }
+.minimap .land { fill: var(--land); stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.minimap .grat { fill: none; stroke: var(--graticule); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.minimap .frame { cursor: pointer; outline: none; }
+.minimap .frame path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.minimap .city { cursor: pointer; outline: none; }
+.minimap .city .dot { fill: currentColor; }
+.minimap .city .ld { fill: none; stroke: var(--go-leader); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 0; }   /* the leaders in the paler ice; the dots and box strokes in the card's blue */
+.minimap.drawn .city .ld { animation: mmdraw 0.6s ease-out backwards; }
+@keyframes mmdraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.minimap .box { fill: var(--panel); stroke: currentColor; stroke-width: 1; }
+.minimap text { fill: var(--ink); font-family: var(--font); font-size: 9px; font-weight: 500; letter-spacing: 0.08em; dominant-baseline: central; }
+.minimap .city:hover, .minimap .city:focus-visible, .minimap .frame:hover, .minimap .frame:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
+.minimap .city:hover .ld, .minimap .city:focus-visible .ld { stroke: var(--context-live); }
+.minimap .city:focus-visible .box, .minimap .frame:focus-visible .box { stroke: var(--cursor-live); stroke-width: 2; }
+/* The selected preset (the author's correction of 26 October): the city whose preset the camera is on, after a click, a hash link or a flight there, shows its dot, leader, box
+   stroke and name in the full neon green until the camera leaves it; RUSSIA likewise at the fit; a hover keeps the name in the ink. */
+.minimap [aria-pressed="true"] { color: var(--context); }
+.minimap [aria-pressed="true"] .ld { stroke: var(--context); }
+.minimap [aria-pressed="true"] text { fill: var(--context); }
+.minimap .city:hover text, .minimap .frame:hover text { fill: var(--ink); }
+@media (max-width: 900px) { .minimap { display: none; } }
+@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 .muted { color: var(--muted); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; }
@@ -209,7 +296,7 @@ footer a { color: var(--accent); }
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol></defs></svg>
 <header>
-  <div class="hleft"><h1><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg>Visibility atlas</h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
+  <div class="hleft"><h1><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
   <div class="hright"><button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button>
   <div class="byline"><div class="who"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg>Armen G. Kaprelian · PhD Candidate, Claremont Graduate University</div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></div>
 </header>
@@ -228,7 +315,7 @@ footer a { color: var(--accent); }
       <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="ZOOM OUT (−)">−</button>
       <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="FIT THE WHOLE COUNTRY (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     </div>
-    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line">▾</button></div>
+    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span><div class="track" id="wiretrack"></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line">▾</button></div>
     <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span></div></div>
   </div>
   <aside class="side">
@@ -238,10 +325,11 @@ footer a { color: var(--accent); }
       <div class="methodrow"><span class="ui">Method</span><button class="btn info" id="methodbtn" type="button" aria-expanded="false" aria-controls="method" aria-label="Show the method" title="METHOD">i</button></div>
       <div class="method" id="method" hidden><div class="mtext clamped" id="methodtext"><p class="prov" id="methodintro"></p><p class="prov" id="layerprov"></p><h3 class="ui">Reading the atlas</h3><p class="prov" id="methodread"></p></div><button class="btn more" id="methodmore" type="button" aria-expanded="false">More</button></div>
       <div class="controls" id="layers"></div>
-      <div class="yearrow" id="yearrow"><span class="ui">Year</span><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><span class="yr" id="yearlabel">2024</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
+      <div class="yearrow" id="yearrow"><span class="ui" id="yearui">Year</span><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
     </section>
-    <section class="card act">
+    <section class="card go">
       <h2>Go to</h2>
+      <svg class="minimap" id="minimap" viewBox="0 0 376 232" role="group" aria-label="Minimap of the preset cities"></svg>
       <div class="presets" id="presets"></div>
       <div class="prov">Scroll or the + and − buttons zoom, drag pans, a click on a cell zooms to it (Shift+click zooms out). On a touch screen: drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
     </section>
@@ -277,6 +365,7 @@ footer a { color: var(--accent); }
 <script src="data/cells25.js" onerror="this.remove()"></script>
 <script src="data/industry.js" onerror="this.remove()"></script>
 <script src="data/regions.js" onerror="this.remove()"></script>
+<script src="data/offwire.js" onerror="this.remove()"></script>   <!-- the wire's cat facts (round 10, item 15) -->
 <script src="data/treatednational.js" onerror="this.remove()"></script>
 <script src="data/firms.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
