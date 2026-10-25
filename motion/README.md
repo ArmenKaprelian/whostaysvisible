@@ -1292,14 +1292,16 @@ The chapter treats membership as fixed and uses no dates. This view is therefore
 group, with the dated turning-red added as a descriptive layer; the close's caveat (the sanctions-list dates,
 the inferred share, the undated firms red throughout) is unchanged.
 
-Published: TBD-V16; TBD-V20.
+Published on 25 October 2026 after the author's confirmation: atlas v16 (version id 1792898590-9ef6) (the page, `js/explorer-app.js`,
+`js/map-layers.js`) and explainer v20 (version id 1792898612-816b) (the page, `js/map-layers.js`, `js/treated-scenes.js`); the
+teaser asset kept, the committed round c12d966.
 
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
 journey loads, the 24 national rasters and the 12 address scripts (109.8 MB) and refuses an identifier
 key or a named neighbour. Explainer artifact: v10 and v11 (two uploads), v12 with the assets capability, v13 with the three 720p cuts as assets linked from the page, v14 and v15 with the 24 October wording, v16 with the re-rendered 720p assets, v17 with the wording correction, v18 with the side cuts retired, v19 with the directed camera and the re-rendered teaser asset;
-atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked, v14 with the pinch rate, the zoom floor and the smoothness fixes, v15 with the address field in WebGL, the pulse of newly listed firms, the corrected address manifest and the canvas-sizing fix (the page, the script and `data/firms.js`; the address scripts kept from v14). The published pages could not be opened from the lab's headless
+atlas artifact: v6 and v7 (two uploads), v8 with the wording, v9 with the correction, v10 with the treated gloss, click-to-zoom, the zoom box and the phone layout, v11 with the directed flights, v12 with the 25 km cells, the hand-over between grids and the pinch rate, v13 with the click that goes to what was clicked, v14 with the pinch rate, the zoom floor and the smoothness fixes, v15 with the address field in WebGL, the pulse of newly listed firms, the corrected address manifest and the canvas-sizing fix (the page, the script and `data/firms.js`; the address scripts kept from v14), v16 with the rim before the listing year, the three legend rows, the pulse button and the earlier re-centring; explainer v20 with the rim, the three legend rows and the ringed ticker line (the teaser asset unchanged). The published pages could not be opened from the lab's headless
 browser (the links need a claude.ai session), so the load on the host is the author's check.
 
 ## Design decisions
