@@ -1,0 +1,277 @@
+"check","expected","observed","tolerance","pass"
+"2014: located firms equal M5's total",4625980,4625980,0,TRUE
+"2014: 25 km cells equal cells25's cells (count)",8031,8031,0,TRUE
+"2014: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2014: 100 km cells equal cellsyears' cells",1168,1168,0,TRUE
+"2014: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2014: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2014: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2014: ranked shares non-increasing",1,1,0,TRUE
+"2014: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2014: listed shares within 0 to 100",0,0,0,TRUE
+"2014: located firms over the regions equal M5's total",4625980,4625980,0,TRUE
+"2015: located firms equal M5's total",4613157,4613157,0,TRUE
+"2015: 25 km cells equal cells25's cells (count)",8011,8011,0,TRUE
+"2015: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2015: 100 km cells equal cellsyears' cells",1167,1167,0,TRUE
+"2015: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2015: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2015: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2015: ranked shares non-increasing",1,1,0,TRUE
+"2015: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2015: listed shares within 0 to 100",0,0,0,TRUE
+"2015: located firms over the regions equal M5's total",4613157,4613157,0,TRUE
+"2016: located firms equal M5's total",4812100,4812100,0,TRUE
+"2016: 25 km cells equal cells25's cells (count)",8002,8002,0,TRUE
+"2016: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2016: 100 km cells equal cellsyears' cells",1164,1164,0,TRUE
+"2016: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2016: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2016: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2016: ranked shares non-increasing",1,1,0,TRUE
+"2016: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2016: listed shares within 0 to 100",0,0,0,TRUE
+"2016: located firms over the regions equal M5's total",4812100,4812100,0,TRUE
+"2017: located firms equal M5's total",4534752,4534752,0,TRUE
+"2017: 25 km cells equal cells25's cells (count)",7930,7930,0,TRUE
+"2017: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2017: 100 km cells equal cellsyears' cells",1162,1162,0,TRUE
+"2017: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2017: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2017: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2017: ranked shares non-increasing",1,1,0,TRUE
+"2017: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2017: listed shares within 0 to 100",0,0,0,TRUE
+"2017: located firms over the regions equal M5's total",4534752,4534752,0,TRUE
+"2018: located firms equal M5's total",4317455,4317455,0,TRUE
+"2018: 25 km cells equal cells25's cells (count)",7890,7890,0,TRUE
+"2018: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2018: 100 km cells equal cellsyears' cells",1164,1164,0,TRUE
+"2018: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2018: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2018: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2018: ranked shares non-increasing",1,1,0,TRUE
+"2018: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2018: listed shares within 0 to 100",0,0,0,TRUE
+"2018: located firms over the regions equal M5's total",4317455,4317455,0,TRUE
+"2019: located firms equal M5's total",3984991,3984991,0,TRUE
+"2019: 25 km cells equal cells25's cells (count)",7824,7824,0,TRUE
+"2019: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2019: 100 km cells equal cellsyears' cells",1160,1160,0,TRUE
+"2019: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2019: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2019: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2019: ranked shares non-increasing",1,1,0,TRUE
+"2019: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2019: listed shares within 0 to 100",0,0,0,TRUE
+"2019: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2019: located firms over the regions equal M5's total",3984991,3984991,0,TRUE
+"2020: located firms equal M5's total",3574314,3574314,0,TRUE
+"2020: 25 km cells equal cells25's cells (count)",7745,7745,0,TRUE
+"2020: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2020: 100 km cells equal cellsyears' cells",1157,1157,0,TRUE
+"2020: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2020: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2020: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2020: ranked shares non-increasing",1,1,0,TRUE
+"2020: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2020: listed shares within 0 to 100",0,0,0,TRUE
+"2020: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2020: located firms over the regions equal M5's total",3574314,3574314,0,TRUE
+"2021: located firms equal M5's total",3277638,3277638,0,TRUE
+"2021: 25 km cells equal cells25's cells (count)",7702,7702,0,TRUE
+"2021: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2021: 100 km cells equal cellsyears' cells",1154,1154,0,TRUE
+"2021: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2021: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2021: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2021: ranked shares non-increasing",1,1,0,TRUE
+"2021: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2021: listed shares within 0 to 100",0,0,0,TRUE
+"2021: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2021: located firms over the regions equal M5's total",3277638,3277638,0,TRUE
+"2021: (region, industry2) rows of the pinned regional table all present",7284,7284,0,TRUE
+"2021: (region, industry2) located counts equal the pinned regional table (max abs diff)",0,0,0,TRUE
+"2021: the regional sums reproduce the located total",3277638,3277638,0,TRUE
+"2022: located firms equal M5's total",3146043,3146043,0,TRUE
+"2022: 25 km cells equal cells25's cells (count)",7777,7777,0,TRUE
+"2022: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2022: 100 km cells equal cellsyears' cells",1180,1180,0,TRUE
+"2022: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2022: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2022: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2022: ranked shares non-increasing",1,1,0,TRUE
+"2022: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2022: listed shares within 0 to 100",0,0,0,TRUE
+"2022: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2022: located firms over the regions equal M5's total",3146043,3146043,0,TRUE
+"2023: located firms equal M5's total",3102998,3102998,0,TRUE
+"2023: 25 km cells equal cells25's cells (count)",7801,7801,0,TRUE
+"2023: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2023: 100 km cells equal cellsyears' cells",1180,1180,0,TRUE
+"2023: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2023: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2023: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2023: ranked shares non-increasing",1,1,0,TRUE
+"2023: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2023: listed shares within 0 to 100",0,0,0,TRUE
+"2023: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2023: located firms over the regions equal M5's total",3102998,3102998,0,TRUE
+"2024: located firms equal M5's total",3083823,3083823,0,TRUE
+"2024: 25 km cells equal cells25's cells (count)",7810,7810,0,TRUE
+"2024: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2024: 100 km cells equal cellsyears' cells",1182,1182,0,TRUE
+"2024: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2024: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2024: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2024: ranked shares non-increasing",1,1,0,TRUE
+"2024: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2024: listed shares within 0 to 100",0,0,0,TRUE
+"2024: the Chelyabinsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Irkutsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Kaliningrad window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Kazan window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Khabarovsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Krasnodar window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Krasnoyarsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Moscow window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Murmansk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Nizhny Novgorod window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Novosibirsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Omsk window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Perm window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Rostov-on-Don window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Samara window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the St Petersburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Tyumen window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Ufa window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Vladivostok window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Volgograd window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Voronezh window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: the Yekaterinburg window's 1 km cells equal cellsyears' (count and firms)",1,1,0,TRUE
+"2024: located firms over the regions equal M5's total",3083823,3083823,0,TRUE
+"2025: located firms equal M5's total",3062023,3062023,0,TRUE
+"2025: 25 km cells equal cells25's cells (count)",7812,7812,0,TRUE
+"2025: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2025: 100 km cells equal cellsyears' cells",1184,1184,0,TRUE
+"2025: 100 km firms equal cellsyears' (max abs diff)",0,0,0,TRUE
+"2025: a cell has a leading division exactly when a firm has a revenue value",0,0,0,TRUE
+"2025: leading shares within 1 to 100 where known",0,0,0,TRUE
+"2025: ranked shares non-increasing",1,1,0,TRUE
+"2025: rounded top shares sum to at most 100 plus half a point per entry",0,0,0,TRUE
+"2025: listed shares within 0 to 100",0,0,0,TRUE
+"2025: located firms over the regions equal M5's total",3062023,3062023,0,TRUE
+"crosswalk: every matched region has a sample",0,0,0,TRUE
+"crosswalk: the lowest share of a region's sampled firms inside its polygon is at least 0.90",1,1,0,TRUE
+"crosswalk: at most 10 percent of the outside labels' samples fall inside any polygon (firms registered outside the outline but geocoded inside it)",1,1,0,TRUE
+"industry: 88 divisions in the English title table",88,88,0,TRUE
+"industry: 88 divisions in the OKVED 2 crosswalk",88,88,0,TRUE
+"industry: the two code sets coincide (symmetric difference)",0,0,0,TRUE
+"industry: the code set equals the lab's 88 divisions",0,0,0,TRUE
+"industry: every codelist section letter agrees with the division's NACE range",0,0,0,TRUE
+"industry: every title and short label non-empty",0,0,0,TRUE

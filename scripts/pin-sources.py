@@ -163,6 +163,13 @@ add_small("motion.strateg-government", f"{PROG}/data/raw_files/sanctioned_strate
 add_small("motion.deflator", f"{PROG}/data/raw_files/RF_GDP_deflator/API_NY.GDP.DEFL.ZS.AD_DS2_en_csv_v2_35893.csv", "motion")
 add_small("motion.okved-names", f"{ROOT}/Claude Code/2026-09-24-before-migration/programming/data/raw_files/okved/okved_names.xlsx", "motion", kind="xlsx")
 add_small("motion.okfs", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okfs.csv", "motion")
+# The industry layer (round 9, 25 October 2026): Eurostat's NACE Rev. 2 codelist downloaded into the lab (data/external/nace-rev2/README.md
+# records the URLs, bytes and hashes), and the programming project's OKVED 2 crosswalk with its sources record for the equivalence check.
+LAB = f"{ROOT}/Claude Code/current/dataviz-lab"
+add_small("motion.nace-rev2-codelist", f"{LAB}/data/external/nace-rev2/NACE_R2-ESTAT-20.1.tsv", "motion", kind="tsv")
+add_small("motion.nace-rev2-sdmx", f"{LAB}/data/external/nace-rev2/NACE_R2-ESTAT-20.1.sdmx.xml", "motion", kind="xml")
+add_small("motion.classifier-crosswalk", f"{PROG}/metadata/chapter2-addendum-classifier-crosswalk.csv", "motion")
+add_small("motion.classifier-sources", f"{PROG}/metadata/chapter2-addendum-classifier-sources.csv", "motion")
 add_small("motion.okopf", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okopf-2012.csv", "motion")
 
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()

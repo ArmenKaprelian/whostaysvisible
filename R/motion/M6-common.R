@@ -37,6 +37,8 @@ rus <- wdi[wdi$`Country Code` == "RUS", ]
 if (nrow(rus) != 1) stop("deflator: Russia row not found")
 idx <- as.numeric(rus[1, as.character(2011:2025)])
 deflator <- data.frame(year = 2011:2025, index = idx, defl = idx / idx[2021 - 2010])
+# Real values are nominal values divided by this index (2021 rubles), the programming convention; until 25 October 2026
+# the lab multiplied, which inverted the time direction of every real series (corrected in round 9).
 DBI::dbWriteTable(con, "deflator", deflator[, c("year", "defl")], temporary = TRUE, overwrite = TRUE)
 
 # ---- sanctions list: one row per INN with the earliest start date and that row's inferred flag ----
@@ -111,7 +113,7 @@ fy_year_sql <- function(y) sprintf("
        b AS (SELECT *, 1 + sin(pi() / 3) * sin(phi) + cos(pi() / 3) * cos(phi) * cos(dl) AS den FROM a),
        c AS (SELECT *, CASE WHEN bounds_valid AND den > 1e-12 THEN 6371 * sqrt(2 / den) * cos(phi) * sin(dl) END AS x_km,
                     CASE WHEN bounds_valid AND den > 1e-12 THEN 6371 * sqrt(2 / den) * (cos(pi() / 3) * sin(phi) - sin(pi() / 3) * cos(phi) * cos(dl)) END AS y_km FROM b)
-  SELECT year, inn_key, x_km, y_km, coalesce(original_available, 0) = 1 AS filed, line_2110, line_1600, line_2110 * d.defl AS real_rev,
+  SELECT year, inn_key, x_km, y_km, coalesce(original_available, 0) = 1 AS filed, line_2110, line_1600, line_2110 / d.defl AS real_rev,
          (other_lists + residents) > 0 AS treated_row, residents > 0 AS residents_row, other_lists > 0 AS other_row,
          geocoding_quality = 'city' AS city_level, industry2, legal_form, ownership_form, creation_date_reconciled
   FROM c JOIN deflator d USING (year)
@@ -205,7 +207,7 @@ PCOL <- if (METRIC == "rel") "pct_rel" else "pct"
 SUFFIX <- if (METRIC == DEFAULT_METRIC) "" else paste0("-", METRIC)
 CANONICAL <- VARIANT == "a" && METRIC == DEFAULT_METRIC && LOOK %in% c("navy", "charcoal")
 METRIC_TEXT <- list(abs = list(kind = "absolute", legend_title = "Firms on no list, real revenue against own 2019-2021 average", legend_subtitle = NULL,
-                               description = "real revenue (line 2110 times the GDP deflator rebased to 2021 = 1) as percent change against the firm's own 2019-2021 average of statements with positive revenue (at least two of the three years)"),
+                               description = "real revenue (line 2110 divided by the GDP deflator rebased to 2021 = 1) as percent change against the firm's own 2019-2021 average of statements with positive revenue (at least two of the three years)"),
                     rel = list(kind = "relative", legend_title = "Firms on no list, real revenue against own 2019-2021 average,", legend_subtitle = "relative to the year's median of firms on no list",
                                description = "the firm's own percent change against its 2019-2021 average, minus the median change of the drawn firms on no list in the same year"))[[METRIC]]
 # Dark control: a saturated deep purple, so it separates from the faint backdrop and from the land by
@@ -237,4 +239,40 @@ draw_region <- function(m, file, colours, cnt, order_by) {
   grid::grid.newpage(); grid::grid.raster(arr, x = 0, y = 0, width = 1, height = 1, just = c("left", "bottom"), interpolate = FALSE)
   grDevices::dev.off()
   invisible(NULL)
+}
+
+# ---- listed firms' yearly revenue and their share of the revenue at their coordinate pair (author's request, 25 October 2026) ----
+# Per listed firm and year: rev_m, the filed revenue (line 2110, thousands of rubles in the source) in millions of nominal
+# rubles, NA without a statement or a positive value; psh, the firm's share of the summed revenue of every firm with a
+# statement and a positive revenue value registered at the same coordinate pair that year (1 m rounding, house- or
+# street-level geocodes, firms on any list included: the denominator M9 sums per address), in tenths of a percent, NA when
+# the firm has no revenue value or a city-level geocode. The identifier stays inside R and the in-memory database.
+MOTION_REVENUE_NOTE <- "rev_m: filed revenue (line 2110) in millions of nominal rubles, years 2014 to 2025 (float32, NaN without a statement or a positive value); psh: the firm's share of the revenue of every firm with a statement and a positive revenue value registered at its coordinate pair that year, in tenths of a percent (int16, -1 without a value or with a city-level geocode); both row-major, 12 per firm, base64 little-endian"
+motion_listed_revenue <- function() {
+  d <- lab_query(con, "
+    WITH pr AS (SELECT year, round(x_km, 3) AS px, round(y_km, 3) AS py, sum(line_2110) AS rt, count(*) AS nf
+                FROM fym WHERE filed AND line_2110 > 0 AND NOT city_level GROUP BY 1, 2, 3)
+    SELECT m.inn_key, g.year, y.line_2110, coalesce(y.filed, false) AS filed, coalesce(y.city_level, false) AS city_level, pr.rt, pr.nf
+    FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g
+    LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year
+    LEFT JOIN pr ON pr.year = g.year AND pr.px = round(y.x_km, 3) AND pr.py = round(y.y_km, 3)
+    WHERE m.treated ORDER BY m.inn_key, g.year", "listed firms' revenue and the revenue at their coordinate pairs")
+  has <- !is.na(d$line_2110) & d$filed & d$line_2110 > 0
+  d$rev_m <- ifelse(has, round(d$line_2110 / 1000, 1), NA_real_)
+  d$psh <- ifelse(has & !d$city_level & !is.na(d$rt) & d$rt > 0, round(1000 * d$line_2110 / d$rt), NA_real_)
+  d
+}
+motion_listed_revenue_cols <- function(lr, inn_keys, filed_strings) {   # row-major, 12 values per firm in the order of inn_keys
+  idx <- match(paste(rep(inn_keys, each = 12L), rep(2014:2025, times = length(inn_keys))), paste(lr$inn_key, lr$year))
+  if (anyNA(idx)) stop("listed revenue: a firm-year is missing")
+  rev <- lr$rev_m[idx]; psh <- lr$psh[idx]; has <- !is.na(rev)
+  fchar <- substring(rep(filed_strings, each = 12L), rep(1:12, times = length(inn_keys)), rep(1:12, times = length(inn_keys)))
+  list(rev_m = motion_b64_float32(rev), psh = motion_b64_int16(ifelse(is.na(psh), -1L, as.integer(psh))),
+       n_with_value = sum(has), n_with_share = sum(!is.na(psh)), firms_with_any_value = sum(tapply(has, rep(seq_along(inn_keys), each = 12L), any)),
+       checks = motion_checks(
+         motion_check("listed revenue: 12 values per firm", 12L * length(inn_keys), length(rev)),
+         motion_check("listed revenue: pair shares within 0 to 1000", 0L, sum(psh < 0 | psh > 1000, na.rm = TRUE)),
+         motion_check("listed revenue: a pair share exists exactly where a revenue value does and the geocode is not city-level", 0L, sum(!is.na(psh) != (has & !lr$city_level[idx]))),
+         motion_check("listed revenue: a firm alone with revenue at its coordinate pair holds all of it", 0L, sum(!is.na(psh) & lr$nf[idx] == 1 & psh != 1000)),
+         motion_check("listed revenue: a revenue value implies a statement in the filing string", 0L, sum(has & fchar != "1"))))
 }

@@ -23,6 +23,8 @@
     return p;
   };
   M.b64Int16 = function (b64) { const bin = atob(b64); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Int16Array(buf); };
+  M.b64Float32 = function (b64) { const bin = atob(b64); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Float32Array(buf); };   // NaN marks no value (round 9)
+  M.b64Uint8 = function (b64) { const bin = atob(b64); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; };
   M.b64Int32 = function (b64) { const bin = atob(b64); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Int32Array(buf); };
 
   // --- basemap --------------------------------------------------------------------------------
@@ -64,7 +66,7 @@
     const path = w1 >= 0.5 && fine ? fine : bmp.lod0;
     ctx.save(); ctx.globalAlpha *= landAlpha;
     ctx.fillStyle = theme.land; ctx.fill(path, 'evenodd');
-    if (graticule) { ctx.strokeStyle = theme.graticule; ctx.lineWidth = 0.7 / cam.k; ctx.stroke(bmp.grat); }
+    if (graticule) { ctx.strokeStyle = theme.graticule; ctx.lineWidth = 1.0 / cam.k; ctx.stroke(bmp.grat); }   // a whiter 1 px line since round 9 (0.7 px before)
     if (borders) {
       ctx.strokeStyle = theme.border; ctx.lineWidth = Math.min(borderPx, 1) / cam.k; ctx.lineJoin = 'round';
       if (w1 < 1) { ctx.save(); ctx.globalAlpha *= 1 - w1; ctx.stroke(bmp.lod0); ctx.restore(); }
@@ -193,46 +195,70 @@
   // available (fill 1) and a red ring when it is absent (fill 0); fill between the two fades one into the other. A hollow
   // mark keeps a land core of at least 0.75 px inside a stroke of at least 1 px, so it stays a ring at every zoom (its outer
   // radius grows above the solid mark's at the floor; 25 October 2026).
-  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme, halo = 1) {
+  // ---- listed marks (round 8) and the bloom, second pass (round 9, 25 October 2026): a flash with a pale core that fades to
+  // the mark's own colour, a soft pale glow under it, two rings that reach 44 to 64 px, a per-firm start (the atlas's
+  // west-to-east stagger) and a 1.5 s decay; nothing is allocated per mark, the phase is written into a caller-owned object.
+  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme, halo = 1, core = null) {
     const TAU = Math.PI * 2, w = Math.max(1.0, Math.min(2.2, rr * 0.45)), R = rr + (1 - fill) * Math.max(0, 0.75 + w - rr);
     ctx.save(); ctx.globalAlpha = alpha;
     if (halo > 0.05) { ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, R + halo, 0, TAU); ctx.fill(); }
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill();
-    if (fill > 0) { ctx.fillStyle = theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = core && fill < 1 ? core : theme.land; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill();
+    if (fill > 0) { ctx.fillStyle = core || theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill(); }
     if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(px, py, R - w / 2, 0, TAU); ctx.stroke(); }
     ctx.restore();
   };
-  // A listed firm before its listing year (25 October 2026): its ordinary fill at the scale's radius and a thin rim in the
-  // listed red stroked outside the fill, so the fill stays visible at the floor and the mark never reads as hollow red; no
-  // halo. The callers pass the fill's and the rim's opacity and the rim's width (1.5 px at 0.8 at rest, quieter with q).
   M.rimmedMark = function (ctx, px, py, r, colour, fillAlpha, rimAlpha, theme, rimW = 1.5) {
     const TAU = Math.PI * 2; ctx.save();
     ctx.globalAlpha = fillAlpha; ctx.fillStyle = colour; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill();
     ctx.globalAlpha = rimAlpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = rimW; ctx.beginPath(); ctx.arc(px, py, r + rimW / 2, 0, TAU); ctx.stroke();
     ctx.restore();
   };
-  // Listed marks by zoom (author's decision, 25 October 2026): quieter where they are many. The quiet weight q is 1 at
-  // k ≤ 0.5 px per km (the national view) and 0 at k ≥ 60 (the street zoom), interpolated in log k. The listed rule shrinks
-  // the address rule's floor and cap, thins the halo, lowers the resting opacity and the rim with q, and sets the pulse's
-  // ring reach and width from log k against the fitted zoom kRef, capped. The address field keeps its own rule.
+  M.PULSE = { attack: 0.10, release: 0.35, ringDelay: 0.08, glow: 0.70, decay: 1.5, cull: 80 };   // seconds; the atlas's timings (the video fits its own inside each hold)
   M.quietWeight = k => Motion.clamp(Math.log2(60 / k) / Math.log2(120), 0, 1);
+  // The listed rule by zoom: the resting marks' floor, cap, halo and alpha and the rim (round 8, untouched), and the bloom's
+  // ring reach Rmax (44 px at the reference zoom, up to 64), ring width W and the stagger spread (200 ms at the country, 60 at the street).
   M.listedRule = function (rule, k, kRef) {
     const q = M.quietWeight(k), lk = Math.log2(k / kRef);
     return { q, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q,
-             rimW: 1.5 * (1 - 0.33 * q), rimA: 0.8 * (1 - 0.15 * q), Rmax: Motion.clamp(10 + 3 * lk, 12, 30), W: Motion.clamp(3 - 0.25 * lk, 1.5, 3) };
+             rimW: 1.5 * (1 - 0.33 * q), rimA: 0.8 * (1 - 0.15 * q), Rmax: Motion.clamp(44 + 2 * lk, 44, 64), W: Motion.clamp(3.5 - 0.2 * lk, 2.2, 3.5), spreadMs: 60 + 140 * q };
   };
   M.listedRadius = (L, n) => Math.max(L.floor, Math.min(L.cap, L.base + L.s * Math.sqrt(Math.max(0, n - 1))) / 2);
-  // The pulse's two rings for one frame: ring 1 in the listed red reaches r + 2 + Rmax with an eased decay, ring 2 trails at
-  // 0.7 of its radius in the pale outline colour (the red at half opacity on a light theme). still: the reduced-motion hold.
-  M.pulseRings = function (L, b, still) {
-    if (still) return { r1: 2 + L.Rmax, w1: L.W, a1: 0.9, r2: 0.7 * (2 + L.Rmax), w2: 0.8 * L.W, a2: 0.6 };
-    const g = Motion.ease.outCubic(b), r1 = 2 + L.Rmax * g, b2 = Motion.clamp((b - 0.2) / 0.8, 0, 1), fade2 = Motion.clamp((b - 0.2) / 0.1, 0, 1);
-    return { r1, w1: L.W * (1 - 0.5 * b), a1: (1 - b) * (1 - b), r2: 0.7 * r1, w2: 0.8 * L.W, a2: 0.7 * fade2 * (1 - b2) * (1 - b2) };
+  M.flashPeak = r => Math.min(14, Math.max(2.5 * r, 4));   // the flash's extra radius at its peak, px
+  // The phase of one firm's bloom t seconds after its own start, into o: on (started), swell (the flash, 0 to 1 and back),
+  // release (the pale core's fade to the mark's colour, 0 to 1), grow (the mark's opacity ramp), glowA (the glow's alpha), p (the rings, 0 to 1).
+  M.pulsePhase = function (t, o, P = M.PULSE) {
+    if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
+    o.on = true;
+    o.swell = t < P.attack ? Motion.ease.outCubic(t / P.attack) : t < P.attack + P.release ? 1 - Motion.ease.inOutSine((t - P.attack) / P.release) : 0;
+    o.release = t < P.attack ? 0 : Motion.clamp((t - P.attack) / P.release, 0, 1);
+    o.grow = Motion.ease.outCubic(Motion.clamp(t / (P.attack + P.release), 0, 1));
+    const g = 1 - Motion.clamp(t / P.glow, 0, 1); o.glowA = 0.18 * g * g;
+    o.p = Motion.clamp((t - P.ringDelay) / P.decay, 0, 1);
+    return o;
   };
-  M.pulseRing = function (ctx, px, py, r, g, theme) {
-    const TAU = Math.PI * 2, light = theme.dark === false; ctx.save();
-    ctx.lineWidth = g.w1; ctx.globalAlpha = g.a1; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + g.r1, 0, TAU); ctx.stroke();
-    if (g.a2 > 0.01) { ctx.lineWidth = g.w2; ctx.globalAlpha = light ? g.a2 * 0.5 : g.a2; ctx.strokeStyle = light ? theme.treated : theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + g.r2, 0, TAU); ctx.stroke(); }
+  // The pale core's 8-step tables, built once per theme: pale to the listed red (solid marks) and pale to the land (hollow marks).
+  M.coreRamp = function (theme) {
+    const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const mix = (a, b, t) => { const pa = rgb(a), pb = rgb(b); return '#' + [0, 1, 2].map(i => Math.round(pa[i] + (pb[i] - pa[i]) * t).toString(16).padStart(2, '0')).join(''); };
+    const steps = (from, to) => Array.from({ length: 8 }, (_, i) => mix(from, to, i / 7));
+    return { coreRed: steps(theme.treatedOutline, theme.treated), coreLand: steps(theme.treatedOutline, theme.land) };
+  };
+  M.coreAt = (table, release) => table[Math.min(7, Math.max(0, Math.round(release * 7)))];
+  M.glowDisc = function (ctx, px, py, radius, alpha, theme) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  };
+  // The two rings at progress p (0 to 1) around a mark of resting radius r: ring 1 in the listed red reaching r + 2 + Rmax,
+  // ring 2 trailing at 0.7 of it in the pale outline colour (the red at half alpha on a light theme); still: the held highlight.
+  M.pulseRing = function (ctx, px, py, r, L, p, theme, still) {
+    const TAU = Math.PI * 2, light = theme.dark === false; let r1, w1, a1, r2, w2, a2;
+    if (still) { r1 = 2 + 0.6 * L.Rmax; w1 = L.W; a1 = 0.6; r2 = 0.7 * r1; w2 = 0.8 * L.W; a2 = 0.4; }
+    else {
+      const g = Motion.ease.outCubic(p); r1 = 2 + L.Rmax * g; w1 = L.W * (1 - 0.4 * p); a1 = 0.95 * (1 - p) * (1 - p);
+      const p2 = Motion.clamp((p - 0.15) / 0.85, 0, 1), fade2 = Motion.clamp((p - 0.15) / 0.1, 0, 1); r2 = 0.7 * r1; w2 = 0.8 * L.W; a2 = 0.7 * fade2 * (1 - p2) * (1 - p2);
+    }
+    ctx.save();
+    ctx.lineWidth = w1; ctx.globalAlpha = a1; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + r1, 0, TAU); ctx.stroke();
+    if (a2 > 0.01) { ctx.lineWidth = w2; ctx.globalAlpha = light ? a2 * 0.5 : a2; ctx.strokeStyle = light ? theme.treated : theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + r2, 0, TAU); ctx.stroke(); }
     ctx.restore();
   };
   M.locationAt = function (entries, l) {

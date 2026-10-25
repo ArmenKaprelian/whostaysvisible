@@ -1,13 +1,13 @@
 {
   "id": "points",
-  "run_id": "20261025T055337Z-run-M6-treated.R",
+  "run_id": "20261025T090141Z-run-M6-treated.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T05:54:24Z",
+  "time_utc": "2026-10-25T09:02:26Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M6-treated.R",
-    "sha256": "8062cd9c4f362ce852f945f06b28baa68de5fe49478930b6481eccf6ab0caafc"
+    "sha256": "251b48f6c52f004d94bf9b656428e1da7899391d4c67fb0d7a65c387c12ed8c3"
   },
-  "lab_commit": "450cdc5aa8b4a0a399fdf89892c165619f04aa20",
+  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -496,9 +496,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "6GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-cMGkrakQ/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-0914z3NU/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -506,10 +506,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/points.json",
-    "json_sha256": "03de0c25749dd87e1be400fc4ff470b11169d5230b57e7b75427e703ec968f72",
-    "json_bytes": 30668,
+    "json_sha256": "dcd5cbbcdf37c452ce68a51e325b22e522f2da32ed5ecc032a212540570c711e",
+    "json_bytes": 30662,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/points.js",
-    "js_sha256": "f3a5e4a8900dcaf5b08996d6b67812ae42bba4e8400b8483fc5a6104aefc03de",
+    "js_sha256": "82ea574c046080b0ba7fb3699fbdb70605ae7006f958856abebd7e247d51c321",
     "names": ["anchor", "years", "breaks", "candidate_breaks", "class_colours", "variant", "ramp", "look", "nonfiler", "neutral", "backdrop_alpha", "layer_alpha", "treated", "metric_kind", "legend_title", "legend_subtitle", "metric", "metric_median_by_year", "metric_quantiles_2022_2024", "extents", "files", "align", "counts", "classes", "pile_check", "deflator", "rules", "excluded_no_identifier", "notes", "x", "y", "current", "previous", "c2", "c3", "year", "med", "probs", "values", "region", "city", "downtown", "xmin", "xmax", "ymin", "ymax", "w_km", "h_km", "k", "mark", "base", "s", "cap", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "backdrop", "layer", "firms", "city_level", "red", "red_nonfilers", "red_undated", "drawn", "filers_base", "nonfilers_base", "nobase", "nobase_filed", "base_filed_novalue", "with_base_all", "piles", "piles_outcome", "piles_coloured", "piles_dark_only", "marks_firms_f", "marks_firms", "marks_firms_base", "filers", "quantiles", "n", "baseline_firms", "median_pct", "index", "defl", "red_from", "states", "excluded", "firm_years", "firm_years_2021"]
   }
 }

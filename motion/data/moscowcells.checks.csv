@@ -196,7 +196,7 @@
 "firms on no list with a baseline: membership positive",1,1,0,TRUE
 "firms listed in 2022: yearly counts never exceed membership",1,1,0,TRUE
 "firms on no list: yearly counts never exceed membership",1,1,0,TRUE
-"Aeroflot's index equals anchors.json (max abs diff, 1-decimal rounding)",0,0.0468594945104002,0.06,TRUE
-"neighbour's index equals anchors.json (max abs diff, whole-point rounding)",0,0.448438174003414,0.51,TRUE
+"Aeroflot's index equals anchors.json (max abs diff, 1-decimal rounding)",0,0.0487697657041224,0.06,TRUE
+"neighbour's index equals anchors.json (max abs diff, whole-point rounding)",0,0.485310148727322,0.51,TRUE
 "Aeroflot has no 2022 index",0,0,0,TRUE
 "both groups cover every year",24,24,0,TRUE

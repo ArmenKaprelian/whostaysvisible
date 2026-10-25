@@ -43,11 +43,12 @@
   window.__textBoxes = () => Motion.audit.boxes;
   const css = getComputedStyle(document.documentElement);
   const tok = n => css.getPropertyValue('--' + n).trim();
-  const theme = { stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'),
+  const theme = { dark: true, panel: tok('panel'), stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'),
                   accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), treated: tok('treated'), treatedOutline: tok('treated-outline'),
                   controlDark: tok('control-dark'), nobase: tok('nobase'), below: tok('below'), highlightBand: tok('highlight'),
                   anchorA: tok('anchor-a'), anchorB: tok('anchor-b'), accentMuted: tok('accent-muted'),
                   tick: tok('dim'), axis: tok('dim'), barMuted: tok('border') };
+  Object.assign(theme, MotionMap.coreRamp(theme));   // the bloom's pale-core tables (round 9)
   const canvas = document.getElementById('stage');
   // One cut family (round 5; the side cuts retired 24 October 2026): both cuts carry the Moscow section, so the firm-level data must be present.
   // The cuts are built at once without the rasters, which arrive in the background (render mode waits for them).

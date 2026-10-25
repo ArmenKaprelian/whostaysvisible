@@ -3,25 +3,28 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&display=swap">
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
-   Dark is the default and shares the explainer's charcoal ground (round 3, 23 October 2026: css/theme.css);
-   the light theme uses the manuscript's production colours. */
+   Dark is the default and shares the explainer's near-black navy stage with the lit navy land (round 9, 25 October 2026:
+   css/theme.css; the charcoal of round 3 before it); the light theme uses the manuscript's production colours. The two accents, fuchsia for
+   the cursor layer and green for the context layer, never colour data; the full neon rests and the live variants show while
+   something moves or has focus (the author's correction, 25 October 2026). */
 :root {
-  --stage: #121418; --land: #22262D; --border: #4A515C; --graticule: #1A1D22;
-  --ink: #ECEEF1; --muted: #A3AAB4; --dim: #6B7380; --grid: #1D2126; --panel: #171A1F; --panel-2: #1D2126;
+  --stage: #060B18; --land: #172A45; --border: #495669; --graticule: #2E333D;
+  --ink: #ECEEF1; --muted: #9EABBD; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #7FCDBB; --accent-strong: #EDF8B1; --fall: #C2A5CF; --rise: #A6DBA0; --below: #3C4852; --highlight: rgba(127,205,187,0.10);
-  --control: #22262D; --control-on: #1F6F80; --treated: #E31A1C; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
+  --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
   --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
-  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; color-scheme: light; } }
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; } }
 :root[data-theme="light"] {
   --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
   --ink: #24323D; --muted: #657680; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
   --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
-  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; color-scheme: light; }
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.4;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box;
@@ -32,7 +35,7 @@ header .sub { color: var(--muted); flex: 1 1 320px; min-width: 0; }
 button, select { font: inherit; }
 .btn { background: var(--control); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
 .btn[aria-pressed="true"], .btn.on { background: var(--control-on); color: #fff; border-color: var(--control-on); }
-.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 1px; }
 main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; }
 /* Below 900 px the page scrolls: the map is a fixed-height block and the panels stack under it (the earlier
    viewport-locked layout squeezed the panels into a strip on a phone). */
@@ -41,29 +44,66 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap.dragging { cursor: grabbing; }
 .mapwrap.clickable { cursor: pointer; }
 .mapwrap.zoomable { cursor: zoom-in; }
-.mapwrap:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.mapwrap:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: -2px; }
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #field, #field2d, #marks, #overlay { pointer-events: none; }
-.maplegend { position: absolute; left: 12px; bottom: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 136px); box-sizing: border-box; }   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
+.mapwrap { --lift: 0px; }
+.mapwrap.strip-open { --lift: 26px; }   /* the context strip lifts the legend, the zoom box and the scale bar while it is open (round 9) */
+.maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 4px; font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
 .toggle { background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 4px; width: 24px; height: 22px; padding: 0; cursor: pointer; font-size: 12px; line-height: 1; flex: 0 0 auto; }
 .toggle:hover { border-color: var(--border); color: var(--ink); }
-.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.toggle:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 1px; }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
 .maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
 .maplegend .row { margin: 2px 0; }
 .mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 4px; font-size: 13px; color: var(--muted); max-width: 46%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }
 .mapnote .nlabel { color: var(--muted); align-self: center; }
-.zoombox { position: absolute; right: 12px; bottom: 12px; z-index: 4; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 6px; background: color-mix(in srgb, var(--panel) 92%, transparent); }
+.mixbox { position: absolute; left: 12px; top: 12px; z-index: 3; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px 8px; border-radius: 4px; font-size: 13px; width: 300px; max-width: calc(100% - 24px); box-sizing: border-box; }   /* the revenue mix (round 9): the industry layer's live breakdown */
+.mixbox .mhead { display: flex; align-items: center; gap: 6px; }
+.mixbox .mhead b { flex: 1 1 auto; min-width: 0; }
+.mixbox .r { display: flex; align-items: baseline; gap: 6px; line-height: 1.45; }
+.mixbox .r .sw { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 2px; align-self: center; }
+.mixbox .r .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mixbox .r .pc { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.mixbox #mixrows { min-height: calc(9 * 1.45em); }
+.mixbox.closed { width: auto; }
+.zoombox { position: absolute; right: 12px; bottom: calc(12px + var(--lift)); z-index: 4; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 6px; background: color-mix(in srgb, var(--panel) 92%, transparent); }
 .zoombox .btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; font-size: 22px; line-height: 1; font-weight: 600; }
 .zoombox .btn svg { width: 18px; height: 18px; }
 .zoombox .btn:disabled { opacity: 0.4; cursor: default; }
-.scalebar { position: absolute; right: 12px; bottom: 156px; max-width: 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--panel) 85%, transparent); font-size: 11px; color: var(--muted); pointer-events: none; }
+.scalebar { position: absolute; right: 12px; bottom: calc(156px + var(--lift)); max-width: 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--panel) 85%, transparent); font-size: 11px; color: var(--muted); pointer-events: none; }
 .scalebar .bar { display: block; height: 6px; box-sizing: border-box; border: 2px solid var(--ink); border-top: 0; }
-@media (pointer: coarse) { .zoombox .btn { width: 44px; height: 44px; } .scalebar { bottom: 168px; } }
-.tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: 280px; display: none; z-index: 5; }
+@media (pointer: coarse) { .zoombox .btn { width: 44px; height: 44px; } .scalebar { bottom: calc(168px + var(--lift)); } .ctx.closed { right: 80px; } }
+/* The cursor tile (round 9): the glance view that follows the cursor, its border in the cursor colour (muted at rest, full while
+   the cursor moves), tabular monospace figures, a class-mix bar on the industry layer and a footer with the coordinate and the scale. */
+.tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 2px solid var(--cursor); border-radius: 4px; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: min(280px, calc(100% - 16px)); display: none; z-index: 5; font-variant-numeric: tabular-nums; transition: border-color .15s; }
 .tooltip b { font-variant-numeric: tabular-nums; }
+.mapwrap.cursor-live .tooltip { border-color: var(--cursor-live); }
+.mapwrap.narrow .tooltip { max-width: 64%; font-size: 12px; padding: 5px 7px; line-height: 1.3; }
+.mapwrap.narrow .t-foot { font-size: 11px; }   /* a phone-width map: the tile leaves room beside it for the zoom box and the scale bar (round 9) */
+.tile .num { font-family: "Nimbus Mono PS", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace; font-size: 12px; font-variant-numeric: tabular-nums; }
+.t-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
+.mapwrap.cursor-live .t-foot { color: var(--context-live); }
+/* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
+.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 1.5px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }
+.ctx .toggle { pointer-events: auto; color: var(--context); }
+.ctx.narrow { font-size: 11.5px; }
+.ctx .toggle:hover { color: var(--context-live); }
+.ctx.closed { left: auto; right: 76px; bottom: 12px; height: auto; padding: 2px; border-top: 0; border-radius: 4px; }
+.ctx.closed .glyph, .ctx.closed .ctxt { display: none; }
+.ctx .glyph { width: 22px; height: 22px; flex: 0 0 auto; overflow: visible; }
+.ctx .glyph path { fill: none; stroke: var(--context); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 0; opacity: 1; transition: stroke-dashoffset .4s ease-out, opacity .3s, stroke .3s; }
+.ctx .glyph path.live { stroke: var(--context-live); }
+.ctx .glyph path.nt { transition: none; }
+.ctx .glyph path.out { opacity: 0; }
+.ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 20px; line-height: 20px; }
+.ctxt .t { position: absolute; left: 0; right: 0; top: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
+.ctxt .t.hid { opacity: 0; }
+.ctxt .t.live { color: var(--context-live); }
+.ctxt .num { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
 .card { background: var(--panel); border-radius: 6px; padding: 10px 12px; min-width: 0; }
 .card h2 { font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
@@ -74,14 +114,21 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 #modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; }
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .yearrow input[type=range] { flex: 1 1 120px; min-width: 80px; accent-color: var(--accent); }
-.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 48px; font-weight: 600; }
-.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--treated); flex: 0 0 auto; }
+.yearrow .yr { font-variant-numeric: tabular-nums; min-width: 60px; font-weight: 600; }
+/* The context layer's live marker (round 9): while a pulse runs the slider and the year take the context colour and a dot follows the year. */
+.yearrow .yr::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: 1px; background: var(--context-live); opacity: 0; }
+.yearrow.live .yr::after { opacity: 1; }
+.yearrow.live .yr { color: var(--context-live); }
+.yearrow.live input[type=range] { accent-color: var(--context-live); }
+.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--cursor); flex: 0 0 auto; }
+.yearrow .pulse:hover, .yearrow .pulse:focus-visible, .yearrow.live .pulse { color: var(--cursor-live); }
 .yearrow .pulse svg { width: 16px; height: 16px; display: block; }
 .yearrow .pulse:disabled { opacity: 0.4; cursor: default; }
 @media (pointer: coarse) { .yearrow .pulse { width: 36px; height: 36px; } }
 .presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .presets .btn { font-size: 12px; padding: 3px 8px; }
 canvas.chart { width: 100%; height: 170px; display: block; }
+.muted { color: var(--muted); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; }
 .kv b { font-variant-numeric: tabular-nums; text-align: right; }
 .gl { display: inline-block; width: 11px; height: 11px; border-radius: 50%; box-sizing: border-box; vertical-align: -1px; margin-right: 5px; }
@@ -108,6 +155,7 @@ footer a { color: var(--accent); }
     <canvas id="marks" aria-hidden="true"></canvas>
     <canvas id="overlay"></canvas>
     <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend">▾</button></div><div class="lbody" id="legendbody"></div></div>
+    <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix">▾</button></div><div id="mixbody"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div>
     <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note">▾</button><span class="nlabel" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
     <div class="scalebar" id="scalebar" aria-hidden="true"><span class="bar"></span><span class="lab"></span></div>
     <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
@@ -115,7 +163,8 @@ footer a { color: var(--accent); }
       <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
       <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="Fit the whole country (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     </div>
-    <div class="tooltip" id="tip"></div>
+    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line">▾</button></div>
+    <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span></div></div>
   </div>
   <aside class="side">
     <section class="card">
@@ -160,6 +209,8 @@ footer a { color: var(--accent); }
 <script src="data/series.js"></script>
 <script src="data/cellsyears.js"></script>
 <script src="data/cells25.js" onerror="this.remove()"></script>
+<script src="data/industry.js" onerror="this.remove()"></script>
+<script src="data/regions.js" onerror="this.remove()"></script>
 <script src="data/treatednational.js" onerror="this.remove()"></script>
 <script src="data/firms.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>

@@ -2,15 +2,15 @@
    Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
    code once per theme (getComputedStyle), so every colour lives here. */
 :root {
-  --stage: #121418;        /* charcoal ground (author's pick, 23 October 2026, round 3) */
-  --land: #22262D;         /* neutral dark land */
-  --border: #4A515C;       /* region borders: thin pale lines, never heavier than the marks */
-  --graticule: #1A1D22;    /* faint meridians and parallels */
+  --stage: #060B18;        /* near-black navy sea (author's decision, 25 October 2026, round 9; the charcoal of round 3 before it) */
+  --land: #172A45;         /* the land as a lit shape on the sea: OKLab L 0.284 against the stage's 0.152, 1.36:1 */
+  --border: #495669;       /* region borders: thin pale lines, never heavier than the marks (1.94:1 on the land) */
+  --graticule: #2E333D;    /* meridians and parallels: a whiter line at 1.55:1 on the stage, 1.14:1 over the land (round 9) */
   --ink: #ECEEF1;          /* text */
-  --muted: #A3AAB4;        /* secondary text */
-  --dim: #6B7380;          /* tertiary text, axes */
-  --grid: #1D2126;         /* chart grid lines */
-  --panel: #171A1F;        /* control bar and cards */
+  --muted: #9EABBD;        /* secondary text (6.2:1 on the land) */
+  --dim: #7D889C;          /* tertiary text, axes (4.8:1 on the panel, AA for the small text) */
+  --grid: #0D162B;         /* chart grid lines */
+  --panel: #091023;        /* control bar and cards: the stage plus 0.026 in OKLab lightness */
   /* Data colours sit off the navy chrome (round 2, 23 October 2026): ColorBrewer YlGnBu for ordered
      quantities, PRGn for signed change, one red reserved for listed (treated) firms. */
   --accent: #7FCDBB;       /* principal series, density: YlGnBu step 4 */
@@ -22,7 +22,9 @@
   --control-dark: #5A3175; --backdrop: #B5C3D1; /* the purple is no longer drawn on maps (round 3); the backdrop neutral */
   --anchor-a: #F2B134; --anchor-b: #7CE8C3; --accent-muted: #6FA39A; /* the two anchor firms (amber: Aeroflot, mint: the private firm) and the comparison groups */
   --nobase: #55606B; --ramp6: #1D91C0 #38ADC3 #6CC5BE #A2DAB8 #D4EEB3 #FFFFD9;       /* non-treated firm without a revenue baseline */
-  --below: #3C4852;        /* cells below support */
+  --below: #3C4852;        /* cells below support (round 8's value) */
+  /* The atlas's two accents (round 9), carried here for parity; the video draws none of them. */
+  --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   --highlight: rgba(127, 205, 187, 0.10);
   --font: "Nimbus Sans", Arimo, "Liberation Sans", Arial, Helvetica, sans-serif;
   color-scheme: dark;

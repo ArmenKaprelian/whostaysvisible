@@ -980,6 +980,25 @@ YEAR statement, P%", "N on the lists: R red, H hollow, B before listing", one sh
 listing year) and "and k more"; "(treated)", the cursor radius and the year words moved to the Under the cursor panel (the round-8
 section).
 
+Addition (round 9, 25 October 2026; no earlier string changes): the new on-screen strings follow the standard. The industry
+layer: the button "Leading industry by year"; the legend "Leading industry by revenue, YEAR (100 km | 25 km | 1 km cells)" with
+"Cells in view by class", nine class rows with counts, "no firm with a revenue value", and in the Firms view "Colour: the
+division with the largest share of revenue at the coordinate pair, in nine classes" with "Coordinate pairs in view by class";
+the tooltip's "Largest share of revenue: {NACE title} (division NN), P%" and "Then {short} (NN) P%"; the address line "{NACE
+title} (division NN), P% of revenue at this coordinate pair", "No OKVED 2 division code (missing or an earlier revision's
+code)" and "No firm with a revenue value at this coordinate pair"; the panel rows Leading division, Share of revenue, Class,
+Ranked mix, "Firms on these lists (treated)" and "With a revenue value". The tile's footer: "55.75 N, 37.61 E" and "1 px =
+110 m". The context strip: the facts listed in the round-9 section ("located firms", "with a statement", "registered in the
+region", "firms on no list (comparison group)", "on the lists (treated)", "leads with P% of revenue", "+d points against
+2021") and the six tips (the click ladder with its touch form, Shift+click, the pulse button, the Firms view's red rule, the
+preset links, the keyboard), each one sentence. Toggle labels "Collapse the context line" and "Expand the context line". The revenue mix box (the author's correction):
+"Revenue mix, YEAR", the unit line "100 km cell at the cursor" / "25 km cell at the cursor" / "1 km cell at the cursor" /
+"coordinate pair at the cursor" / "100 km cells in view" / "coordinate pairs in view", the rows "{short name} (NN) P%",
+"other divisions N%", "no firm with a revenue value here", "no data in view", the toggle labels "Collapse the revenue mix"
+and "Expand the revenue mix"; the listed lines' clause "(12% of revenue here)" and "(12% of 2021 revenue here)"; the
+panel's "revenue 2022: 12,345 mn rubles". Nothing says "supplied list", "treatment group", "sanctioned or strategic" or
+"control".
+
 ### Atlas: pinch zoom, the hand-over between grids, and 25 km cells (author's requests, 24 October 2026)
 
 Two observations from the author's laptop and phone. A trackpad pinch was too slow: it arrives as a wheel event
@@ -1404,6 +1423,234 @@ Published: atlas v17 (version id 1792908012-6e4e) with the page, `explorer-app.j
 explainer v21 (version id 1792908009-6d9c) with the page, `map-layers.js`, `treated-scenes.js`, `treated.js`, `treatednational.js` and
 the 27 changed Moscow rasters; the teaser asset unchanged; the cuts not re-rendered (the author's decision: the raster
 differences lie below the codec's quantisation).
+
+### Round 9: the navy ground with two accents, the bloom's second pass, an industry layer, a cursor tile and crosshair, a context strip (author's request, 25 October 2026)
+
+The request: seven items designed as one system on the round-8 base, atlas first and the video where the palette and the
+pulse reach it, with no new per-frame computation beyond the hover's, every new element inside the audit's DOM checks and
+every string under the wording rules; the neighbour firm stays anonymous. The author's four answers in planning: the
+deflator direction is corrected in this round; agriculture joins extraction and energy and information joins professional
+services, with a report on Other's revenue share by region; the cells' industry mix counts every located firm, listed
+firms included; region facts use the registry's region label mapped to the basemap's names. Two defects found in planning
+are fixed here: the deflator and the ring tails the video drew for firms red from 2014 at the start of every year run.
+
+The deflator correction. `M6-common.R` rebased the WDI index to 2021 and then multiplied nominal revenue by it
+(`line_2110 * d.defl`), where the programming project divides, so every real series of the lab ran backwards in time:
+Aeroflot's 2014 revenue read 152,649 mn in 2021 rubles instead of 378,305 mn and 2024 read 994,791 mn instead of 510,928 mn.
+The line now divides, the descriptions say so, and M6 (48 s, peak 10.5 GB), M7 (27 s, 9.7 GB) and M8 (62 s, 12.9 GB) re-ran
+with every check passing; 79 of the 104 outputs changed (every data file of the three passes and 72 rasters; the 25
+unchanged rasters are backdrops whose disc order happened to repeat). The revenue-change classes of M6, M8 and M9, the
+Moscow cells and the comparison beat's index lines and facts changed; the cells view's own revenue layer, which comes from
+the programming aggregates, was never affected. The lab decision log records the defect and the fix.
+
+The palette (item 0). The stage is a near-black navy and the land a lit shape on it (the author's decision after the first
+frames): stage #060B18 (OKLab L 0.152; the charcoal had 0.191), land #172A45 (L 0.284, 1.36:1 on the stage), panel #091023 (the
+stage plus 0.026 in lightness, the rule of the first proposal), panel-2 and grid #0D162B, border #495669 (1.94:1 on the land,
+2.54 on the panel), below #3C4852 (round 8's value: a cell class, not chrome), control the land, dim #7D889C (5.3:1 on the
+panel, AA for the 12 px provenance and footer text), muted #9EABBD (8.4:1 on the stage, 6.2 on the land); the graticule is a
+whiter, 1 px line (#2E333D, 1.55:1 on the stage and 1.14 over the land, 0.7 px and #1A1D22 before), structure that competes
+with neither the land outline nor the data; ink, the ramps, the neutral, the blue classes, the density colour, the highlight
+and the red unchanged (the red 4.15:1 on the stage, 3.05 on the land; the round-2 navy was rejected because the red falls to
+2.9:1 there). Every data colour of every layer but the new one is round 8's, checked token by token against the committed
+pages and manifests (the one drift found, `--below`, was reverted). The light theme is untouched. Two accents, never on data,
+ramps or the red, neon at rest and brighter while something moves or has focus (the author's correction): `--cursor` #FF45C8
+and `--cursor-live` #FF8FDF for the cursor layer (the crosshair at 2 px, the tile's 2 px border, the hover ring at 2.5 px
+cased in the stage colour, the 2 px focus rings, the pulse button), `--context` #4DFF7F and `--context-live` #9AFFB8 for the
+context layer (the strip's text, its 1.5 px rule and its glyph at 1.5 px, the tile footer's figures, the year row's live
+marker while a pulse runs); light values #C60198 and #9E0079, #037E52 (the live green equals the resting one there: a darker
+green loses its protan distance from the red). The validator, all pairs on the stage: the fuchsia 22 normal, 25 protan and
+21 deutan from the red, the green 49, 48 and 28, the two 51, 41 and 24 from each other; the live pair 27, 33, 26 and 47, 50,
+33 from the red and 33, 27, 16 from each other; contrasts on the stage, the land and the panel 6.5, 4.8 and 6.3 (fuchsia),
+9.6, 7.1 and 9.2 (its live), 14.9, 11.0 and 14.4 (green), 16.3, 12.0 and 15.7 (its live). Recorded adjacencies, UI over
+data: the fuchsia sits 5.5 (deutan) from the PRGn fall step and its live 3.7, the green 6.6 from the rise step and its live
+7.9, and the fuchsia 12.9 normal and 5.3 deutan from the industry layer's finance pink #E78AC3 (the tile's border beside its
+mix bar; the pink is paler and less saturated, and the legend and the tile name the class). The ramps re-validated on the stage: YlGnBu monotone with a 5.49:1 dark end (the one-hue check fails by design as in
+round 2), the PRGn halves 4.92 and 7.17, the blue six 6.14; the categorical set red, purple control, dark control, neutral:
+CVD worst 10.7 protan, the two controls at 13.8 normal as round 2 accepted, the purple at 1.99:1 on the stage (drawn on a few
+pre-listing marks over the land, where it was 1.47 before). `readTheme` reads the scheme from a `--scheme` token; the
+explainer's theme object carries `dark`. The palette frames went to the author twice, on the first navy and on the near-black
+stage.
+
+The bloom, second pass (item 1), shared in `map-layers.js`. Each pulsing firm runs its own clock from a start delayed by the
+stagger: a flash to r + min(14, max(2.5r, 4)) px over 0.10 s with a pale core (#FFD9D9) fading to the mark's own colour
+through an 8-step table over 0.35 s (to the red for a solid mark, to the land for a hollow one), a pale glow disc of twice
+the flash radius at alpha 0.18 fading over 0.7 s (source-over; an additive composite would differ between the atlas's
+transparent canvas and the video's opaque stage), ring 1 in the red from r + 2 to r + 2 + Rmax over 1.5 s with width W(1 −
+0.4p) and alpha 0.95(1 − p)², ring 2 trailing at 0.7 of it in the pale; Rmax = clamp(44 + 2·log2(k/kRef), 44, 64) px and W =
+clamp(3.5 − 0.2·log2(k/kRef), 2.2, 3.5), so the rings reach 47 px at the country, 60 at Moscow, 67 at Central Moscow and 72 at
+the street zoom; the stagger runs west to east over 60 + 140q ms (200 ms at the country, 116 at Moscow, 60 at the street)
+from one Float32Array filled when a pulse starts; the atlas pulse lasts 1.8 s (1.6 s decay plus the stagger), `MARK_MARGIN`
+is 80 px, `pulseAt(ms)` freezes an exact frame; the reduced-motion highlight holds the mark at 0.6 of the flash with the
+core at step 3 and ring 1 at 0.6 Rmax. The resting marks of round 8 are untouched. Video: the same language on the section
+clock with the flash over the year transition, the rings' decay fitted inside each hold (downtown 0.85 s with a 0.06 s
+spread, city 0.60 and 0.08, region and national 0.55 and 0.10; the national and region decay shortens from 0.6 to make room
+for the stagger, the year timing is unchanged), rings only for firms listed from 2015 on and dated (the 2014 and undated
+members never bloom: the ring tails seen in frame 4408 are gone), the audit's mark record at the resting radius so the
+counted label-over-mark lines do not grow. Frame costs at 1,600 px (mean and largest of 20 frames, ms; the committed code
+then this round at 300 ms, the costliest phase, and at 900 ms): Russia at rest 3.5 and 5.8, 3.6 and 6.1, 3.4 and 3.8; the
+2022 pulse of 732 marks 4.6 and 5.5, 5.4 and 7.4, 4.6 and 6.1; Moscow at rest 1.3 and 3.1, 1.1 and 2.5, 1.0 and 1.1, pulsing
+1.4 and 2.1, 1.5 and 2.1, 1.2 and 1.6; Central Moscow at rest 1.6 and 3.0, 1.7 and 3.6, 1.7 and 2.0, pulsing 0.9 and 1.1, 1.7
+and 2.0, 1.4 and 1.5: inside the 16 ms budget with room. The `rules` audit state checks Rmax within 44 to 64, W within 2.2 to
+3.5, the spread within 60 to 200 ms, the decay 1,600 and the pulse 1,800 ms, and that the flash, the glow and the rings stay
+inside the cull margin; `btn0` waits 2.0 s. The before and after frames (the committed code served beside the working tree,
+25, 50 and 75 percent of each version's pulse at the three presets; the video's frames 4650, 4654, 4662, 4672, 5771, 5774,
+5778, 5783 and 5788) went to the author; where hundreds of 2022 listings share a few pixels (Moscow at the national zoom)
+the rings saturate into one red disc for about half a second, offered to the author with a crowd factor as the knob.
+
+The industry layer (item 2). Classes: 1 Agriculture, extraction and energy (divisions 01 to 03, 05 to 09, 35); 2
+Manufacturing (10 to 33); 3 Construction (41 to 43); 4 Trade (45 to 47); 5 Transport and logistics (49 to 53); 6 Finance
+and real estate (64 to 66, 68); 7 Professional services (58 to 63, 69 to 75, 77 to 82); 8 Public and social (84 to 88); 9
+Other (36 to 39, 55, 56, 90 to 99 and firms without a division code). The byte: 1 to 99 the division, 0 no OKVED 2 division
+code (class Other; `__MISSING__` and the legacy codes 00, 34, 40 and 57 are not reinterpreted), 255 no firm with a
+statement and a positive revenue value (unknown, neutral). Names: Eurostat's NACE Rev. 2 codelist NACE_R2 version 20.1,
+downloaded on 2026-10-25T07:28:31Z into `data/external/nace-rev2/` (the TSV, 78,151 bytes, sha256 5553f59f…8eff7, and the
+SDMX-ML, 1,228,412 bytes, sha256 b3da1c91…0871, with a README) and pinned with the programming project's OKVED 2 crosswalk
+and its sources record; `industry-common.R` checks that the 88 division codes of the two coincide and records the
+equivalence (OKVED 2, OK 029-2014, mirrors NACE Rev. 2 through four digits; titles are translations that differ in
+emphasis; departures lie below the two-digit level). M9 v3 (`firms-YYYY.bin.gz` version 3, 33 bytes per record: after the counts a revenue code `rv` (a u16 log code of the summed
+revenue, in thousands of rubles, of every firm with a statement and a positive revenue value at the address, listed firms
+included: 10^((rv - 1) / 100), 0 without revenue), the class, then eight (`ind`, `ish`) pairs, the divisions with revenue at
+the address by share descending with their integer shares, 255 and 0 beyond the present ones; the first pair is version 2's
+leader; the author's correction of 25 October replaced the single leader of version 2 and widened the address population
+of the mix to every firm at the pair, since the listed firms' shares are measured against the same revenue; 201 s, peak 12.9 GB, 311 checks: 2021 holds
+435,240 addresses with a revenue value of 692,057, 419,979 of them with eight or fewer divisions and so fully listed (96.5
+percent; the most at one address is 70), 2014 389,843 of 727,116 and 2025 425,619 of 691,594; the files are 6.3 to 6.6 MB
+gzipped (75.9 MB in all) and the twins about 8.4 MB each, under the 15 and 16 MB caps). M11 (`industry.json`, 4.3 MB with its twin, `industry-city.json`, 4.5 MB, loaded by the atlas only when the industry layer
+reaches a city window, and `regions.json`, 80 kB; 35 s, peak 1.3 GB; 276, 72 and 15 checks): per 100 km, 25 km and 1 km city
+cell and year the leading division, its share, the listed share of the cell's revenue (the 100 and 25 km grids), a revenue
+code `rv` like the addresses' and the ranked mix of up to eight divisions with their shares (the author's correction of 25
+October: eight rows everywhere; version 1 carried five, three and one) (94,335 25 km cell-years, 125,484 1 km cell-years in
+132 city windows), every located eligible firm counted;
+the 2021 diagnostic of cells whose leader changes without listed firms or without other geocodes is in the manifest; the
+(region, division) located counts equal the pinned regional table for all its rows. Regions: `config/regions-crosswalk.csv`
+maps the registry's 90 labels to the basemap's 83 names (seven labels outside the outline); the geometric validation by
+ray casting 200 located 2021 firms per label against the named polygon: the lowest inside share Chechnya 0.925, then
+Primorsky Krai 0.940 and Chukotka 0.945; 6.0 percent of the outside labels' samples fall inside a polygon (firms
+registered in the territories but geocoded inside the outline; the check allows 10). Other's revenue share by region in
+2021, the author's report: above 15 percent in Ingushetia (66 percent, division 38 waste collection, treatment and
+disposal, 65) and Rostov Oblast (30 percent, division 38, 27); the proposed home is to move section E (divisions 36 to
+39, water, sewerage and waste) into class 1 under the name "Agriculture, energy and utilities", the author's call. Colours
+(ColorBrewer hues, searched for the largest smallest distance on the land with the red, the two accents and the neutral):
+#7FC97F, #FF7F00, #FFFF33, #1B9E77, #FDBF6F, #E78AC3, #1F78B4, #CCEBC5, #999999 in class order; every class at 3:1 or more
+on the land (Professional services 3.03); no selection of nine clears the validator's 15 floor with the neutral and the
+accents, the closest pairs being Transport and Public 12.9, Finance and the cursor accent 12.9, Trade and Other 13.6,
+Manufacturing and Transport 14.2, and under deutan vision Agriculture and Transport 3.0, Trade and Other 4.8, Finance and
+Other 6.2; the hover and the legend therefore name the class and the division (the author's rule). The light theme's nine
+(#1B9E77, #4E342E, #00838F, #0277BD, #7570B3, #984EA3, #3949AB, #7B1FA2, #616161) come from the same search over darker
+hues; the warm family is too close to the red under deutan vision there. The atlas: a seventh layer "Leading industry by
+year" in both views (100 km, 25 km and the 1 km window tiles; the address field through a third class byte per vertex and
+a 16-slot palette, the 2D fallback through the same tables); the tooltip's lines ("100 km cell, 2021: 277,027 firms with a
+revenue value", "Largest share of revenue: Wholesale trade, except of motor vehicles and motorcycles (division 46), 34%",
+"Firms on these lists (treated) hold 13% of this cell's revenue"; at an address "… (division 10), 42% of revenue at this
+coordinate pair"); the Under the cursor rows Leading division, Share of revenue, Class, the ranked mix, On the lists
+(treated), With a revenue value; the legend's nine class swatches with their names and the division list per class in the
+provenance. The revenue mix box (the author's correction of 25 October, which moved the breakdown out of the legend): a
+translucent box at the top left of the map on the industry layer, live with the cursor: the revenue mix of the 100 km, 25 km
+or 1 km cell under it in the cells view or of the coordinate pair in the firms view, one row per division present by share
+descending, each with its class colour (fixed per division, never by rank), the division's short name with its code (the
+full NACE title on the row's title attribute) and its share of that unit's revenue, at most eight rows then "other divisions
+N%"; with the cursor off the map, the mix of the view: the eight largest divisions by their share of the summed revenue of
+the cells or coordinate pairs in view, from each unit's own rows weighted by its revenue code (the divisions beyond a unit's
+eight join "other divisions"), computed once per camera settle, year, layer or view change (`__atlas.mixCost()`), never per
+frame; the box's row area keeps a fixed height so its box never changes under the cursor; collapsible ("Collapse the revenue
+mix" / "Expand the revenue mix", remembered per viewer as `atlas-mix`), open by default where the map is at least 600 px wide
+and 640 px tall and otherwise taking turns with the legend (opening one closes the other, as the legend and the note do
+on narrow maps), placed below the note when the two would meet, an obstacle for the tile and a panel in the audit's DOM checks (inside the map, clear
+of every other panel, never under the tile).
+
+The cursor tile (item 3). The tooltip element keeps its id and becomes the tile: the glance lines of round 8 with the
+figures in a monospace stack (the ranked mix the first draft put here as a bar moved to the mix box on the author's
+correction), and a footer with the cursor's coordinate from the inverse of the basemap's projection ("55.75 N, 37.61
+E") and the scale as metres per CSS pixel ("1 px = 110 m"; a round length is already on the scale bar). The border is 2 px in the
+cursor colour, the live variant while the cursor moves. Placement: eight anchors around the cursor, each keeping d = max(14,
+r + 9) px of clearance on one axis (24 on a tap) so the tile never covers the hovered mark; the first inside the map and
+clear of the legend, note, mix box, zoom box, scale bar and strip wins; a second pass slides the anchors along their free
+axis, away from what they meet and then the other way; a third searches a 16 px grid for the nearest place inside the map,
+clear of every panel and d px from the cursor on both axes; when none exists (a phone or a portrait tablet with the panels
+open) the tiers repeat without the note, then without the legend, then without both, and the tile may cover those two,
+never the controls, the scale bar, the strip or the mix box (the audit allows exactly those two overlaps when the page
+reports the tier, and counts them); the clamped placement of round 8 is the last resort. A showing tile is re-placed
+whenever the legend or the note is rewritten (their boxes change with the text). On maps under 600 px the tile is compact:
+64 percent of the map's width at 12 px, the short division label, one named firm then "and k more" (the panel below lists
+three); a 400 px map with the panels open still has no clear place for the full tile. On a tap the tile appears
+above the finger and stays. The footer's figures count to new values over 200 ms only when the camera moves under a still
+cursor. Each listed firm's line carries, in parentheses, the firm's share of the revenue of every firm at its coordinate
+pair from its most recent statement with a revenue value up to the slider's year, "(12% of revenue here)", with the year
+named when it is not the slider's, "(12% of 2021 revenue here)" (the author's correction of 25 October; shares under 10
+percent to one decimal, under 0.1 as "<0.1%"); the Under the cursor panel adds that statement's revenue, "revenue 2022:
+12,345 mn rubles". The data: M8 and M6 join, per listed firm and year inside DuckDB, the filed revenue (`rev_m`, millions of
+nominal rubles, float32, NaN without a statement or a positive value) and the firm's share of the summed revenue of every
+firm with a statement and a positive revenue value registered at the same coordinate pair that year (`psh`, tenths of a
+percent, int16, -1 without a value or with a city-level geocode: the denominator M9 sums per address, listed firms
+included), 12 per firm, base64, to `treatednational.json` (4,803 firms: 24,996 firm-years with a value over 3,952 firms,
+23,323 with a pair share; 1.49 MB with its twin, from 1.01) and `treated.json` (the Moscow rectangle: 11,474 firm-years
+over 1,810 firms, 10,724 shares); five checks each (12 values per firm, shares within 0 to 1000, a share exactly where a
+value and a non-city geocode exist, a firm alone with revenue at its pair holds all of it, a value only where the filing
+string shows a statement); the identifier never leaves the database; the save helper and `publish-set.py` see two numeric
+columns and nothing named. Unlisted firms stay as they are. The M6 re-run changed 30 Moscow rasters at rounding level
+(the disc order), as round 8's did. A 1 px crosshair across the map at the cursor in the cursor colour, full while moving and muted after 200 ms
+without a move (one timeout, no loop), eases toward the cursor over 120 ms (item 5: chosen over a stroke around the tile,
+whose content changes on nearly every move in a dense field; a snap under reduced motion). The hover's cost: the inverse
+projection, five rectangle reads under the one layout the tile already forced, at most sixteen placement tests, two lines on
+the overlay.
+
+The context strip (item 4). A 26 px bar along the bottom of the map over the canvases, the legend, zoom box and scale bar
+lifted by its height while it is open (`--lift`), collapsible to its toggle at the right (remembered per viewer), the text,
+its 1.5 px rule and its glyph in the context colour (the neon at rest; the live variant while the figures tick, the text
+crossfades or the glyph strokes on) with the figures tabular. Facts by band and layer, from the loaded data: the country (k under
+three times the fitted zoom), the city window (the camera centre inside the nearest city's 90 km square with a 1 km grid
+for the year) or the registry region under the camera centre (`regionAt` once per settled draw). The strings: "Russia,
+2021: 3,277,638 located firms, 55.0% with a statement, +1.2 points against 2021" (the share layer and every layer without
+its own aggregate; the change clause drops for 2021), "Moscow Oblast, 2024: N firms registered in the region, P% with a
+statement, +d points against 2021" (from `regions.json`, which counts firms by their registry region), "Moscow window,
+2022: 732,362 located firms in the 1 km cells, 59.8% with a statement, +2.1 points against 2021" (the 1 km cells' sums for
+2019 to 2024), "Russia: P% with a statement in 2021, P% in 2024, +d points" (the change layer), "N firms registered in the
+region on the five lists (treated) of M" (the lists layer), "Moscow Oblast, 2021: Wholesale trade (division 46) leads with
+32% of revenue" (the industry layer; in the city band too, from the registry region under the camera centre, since no
+window-level industry aggregate exists: the 1 km cells carry each cell's leader, not the window's), and in the Firms view "Russia, 2021: 3,078,593 firms on no list (comparison group) at 692,057 coordinate
+pairs; 4,034 on the lists (treated)". Six tips, each once per session, shown only while the strip is open, nothing moves, the
+cursor is still and 12 s have passed since the last fact change, for 8 s: the click ladder (a touch variant on coarse
+pointers), Shift+click, the pulse button, the Firms view, the preset links, the keyboard. The region glyph: the region's
+largest ring and any ring with a quarter of its area, Douglas-Peucker to about 60 points, fitted into 22 by 22 and cached on
+first use; Russia's outline traced once from the filled parts on an offscreen canvas at 0.03 px per km; stroked on over 0.4 s
+in the live context colour when the region changes, still otherwise. Text changes crossfade over 0.3 s and, when the two
+facts share a template, the figures count to their new values in that time. Nothing external, no fetch. The API gains
+`hoverPx`, `tapAt`, `tile`, `strip`, `context`, `tip`, `glyph`, `jump`, `still`, `overlayCost` and `contextCost`; the audit
+holds the tile clear of every panel and the strip inside the map with its toggle and glyph, the legend and zoom box lifted,
+the collapsed stub clear, and runs the band states (the country, a point 60 km east of Moscow at k 1 as Moscow Oblast, the
+Moscow preset as the city), a forced tip, the strip closed and by default, the tile at the map's corners and centre in both
+views and a tap.
+
+Verification. The atlas audit (`tools/atlas-audit.py`, now with the industry, tile, strip and mix-box rules and states):
+649 states and 24,007 text boxes at 400, 768, 1,200, 1,600 and 2,000 px on both renderers with zero findings; the states
+apply their layer and year before their setup as well as after it (the context and industry states had read the previous
+state's); the corner-tile states use the map's own size; three tiles were placed over the note or the legend for want of a
+clear place (the phone-width map and the 768 px map with the panels open), the count the audit now prints. Screenshots in both themes at 1,600 px and the phone layout at 390 × 844 went to the author. Costs
+(`frameCost(20)`, `hoverCost(30)`, `overlayCost(30)`, `contextCost(30)` and `mixCost(10)` at 1,600 px, software rendering, the
+firms view on the share layer for the frame costs): frames at rest 3.5 ms at Russia, 1.4 at Moscow, 1.6 at Central Moscow,
+and 900 ms into the 2022 pulse 3.2, 1.2 and 1.4 (maxima 4.0, 1.4 and 1.6; the acceptance was a mean under 10 and a maximum
+under 16 at Russia; the first pass of this round measured 5.4 at 300 ms, the costliest phase); the hover 0.4 to 0.7 ms mean
+on every view (1.1 at the street zoom, where the first call pays for the tile's layout), the crosshair's overlay under 0.01,
+the strip under 0.2; the view mix 0.2 ms over the 100 km cells, 0.7 to 1.6 over the coordinate pairs of a city window and
+10.5 ms over the 692,057 coordinate pairs of the country, paid once per settle, year or layer change and never per frame. Video: both cuts re-rendered at 4 shards on the
+corrected data and the new palette (`who-stays-visible-full-287s.mp4`, 8,610 frames in 318 s, 102.4 MB; `-teaser-46s.mp4`,
+1,380 frames in 44 s, 20.2 MB), ffprobe confirming 287.0 and 46.0 s at 1920 by 1080; the 720p copies 27.1 and 5.3 MB (the
+teaser's under the 15 MB asset cap); both probes clean after the M6 and M8 re-runs; the text audits: the full cut 1,435 frames at step 6, 29,702 boxes, 18
+findings, all of them the counted live-box coverage of red marks in the Moscow field (17 in round 8; the corrected revenue
+classes move a few marks under the box), zero label-over-mark; the teaser 460 frames at step 3, 6,659 boxes, zero (at step
+6 the audit's cut-in rule fires on the teaser's own 0.3 s fades at its cuts, so the recorded step of 3 stands); the 2014
+ring check on frames 4,404 to 4,412 shows rims only, no rings. The teaser identity test against round 8's frames 300, 700 and 1,300 (`build/r10-teaser-after`): all three differ (92.7, 99.3 and 100 percent of the pixels), as expected, since the stage colour reaches every frame; the new teaser is kept and its asset replaced at publishing. Publish set: `publish-set.py` rebuilt it on the final code, 163.7 MB: the two pages, six scripts, 17 data files (19.6 MB, with
+`industry.js`, `industry-city.js`, `regions.js` and the heavier `treatednational.js`), the 49 Moscow rasters the journey
+loads (41.2 MB), the 24 national rasters (1.3 MB) and the twelve address twins (101.2 MB); the guards (identifier keys,
+firm-name keys outside the two listed-firm files, a named neighbour, the size caps) pass. The atlas goes up in three
+uploads (the pages, scripts and data; the twins in two halves), the explainer in two (the pages, scripts and data; the
+rasters). Published on the author's word (25 October 2026): the atlas in three uploads, versions 18 to 20 (the last version id
+1792920994-0928: the page, the four scripts, the ten data files with `industry.js`, `industry-city.js` and `regions.js`,
+then the twelve address twins in two halves); the explainer in two, versions 22 and 23 (version id 1792921063-21c7: the
+page, the five scripts, the twelve data files, then the 73 rasters), with the new teaser asset
+`/_blob/bc8d172861eeffb686718f551c873b0f` replacing the old one, which was deleted. The Codex brief
+`candidates/2026-10-25-chapter2-named-illustrations-codex-brief.md` proposes an Aeroflot paragraph and an Appendix B table
+of the largest listed firms, with the sources, the display rule to port and the checks, and names what it does not propose.
 
 ### Publishing
 

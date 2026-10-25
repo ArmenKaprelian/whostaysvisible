@@ -2,10 +2,21 @@
 "2014: firms at the addresses equal M8's drawn firms",4288612,4288612,0,TRUE
 "2014: filers with a value equal M8's filers_base",559516,559516,0,TRUE
 "2014: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2014: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2014: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2014: read-back first and last records",1,1,0,TRUE
+"2014: read-back addresses by industry class",1,1,0,TRUE
+"2014: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2014: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2014: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2014: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2014: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2014: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2014: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2014: firms with a revenue value over the addresses equal a direct count",1208876,1208876,0,TRUE
+"2014: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",100,100,0,TRUE
+"2014: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2014: read-back sums (n, a, f)",1,1,0,TRUE
-"2014: raw bytes equal 32 + 15 records",10906772,10906772,0,TRUE
+"2014: raw bytes equal 32 + 33 records",23994860,23994860,0,TRUE
 "2014: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2014: M6's pile rule in the Moscow city extent reproduces M6's piles",43531,43531,0,TRUE
 "2014: and their firms equal M6's marks (city)",1113465,1113465,0,TRUE
@@ -16,10 +27,21 @@
 "2015: firms at the addresses equal M8's drawn firms",4291360,4291360,0,TRUE
 "2015: filers with a value equal M8's filers_base",707024,707024,0,TRUE
 "2015: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2015: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2015: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2015: read-back first and last records",1,1,0,TRUE
+"2015: read-back addresses by industry class",1,1,0,TRUE
+"2015: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2015: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2015: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2015: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2015: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2015: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2015: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2015: firms with a revenue value over the addresses equal a direct count",1393697,1393697,0,TRUE
+"2015: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",78,78,0,TRUE
+"2015: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2015: read-back sums (n, a, f)",1,1,0,TRUE
-"2015: raw bytes equal 32 + 15 records",10967252,10967252,0,TRUE
+"2015: raw bytes equal 32 + 33 records",24127916,24127916,0,TRUE
 "2015: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2015: M6's pile rule in the Moscow city extent reproduces M6's piles",43140,43140,0,TRUE
 "2015: and their firms equal M6's marks (city)",1069547,1069547,0,TRUE
@@ -30,10 +52,21 @@
 "2016: firms at the addresses equal M8's drawn firms",4485417,4485417,0,TRUE
 "2016: filers with a value equal M8's filers_base",803731,803731,0,TRUE
 "2016: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2016: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2016: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2016: read-back first and last records",1,1,0,TRUE
+"2016: read-back addresses by industry class",1,1,0,TRUE
+"2016: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2016: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2016: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2016: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2016: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2016: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2016: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2016: firms with a revenue value over the addresses equal a direct count",1417427,1417427,0,TRUE
+"2016: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",84,84,0,TRUE
+"2016: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2016: read-back sums (n, a, f)",1,1,0,TRUE
-"2016: raw bytes equal 32 + 15 records",11223122,11223122,0,TRUE
+"2016: raw bytes equal 32 + 33 records",24690830,24690830,0,TRUE
 "2016: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2016: M6's pile rule in the Moscow city extent reproduces M6's piles",43695,43695,0,TRUE
 "2016: and their firms equal M6's marks (city)",1124855,1124855,0,TRUE
@@ -44,10 +77,21 @@
 "2017: firms at the addresses equal M8's drawn firms",4229900,4229900,0,TRUE
 "2017: filers with a value equal M8's filers_base",917154,917154,0,TRUE
 "2017: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2017: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2017: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2017: read-back first and last records",1,1,0,TRUE
+"2017: read-back addresses by industry class",1,1,0,TRUE
+"2017: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2017: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2017: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2017: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2017: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2017: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2017: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2017: firms with a revenue value over the addresses equal a direct count",1427897,1427897,0,TRUE
+"2017: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",84,84,0,TRUE
+"2017: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2017: read-back sums (n, a, f)",1,1,0,TRUE
-"2017: raw bytes equal 32 + 15 records",11224157,11224157,0,TRUE
+"2017: raw bytes equal 32 + 33 records",24693107,24693107,0,TRUE
 "2017: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2017: M6's pile rule in the Moscow city extent reproduces M6's piles",43142,43142,0,TRUE
 "2017: and their firms equal M6's marks (city)",976958,976958,0,TRUE
@@ -58,10 +102,21 @@
 "2018: firms at the addresses equal M8's drawn firms",4027197,4027197,0,TRUE
 "2018: filers with a value equal M8's filers_base",1023529,1023529,0,TRUE
 "2018: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2018: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2018: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2018: read-back first and last records",1,1,0,TRUE
+"2018: read-back addresses by industry class",1,1,0,TRUE
+"2018: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2018: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2018: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2018: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2018: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2018: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2018: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2018: firms with a revenue value over the addresses equal a direct count",1386736,1386736,0,TRUE
+"2018: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",73,73,0,TRUE
+"2018: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2018: read-back sums (n, a, f)",1,1,0,TRUE
-"2018: raw bytes equal 32 + 15 records",11051627,11051627,0,TRUE
+"2018: raw bytes equal 32 + 33 records",24313541,24313541,0,TRUE
 "2018: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2018: M6's pile rule in the Moscow city extent reproduces M6's piles",43198,43198,0,TRUE
 "2018: and their firms equal M6's marks (city)",950003,950003,0,TRUE
@@ -72,10 +127,21 @@
 "2019: firms at the addresses equal M8's drawn firms",3714907,3714907,0,TRUE
 "2019: filers with a value equal M8's filers_base",1231517,1231517,0,TRUE
 "2019: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2019: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2019: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2019: read-back first and last records",1,1,0,TRUE
+"2019: read-back addresses by industry class",1,1,0,TRUE
+"2019: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2019: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2019: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2019: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2019: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2019: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2019: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2019: firms with a revenue value over the addresses equal a direct count",1405459,1405459,0,TRUE
+"2019: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",50,50,0,TRUE
+"2019: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2019: read-back sums (n, a, f)",1,1,0,TRUE
-"2019: raw bytes equal 32 + 15 records",10847762,10847762,0,TRUE
+"2019: raw bytes equal 32 + 33 records",23865038,23865038,0,TRUE
 "2019: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2019: M6's pile rule in the Moscow city extent reproduces M6's piles",42023,42023,0,TRUE
 "2019: and their firms equal M6's marks (city)",828044,828044,0,TRUE
@@ -86,10 +152,21 @@
 "2020: firms at the addresses equal M8's drawn firms",3357902,3357902,0,TRUE
 "2020: filers with a value equal M8's filers_base",1420896,1420896,0,TRUE
 "2020: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2020: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2020: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2020: read-back first and last records",1,1,0,TRUE
+"2020: read-back addresses by industry class",1,1,0,TRUE
+"2020: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2020: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2020: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2020: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2020: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2020: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2020: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2020: firms with a revenue value over the addresses equal a direct count",1472814,1472814,0,TRUE
+"2020: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",39,39,0,TRUE
+"2020: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2020: read-back sums (n, a, f)",1,1,0,TRUE
-"2020: raw bytes equal 32 + 15 records",10636262,10636262,0,TRUE
+"2020: raw bytes equal 32 + 33 records",23399738,23399738,0,TRUE
 "2020: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2020: M6's pile rule in the Moscow city extent reproduces M6's piles",43911,43911,0,TRUE
 "2020: and their firms equal M6's marks (city)",734295,734295,0,TRUE
@@ -100,10 +177,21 @@
 "2021: firms at the addresses equal M8's drawn firms",3078593,3078593,0,TRUE
 "2021: filers with a value equal M8's filers_base",1342207,1342207,0,TRUE
 "2021: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2021: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2021: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2021: read-back first and last records",1,1,0,TRUE
+"2021: read-back addresses by industry class",1,1,0,TRUE
+"2021: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2021: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2021: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2021: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2021: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2021: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2021: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2021: firms with a revenue value over the addresses equal a direct count",1450448,1450448,0,TRUE
+"2021: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",29,29,0,TRUE
+"2021: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2021: read-back sums (n, a, f)",1,1,0,TRUE
-"2021: raw bytes equal 32 + 15 records",10380887,10380887,0,TRUE
+"2021: raw bytes equal 32 + 33 records",22837913,22837913,0,TRUE
 "2021: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2021: M6's pile rule in the Moscow city extent reproduces M6's piles",42480,42480,0,TRUE
 "2021: and their firms equal M6's marks (city)",649391,649391,0,TRUE
@@ -114,10 +202,21 @@
 "2022: firms at the addresses equal M8's drawn firms",2946625,2946625,0,TRUE
 "2022: filers with a value equal M8's filers_base",1212720,1212720,0,TRUE
 "2022: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2022: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2022: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2022: read-back first and last records",1,1,0,TRUE
+"2022: read-back addresses by industry class",1,1,0,TRUE
+"2022: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2022: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2022: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2022: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2022: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2022: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2022: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2022: firms with a revenue value over the addresses equal a direct count",1425179,1425179,0,TRUE
+"2022: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",24,24,0,TRUE
+"2022: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2022: read-back sums (n, a, f)",1,1,0,TRUE
-"2022: raw bytes equal 32 + 15 records",10272332,10272332,0,TRUE
+"2022: raw bytes equal 32 + 33 records",22599092,22599092,0,TRUE
 "2022: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2022: M6's pile rule in the Moscow city extent reproduces M6's piles",41369,41369,0,TRUE
 "2022: and their firms equal M6's marks (city)",620443,620443,0,TRUE
@@ -128,10 +227,21 @@
 "2023: firms at the addresses equal M8's drawn firms",2907366,2907366,0,TRUE
 "2023: filers with a value equal M8's filers_base",1121169,1121169,0,TRUE
 "2023: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2023: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2023: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2023: read-back first and last records",1,1,0,TRUE
+"2023: read-back addresses by industry class",1,1,0,TRUE
+"2023: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2023: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2023: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2023: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2023: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2023: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2023: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2023: firms with a revenue value over the addresses equal a direct count",1424955,1424955,0,TRUE
+"2023: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",21,21,0,TRUE
+"2023: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2023: read-back sums (n, a, f)",1,1,0,TRUE
-"2023: raw bytes equal 32 + 15 records",10241492,10241492,0,TRUE
+"2023: raw bytes equal 32 + 33 records",22531244,22531244,0,TRUE
 "2023: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2023: M6's pile rule in the Moscow city extent reproduces M6's piles",41120,41120,0,TRUE
 "2023: and their firms equal M6's marks (city)",643432,643432,0,TRUE
@@ -142,10 +252,21 @@
 "2024: firms at the addresses equal M8's drawn firms",2884476,2884476,0,TRUE
 "2024: filers with a value equal M8's filers_base",1042702,1042702,0,TRUE
 "2024: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2024: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2024: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2024: read-back first and last records",1,1,0,TRUE
+"2024: read-back addresses by industry class",1,1,0,TRUE
+"2024: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2024: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2024: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2024: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2024: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2024: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2024: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2024: firms with a revenue value over the addresses equal a direct count",1415448,1415448,0,TRUE
+"2024: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",17,17,0,TRUE
+"2024: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2024: read-back sums (n, a, f)",1,1,0,TRUE
-"2024: raw bytes equal 32 + 15 records",10317122,10317122,0,TRUE
+"2024: raw bytes equal 32 + 33 records",22697630,22697630,0,TRUE
 "2024: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2024: M6's pile rule in the Moscow city extent reproduces M6's piles",41144,41144,0,TRUE
 "2024: and their firms equal M6's marks (city)",660305,660305,0,TRUE
@@ -156,10 +277,21 @@
 "2025: firms at the addresses equal M8's drawn firms",2865746,2865746,0,TRUE
 "2025: filers with a value equal M8's filers_base",953833,953833,0,TRUE
 "2025: an address has a class exactly when it has a filer with a value",0,0,0,TRUE
-"2025: read-back header (magic, count, year, version)",1,1,0,TRUE
+"2025: read-back header (magic, count, year, version 3)",1,1,0,TRUE
 "2025: read-back first and last records",1,1,0,TRUE
+"2025: read-back addresses by industry class",1,1,0,TRUE
+"2025: industry bytes within 255, 0 and the 88 divisions",0,0,0,TRUE
+"2025: mix rows: 255 with share 0 beyond the present divisions, and shares never rise along the rows",0,0,0,TRUE
+"2025: mix rows: the rounded shares of an address sum to at most 100 + 4",0,0,0,TRUE
+"2025: rv is 0 exactly for an address without a revenue value",0,0,0,TRUE
+"2025: an address lists every division when it has eight or fewer",0,0,0,TRUE
+"2025: the leading share is 0 exactly for an unknown address and 1 to 100 otherwise",0,0,0,TRUE
+"2025: an address is unknown exactly when no firm there has a revenue value",0,0,0,TRUE
+"2025: firms with a revenue value over the addresses equal a direct count",1356579,1356579,0,TRUE
+"2025: an address with a revenue value but no statement among its own firms has a listed firm with a revenue value at the pair",15,15,0,TRUE
+"2025: the js twin under the 16 MB text cap",1,1,0,TRUE
 "2025: read-back sums (n, a, f)",1,1,0,TRUE
-"2025: raw bytes equal 32 + 15 records",10373942,10373942,0,TRUE
+"2025: raw bytes equal 32 + 33 records",22822634,22822634,0,TRUE
 "2025: gzipped file under the 15 MB asset cap",1,1,0,TRUE
 "2025: M6's pile rule in the Moscow city extent reproduces M6's piles",41348,41348,0,TRUE
 "2025: and their firms equal M6's marks (city)",664138,664138,0,TRUE
@@ -172,3 +304,9 @@
 "2021: firms at addresses with 100 or more equal firms_at_100plus_locations",514368,514368,0,TRUE
 "2021: located firms equal the density pass's national count",3277638,3277638,0,TRUE
 "12 year files written",12,12,0,TRUE
+"industry: 88 divisions in the English title table",88,88,0,TRUE
+"industry: 88 divisions in the OKVED 2 crosswalk",88,88,0,TRUE
+"industry: the two code sets coincide (symmetric difference)",0,0,0,TRUE
+"industry: the code set equals the lab's 88 divisions",0,0,0,TRUE
+"industry: every codelist section letter agrees with the division's NACE range",0,0,0,TRUE
+"industry: every title and short label non-empty",0,0,0,TRUE

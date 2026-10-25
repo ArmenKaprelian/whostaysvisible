@@ -57,6 +57,7 @@ tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.un
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
                  FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year LEFT JOIN listnames nm ON nm.inn = m.inn_key LEFT JOIN memberships ms ON ms.inn_key = m.inn_key
                  WHERE m.treated GROUP BY ALL", cls_sql), "treated firms nationwide")
+lr <- motion_listed_revenue(); lrc <- motion_listed_revenue_cols(lr, tr$inn_key, tr$filed)   # yearly revenue and pair shares (author's request, 25 October 2026)
 piles <- lab_query(con, "SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n FROM fy WHERE year = 2021 GROUP BY 1, 2", "2021 piles")
 tr$pile <- piles$n[match(paste(round(tr$x_km, 3), round(tr$y_km, 3)), paste(piles$px, piles$py))]; tr$pile[is.na(tr$pile)] <- 1L
 red_hist <- table(factor(tr$red_from, levels = years))
@@ -125,11 +126,12 @@ manifest <- list(
 motion_save_json(manifest, "national", checks = checks, rows = length(years))
 treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
                       name = tr$name, name_filed = tr$name_filed, name_case = as.integer(tr$name_case), name_shared = as.integer(tr$name_shared), lists = tr$lists, names_summary = motion_names_summary(tr),
+                      rev_m = lrc$rev_m, psh = lrc$psh, revenue_note = MOTION_REVENUE_NOTE, revenue_counts = list(firm_years_with_value = lrc$n_with_value, firm_years_with_pair_share = lrc$n_with_share, firms_with_any_value = lrc$firms_with_any_value),
                     red_from_counts = as.list(stats::setNames(as.integer(red_hist), names(red_hist))), n = nrow(tr), inferred_n = sum(tr$inferred), undated_n = sum(tr$undated),
                     moscow_rectangle_n = sum(inside_of(EXT$region)),
                     state_key = list(`-` = "absent from the registry", b = "no usable baseline (backdrop only)", d = "baseline, no statement", `1-6` = "revenue-change class, national median"))
 motion_save_json(treated_out, "treatednational", rows = nrow(tr),
-                 checks = motion_checks(motion_name_checks(tr),
+                 checks = motion_checks(motion_name_checks(tr), lrc$checks,
                                         motion_check("lists: the resident code agrees with the firms table", 0, sum(grepl("r", tr$lists, fixed = TRUE) != tr_keys$residents[match(tr$inn_key, tr_keys$inn_key)])),
                                         motion_check("lists: the other-list codes agree with the firms table", 0, sum(grepl("[sdgp]", tr$lists) != tr_keys$other_lists[match(tr$inn_key, tr_keys$inn_key)]))))
 message(sprintf("  listed firms nationwide: %d (%d in the Moscow rectangle); Moscow point at pixel %d,%d (camera %.1f,%.1f)", nrow(tr), sum(inside_of(EXT$region)), mcol, mrow, mpx, mpy))

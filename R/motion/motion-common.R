@@ -57,6 +57,8 @@ motion_read_json <- function(id) jsonlite::fromJSON(file.path(motion_data_dir(),
 # Base64 of little-endian integer vectors for the dense cell layers.
 motion_b64_int16 <- function(x) jsonlite::base64_enc(writeBin(as.integer(x), raw(), size = 2L, endian = "little"))
 motion_b64_int32 <- function(x) jsonlite::base64_enc(writeBin(as.integer(x), raw(), size = 4L, endian = "little"))
+motion_b64_uint8 <- function(x) { x <- as.integer(x); if (any(x < 0 | x > 255)) stop("uint8 overflow"); jsonlite::base64_enc(as.raw(x)) }
+motion_b64_float32 <- function(x) jsonlite::base64_enc(writeBin(as.numeric(x), raw(), size = 4L, endian = "little"))   # NA is written as a NaN; the page reads NaN as no value
 
 # Format helpers used in facts.
 motion_count <- function(x) format(round(x), big.mark = ",", trim = TRUE, scientific = FALSE)

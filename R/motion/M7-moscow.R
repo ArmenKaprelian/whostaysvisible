@@ -124,7 +124,7 @@ cells_out <- list(origin = c(R$xmin, R$ymin), extent = list(xmin = R$xmin, xmax 
                   notes = c("Registered addresses, not operating sites.", "Descriptive: the metric is each firm's own revenue path, aggregated by cell; no spatial or proximity effect is estimated."))
 motion_save_json(cells_out, paste0("moscowcells", SUFFIX), checks = checks, rows = sum(vapply(G, function(g) nrow(g$cells), 0L)), digits = 1)
 if (!CANONICAL) { message("  comparison groups unchanged by the metric; not rewritten in this run"); quit(save = "no", status = 0) }
-cmp_out <- list(years = years, index = "100 * real revenue (line 2110 times the GDP deflator, 2021 = 1) / the firm's own 2019-2021 average of statements with positive revenue",
+cmp_out <- list(years = years, index = "100 * real revenue (line 2110 divided by the GDP deflator, 2021 = 1) / the firm's own 2019-2021 average of statements with positive revenue",
                 filter = "members with a baseline, a statement and positive revenue in the year (the map's metric admits a filed zero; the log axis cannot)",
                 groups = list(listed2022 = list(label = "firms listed in 2022", rule = "on a supplied list with red-from 2022 (the sanctions file's first start year), inside the rectangle", members = members$a[1], by_year = ga),
                               nolist = list(label = "firms on no list", rule = "on none of the five supplied lists, with a baseline, inside the rectangle", members = members$b[1], by_year = gb)),

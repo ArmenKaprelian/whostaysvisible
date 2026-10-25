@@ -1,13 +1,13 @@
 {
   "id": "national",
-  "run_id": "20261025T055425Z-run-M8-national.R",
+  "run_id": "20261025T090037Z-run-M8-national.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T05:55:27Z",
+  "time_utc": "2026-10-25T09:01:40Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M8-national.R",
-    "sha256": "def8be38a5978b9d21b02069d441678883afecb503d4e492bfae2b89459faa32"
+    "sha256": "d0ec2d2b4d84840bfd39f4318a220bbb09cd8d5e8a07e0ebdf2820d86902fb57"
   },
-  "lab_commit": "450cdc5aa8b4a0a399fdf89892c165619f04aa20",
+  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -456,9 +456,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "6GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-jLZBUSd4/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-pbiIBuRM/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },
@@ -466,10 +466,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/national.json",
-    "json_sha256": "3325f6953862c03fd23cbe2241bdbf7d58336da83d1a0213365ce412cc5de9e5",
-    "json_bytes": 12994,
+    "json_sha256": "b6fa6faa1004d65571e81895907a28489f8abec00a24cb6223a3e21a09263f99",
+    "json_bytes": 13013,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/national.js",
-    "js_sha256": "ca0b9c20e97483d0ffa484410a64847915d8b7f82f945f3f31762fbf8ed67108",
+    "js_sha256": "8e678f4584a5c59a66be7305ca345ce896c8e10104bb6eb7a49f2ae06c79cfc6",
     "names": ["scope", "camera", "extent", "years", "breaks", "class_colours", "neutral", "backdrop_alpha", "layer_alpha", "treated", "metric_kind", "metric", "metric_median_by_year", "moscow_median_by_year", "files", "counts", "classes", "moscow_pixel", "moscow_counters_minus_m6", "moscow_rectangle", "pile_check", "rules", "notes", "cx", "cy", "k", "ox", "oy", "xmin", "xmax", "ymin", "ymax", "w_km", "h_km", "mark", "px_km", "base", "s", "cap", "year", "med", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "backdrop", "layer", "firms", "city_level", "drawn", "filers_base", "nonfilers_base", "nobase", "nobase_filed", "base_filed_novalue", "with_base_all", "located_all", "located_no_id", "piles", "piles_outcome", "marks_firms", "marks_firms_base", "marks_firms_f", "blocks_2x2", "blocks_3x3", "red", "red_nonfilers", "red_undated", "filers", "quantiles", "current", "previous", "c2", "c3", "col", "row", "px", "py", "firms_with_a_row", "firms_by_latest_coordinates", "m6_treated", "n", "pixel", "median", "excluded"]
   }
 }

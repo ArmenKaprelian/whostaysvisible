@@ -1,16 +1,16 @@
 {
   "id": "moscowcomparison",
-  "run_id": "20261023T063649Z-run-M7-moscow.R",
+  "run_id": "20261025T072828Z-run-M7-moscow.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T06:36:56Z",
+  "time_utc": "2026-10-25T07:28:55Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M7-moscow.R",
-    "sha256": "e375e61c23fcca4d193cca9a1612118bf5e3dca914322f675fb0604bdd6d56ef"
+    "sha256": "9a39a814aa9a15ccf04235e2ee36bff40508ac61ba48765bfcf79dff65a03c2e"
   },
-  "lab_commit": "9a5f0416e72fc51b56ca1c6e9129aa493ef76813",
+  "lab_commit": "0cc137d916fad6af6fe4f11e75d8a95a8e3d5805",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
-    "dirty_files": 18,
+    "dirty_files": 20,
     "pinned_utc": "2026-10-18T19:22:42Z"
   },
   "sources": [
@@ -35,6 +35,26 @@
       "sha256_source": "computed"
     },
     {
+      "name": "motion.putin-decree-list",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/putin_decree_list.xlsx",
+      "kind": "xlsx",
+      "generation": null,
+      "size": 14726,
+      "mtime": 1770857578,
+      "sha256": "b64de34a3353422ef49741590bc0f78ca670817411dc5f442b45e2694cd76578",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "motion.strateg-government",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/raw_files/sanctioned_strategic/strategic/strateg_government.xlsx",
+      "kind": "xlsx",
+      "generation": null,
+      "size": 61694,
+      "mtime": 1770857578,
+      "sha256": "41beeffec98145cbd80b3e52c1560ca6a23b81b4663f5b452d3ca53104cab48d",
+      "sha256_source": "computed"
+    },
+    {
       "name": "registry.2014",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2014/generation-10b9d19df45f2/registry.parquet",
       "kind": "parquet",
@@ -42,116 +62,6 @@
       "size": 127293275,
       "mtime": 1791232633,
       "sha256": "9c12a5c5a57f07df244442a68dcad2b3253bbb6517b7e76a8228b45bd8918bd9",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2015",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2015/generation-10b9d258740eb/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d258740eb",
-      "size": 126311866,
-      "mtime": 1791232718,
-      "sha256": "5a95c4c8693a13f467dcd4e298faf169f551ef0f82ef2ce154934d31f1a9d36d",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2016",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2016/generation-10b9d3e0b028a/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d3e0b028a",
-      "size": 129997776,
-      "mtime": 1791232806,
-      "sha256": "b3bddfa39e73f19a83e1d2df5c82af4cb1e7175dce752bd879354bfa804f6656",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2017",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2017/generation-10b9d5641022e/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d5641022e",
-      "size": 122753458,
-      "mtime": 1791232889,
-      "sha256": "61f143cee710ac1b980ea230781a5e2d4df3c60a41192ce8ff29b5d17ccc1d0c",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2018",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2018/generation-10b9d3b956b20/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d3b956b20",
-      "size": 115305220,
-      "mtime": 1791232968,
-      "sha256": "55d867ce65864552adc1f2507c4a5bc954d998dbeafe799560684931b82f6ca4",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2019",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d382646ef",
-      "size": 109769199,
-      "mtime": 1791233045,
-      "sha256": "622ec3b5f1f5b74c3b47d9f3d18888ba253190f1ffc5bc8408a8678c7e08fbd0",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2020",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2020/generation-10b9d3c8381fa/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d3c8381fa",
-      "size": 98479578,
-      "mtime": 1791233116,
-      "sha256": "56a56e5ec00ff037bbd35931f3a2f125e5cd3f1a84432446cc35ab7c4dee093b",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2021",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d5d363d92",
-      "size": 134403043,
-      "mtime": 1791233185,
-      "sha256": "048f43d8391caf3f87bdcee98e801c58f2fca66675c7c4c0a6362d9ca9fb58e1",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2022",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2022/generation-10b9d826b541/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d826b541",
-      "size": 127525251,
-      "mtime": 1791233252,
-      "sha256": "27286e8c8d8f684482abbf76b2614f82c51025f8bc642da8c3ec04a459417023",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2023",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2023/generation-10b9dafdc90e/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9dafdc90e",
-      "size": 124672335,
-      "mtime": 1791233317,
-      "sha256": "f1e2af758c0f4d82cfe6e423fe6cf40ccfee680a40ef91ccb9a5fca4d265ba81",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2024",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d1db9b6af",
-      "size": 122521400,
-      "mtime": 1791232284,
-      "sha256": "5969b72b6002f9c425af462033a2c4ef4d6a27289e84f19fc9e0512e0b65b2eb",
-      "sha256_source": "stage-manifest"
-    },
-    {
-      "name": "registry.2025",
-      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2025/generation-10b9d246463d5/registry.parquet",
-      "kind": "parquet",
-      "generation": "10b9d246463d5",
-      "size": 119434792,
-      "mtime": 1791233380,
-      "sha256": "19219cbe42284a83390304a5e09057cf4b7bff5f3a76183288d8dad9af93de29",
       "sha256_source": "stage-manifest"
     },
     {
@@ -165,6 +75,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2015",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2015/generation-10b9d258740eb/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d258740eb",
+      "size": 126311866,
+      "mtime": 1791232718,
+      "sha256": "5a95c4c8693a13f467dcd4e298faf169f551ef0f82ef2ce154934d31f1a9d36d",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2015",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2015/generation-10b9d70347d31/raw-payload.parquet",
       "kind": "parquet",
@@ -172,6 +92,16 @@
       "size": 135157692,
       "mtime": 1791231713,
       "sha256": "1cc469707d826f197fec9cf61097894f644f7a52700adecb9b3e4b0bb03a2097",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2016",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2016/generation-10b9d3e0b028a/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3e0b028a",
+      "size": 129997776,
+      "mtime": 1791232806,
+      "sha256": "b3bddfa39e73f19a83e1d2df5c82af4cb1e7175dce752bd879354bfa804f6656",
       "sha256_source": "stage-manifest"
     },
     {
@@ -185,6 +115,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2017",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2017/generation-10b9d5641022e/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5641022e",
+      "size": 122753458,
+      "mtime": 1791232889,
+      "sha256": "61f143cee710ac1b980ea230781a5e2d4df3c60a41192ce8ff29b5d17ccc1d0c",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2017",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2017/generation-10b9d4931784e/raw-payload.parquet",
       "kind": "parquet",
@@ -192,6 +132,16 @@
       "size": 135495043,
       "mtime": 1791231788,
       "sha256": "4e7f3ea9a500098e788b3e630c281c6853f61f32923e2ef47a742a51105770e8",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2018",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2018/generation-10b9d3b956b20/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3b956b20",
+      "size": 115305220,
+      "mtime": 1791232968,
+      "sha256": "55d867ce65864552adc1f2507c4a5bc954d998dbeafe799560684931b82f6ca4",
       "sha256_source": "stage-manifest"
     },
     {
@@ -205,6 +155,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2019",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2019/generation-10b9d382646ef/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d382646ef",
+      "size": 109769199,
+      "mtime": 1791233045,
+      "sha256": "622ec3b5f1f5b74c3b47d9f3d18888ba253190f1ffc5bc8408a8678c7e08fbd0",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2019",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2019/generation-10b9d551d3ebc/raw-payload.parquet",
       "kind": "parquet",
@@ -212,6 +172,16 @@
       "size": 123281587,
       "mtime": 1791231859,
       "sha256": "979afddab797ce85bb3462b473b119f4e5a6f98930bbf6034c14e188f8c67781",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2020",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2020/generation-10b9d3c8381fa/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d3c8381fa",
+      "size": 98479578,
+      "mtime": 1791233116,
+      "sha256": "56a56e5ec00ff037bbd35931f3a2f125e5cd3f1a84432446cc35ab7c4dee093b",
       "sha256_source": "stage-manifest"
     },
     {
@@ -225,6 +195,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5d363d92",
+      "size": 134403043,
+      "mtime": 1791233185,
+      "sha256": "048f43d8391caf3f87bdcee98e801c58f2fca66675c7c4c0a6362d9ca9fb58e1",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2021",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2021/generation-10b9dba7faf9/raw-payload.parquet",
       "kind": "parquet",
@@ -232,6 +212,16 @@
       "size": 111292791,
       "mtime": 1791231921,
       "sha256": "57e337a63d63f00011fb0a77fe20879aa3260b23afb897ce6311c09b42fb3127",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2022",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2022/generation-10b9d826b541/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d826b541",
+      "size": 127525251,
+      "mtime": 1791233252,
+      "sha256": "27286e8c8d8f684482abbf76b2614f82c51025f8bc642da8c3ec04a459417023",
       "sha256_source": "stage-manifest"
     },
     {
@@ -245,6 +235,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2023",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2023/generation-10b9dafdc90e/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9dafdc90e",
+      "size": 124672335,
+      "mtime": 1791233317,
+      "sha256": "f1e2af758c0f4d82cfe6e423fe6cf40ccfee680a40ef91ccb9a5fca4d265ba81",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2023",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2023/generation-10b9d1835ffa4/raw-payload.parquet",
       "kind": "parquet",
@@ -255,6 +255,16 @@
       "sha256_source": "stage-manifest"
     },
     {
+      "name": "registry.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1db9b6af",
+      "size": 122521400,
+      "mtime": 1791232284,
+      "sha256": "5969b72b6002f9c425af462033a2c4ef4d6a27289e84f19fc9e0512e0b65b2eb",
+      "sha256_source": "stage-manifest"
+    },
+    {
       "name": "payload.2024",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2024/generation-10b9d48c4d841/raw-payload.parquet",
       "kind": "parquet",
@@ -262,6 +272,16 @@
       "size": 108317556,
       "mtime": 1791231503,
       "sha256": "ef7e745004b05b4caa35e252fe428530a7592513ca555102c89d97920ddc40ae",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2025",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2025/generation-10b9d246463d5/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d246463d5",
+      "size": 119434792,
+      "mtime": 1791233380,
+      "sha256": "19219cbe42284a83390304a5e09057cf4b7bff5f3a76183288d8dad9af93de29",
       "sha256_source": "stage-manifest"
     },
     {
@@ -279,6 +299,11 @@
   "rows": 24,
   "r_version": "R version 4.5.2 (2025-10-31)",
   "packages": [
+    {
+      "package": "cellranger",
+      "version": "1.1.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
     {
       "package": "cli",
       "version": "3.6.6",
@@ -385,6 +410,11 @@
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
     },
     {
+      "package": "readxl",
+      "version": "1.5.0.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
       "package": "rlang",
       "version": "1.3.0",
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
@@ -428,7 +458,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-SodyL8sy/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-zUGI9mI2/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -436,10 +466,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/moscowcomparison.json",
-    "json_sha256": "645b7278a4b1347fd0c5e8b0d0f2f35a05200324844afef719b9a4327a37659d",
-    "json_bytes": 2334,
+    "json_sha256": "84928cb72974e9b1b703382b545bc2ecde1f94f58694a792df1831150783b89a",
+    "json_bytes": 2332,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/moscowcomparison.js",
-    "js_sha256": "a32a1e2df564f984b44fec3f46337aa10fb6108bb7cec19b3b1cc152fa821a87",
+    "js_sha256": "7c8b2e4191276b7c3b30e2a98ad8513363673cc8c2dbd695d486f2a2b9f6b485",
     "names": ["years", "index", "filter", "groups", "anchors", "extremes", "notes", "listed2022", "nolist", "label", "rule", "members", "by_year", "year", "n", "med", "q1", "q3", "a", "b", "group", "idx", "gap", "marker", "before", "after", "years_before", "years_after", "min_q1", "max_q3", "min_idx", "max_idx"]
   }
 }

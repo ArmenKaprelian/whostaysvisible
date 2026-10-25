@@ -115,6 +115,7 @@ tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.un
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
                  FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year LEFT JOIN listnames nm ON nm.inn = m.inn_key LEFT JOIN memberships ms ON ms.inn_key = m.inn_key
                  WHERE m.treated GROUP BY ALL", cls_sql), "treated firms")
+lr <- motion_listed_revenue(); lrc <- motion_listed_revenue_cols(lr, tr$inn_key, tr$filed)   # yearly revenue and pair shares (author's request, 25 October 2026)
 piles <- lab_query(con, "SELECT round(x_km, 3) AS px, round(y_km, 3) AS py, count(*) AS n FROM fy WHERE year = 2021 GROUP BY 1, 2", "2021 piles")
 tr$pile <- piles$n[match(paste(round(tr$x_km, 3), round(tr$y_km, 3)), paste(piles$px, piles$py))]
 tr$pile[is.na(tr$pile)] <- 1L
@@ -257,9 +258,10 @@ motion_save_json(manifest, POINTS_DIR, checks = checks, rows = sum(vapply(counts
 if (CANONICAL) {   # the treated and anchor data belong to the canonical run (ramp A, the default metric)
   treated_out <- list(x = round(tr$x_km, 4), y = round(tr$y_km, 4), red_from = as.integer(tr$red_from), undated = tr$undated, inferred = tr$inferred, filed = tr$filed, state = tr$state, pile = as.integer(tr$pile),
                       name = tr$name, name_filed = tr$name_filed, name_case = as.integer(tr$name_case), name_shared = as.integer(tr$name_shared), lists = tr$lists, names_summary = motion_names_summary(tr),
+                      rev_m = lrc$rev_m, psh = lrc$psh, revenue_note = MOTION_REVENUE_NOTE, revenue_counts = list(firm_years_with_value = lrc$n_with_value, firm_years_with_pair_share = lrc$n_with_share, firms_with_any_value = lrc$firms_with_any_value),
                       red_from_counts = as.list(stats::setNames(as.integer(red_hist), names(red_hist))), n = nrow(tr), inferred_n = sum(tr$inferred), undated_n = sum(tr$undated),
                       state_key = list(`-` = "absent from the registry", b = "no usable baseline (backdrop only)", d = "baseline, no statement (dark)", `1-6` = "revenue-change class"))
-  motion_save_json(treated_out, "treated", checks = motion_name_checks(tr), rows = nrow(tr))
+  motion_save_json(treated_out, "treated", checks = motion_checks(motion_name_checks(tr), lrc$checks), rows = nrow(tr))
   motion_save_json(list(a = aero_facts, b = sme_facts, distance_m = round(1000 * sqrt((aero_facts$x_km - sme_facts$x_km)^2 + (aero_facts$y_km - sme_facts$y_km)^2))), "anchors", rows = 2)
 }
 message("  SME candidates: ", nrow(sme), "; chosen at ", round(sme$dist_m[1]), " m, industry ", sme_facts$okved, " ", sme_facts$okved_text)

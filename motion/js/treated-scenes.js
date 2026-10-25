@@ -178,31 +178,57 @@
     if (wNat < 1) drawMarkSet(ctx, cam, v, alpha * (1 - wNat), theme, TR, rewind, l);
     if (wNat > 0) drawMarkSet(ctx, cam, v, alpha * wNat, theme, TRN, rewind, l);
   }
+  // The video's bloom timings (round 9): the flash over the year transition with the pale core and the glow, the rings' decay
+  // and the west-to-east stagger fitted inside each run's hold, so RUNS and the year timing are unchanged (the national and
+  // region ring decay is 0.55 s, from 0.6, to make room for the stagger). Rings only for firms listed from 2015 on and dated
+  // (the 2014 and undated members are red from the first frame and never bloom).
+  const VP = { downtown: { attack: 0.09, release: 0.21, ringDelay: 0.05, glow: 0.30, decay: 0.85, cull: 80 }, city: { attack: 0.075, release: 0.175, ringDelay: 0.05, glow: 0.25, decay: 0.60, cull: 80 },
+               region: { attack: 0.075, release: 0.175, ringDelay: 0.05, glow: 0.25, decay: 0.55, cull: 80 }, national: { attack: 0.075, release: 0.175, ringDelay: 0.05, glow: 0.25, decay: 0.55, cull: 80 } };
+  const SPREAD = { downtown: 0.06, city: 0.08, region: 0.10, national: 0.10 };   // s: the stagger across the extent, west to east
+  const PH = { on: false, swell: 0, release: 0, grow: 0, glowA: 0, p: 0 };   // the bloom phase of the mark being drawn, reused
+  const stagger = (ext, x) => { const e = P.extents[ext]; return SPREAD[ext] * Motion.clamp((x - e.xmin) / (e.xmax - e.xmin), 0, 1); };
   function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind, l = null) {
     const [y0, y1, u] = yearPair(v); const vy = y0 + (y1 - y0) * u;   // the year value of the pair (equal to v without a kept-year list)
-    const ext = extentOf(cam.k), LR = listedRuleAt(ext, cam.k); const hw = (960 + 48) / cam.k + 1, hh = (540 + 48) / cam.k + 1;   // 48 px beyond the frame: the largest ring stays inside
+    const ext = extentOf(cam.k), LR = listedRuleAt(ext, cam.k), VPX = VP[ext]; const hw = (960 + MM.PULSE.cull) / cam.k + 1, hh = (540 + MM.PULSE.cull) / cam.k + 1;   // 80 px beyond the frame: the largest flash and ring stay inside
+    const clock = l != null && !rewind;   // the section clock drives each firm's bloom from its own start; without it (kept-year cuts) the year value does
+    const inView = i => { const x = MARKS.x[i], y = MARKS.y[i]; return !(x < cam.cx - hw || x > cam.cx + hw || y < cam.cy - hh || y > cam.cy + hh); };
+    if (clock) for (let i = 0; i < MARKS.n; i++) {   // pass 0: the pale glows of the blooming marks under everything
+      if (MARKS.red_from[i] <= Y0 || MARKS.undated[i] || !inView(i)) continue;
+      const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0]; const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
+      MM.pulsePhase(l - tStart(MARKS.red_from[i], ext) - stagger(ext, MARKS.x[i]), PH, VPX);
+      if (!PH.on || PH.glowA <= 0.01) continue;
+      const [px, py] = Motion.project(cam, MARKS.x[i], MARKS.y[i]); const r = MM.listedRadius(LR, MARKS.pile[i]);
+      MM.glowDisc(ctx, px, py, 2 * (r + MM.flashPeak(r) * PH.swell), PH.glowA * alpha * present, theme);
+    }
     for (let i = 0; i < MARKS.n; i++) {
-      const x = MARKS.x[i], y = MARKS.y[i];
-      if (x < cam.cx - hw || x > cam.cx + hw || y < cam.cy - hh || y > cam.cy + hh) continue;
+      if (!inView(i)) continue;
+      const x = MARKS.x[i], y = MARKS.y[i], yl = MARKS.red_from[i];
       const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0];
       const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
       const [px, py] = Motion.project(cam, x, y); const r = MM.listedRadius(LR, MARKS.pile[i]);   // the listed rule's floor and cap by zoom
-      const bloom = Motion.clamp(vy - (MARKS.red_from[i] - 1), 0, 1);
-      if (bloom < 1) {
+      const bloom = Motion.clamp(vy - (yl - 1), 0, 1);
+      const dated = yl > Y0 && !MARKS.undated[i];
+      let t = 0; if (clock && dated) { t = l - tStart(yl, ext) - stagger(ext, x); MM.pulsePhase(t, PH, VPX); }
+      const own = clock && dated;   // this firm's bloom runs on its own clock
+      const started = own ? PH.on : bloom > 0, done = own ? (PH.on && PH.grow >= 1 && PH.swell <= 0) : bloom >= 1;
+      const grow = own ? PH.grow : (rewind ? bloom : E.outCubic(bloom));
+      if (!done) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
-        const pre = (1 - E.outCubic(bloom)) * present * alpha;   // the ordinary fill at the listed radius
+        const pre = (1 - grow) * present * alpha;   // the ordinary fill at the listed radius, fading as the bloom grows
         if (c0 && u < 1) { ctx.globalAlpha = pre * (1 - u); ctx.fillStyle = c0; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
         if (c1 && u > 0) { ctx.globalAlpha = pre * u; ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(px, py, r, 0, TAU); ctx.fill(); }
         if (c0 || c1) { ctx.globalAlpha = pre * LR.rimA; ctx.strokeStyle = theme.treated; ctx.lineWidth = LR.rimW; ctx.beginPath(); ctx.arc(px, py, r + LR.rimW / 2, 0, TAU); ctx.stroke(); }   // the rim outside the fill: membership visible from the first frame (25 October 2026)
       }
-      if (bloom > 0) {
+      if (started) {
         const f0 = MARKS.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = MARKS.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
-        const grow = rewind ? bloom : E.outCubic(bloom), swell = rewind ? 0 : Math.sin(Math.PI * bloom), rr = r + Math.max(1.2 * r, 2.5) * swell;
-        if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: rr + LR.halo });
-        MM.listedMark(ctx, px, py, rr, fill, alpha * present * grow * (1 - (1 - LR.alpha) * bloom), theme, LR.halo);
-        if (!rewind) {   // the rings: on the section clock the decay runs 0.6 s into the hold; without it, the bloom's own clock
-          const p = l != null ? Motion.clamp((l - tStart(MARKS.red_from[i], ext)) / 0.6, 0, 1) : bloom;
-          if (p > 0 && p < 1) { ctx.globalAlpha = alpha * present; MM.pulseRing(ctx, px, py, r, MM.pulseRings(LR, p, false), theme); }
+        const swell = own ? PH.swell : (rewind ? 0 : Math.sin(Math.PI * bloom)), rr = r + (own ? MM.flashPeak(r) : Math.max(1.2 * r, 2.5)) * swell;
+        const core = own && PH.release < 1 && theme.coreRed ? MM.coreAt(fill >= 0.5 ? theme.coreRed : theme.coreLand, PH.release) : null;
+        const settle = own ? Motion.clamp(t / (VPX.ringDelay + VPX.decay), 0, 1) : bloom;
+        if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: r + LR.halo });   // the resting radius: the flash is transient
+        MM.listedMark(ctx, px, py, rr, fill, alpha * present * grow * (1 - (1 - LR.alpha) * settle), theme, LR.halo, core);
+        if (!rewind) {   // the rings on the section clock (this firm's start), else on the bloom's own clock
+          const p = own ? PH.p : (dated ? bloom : 1);
+          if (p > 0 && p < 1) { ctx.globalAlpha = alpha * present; MM.pulseRing(ctx, px, py, r, LR, p, theme, false); }
         }
       }
     }
