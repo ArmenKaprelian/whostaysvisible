@@ -156,7 +156,8 @@
 
   // ---- state -----------------------------------------------------------------------------------
   const NAT = { cx: (BM.extents.national.x[0] + BM.extents.national.x[1]) / 2, cy: (BM.extents.national.y[0] + BM.extents.national.y[1]) / 2 };
-  const state = { layer: 'share', year: 2024, cam: { cx: NAT.cx, cy: NAT.cy, k: 0.2 }, hover: null, mode: 'cells' };   // the landing (round 10): the Cells view, 2024, the leading-industry layer when its data exist (set below), the national zoom
+  const state = { layer: 'share', year: 2024, cam: { cx: NAT.cx, cy: NAT.cy, k: 0.2 }, hover: null, mode: 'cells' };
+  const hoverUnit = { key: null, tw: 0, th: 0, foot: '' };   // the hovered unit's key and the tile's measured size (round 14): a pointer move inside the same unit moves the tile and writes the footer only   // the landing (round 10): the Cells view, 2024, the leading-industry layer when its data exist (set below), the national zoom
   const LAYERS = [
     { id: 'density', label: 'Firm density, 2021', prov: 'Located eligible firms at registered addresses in 2021, counted per 5 km cell nationally and per 1 km and 250 m cell in city windows (M3 pass over the production point layer). Shares are shown only for cells with 50 or more firms.' },
     { id: 'share', label: 'Statement share by year', prov: 'Share of located eligible firms with an original statement, per 100 km cell, financial years 2014 to 2025 (M5 pass over the foundation registry and payload partitions, production projection and located rule; 2012 and 2013 carry no coordinates). City windows at 1 km for 2019 to 2024.' },
@@ -175,7 +176,7 @@
   // address field, WebGL), #marks (the listed marks and, in the firms view, the city labels) and #overlay (the hover).
   // #map no longer reads its pixels back, so it may be hardware-rendered; the field has its own canvas.
   const wrap = $('mapwrap'), mapC = $('map'), fieldC = $('field'), marksC = $('marks'), ovC = $('overlay');
-  const mctx = mapC.getContext('2d', { willReadFrequently: true }), kctx = marksC.getContext('2d'), octx = ovC.getContext('2d');
+  const mctx = mapC.getContext('2d', { willReadFrequently: new URLSearchParams(location.search).get('canvas') !== 'gpu' }), kctx = marksC.getContext('2d'), octx = ovC.getContext('2d');   // ?canvas=gpu draws the map canvas on the GPU, for the measurement on the author's screens (round 14)
   // The map context keeps willReadFrequently although nothing reads it back any more: the flag also selects the canvas's raster
   // path (CPU with it, GPU without), and without it the cells view's flights ran two to three times slower at device-pixel
   // ratios 2 and 3 in the lab's headless browser on the Intel GPU (measured 24 October 2026); the author may test the other setting.
@@ -187,6 +188,7 @@
     for (const c of [mapC, fieldC, marksC, ovC].concat(field2d ? [field2d.canvas] : [])) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); c.style.width = stage.width + 'px'; c.style.height = stage.height + 'px'; }   // an explicit CSS size, so a device pixel is a device pixel
     window.__atlasCanvases.marks = { w: stage.width, h: stage.height };
     MM.listedCityK = Math.min(stage.width, stage.height) / 95;   // the city preset's zoom at this stage, where the listed marks' national extra ends (round 11, item 2)
+    layersDirty();   // a canvas whose size is assigned is cleared, whatever the size: the field and the marks redraw
   }
   const cam = () => ({ cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k, ox: stage.width / 2, oy: stage.height / 2 });
   // Camera targets (24 October 2026): pure helpers shared by the presets, the click ladder, the zoom buttons, the keys
@@ -248,17 +250,24 @@
   }
 
   let drawLog = [];   // the named draw steps of the last drawMap (round 10): the audit asserts the authorship mark right after the basemap and before every data layer
+  // The field and the marks redraw only when what they show changed (round 14): a hovered region's fill redraws the map canvas alone, and the field and the marks
+  // keep the frame they have. The key holds everything they depend on; layersDirty() forces the next draw (a restored context, an audit hook).
+  let lastFieldKey = '', lastMarksKey = '';
+  const layersKey = c => [state.mode, state.layer, state.year, theme.dark ? 1 : 0, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, firmYears.has(state.year) ? 1 : 0, mosaicOff ? 1 : 0, useGL() ? 1 : 0].join('|');
+  const layersDirty = () => { lastFieldKey = ''; lastMarksKey = ''; };
   function drawMap(opts) {
     drawLog = [];
-    const flight = !!(opts && opts.flight);   // a flight frame skips the two DOM touches: the audit box and the legend
-    Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame   // the canvases' own size (the content box), for the audit
+    const flight = !!(opts && opts.flight), motion = !!(opts && opts.motion);   // a flight frame skips the two DOM touches: the audit box and the legend; a wheel step (motion) leaves the strip to the settle
+    Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight && !motion) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame or a wheel step   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
     MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { drawRegionFill(c); if (state.mode === 'firms') drawFirmsGround(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
-    if (state.mode === 'firms') { drawLog.push('firms'); if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; } drawFirms(c); drawMarks(c); }
+    if (state.mode === 'firms') { drawLog.push('firms'); if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; layersDirty(); }
+      const key = layersKey(c), fieldNew = key !== lastFieldKey; drawFirms(c, fieldNew); lastFieldKey = key;
+      if (key !== lastMarksKey || pulse) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
     else if (L === 'density') { drawLog.push('density');
       const ga = gridAlphas(c.k), near = nearestCity(c).city.label, w1 = win1[near] ? winRect(win1[near].d, 90) : null, w025 = win025[near] ? winRect(win025[near].d, 24) : null;
       drawAround(c, w1, ga.one, (a, region) => drawNat(c, a, region, false));
@@ -337,9 +346,12 @@
   function ensureYear(y) {
     if (firmYears.has(y)) return Promise.resolve(firmYears.get(y));
     if (firmPending.has(y)) return firmPending.get(y);
-    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); for (const T of MOSAIC_LEVELS) mosaicCache.delete(yy + '|' + T); mosaicBitmaps.clear(); mosaicPathCache.clear(); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
+    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); prebuildBins(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); for (const T of MOSAIC_LEVELS) mosaicCache.delete(yy + '|' + T); mosaicBitmaps.clear(); mosaicPathCache.clear(); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
     firmPending.set(y, p); return p;
   }
+  // The bins of a loaded year are built in idle time (round 14), not in the first frame that needs them (a 312 ms stall on the first zoom past k 1.5).
+  const onIdle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 250));
+  function prebuildBins(y) { for (const T of MOSAIC_LEVELS) onIdle(() => { if (firmYears.has(y)) mosaicBins(y, T); }); }
   // Mark rules by zoom (base, s, cap, floor), the Moscow rasters' three extents: pixel marks with blocks below
   // 20 px per km (the region extent's rule), the city discs to 60, the downtown discs above.
   const MARK = { low: [1, 0.2, 3, 1.5], city: [2, 0.6, 8, 2], downtown: [3, 1.1, 11, 1.5] };
@@ -683,16 +695,18 @@ void main() {
   const mosaicCache = new Map(), mosaicBitmaps = new Map(); let mosaicBuilds = 0, mosaicBitmapBuilds = 0, mosaicState = { level: null, mode: null, drawn: 0 }, mosaicOff = false;
   function mosaicBins(y, T) {
     const key = y + '|' + T; if (mosaicCache.has(key)) return mosaicCache.get(key);
-    const d = firmYears.get(y); if (!d) return null; const N = d.nn.length, Tm = T * 1000, idx = new Map(), bxA = [], byA = []; let count = 0;
-    for (let i = 0; i < N; i++) { const bx = Math.floor(d.x[i] / Tm), by = Math.floor(d.y[i] / Tm), kk = binKey(bx, by); if (!idx.has(kk)) { idx.set(kk, count++); bxA.push(bx); byA.push(by); } }
+    const d = firmYears.get(y); if (!d) return null; const N = d.nn.length, Tm = T * 1000, idx = new Map(), bxA = [], byA = [], binOf = new Uint32Array(N); let count = 0;
+    for (let i = 0; i < N; i++) { const bx = Math.floor(d.x[i] / Tm), by = Math.floor(d.y[i] / Tm), kk = binKey(bx, by); let j = idx.get(kk); if (j === undefined) { j = count++; idx.set(kk, j); bxA.push(bx); byA.push(by); } binOf[i] = j; }   // each address's bin kept, so the second pass needs no lookup (round 14)
     const n = new Uint32Array(count), p = new Uint32Array(count), a = new Uint32Array(count), f = new Uint32Array(count), rev = new Float64Array(count), cls9 = new Float32Array(count * 9), fin6 = new Uint32Array(count * 6), MK = d.mixInd.length;
-    for (let i = 0; i < N; i++) { const j = idx.get(binKey(Math.floor(d.x[i] / Tm), Math.floor(d.y[i] / Tm))); n[j] += d.nn[i]; p[j]++; a[j] += d.a[i]; f[j] += d.f[i];
+    for (let i = 0; i < N; i++) { const j = binOf[i]; n[j] += d.nn[i]; p[j]++; a[j] += d.a[i]; f[j] += d.f[i];
       if (d.cls[i]) fin6[j * 6 + d.cls[i] - 1] += d.f[i];
       if (d.rv[i]) { const r = Math.pow(10, (d.rv[i] - 1) / 100); rev[j] += r; for (let m = 0; m < MK; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; cls9[j * 9 + (IND_CLASS[ind] || 9) - 1] += r * d.mixSh[m][i] / 100; } } }
     const bx = Int32Array.from(bxA), by = Int32Array.from(byA), ord = new Uint32Array(count); for (let j = 0; j < count; j++) ord[j] = j; ord.sort((u, v) => bx[u] - bx[v]);
     const bxSorted = new Int32Array(count); for (let q = 0; q < count; q++) bxSorted[q] = bx[ord[q]];
     let sumN = 0; for (let j = 0; j < count; j++) sumN += n[j];
-    const bins = { T, count, idx, bx, by, n, p, a, f, rev, cls9, fin6, ord, bxSorted, sumN }; mosaicCache.set(key, bins); mosaicBuilds++; return bins;
+    const start = new Uint32Array(count + 1); for (let j = 0; j < count; j++) start[j + 1] = start[j] + p[j];   // each bin's addresses grouped (a counting sort), so a square's mix and leader read its own addresses only (round 14)
+    const members = new Uint32Array(N), fill = start.slice(0, count); for (let i = 0; i < N; i++) members[fill[binOf[i]]++] = i;
+    const bins = { T, count, idx, bx, by, n, p, a, f, rev, cls9, fin6, ord, bxSorted, sumN, start, members, stats: new Map() }; mosaicCache.set(key, bins); mosaicBuilds++; return bins;
   }
   function mosaicClass(b, j, L) {   // the square's class on the layer: 'below' and 'zero' as the Cells view uses them, 'count' for the layers without a firm-level statistic
     if (L === 'share') { if (b.T >= 25) return classOfShare(b.n[j], b.a[j], YEAR_BREAKS); if (b.n[j] < 50) return 'below'; const sh = 100 * b.a[j] / b.n[j]; let c = 0; while (c < FINE_BREAKS.length && sh >= FINE_BREAKS[c]) c++; return c; }
@@ -738,17 +752,21 @@ void main() {
     const dpr = stage.scale || 1, exact = Math.abs(f * dpr - 1) < 1e-6;   // the bitmap at the device's resolution: a copy without filtering, aligned to device pixels (at most half a pixel of shift); a zoom in flight filters
     mctx.save(); stage.base(); mctx.globalAlpha *= alpha; mctx.imageSmoothingEnabled = !exact; mctx.drawImage(b.cv, sx, sy, sw, sh, exact ? Math.round(px * dpr) / dpr : px, exact ? Math.round(py * dpr) / dpr : py, sw * f, sh * f); mctx.restore();
   }
+  function binDivisions(b, j, d) {   // the square's revenue by division from its own addresses, computed once per square and kept with the bins (round 14: the hover had rescanned the whole column of addresses on every pointer move)
+    let s = b.stats.get(j); if (s) return s;
+    const acc = new Map(); let tot = 0;
+    for (let q = b.start[j]; q < b.start[j + 1]; q++) { const i = b.members[q]; if (!d.rv[i]) continue; const r = POW[d.rv[i]]; tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } }
+    s = { acc, tot }; b.stats.set(j, s); if (b.stats.size > 512) b.stats.delete(b.stats.keys().next().value); return s;
+  }
   function binMix(b, j, d) {   // the square's divisions by revenue share, the top eight and the rest (the mix box)
-    const T = b.T, Tm = T * 1000, bx = b.bx[j], by = b.by[j], i0 = lowerBound(d.x, bx * Tm), i1 = lowerBound(d.x, (bx + 1) * Tm), y0 = by * Tm, y1 = (by + 1) * Tm, acc = new Map(); let tot = 0;
-    for (let i = i0; i < i1; i++) { if (d.y[i] < y0 || d.y[i] >= y1 || !d.rv[i]) continue; const r = Math.pow(10, (d.rv[i] - 1) / 100); tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } }
+    const { acc, tot } = binDivisions(b, j, d);
     if (!tot) return { rows: [], other: 0 }; const rows = [...acc].sort((u, v) => v[1] - u[1]).slice(0, 8).map(([code, v]) => ({ code, share: Math.round(100 * v / tot) })); return { rows, other: Math.max(0, 100 - rows.reduce((t, r) => t + r.share, 0)) };
   }
   function binLeader(b, j, d) {   // the division with the largest revenue inside the square and its share, from the addresses inside it (on hover only)
-    const T = b.T, Tm = T * 1000, bx = b.bx[j], by = b.by[j], i0 = lowerBound(d.x, bx * Tm), i1 = lowerBound(d.x, (bx + 1) * Tm), y0 = by * Tm, y1 = (by + 1) * Tm, acc = new Map(); let tot = 0;
-    for (let i = i0; i < i1; i++) { if (d.y[i] < y0 || d.y[i] >= y1 || !d.rv[i]) continue; const r = Math.pow(10, (d.rv[i] - 1) / 100); tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } }
+    const { acc, tot } = binDivisions(b, j, d);
     if (!tot) return null; let div = -1, bv = 0; for (const [ind, v] of acc) if (v > bv) { bv = v; div = ind; } return { div, share: Math.round(100 * bv / tot) };
   }
-  function drawFirms(c) {
+  function drawFirms(c, fieldNew = true) {   // fieldNew false: the squares on the map canvas only, the field canvas keeps its frame (round 14)
     const y = state.year, d = firmYears.get(y), L = state.layer;
     if (!d) {
       firmStatus = `Loading ${y} addresses…`; clearField();
@@ -759,6 +777,7 @@ void main() {
     firmStatus = null;
     const k = c.k, A = mosaicAlphas(k);
     if (!mosaicOff && k < dotsK() * 1.4) for (const T of MOSAIC_LEVELS) { const al = A[T]; if (al > 0) { const b = mosaicBins(y, T); if (b) drawMosaicLevel(c, b, L, T, al); } }   // the squares on the map canvas, under the field and the marks (round 13)
+    if (!fieldNew) return;
     const op = A.dots < 1 ? String(A.dots) : ''; fieldC.style.opacity = op; if (field2d) field2d.canvas.style.opacity = op;
     if (k < dotsK()) { clearField(); if (field2d) field2d.canvas.hidden = true; fieldRegime = { u: 0, smax: 0, additive: false, over: false, mosaic: mosaicLevelAt(k) }; return; }
     const pad = markRadius(markRule(k), 65535) / k * 1000 + 1000;
@@ -1645,12 +1664,17 @@ void main() {
     });
   }
   // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
-  let drawQueued = false, drawAfter = null;
-  function requestDraw(after) { if (after) drawAfter = after; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(); const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
+  let drawQueued = false, drawAfter = null, drawMotion = false;
+  function requestDraw(after, motion) { if (after) drawAfter = after; drawMotion = !!motion; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(drawMotion ? { motion: true } : undefined); drawMotion = false; const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
   function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
-  function afterCameraMove() { syncZoomButtons(); countFirmsInView(); wireSettled = true; try { refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons, the ruler and the tile from the hovered unit's cache; the settle, 150 ms after
+  // the last step (or at once after a flight, a drag or a pinch), counts the firms in view, rebuilds the tile and the panels once, updates the strip and the wire, the
+  // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
+  let settleTimer = 0;
+  function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -1707,7 +1731,7 @@ void main() {
   const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); fillMixBox(null); }
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -1814,13 +1838,25 @@ void main() {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     if (h.region === undefined) h.region = regionAt(x, y);
     { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); requestDraw(); } }   // the map redraws with the region's fill on a region change only, coalesced with any queued draw   // the strip follows the cursor's region (round 10)
-    const tip = $('tip'); $('tipbody').innerHTML = tipText(h); fillFoot(km, !!opts.tick); tip.style.display = 'block';
-    const tw = tip.offsetWidth, th = tip.offsetHeight, obs = tileObstacles();   // one forced layout; the panels' boxes are read under it
+    const tip = $('tip'), key = unitKey(h), fresh = key !== hoverUnit.key;
+    if (fresh) $('tipbody').innerHTML = tipText(h);
+    fillFoot(km, !!opts.tick); tip.style.display = 'block';
+    const foot = ['tlat', 'tlon', 'tscale', 'tunit', 'tfirms'].map(id => $(id).textContent.length).join(',') + ($('tfirmsw').hidden ? 'h' : '');
+    if (fresh || foot !== hoverUnit.foot || !hoverUnit.tw) { hoverUnit.tw = tip.offsetWidth; hoverUnit.th = tip.offsetHeight; hoverUnit.foot = foot; }   // one forced layout per unit or footer width change
+    const tw = hoverUnit.tw, th = hoverUnit.th, obs = tileObstacles();   // the panels' boxes are read once per layout
     const mark = h.kind === 'firm' || h.kind === 'listed', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
     tip.style.left = b.x + 'px'; tip.style.top = b.y + 'px';
     tileState = { box: b, cursor: [x, y], mark: mark ? [h.px, h.py] : null, anchor: b.anchor, fallback: !!b.fallback, slid: !!b.slid, searched: !!b.searched, relaxed: b.relaxed || null };
-    setCross(x, y, !!opts.touch); drawOverlay(h); drawCellPanel(h); syncCursor(h); armStill(!!opts.touch); fillMixBox(h);
+    setCross(x, y, !!opts.touch); drawOverlay(h); syncCursor(h); armStill(!!opts.touch);
+    if (fresh) { drawCellPanel(h); fillMixBox(h); hoverUnit.key = key; }   // the panel, its chart and the mix box once per hovered unit
     return h;
+  }
+  // The hovered unit (round 14): what the tile, the panel and the mix box describe. Equal keys give equal text, so a move inside the unit rewrites nothing but the footer.
+  function unitKey(h) {
+    const g = h.grid, o = h.origin || [0, 0], L = h.listed, ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin;
+    const cell = g != null && h.kmx != null ? Math.floor((h.kmx - o[0]) / g) + ',' + Math.floor((h.kmy - o[1]) / g) : '';
+    const pair = !!(AN && state.mode === 'firms' && h.kind !== 'none' && h.kmx != null && Math.min(Math.hypot(h.kmx - AN.a.x_km, h.kmy - AN.a.y_km), Math.hypot(h.kmx - AN.b.x_km, h.kmy - AN.b.y_km)) * 1000 <= 35);
+    return [state.mode, state.layer, state.year, theme.dark ? 1 : 0, narrow() ? 1 : 0, h.kind || 'cell', h.region || '', g, o.join(','), cell, h.fine ? 1 : 0, h.city || '', ad ? ad.rec : '', bn ? bn.T + ':' + bn.j : '', L ? [L.n, L.red, L.ring, L.rim, L.top.join('.'), L.within_km.toFixed(4)].join(':') : '', pair ? 1 : 0].join('|');
   }
   let hoverQueued = false;
   function refreshHover() { if (press || pinch || flight || !lastPointer || !lastPointer.inside) return; showHoverAt(lastPointer.x, lastPointer.y, { tick: true, touch: cursorStill }); }
@@ -1871,7 +1907,7 @@ void main() {
     hideHover({ keepRegion: true });
     if (atFloor(t.k)) { flyTo(t, { duration: 300 }); return; }   // fully zoomed out: settle on the country's centre
     state.cam = { cx: t.cx, cy: t.cy, k: t.k };
-    requestDraw(afterCameraMove);
+    requestDraw(afterWheelStep, true);
   }, { passive: false });
   // Keys, when the map has focus: + and − zoom one step, 0 fits the country, the arrows pan (Shift: a small step).
   wrap.addEventListener('keydown', ev => {
@@ -2261,7 +2297,7 @@ void main() {
     pathPreview(target, n = 20) { const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) }; const ms = 1000, path = flightPath(from, to, ms); const out = []; for (let i = 0; i <= n; i++) { const p = path(ms * i / n); out.push(Math.hypot((to.cx - p.cx) * p.k, (to.cy - p.cy) * p.k)); } return out; },
     legend(open) { setLegend(open == null ? null : open ? 'open' : 'closed'); },   // null: back to the width rule
     note(open) { setNote(open == null ? null : open ? 'open' : 'closed'); },
-    frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
+    frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); layersDirty(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
     field() { return useGL() ? glKind : '2d'; },
     fieldRegime() { return Object.assign({ float: glFloat ? glFloat.name : null }, fieldRegime); },   // the additive and over weights of the last field draw (round 11, item 1)
