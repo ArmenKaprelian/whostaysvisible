@@ -39,3 +39,5 @@ Frames: `motion/build/r27-dock/` (sheets 1 to 5, today against the proposal; she
 ## Decision (25 October 2026)
 
 The author adopted parts 1 and 2 and kept the scale bar visible. The figures above for the dock and for the dock with the lower landing assumed that the docked tile set the scale bar aside, as the prototype did; with the scale bar visible the dock ends above it, and the lower landing has no measured effect. The adopted build's figures are in `motion/README.md` (round 14, "The tile on small phones").
+
+On 26 October 2026, after v35, the author left the tile on short phones as it is for now: on maps under about 450 px tall most tall tiles still end on the last resort, and a shorter tile is not planned.
