@@ -743,6 +743,10 @@ def main():
             state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverOff(); " + MIXJS, "mixview", mix_ok("100 km cells in view"))
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); A.hoverKm(AN.a[0], AN.a[1], { show: true }); " + MIXJS, "mixaddr", mix_ok("coordinate pair at the cursor"))
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
+            # a tap at the map's centre (round 14: where the search lands a firm): on a 400 px map the revenue layer's tile at Moscow is about 260 px tall and has no place at
+            # a tap's 24 px, so it must take the hover's clearance rather than the last resort over the controls
+            state("fin", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true, touch: true }); window.__extra = A.tile();", "tapcentre",
+                  lambda r: [] if r["extra"] and not r["extra"].get("fallback") else [("tile", "tap", "a tap at the map's centre left the tile on the last resort: %s" % json.dumps(r["extra"])[:200])])
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverOff(); " + MIXJS, "mixviewf", mix_ok("coordinate pairs in view"))
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); " + MIXJS, "mixoff", lambda r: [] if r["extra"] and not r["extra"]["visible"] else [("mix", "hidden", "the box shows off the industry layer")])
             state("industry", 2021, "A.mode('cells'); A.mixbox(false); A.preset('Russia'); " + MIXJS, "mixclosed", mix_ok("", closed=True))
