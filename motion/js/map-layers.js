@@ -256,11 +256,15 @@
   // ---- listed marks (round 8) and the bloom, second pass (round 9, 25 October 2026): a flash with a pale core that fades to
   // the mark's own colour, a soft pale glow under it, two rings that reach 44 to 64 px, a per-firm start (the atlas's
   // west-to-east stagger) and a 1.5 s decay; nothing is allocated per mark, the phase is written into a caller-owned object.
-  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme, halo = 1, core = null) {
-    const TAU = Math.PI * 2, w = Math.max(1.0, Math.min(2.2, rr * 0.45)), R = rr + (1 - fill) * Math.max(0, 0.75 + w - rr);
+  // The atlas's cased marks (round 14, the author's choice B'' of 25 October 2026; style is the rule from M.listedRule with M.listedCased on): a thin casing in the stage
+  // colour in place of the pale halo, at 0.4 of its strength and 0.6 of its width up to k 20 and full by k 60, so the red stays red at the city zoom and is set apart
+  // from the amber and cyan dots at the street zoom without a glow; at the national zoom no land disc under a solid mark, so the red blends with the field.
+  M.listedMark = function (ctx, px, py, rr, fill, alpha, theme, halo = 1, core = null, style = null) {
+    const TAU = Math.PI * 2, w = Math.max(1.0, Math.min(2.2, rr * 0.45)), R = rr + (1 - fill) * Math.max(0, 0.75 + w - rr), cased = !!(style && style.casingA != null);
     ctx.save(); ctx.globalAlpha = alpha;
-    if (halo > 0.05) { ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, R + halo, 0, TAU); ctx.fill(); }
-    ctx.fillStyle = core && fill < 1 ? core : theme.land; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill();
+    if (halo > 0.05 && !cased) { ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, R + halo, 0, TAU); ctx.fill(); }
+    if (halo > 0.05 && cased) { ctx.fillStyle = theme.stage; ctx.globalAlpha = alpha * style.casingA; ctx.beginPath(); ctx.arc(px, py, R + Math.min(1, halo) * style.casingW, 0, TAU); ctx.fill(); ctx.globalAlpha = alpha; }
+    if (!cased || style.underlay || fill < 1) { ctx.fillStyle = core && fill < 1 ? core : theme.land; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill(); }
     if (fill > 0) { ctx.fillStyle = core || theme.treated; ctx.globalAlpha = alpha * fill; ctx.beginPath(); ctx.arc(px, py, R, 0, TAU); ctx.fill(); }
     if (fill < 1) { ctx.globalAlpha = alpha; ctx.strokeStyle = theme.treated; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(px, py, R - w / 2, 0, TAU); ctx.stroke(); }
     ctx.restore();
@@ -278,11 +282,15 @@
   // The atlas's national extra (round 11, the author's item 2; M.listedQuiet is 1 on the atlas and 0 on the video): below the city zoom (the city preset's own k, which the
   // atlas sets in M.listedCityK from the stage's size: 9.3 at 1,600 by 1,000, 3.9 on a phone) the resting alpha falls further to 0.60 at the country and the radius
   // floor to 0.85 px, through the same weight; nothing changes from the city zoom up; the pulse is untouched.
-  M.listedQuiet = 0; M.listedCityK = 10;
+  // The atlas's B'' (round 14, M.listedCased 1 there, 0 in the video): at the country the resting alpha a further fifth lower (0.48) and the floor 18 percent smaller (0.70 px),
+  // and the casing's strength, width and the land disc as listedMark describes.
+  M.listedQuiet = 0; M.listedCityK = 10; M.listedCased = 0;
   M.listedRule = function (rule, k, kRef) {
     const q = M.quietWeight(k), lk = Math.log2(k / kRef), qc = M.quietWeight(M.listedCityK), q2 = M.listedQuiet * Motion.clamp((q - qc) / Math.max(1e-9, 1 - qc), 0, 1);
-    return { q, q2, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q - (1 / 12) * q2), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q - 0.2 * q2,
+    const L = { q, q2, base: rule[0], s: rule[1], floor: rule[3] * (1 - 0.35 * q - (1 / 12) * q2), cap: rule[2] * (1 - 0.30 * q), halo: 1 - q, alpha: 1 - 0.2 * q - 0.2 * q2,
              rimW: 1.5 * (1 - 0.33 * q), rimA: 0.8 * (1 - 0.15 * q), Rmax: Motion.clamp(44 + 2 * lk, 44, 64), W: Motion.clamp(3.5 - 0.2 * lk, 2.2, 3.5), spreadMs: 60 + 140 * q };
+    if (M.listedCased) { const t = Motion.clamp((k - 20) / 40, 0, 1); L.alpha *= 1 - 0.2 * q2; L.floor *= 1 - 0.18 * q2; L.casingA = 0.8 * (0.4 + 0.6 * t); L.casingW = 0.6 + 0.4 * t; L.underlay = q2 < 0.5; }
+    return L;
   };
   M.listedRadius = (L, n) => Math.max(L.floor, Math.min(L.cap, L.base + L.s * Math.sqrt(Math.max(0, n - 1))) / 2);
   M.flashPeak = r => Math.min(14, Math.max(2.5 * r, 4));   // the flash's extra radius at its peak, px

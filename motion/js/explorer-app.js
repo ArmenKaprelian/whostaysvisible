@@ -4,7 +4,7 @@
   'use strict';
   const D = window.MOTION_DATA, S = D.series, C100 = D.cells100, DEN = D.density, BM = D.basemap, CY = D.cellsyears;
   const F = S.facts, fmt = Motion.fmt, MM = MotionMap, CH = MotionCharts;
-  MM.listedQuiet = 1;   // the atlas's quieter resting listed marks at the national zoom (round 11, item 2); the video keeps round 8's rule
+  MM.listedQuiet = 1; MM.listedCased = 1;   // the atlas's quieter resting listed marks at the national zoom (round 11, item 2) and the cased marks of round 14 (B''); the video keeps round 8's rule
   { const q = new URLSearchParams(location.search); MM.hairlines = q.get('hairlines') === '0' ? 0 : 1; MM.landLevels = q.get('land') === '0' ? 0 : 1; }   // round 14: the borders as 1 device px hairlines on fractional device ratios, and the land by level of detail; ?hairlines=0 and ?land=0 draw as before, for the comparison crops
   const $ = id => document.getElementById(id);
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
@@ -123,21 +123,10 @@
   const divLabel = code => (code === 0 ? 'No OKVED 2 division code (missing or an earlier revision\'s code)' : `${divTitle(code)} (division ${divPad(code)})`);
   const indClassLabel = code => (IND_T && IND_CLASS[code] ? IND_T.classes.label[IND_CLASS[code] - 1] : '');
   const decodeInd = (r, k) => { const d = { count: r.count, k, ix: MM.b64Int16(r.ix), iy: MM.b64Int16(r.iy), nrev: MM.b64Int32(r.nrev), dom: MM.b64Uint8(r.dom), dsh: MM.b64Uint8(r.dsh), lsh: MM.b64Uint8(r.lsh), rv: r.rv ? MM.b64Int16(r.rv) : null, top: MM.b64Uint8(r.top_code), tsh: MM.b64Uint8(r.top_share), map: new Map() }; for (let i = 0; i < d.count; i++) d.map.set(cellKey(d.ix[i], d.iy[i]), i); return d; };
-  const ind100 = {}, ind25 = {}, indCity = {};   // year -> cells; label -> year -> the 1 km window
-  const decodeCity = (w, k) => { const d = { origin: w.origin, count: w.count, k, ix: MM.b64Int16(w.ix), iy: MM.b64Int16(w.iy), nrev: MM.b64Int16(w.nrev), dom: MM.b64Uint8(w.dom), dsh: MM.b64Uint8(w.dsh), rv: w.rv ? MM.b64Int16(w.rv) : null, top: w.top_code ? MM.b64Uint8(w.top_code) : null, tsh: w.top_share ? MM.b64Uint8(w.top_share) : null, map: new Map() }; for (let i = 0; i < d.count; i++) d.map.set(cellKey(d.ix[i], d.iy[i]), i); return d; };
-  let indCityLoaded = false, indCityPending = null;
-  function takeIndCity(C) { for (const w of C.city_1km) (indCity[w.label] = indCity[w.label] || {})[w.year] = decodeCity(w, C.topk || 1); indCityLoaded = true; }
+  const ind100 = {}, ind25 = {};   // year -> cells
   if (INDD) {
     for (const [y, r] of Object.entries(INDD.grid100.by_year)) ind100[+y] = decodeInd(r, INDD.grid100.topk);
     for (const [y, r] of Object.entries(INDD.grid25.by_year)) ind25[+y] = decodeInd(r, INDD.grid25.topk);
-    if (Array.isArray(INDD.city_1km)) takeIndCity({ city_1km: INDD.city_1km, topk: 1 }); else if (D['industry-city']) takeIndCity(D['industry-city']);
-  }
-  // The 1 km city windows of the industry layer (data/industry-city.js, about 3 MB) load once the layer reaches a city window;
-  // the 25 km tiles stand until they arrive. ready() waits for them.
-  function ensureIndCity() {
-    if (indCityLoaded || !INDD || !INDD.city_1km || !INDD.city_1km.file) return Promise.resolve();
-    if (!indCityPending) indCityPending = loadScript('data/' + INDD.city_1km.file.replace(/\.json$/, '.js')).then(() => { const C = D['industry-city']; if (C) takeIndCity(C); else indCityLoaded = true; indCityPending = null; if (state.layer === 'industry') { drawMap(); updateContext(true); syncMix(); } }, () => { indCityLoaded = true; indCityPending = null; });
-    return indCityPending;
   }
   // The hit of a cell on the industry layer: the leading division, its share, the listed share and the ranked mix (the tile's bar reads mix and rest).
   function indHit(d, i) {
@@ -147,9 +136,26 @@
     for (let j = 0; j < k; j++) { const code = d.top ? d.top[i * k + j] : d.dom[i], sh = d.top ? d.tsh[i * k + j] : d.dsh[i]; if (code === 255) break; sum += sh; out.mix.push({ code, share: sh, cls: IND_CLASS[code], title: divTitle(code), short: divShort(code) }); }
     out.rest = Math.max(0, 100 - sum); return out;
   }
-  // The 25 km grid fades in as a 100 km cell passes 45 px (k 0.45 to 0.8); the 2021 national 5 km shares take over from k 1.5.
-  const alpha25 = k => (C25 ? Motion.step(k, 0.45, 0.35, Motion.ease.linear) : 0);
-  const alpha5 = k => Motion.step(k, 1.5, 1.0, Motion.ease.linear);
+  // The 25 km grid fades in from 1.5 to 2.7 times the country view's zoom (round 14, the author's request: the 100 km cells hold at the country view on every screen;
+  // it was k 0.45 to 0.8, about 2.7 to 4.8 times the fit on the author's laptop).
+  const alpha25 = k => (C25 ? Motion.step(k, 1.5 * kFit(), 1.2 * kFit(), Motion.ease.linear) : 0);
+  // The Cells view's 1 km squares (round 14, the author's decision of 25 October 2026): the round-13 squares of the address files, everywhere, on the share, industry and
+  // density layers (density in 2021), coming in over k 1.5 to 2.5 once the year's address file and its squares are ready (the 25 km cells stand until then); they
+  // replace the 24 city windows' 1 km cells and the 2021 national 5 km shares in the drawing. The 2021 250 m windows stay, from k 24 to 40.
+  const MICRO_LAYERS = new Set(['share', 'industry', 'density']);
+  const microYear = () => (state.layer === 'density' ? 2021 : state.year);
+  const microReady = y => !!(FIRMS_OK && firmYears.has(y) && mosaicCache.has(y + '|1'));
+  const microA = (k, y) => (MICRO_LAYERS.has(state.layer) && microReady(y) ? Motion.step(k, 1.5, 1.0, Motion.ease.linear) : 0);
+  const fineA = k => ((state.layer === 'density' || (state.layer === 'share' && state.year === 2021)) ? Motion.step(k, 24, 16, Motion.ease.linear) : 0);
+  function ensureMicro(y) { if (!FIRMS_OK || firmYears.has(y)) return; ensureYear(y).catch(e => console.error(e)); }   // the address file loads once the camera nears k 1.5; prebuildBins draws the squares when they are ready
+  // The year the red count in the Cells view's tile reads (the author's decision of 25 October 2026): each layer's own year, 2021 on the density, lists and cohort layers,
+  // 2024 on the change and revenue layers, the slider's year on the share and industry layers; the strip keeps the slider's year.
+  const layerYear = () => (state.layer === 'density' || state.layer === 'lists' || state.layer === 'cohort' ? 2021 : state.layer === 'change' || state.layer === 'fin' ? 2024 : state.year);
+  function listedInCell(h) {   // the firms on the five lists present in that year at coordinates inside the hovered cell's square, exact, 0 included
+    if (!TRN || h.kmx == null) return null; const g = h.grid || 100, o = h.origin || [0, 0], x0 = o[0] + Math.floor((h.kmx - o[0]) / g) * g, y0 = o[1] + Math.floor((h.kmy - o[1]) / g) * g, yi = layerYear() - 2014; let n = 0;
+    for (let i = 0; i < TRN.n; i++) { if (TRN.filed[i][yi] === '-') continue; const x = TRN.x[i], y = TRN.y[i]; if (x >= x0 && x < x0 + g && y >= y0 && y < y0 + g) n++; }
+    return n;
+  }
   const tileCache = new Map();
   function tiles(key, build) { if (!tileCache.has(key)) tileCache.set(key, build()); return tileCache.get(key); }
   const classOfShare = (n, a, breaks) => { if (n < 50) return 'below'; const s = 100 * a / n; let c = 0; while (c < breaks.length && s >= breaks[c]) c++; return c; };
@@ -234,8 +240,6 @@
   function fitNational() { state.cam = fitTarget(); }
   function nearestCity(c) { let best = null, bd = Infinity; for (const city of bmp.cities) { const d = Math.hypot(city.x - c.cx, city.y - c.cy); if (d < bd) { bd = d; best = city; } } return { city: best, dist: bd }; }
 
-  // The city windows fade in over k 1.5 to 4 (1 km) and 24 to 40 (250 m); each coarser grid stays drawn around them.
-  function gridAlphas(k) { return { one: Motion.step(k, 1.5, 2.5, Motion.ease.linear), fine: Motion.step(k, 24, 16, Motion.ease.linear) }; }
   const winRect = (d, size) => ({ origin: d.origin, size });
   // Draws a coarser layer around a finer window: at full alpha outside the window's square and, while the window fades
   // in, at (1 - w) inside it, so a zoom into open country never leaves blank ground (hand-over fix, 24 October 2026).
@@ -253,7 +257,7 @@
   // The field and the marks redraw only when what they show changed (round 14): a hovered region's fill redraws the map canvas alone, and the field and the marks
   // keep the frame they have. The key holds everything they depend on; layersDirty() forces the next draw (a restored context, an audit hook).
   let lastFieldKey = '', lastMarksKey = '';
-  const layersKey = c => [state.mode, state.layer, state.year, theme.dark ? 1 : 0, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, firmYears.has(state.year) ? 1 : 0, mosaicOff ? 1 : 0, useGL() ? 1 : 0].join('|');
+  const layersKey = c => [state.mode, state.layer, state.year, theme.dark ? 1 : 0, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, firmYears.has(state.year) ? 1 : 0, microReady(microYear()) ? 1 : 0, mosaicOff ? 1 : 0, useGL() ? 1 : 0].join('|');
   const layersDirty = () => { lastFieldKey = ''; lastMarksKey = ''; };
   function drawMap(opts) {
     drawLog = [];
@@ -261,7 +265,7 @@
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight && !motion) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame or a wheel step   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { drawRegionFill(c); if (state.mode === 'firms') drawFirmsGround(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => drawRegionFill(c) }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
@@ -269,23 +273,17 @@
       const key = layersKey(c), fieldNew = key !== lastFieldKey; drawFirms(c, fieldNew); lastFieldKey = key;
       if (key !== lastMarksKey || pulse) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
     else if (L === 'density') { drawLog.push('density');
-      const ga = gridAlphas(c.k), near = nearestCity(c).city.label, w1 = win1[near] ? winRect(win1[near].d, 90) : null, w025 = win025[near] ? winRect(win025[near].d, 24) : null;
-      drawAround(c, w1, ga.one, (a, region) => drawNat(c, a, region, false));
-      if (ga.one > 0 && win1[near]) drawAround(c, w025, ga.fine, a => MM.drawDensityCounts(mctx, stage, c, win1[near].paths, theme.density, a * ga.one), false);
-      if (ga.fine > 0 && win025[near]) MM.drawDensityCounts(mctx, stage, c, win025[near].paths, theme.density, ga.fine);
+      const am = microA(c.k, 2021); if (c.k >= 1.2 && !flight && !motion) ensureMicro(2021);
+      if (am < 1) drawNat(c, 1 - am, null, false);   // the national 5 km counts (2021), fading as the 1 km squares come in
+      drawCellsSquares2d(c);
     } else if (L === 'share') { drawLog.push('share');
-      // 100 km cells, then the 25 km cells, the national 5 km shares (2021), the city 1 km window of the year and the 250 m window (2021).
-      const y = state.year, ga = gridAlphas(c.k), near = nearestCity(c).city.label, a25 = c25[y] ? alpha25(c.k) : 0, a5 = y === 2021 ? alpha5(c.k) : 0;
-      const win = y === 2021 ? (win1[near] || null) : (cityYear[near] && cityYear[near][y] ? cityYear[near][y] : null);
-      const w1 = win ? winRect(win.d, 90) : null, w025 = y === 2021 && win025[near] ? winRect(win025[near].d, 24) : null;
+      // 100 km cells, then the 25 km cells, then the 1 km squares from the address files and the 2021 250 m windows (on the field canvas).
+      const y = state.year, a25 = c25[y] ? alpha25(c.k) : 0, am = microA(c.k, y); if (c.k >= 1.2 && !flight && !motion) ensureMicro(y);
       const shareColour = cl => (cl === 'below' ? theme.below : theme.ramp6[cl]), shareAlpha = cl => (cl === 'below' ? 0.5 : 1);
       if (a25 < 1) { const paths = tiles('share' + y, () => { const idx = yearIndex[y]; return MM.buildTiles(idx.length, idx.map(i => CY.avail.ix[i]), idx.map(i => CY.avail.iy[i]), j => classOfShare(CY.avail.n[idx[j]], CY.avail.a[idx[j]], YEAR_BREAKS), { gapKm: 15 }); }); MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: 1 - a25, alphaOf: shareAlpha }); }
-      const a25e = a25 * (1 - a5);
       if (c25[y]) { const d = c25[y], paths = tiles('share25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfShare(d.n[i], d.a[i], YEAR_BREAKS), { sizeKm: G25, gapKm: G25 * 0.12 }));   // built now, not mid-flight
-        if (a25e > 0) drawAround(c, w1, ga.one, (a, region, w) => MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: a * a25e, alphaOf: shareAlpha, outline: w > 0 ? { colour: theme.ghost, alpha: w, px: 1 } : null })); }
-      if (a5 > 0) drawAround(c, w1, ga.one, (a, region) => drawNat(c, a * a5, region, true));
-      if (ga.one > 0 && win) drawAround(c, w025, ga.fine, a => MM.drawDensityShares(mctx, stage, c, win.paths, theme.ramp5, theme.below, a * ga.one), false);
-      if (ga.fine > 0 && w025) MM.drawDensityShares(mctx, stage, c, win025[near].paths, theme.ramp5, theme.below, ga.fine);
+        if (a25 * (1 - am) > 0) MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: a25 * (1 - am), alphaOf: shareAlpha }); }
+      drawCellsSquares2d(c);
     } else if (L === 'change') { drawLog.push('change');
       const a25 = chg25 ? alpha25(c.k) : 0, colour = cl => (cl === 'below' ? theme.below : theme.change6[cl - 1]), alphaOf = cl => (cl === 'below' ? 0.5 : 1);
       if (a25 < 1) { const paths = tiles('change', () => MM.buildTiles(chg.ix.length, chg.ix, chg.iy, i => (chg.supported[i] ? chg.class[i] : 'below'), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, colour, { alpha: 1 - a25, alphaOf }); }
@@ -298,20 +296,22 @@
       if (a25 < 1) { const paths = tiles('lists', () => MM.buildTiles(lists.ix.length, lists.ix, lists.iy, i => listClass(lists.sanctioned[i]), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1], { alpha: 1 - a25 }); }
       if (c25[2021]) { const d = c25[2021], paths = tiles('lists25', () => MM.buildTiles(d.count, d.ix, d.iy, i => (d.ns[i] >= 5 ? listClass(d.ns[i]) : null), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 > 0) MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1], { alpha: a25 }); }
     } else if (L === 'industry' && INDD) { drawLog.push('industry');
-      // 100 km cells, then the 25 km cells, then the 1 km city window of the year (2019 to 2024); no 250 m layer.
-      const y = state.year, ga = gridAlphas(c.k), near = nearestCity(c).city.label, a25 = ind25[y] ? alpha25(c.k) : 0;
-      if (c.k >= 1.2 && !indCityLoaded) ensureIndCity();
-      const win = indCity[near] && indCity[near][y] ? indCity[near][y] : null, w1 = win ? winRect(win, 90) : null;
+      // 100 km cells, then the 25 km cells, then the 1 km squares from the address files (on the field canvas); no 250 m layer.
+      const y = state.year, a25 = ind25[y] ? alpha25(c.k) : 0, am = microA(c.k, y); if (c.k >= 1.2 && !flight && !motion) ensureMicro(y);
       const indColour = cl => (cl === 'below' ? theme.below : theme.ind9[cl - 1]), indAlpha = cl => (cl === 'below' ? 0.5 : 1), classOfDom = dom => (dom === 255 ? 'below' : IND_CLASS[dom]);
       if (a25 < 1 && ind100[y]) { const d = ind100[y], paths = tiles('ind' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: 1 - a25, alphaOf: indAlpha }); }
-      if (ind25[y]) { const d = ind25[y], paths = tiles('ind25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 > 0) drawAround(c, w1, ga.one, (a, region, w) => MM.drawTiles(mctx, stage, c, paths, indColour, { outline: w > 0 ? { colour: theme.ghost, alpha: w, px: 1 } : null, alpha: a * a25, alphaOf: indAlpha })); }
-      if (ga.one > 0 && win) { const paths = tiles('ind1-' + near + '-' + y, () => MM.buildTiles(win.count, win.ix, win.iy, i => classOfDom(win.dom[i]), { sizeKm: 1, gapKm: 0.1, origin: win.origin })); MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: ga.one, alphaOf: indAlpha }); }
+      if (ind25[y]) { const d = ind25[y], paths = tiles('ind25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 * (1 - am) > 0) MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: a25 * (1 - am), alphaOf: indAlpha }); }
+      drawCellsSquares2d(c);
     } else if (L === 'fin') { drawLog.push('fin');
       const paths = tiles('fin', () => MM.buildTiles(finIdx.length, finIdx.map(i => fin.ix[i]), finIdx.map(i => fin.iy[i]), j => { const v = fin.change_pct[finIdx[j]]; let cl = 0; while (cl < FIN_BREAKS.length && v >= FIN_BREAKS[cl]) cl++; return cl; }, { gapKm: 15 }));
       MM.drawTiles(mctx, stage, c, paths, cl => theme.change6[cl]);
     }
     stage.base();
-    if (state.mode !== 'firms') { if (layersOn) { endPulse(); clearField(); clearMarks(); fieldC.hidden = true; marksC.hidden = true; if (field2d) field2d.canvas.hidden = true; layersOn = false; } drawGhostNames(mctx, c, 'map'); drawLog.push('ghost'); drawLabels(mctx, c, 'map'); }   // the ghost names above the cells (round 12, part D), then the labels; in the firms view both sit on the marks layer, above the field
+    if (state.mode !== 'firms') {   // the Cells view (round 14): the 1 km and 250 m squares on the field canvas, the ghost names, the labels and the pulse rings on the marks canvas, both above the cells
+      if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; layersDirty(); }
+      const key = layersKey(c); if (key !== lastFieldKey) { drawCellsField(c); lastFieldKey = key; }
+      if (key !== lastMarksKey || cellPulse) { drawCellsMarks(c); lastMarksKey = key; } else drawLog.push('ghost');
+    }
     if (!flight) { drawLegend(); drawScaleBar(); }
   }
 
@@ -351,7 +351,11 @@
   }
   // The bins of a loaded year are built in idle time (round 14), not in the first frame that needs them (a 312 ms stall on the first zoom past k 1.5).
   const onIdle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 250));
-  function prebuildBins(y) { for (const T of MOSAIC_LEVELS) onIdle(() => { if (firmYears.has(y)) mosaicBins(y, T); }); }
+  function prebuildBins(y) {   // outside flights, drags, pinches and wheel runs (the build is one long task); the Cells view draws the squares once they exist
+    const build = () => { if (!firmYears.has(y)) return; if (flight || settleTimer || press || pinch) { onIdle(build); return; }
+      for (const T of MOSAIC_LEVELS) { const had = mosaicCache.has(y + '|' + T); mosaicBins(y, T); if (!had && state.mode !== 'firms' && microYear() === y && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.5) { drawMap(); refreshHover(); } } };
+    onIdle(build);
+  }
   // Mark rules by zoom (base, s, cap, floor), the Moscow rasters' three extents: pixel marks with blocks below
   // 20 px per km (the region extent's rule), the city discs to 60, the downtown discs above.
   const MARK = { low: [1, 0.2, 3, 1.5], city: [2, 0.6, 8, 2], downtown: [3, 1.1, 11, 1.5] };
@@ -416,113 +420,57 @@
     Motion.audit.scene = 'map';
   }
 
-  // ---- the address field in WebGL (24 October 2026) ---------------------------------------------------------------
-  // Below 20 px per km every address is a point of 1, 2 or 3 device pixels (10 and 100 or more firms), snapped to
-  // whole pixels and composited "over" with an alpha by count (96, 140, 200, 236 of 256), the earlier blit's rule
-  // exactly; from 20 px per km a disc (a square under 1.75 px) sized by the mark rule, drawn largest first at alpha
-  // 0.9 with an antialiased edge, overlaps compounding (the author's choice). Positions travel as metres relative to
-  // the Moscow point; each frame the camera's integer metres shift them on the GPU and the fraction comes as a small
-  // offset, so the GPU multiplies only small exact integers. One buffer set per loaded year, freed with the cache;
-  // the layer and the palette are uniforms. Without WebGL, or after a lost context, the 2D fallback below draws the
-  // same field into a transparent canvas of its own, composited by the browser ("over" is associative).
+  // ---- the Firms view's field: the pixel field and the dots (round 14, the author's decision of 25 October 2026) ---------------------------------------------
+  // Below the dots zoom the field is the video's per-pixel rule (js/pixel-field.js): every CSS pixel sums the firms on no list at the coordinate pairs inside it
+  // and takes the layer's statistic, with 2 and 3 pixel blocks where 10 and 100 firms share a pixel and a faint backdrop of every firm under the revenue and industry
+  // layers. From the dots zoom (k 20, or the phone's fine rung) each coordinate pair is a disc sized by the mark rule, drawn largest first at alpha 0.9 with an
+  // antialiased edge, overlaps compounding (the author's choice of 24 October); the two crossfade over a 1.4 x band. Both draw on the field canvas: on WebGL2 with
+  // blendable float targets, or, without them, through the CPU engine and the 2D discs on a canvas of their own. Positions travel as metres relative to the Moscow
+  // point; each frame the camera's integer metres shift them on the GPU and the fraction comes as a small offset, so the GPU multiplies only small exact integers.
+  // Round 11's additive field and tone pass, and round 10's region tint and glow under the field, retired with this round (the video's slide has neither).
   const GL_R = [Math.round(bmp.cities[0].x * 1000), Math.round(bmp.cities[0].y * 1000)];
   const GL_VS = `
 attribute vec2 a_pos; attribute float a_n; attribute vec4 a_cls;
-uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size;
-uniform float u_mode; uniform float u_dpri; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_w;
+uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_w;
 varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 rel = a_pos + u_shift;
   float dx = u_off.x + rel.x * u_kk, dy = u_off.y - rel.y * u_kk;
   float cls = u_which < 0.5 ? a_cls.x : (u_which < 1.5 ? a_cls.y : (u_which < 2.5 ? a_cls.z : 0.0));
   vec3 col = u_pal[int(cls + 0.5)];
-  if (u_mode < 0.5 || u_mode > 1.5) {
-    float bw = u_dpri * (a_n >= 100.0 ? 3.0 : (a_n >= 10.0 ? 2.0 : 1.0));
-    float h = floor((bw - 1.0) * 0.5);
-    vec2 c = vec2(floor(dx) - h, floor(dy) - h) + bw * 0.5;
-    gl_Position = vec4(c.x / u_size.x * 2.0 - 1.0, 1.0 - c.y / u_size.y * 2.0, 0.0, 1.0);
-    gl_PointSize = bw;
-    if (u_mode > 1.5) { v_col = vec4(col * a_n, a_n); }
-    else { float a = (a_n >= 100.0 ? 236.0 : (a_n >= 10.0 ? 200.0 : (a_n >= 2.0 ? 140.0 : 96.0))) / 256.0; v_col = vec4(col * a, a) * u_w; }
-    v_r = 0.0; v_half = bw * 0.5; v_square = 0.0;
-  } else {
-    float r = max(u_rule.w, min(u_rule.z, u_rule.x + u_rule.y * sqrt(max(0.0, a_n - 1.0))) * 0.5);
-    float rd = r * u_sc, size = ceil(rd * 2.0 + 3.0);
-    gl_Position = vec4(dx / u_size.x * 2.0 - 1.0, 1.0 - dy / u_size.y * 2.0, 0.0, 1.0);
-    gl_PointSize = size;
-    v_col = vec4(col * 0.9, 0.9); v_r = rd; v_half = size * 0.5; v_square = r < 1.75 ? 1.0 : 0.0;
-  }
+  float r = max(u_rule.w, min(u_rule.z, u_rule.x + u_rule.y * sqrt(max(0.0, a_n - 1.0))) * 0.5);
+  float rd = r * u_sc, size = ceil(rd * 2.0 + 3.0);
+  gl_Position = vec4(dx / u_size.x * 2.0 - 1.0, 1.0 - dy / u_size.y * 2.0, 0.0, 1.0);
+  gl_PointSize = size;
+  v_col = vec4(col * 0.9, 0.9) * u_w; v_r = rd; v_half = size * 0.5; v_square = r < 1.75 ? 1.0 : 0.0;
 }`;
   const GL_FS = `
 precision mediump float;
 varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
-  if (v_r <= 0.0) { gl_FragColor = v_col; return; }
   vec2 d = (gl_PointCoord - 0.5) * (v_half * 2.0);
   float cov = v_square > 0.5 ? clamp(v_r - max(abs(d.x), abs(d.y)) + 0.5, 0.0, 1.0) : clamp(v_r - length(d) + 0.5, 0.0, 1.0);
   gl_FragColor = v_col * cov;
 }`;
-  // The tone pass (round 11, the author's item 1): the additive accumulation (colour weighted by the firm count, the count in alpha) read back from the float
-  // texture and mapped through a log curve, so a pixel's brightness rises with the number of firms it holds: alpha 0.5 for one firm, rising by the log of the
-  // count to 1 at S_MAX, the densest pixel of the year at the fitted zoom (scaled by the pixel's area at other zooms), so the densest pixel alone reaches full
-  // strength and Moscow keeps its gradient; the colour the count-weighted mean of the marks' own colours.
-  const GL_VS2 = `
-attribute vec2 a_q; varying vec2 v_t;
-void main() { v_t = a_q * 0.5 + 0.5; gl_Position = vec4(a_q, 0.0, 1.0); }`;
-  const GL_FS2 = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-uniform sampler2D u_tex; uniform float u_smax; uniform float u_w; varying vec2 v_t;
-void main() {
-  vec4 t = texture2D(u_tex, v_t); float S = t.a; if (S <= 0.0) discard;
-  vec3 col = t.rgb / S;
-  float a = S < 1.0 ? 0.5 * S : min(1.0, 0.5 + 0.5 * log(S) / log(u_smax));
-  gl_FragColor = vec4(col * a, a) * u_w;
-}`;
-  // The additive regime (round 11, item 1): below k 1.5 the blocks accumulate additively and the tone pass maps the sums; between k 1.5 and 3 the additive
-  // image fades out under the "over" image fading in, so individual marks take over; S_MAX follows the pixel's area, 10,000 firms at the fitted zoom.
-  const addFade = k => Motion.clamp((k - 1.5) / 1.5, 0, 1);
-  const maxAtFitCache = new Map();
-  function maxAtFit(y) {   // the densest pixel's firm count at the fitted zoom for the year, under the block rule at this stage size (cached per year and size)
-    const d = firmYears.get(y); if (!d) return 1e4; const sc = stage.scale, key = [y, stage.width, stage.height, sc].join('|'); if (maxAtFitCache.has(key)) return maxAtFitCache.get(key);
-    const k = kFit(), W = Math.round(stage.width * sc), H = Math.round(stage.height * sc), acc = new Float32Array(W * H), ax = (stage.width / 2 - NAT.cx * k) * sc, ay = (stage.height / 2 + NAT.cy * k) * sc, kk = k / 1000 * sc, dprI = Math.max(1, Math.round(sc)); let mx = 1;
-    for (let i = 0; i < d.nn.length; i++) { const n = d.nn[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1), bx = Math.floor(ax + d.x[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - d.y[i] * kk) - ((bw - 1) >> 1); for (let yy = Math.max(0, by); yy < Math.min(H, by + bw); yy++) for (let xx = Math.max(0, bx); xx < Math.min(W, bx + bw); xx++) { const v = acc[yy * W + xx] += n; if (v > mx) mx = v; } }
-    maxAtFitCache.set(key, mx); if (maxAtFitCache.size > 6) maxAtFitCache.delete(maxAtFitCache.keys().next().value); return mx;
-  }
-  const sMax = k => Math.max(100, maxAtFit(state.year) * Math.pow(kFit() / k, 2));
-  const toneOf = (S, smax) => (S < 1 ? 0.5 * S : Math.min(1, 0.5 + 0.5 * Math.log(S) / Math.log(smax)));
-  let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null;
-  let glProg2 = null, glLoc2 = null, glQuad = null, glAcc = null, glFloat = null;   // the tone program, the quad, the accumulation target and its float format (round 11)
-  const glYears = new Map();   // year -> { pos, n, cls, count }
-  const useGL = () => !!gl && !glLost;
+  let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null, pfGL = null, sqGL = null;
+  const glYears = new Map();   // year -> { pos, n, a, f, rv, cls, count }
+  const useGL = () => !!gl && !glLost && !!pfGL && !!sqGL;   // the field on the GPU needs the pixel field's float targets and the Cells view's square pass too; without them the field, the dots and the squares take the 2D path
   function glInit() {
+    pfGL = null; sqGL = null;
     if (new URLSearchParams(location.search).get('__nogl') === '1') return false;
     const opts = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' };
-    let g = fieldC.getContext('webgl2', opts), kind = 'webgl2';
-    if (!g) { g = fieldC.getContext('webgl', opts); kind = 'webgl'; if (g && !g.getExtension('OES_element_index_uint')) g = null; }
-    if (!g) { glError = 'no context'; return false; }
+    const g = fieldC.getContext('webgl2', opts), kind = 'webgl2';
+    if (!g) { glError = 'no WebGL2 context'; return false; }
     glError = null;
     const sh = (type, src) => { const s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); if (!g.getShaderParameter(s, g.COMPILE_STATUS)) { glError = 'shader: ' + g.getShaderInfoLog(s); console.error(glError); return null; } return s; };
     const vs = sh(g.VERTEX_SHADER, GL_VS), fs = sh(g.FRAGMENT_SHADER, GL_FS); if (!vs || !fs) return false;
     const p = g.createProgram(); g.attachShader(p, vs); g.attachShader(p, fs); g.linkProgram(p);
     if (!g.getProgramParameter(p, g.LINK_STATUS)) { glError = 'link: ' + g.getProgramInfoLog(p); console.error(glError); return false; }
-    const vs2 = sh(g.VERTEX_SHADER, GL_VS2), fs2 = sh(g.FRAGMENT_SHADER, GL_FS2); if (!vs2 || !fs2) return false;
-    const p2 = g.createProgram(); g.attachShader(p2, vs2); g.attachShader(p2, fs2); g.linkProgram(p2);
-    if (!g.getProgramParameter(p2, g.LINK_STATUS)) { glError = 'link (tone): ' + g.getProgramInfoLog(p2); console.error(glError); return false; }
-    // The accumulation needs a float render target: RGBA32F or RGBA16F on WebGL2 (EXT_color_buffer_float, EXT_color_buffer_half_float), the float or half-float
-    // extensions on WebGL1; without one the field falls back to the 2D path, which accumulates in a typed array (round 11, item 1).
-    const fmt = (() => { const tests = kind === 'webgl2' ? [['f32', g.RGBA32F, g.FLOAT, 'EXT_color_buffer_float'], ['f16', g.RGBA16F, g.HALF_FLOAT, 'EXT_color_buffer_half_float']] : [['f32', g.RGBA, g.FLOAT, 'OES_texture_float', 'WEBGL_color_buffer_float'], ['f16', g.RGBA, null, 'OES_texture_half_float', 'EXT_color_buffer_half_float']];
-      for (const t of tests) { const exts = t.slice(3); if (!exts.every(e => g.getExtension(e))) continue; const type = t[2] != null ? t[2] : g.getExtension('OES_texture_half_float').HALF_FLOAT_OES; const tex = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tex); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.NEAREST); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE); g.texImage2D(g.TEXTURE_2D, 0, t[1], 4, 4, 0, g.RGBA, type, null); const fb = g.createFramebuffer(); g.bindFramebuffer(g.FRAMEBUFFER, fb); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, tex, 0); const ok = g.checkFramebufferStatus(g.FRAMEBUFFER) === g.FRAMEBUFFER_COMPLETE; g.bindFramebuffer(g.FRAMEBUFFER, null); g.deleteFramebuffer(fb); g.deleteTexture(tex); if (ok) return { name: t[0], internal: t[1], type }; }
-      return null; })();
-    if (!fmt) { glError = 'no float render target'; return false; }
-    gl = g; glKind = kind; glProg = p; glProg2 = p2; glFloat = fmt; glIdx = g.createBuffer(); glAcc = null; glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
+    const pf = PixelField.createGL(g); if (!pf.ok) { glError = 'pixel field: ' + pf.reason; return false; }
+    const sq = PixelField.createSquaresGL(g); if (!sq.ok) { glError = 'squares: ' + sq.reason; return false; }
+    gl = g; glKind = kind; glProg = p; pfGL = pf; sqGL = sq; glIdx = g.createBuffer(); glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
     glLoc = { pos: g.getAttribLocation(p, 'a_pos'), n: g.getAttribLocation(p, 'a_n'), cls: g.getAttribLocation(p, 'a_cls') };
-    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_mode', 'u_dpri', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
-    glLoc2 = { q: g.getAttribLocation(p2, 'a_q'), u_tex: g.getUniformLocation(p2, 'u_tex'), u_smax: g.getUniformLocation(p2, 'u_smax'), u_w: g.getUniformLocation(p2, 'u_w') };
-    glQuad = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, glQuad); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), g.STATIC_DRAW);
+    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
     g.disable(g.DEPTH_TEST); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
     return true;
   }
@@ -531,101 +479,43 @@ void main() {
     const n = d.n, pos = new Float32Array(2 * n), cls = new Uint8Array(4 * n);   // four class bytes per vertex: the share class, the revenue class, the industry class, one spare (round 9)
     for (let i = 0; i < n; i++) { pos[2 * i] = d.x[i] - GL_R[0]; pos[2 * i + 1] = d.y[i] - GL_R[1]; cls[4 * i] = d.share[i]; cls[4 * i + 1] = d.cls[i]; cls[4 * i + 2] = d.indCls[i]; }
     const mk = (data) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); return b; };
-    glYears.set(y, { pos: mk(pos), n: mk(d.nn), cls: mk(cls), count: n });
+    glYears.set(y, { pos: mk(pos), n: mk(d.nn), a: mk(d.a), f: mk(d.f), rv: mk(d.rv), cls: mk(cls), count: n });   // a, f and the revenue code feed the pixel field (round 14)
   }
-  function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; gl.deleteBuffer(b.pos); gl.deleteBuffer(b.n); gl.deleteBuffer(b.cls); glYears.delete(y); }
+  function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; for (const k of ['pos', 'n', 'a', 'f', 'rv', 'cls']) gl.deleteBuffer(b[k]); glYears.delete(y); }
   function glPalette(L) { const pal = L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.zero].concat(theme.div6) : L === 'industry' ? [theme.neutral].concat(theme.ind9) : [theme.neutral]; const out = new Float32Array(48); for (let i = 0; i < 16; i++) { const c = hex2rgb(pal[Math.min(i, pal.length - 1)]); out[3 * i] = c[0] / 255; out[3 * i + 1] = c[1] / 255; out[3 * i + 2] = c[2] / 255; } return out; }
-  function glAccTarget(W, Hh) {   // the accumulation texture and framebuffer at the canvas's device size, rebuilt on a size change
-    if (glAcc && glAcc.W === W && glAcc.H === Hh) return glAcc;
-    if (glAcc) { gl.deleteFramebuffer(glAcc.fbo); gl.deleteTexture(glAcc.tex); }
-    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, glFloat.internal, W, Hh, 0, gl.RGBA, glFloat.type, null);
-    const fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    return glAcc = { fbo, tex, W, H: Hh };
-  }
-  let fieldRegime = { u: 1, smax: 0, additive: false, over: true };   // the last field draw's regime (the audit reads it)
-  function glDraw(c, d, L, i0, i1, discs, idx) {
-    const y = state.year; glUpload(y, d); const buf = glYears.get(y); if (!buf) return;
+  // The discs at weight w (the dots' crossfade), from the index of the discs in view, largest first.
+  function glDiscs(c, buf, L, idx, w) {
     const W = fieldC.width, Hh = fieldC.height, sc = stage.scale, kk = c.k / 1000 * sc;
     const camx = c.cx * 1000, camy = c.cy * 1000, Cx = Math.round(camx), Cy = Math.round(camy);
-    const u = discs ? 1 : addFade(c.k), smax = sMax(c.k); fieldRegime = { u, smax, additive: u < 1, over: u > 0 };
-    const bindPoints = () => {
-      gl.useProgram(glProg);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.enableVertexAttribArray(glLoc.pos); gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf.n); gl.enableVertexAttribArray(glLoc.n); gl.vertexAttribPointer(glLoc.n, 1, gl.UNSIGNED_SHORT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf.cls); gl.enableVertexAttribArray(glLoc.cls); gl.vertexAttribPointer(glLoc.cls, 4, gl.UNSIGNED_BYTE, false, 0, 0);
-      gl.uniform2f(glLoc.u_shift, GL_R[0] - Cx, GL_R[1] - Cy);   // a_pos + u_shift = (X - R) + (R - C) = X - C, exact integers
-      gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
-      gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh);
-      gl.uniform1f(glLoc.u_dpri, Math.max(1, Math.round(sc))); gl.uniform1f(glLoc.u_sc, sc);
-      const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
-      gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L));
-    };
-    const unbindPoints = () => { gl.disableVertexAttribArray(glLoc.pos); gl.disableVertexAttribArray(glLoc.n); gl.disableVertexAttribArray(glLoc.cls); };
-    gl.viewport(0, 0, W, Hh);
-    if (u < 1) {   // the additive accumulation into the float target, then the tone pass onto the cleared canvas at weight 1 - u
-      const acc = glAccTarget(W, Hh);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, acc.fbo); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE);
-      bindPoints(); gl.uniform1f(glLoc.u_mode, 2); gl.uniform1f(glLoc.u_w, 1); gl.drawArrays(gl.POINTS, i0, i1 - i0); unbindPoints();
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.useProgram(glProg2); gl.bindBuffer(gl.ARRAY_BUFFER, glQuad); gl.enableVertexAttribArray(glLoc2.q); gl.vertexAttribPointer(glLoc2.q, 2, gl.FLOAT, false, 0, 0);
-      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, acc.tex); gl.uniform1i(glLoc2.u_tex, 0); gl.uniform1f(glLoc2.u_smax, smax); gl.uniform1f(glLoc2.u_w, 1 - u);
-      gl.drawArrays(gl.TRIANGLES, 0, 6); gl.disableVertexAttribArray(glLoc2.q); gl.bindTexture(gl.TEXTURE_2D, null);
-    } else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); }
-    if (u > 0) {   // the "over" marks at weight u (1 from k 3 up): the blocks, or the discs from 20 px per km
-      bindPoints(); gl.uniform1f(glLoc.u_mode, discs ? 1 : 0); gl.uniform1f(glLoc.u_w, u);
-      if (!discs) gl.drawArrays(gl.POINTS, i0, i1 - i0);
-      else { gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0); }
-      unbindPoints();
-    }
+    gl.viewport(0, 0, W, Hh); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.useProgram(glProg);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.enableVertexAttribArray(glLoc.pos); gl.vertexAttribPointer(glLoc.pos, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.n); gl.enableVertexAttribArray(glLoc.n); gl.vertexAttribPointer(glLoc.n, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.cls); gl.enableVertexAttribArray(glLoc.cls); gl.vertexAttribPointer(glLoc.cls, 4, gl.UNSIGNED_BYTE, false, 0, 0);
+    gl.uniform2f(glLoc.u_shift, GL_R[0] - Cx, GL_R[1] - Cy);   // a_pos + u_shift = (X - R) + (R - C) = X - C, exact integers
+    gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
+    gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh); gl.uniform1f(glLoc.u_sc, sc);
+    const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
+    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L)); gl.uniform1f(glLoc.u_w, w);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0);
+    gl.disableVertexAttribArray(glLoc.pos); gl.disableVertexAttribArray(glLoc.n); gl.disableVertexAttribArray(glLoc.cls);
   }
   const glEvents = [];
-  fieldC.addEventListener('webglcontextlost', e => { e.preventDefault(); glEvents.push('lost'); glLost = true; glYears.clear(); glAcc = null; ensureField2d(); drawMap(); });
-  fieldC.addEventListener('webglcontextrestored', () => { glEvents.push('restored'); if (glInit()) { glLost = false; if (field2d) field2d.canvas.hidden = true; drawMap(); } else glEvents.push('init failed: ' + glError); });
+  fieldC.addEventListener('webglcontextlost', e => { e.preventDefault(); glEvents.push('lost'); glLost = true; glYears.clear(); pixPrevKey = ''; ensureField2d(); drawMap(); });
+  fieldC.addEventListener('webglcontextrestored', () => { glEvents.push('restored'); if (glInit()) { glLost = false; if (field2d) field2d.canvas.hidden = true; layersDirty(); drawMap(); } else glEvents.push('init failed: ' + glError); });
   glInit();
-  // The 2D fallback: the same field into its own transparent canvas, created with willReadFrequently for the blit.
+  // The 2D path: the same field into its own transparent canvas.
   function ensureField2d() {
     if (field2d) { field2d.canvas.hidden = false; return field2d; }
     const cv = document.createElement('canvas'); cv.id = 'field2d'; cv.setAttribute('aria-hidden', 'true'); fieldC.insertAdjacentElement('afterend', cv);
-    cv.width = fieldC.width; cv.height = fieldC.height;
-    field2d = { canvas: cv, ctx: cv.getContext('2d', { willReadFrequently: true }), pm: null };
+    cv.width = fieldC.width; cv.height = fieldC.height; cv.style.width = stage.width + 'px'; cv.style.height = stage.height + 'px';
+    field2d = { canvas: cv, ctx: cv.getContext('2d'), cells: document.createElement('canvas'), prev: document.createElement('canvas') };
     return field2d;
   }
-  // The blocks, composited "over" in premultiplied bytes on a transparent buffer, then written as straight colour.
-  function blit2d(f, c, d, L, i0, i1) {
-    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, sc = stage.scale, k = c.k, u = addFade(k), smax = sMax(k), overOn = u > 0, addOn = u < 1;
-    fieldRegime = { u, smax, additive: addOn, over: overOn };
-    if (!f.pm || f.pm.length !== W * H * 4) f.pm = new Uint8ClampedArray(W * H * 4); const pm = f.pm; pm.fill(0);
-    if (addOn && (!f.acc || f.acc.length !== W * H * 4)) f.acc = new Float32Array(W * H * 4); const acc = f.acc; if (addOn) acc.fill(0);
-    const ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc;
-    const pal = firmPalette(L), dprI = Math.max(1, Math.round(sc)), X = d.x, Y = d.y, N = d.nn;
-    for (let i = i0; i < i1; i++) {
-      const n = N[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1);
-      const bx = Math.floor(ax + X[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - Y[i] * kk) - ((bw - 1) >> 1);
-      if (bx >= W || by >= H || bx + bw <= 0 || by + bw <= 0) continue;
-      const col = pal[firmClass(d, i, L)] || pal[0], a8 = n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96, ia = 256 - a8;
-      const sr = (col[0] * a8) >> 8, sg = (col[1] * a8) >> 8, sb = (col[2] * a8) >> 8;
-      const x0 = bx < 0 ? 0 : bx, y0 = by < 0 ? 0 : by, x1 = bx + bw > W ? W : bx + bw, y1 = by + bw > H ? H : by + bw;
-      if (overOn) for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { pm[o] = sr + ((pm[o] * ia) >> 8); pm[o + 1] = sg + ((pm[o + 1] * ia) >> 8); pm[o + 2] = sb + ((pm[o + 2] * ia) >> 8); pm[o + 3] = a8 + ((pm[o + 3] * ia) >> 8); } }
-      if (addOn) { const cr = col[0] * n, cg = col[1] * n, cb = col[2] * n; for (let yy = y0; yy < y1; yy++) { let o = (yy * W + x0) * 4; for (let xx = x0; xx < x1; xx++, o += 4) { acc[o] += cr; acc[o + 1] += cg; acc[o + 2] += cb; acc[o + 3] += n; } } }
-    }
-    // The tone curve on the sums, the "over" image on top at weight u (a premultiplied composite in 0 to 255), then straight colour for putImageData.
-    const img = ctx2.createImageData(W, H), px = img.data, lsm = Math.log(smax);
-    for (let o = 0; o < px.length; o += 4) {
-      let r = 0, g = 0, b = 0, a = 0;
-      if (addOn) { const S = acc[o + 3]; if (S > 0) { const t = (S < 1 ? 0.5 * S : Math.min(1, 0.5 + 0.5 * Math.log(S) / lsm)) * (1 - u); r = acc[o] / S * t; g = acc[o + 1] / S * t; b = acc[o + 2] / S * t; a = t; } }
-      if (overOn) { const ao = pm[o + 3] / 255 * u; if (ao > 0) { const keep = 1 - ao; r = pm[o] * u + r * keep; g = pm[o + 1] * u + g * keep; b = pm[o + 2] * u + b * keep; a = ao + a * keep; } }
-      if (a <= 0) continue;
-      px[o] = Math.min(255, Math.round(r / a)); px[o + 1] = Math.min(255, Math.round(g / a)); px[o + 2] = Math.min(255, Math.round(b / a)); px[o + 3] = Math.round(a * 255);
-    }
-    ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, W, H); ctx2.putImageData(img, 0, 0);
-  }
-  function discs2d(f, c, d, L, idx) {
-    fieldRegime = { u: 1, smax: sMax(c.k), additive: false, over: true };
-    const ctx2 = f.ctx, rule = markRule(c.k); ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.clearRect(0, 0, f.canvas.width, f.canvas.height); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
-    ctx2.globalAlpha = 0.9;
+  function discs2d(f, c, d, L, idx, w) {
+    const ctx2 = f.ctx, rule = markRule(c.k); ctx2.save(); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
+    ctx2.globalAlpha = 0.9 * w;
     for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill(); }
-    ctx2.globalAlpha = 1;
+    ctx2.restore();
   }
   // The discs' order: the largest first, by a counting sort on the radius in tenths of a pixel, over the x-band and the y-range.
   function discOrder(c, d, i0, i1) {
@@ -636,61 +526,75 @@ void main() {
     const idx = new Uint32Array(count); let j = 0; for (let r10 = buckets.length - 1; r10 >= 0; r10--) if (buckets[r10]) for (const i of buckets[r10]) idx[j++] = i;
     return idx;
   }
-  // Two layers under the dot field at the national zoom (round 10, the author's item 12), drawn through drawBasemap's afterLand hook: right after the land fill and
-  // before the graticule, the region borders and the ghost names, so every line stays readable over them (the author's correction of 25 October). (a) The region tint: each region filled in its leading industry's
-  // class colour at 0.18 alpha, full below k 0.5 and gone by k 1.5, from a km-space bitmap at 0.175 px per km built once per year and theme (two cached), one
-  // drawImage per frame. (b) The glow in the field's own colours (the author's answer): the year's addresses accumulated as 1 px points in the layer's palette with
-  // the field's alpha-by-count rule into a km-space buffer at one eighth of the fitted zoom, blurred once with a two-pass box blur of radius 2 in JS (the same bytes
-  // in every engine), drawn per frame with one drawImage at 0.35 alpha, full below k 1.5 and gone by k 3; cached per year, layer, theme and fitted zoom (a resize
-  // rebuilds), never rebuilt within a frame. Both sit on the map canvas, under the field canvas and the marks by DOM order.
-  const TINT_K = 0.175, tintCache = new Map(); let glowCache = null, glowBuilds = 0, firmsFade = { tint: 0, glow: 0 }, firmsLayersOff = false;   // firmsLayersOff: the audit's no-tint, no-glow comparison
-  let TINT_A = 0.08, GLOW_A = 0.06;   // pulled back by the author on 25 October (from 0.18 and 0.35, then the glow to 5 to 8 percent as a visibility assist drawn under every line); settable through __atlas.firmsLayerAlphas for the contrast measurements
-  function desat(hex, f) {   // the colour with its OKLab chroma scaled by f (lightness and hue kept), for the tint's class colours (half)
-    const s2l = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }, l2s = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); };
-    const [r, g, b] = hex2rgb(hex).map(s2l), l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s3 = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-    const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s3, A = f * (1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s3), B = f * (0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s3);
-    const l2 = L + 0.3963377774 * A + 0.2158037573 * B, m2 = L - 0.1055613458 * A - 0.0638541728 * B, s4 = L - 0.0894841775 * A - 1.2914855480 * B, l3 = l2 * l2 * l2, m3 = m2 * m2 * m2, s5 = s4 * s4 * s4;
-    return 'rgb(' + [4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s5, -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s5, -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s5].map(l2s).join(',') + ')';
+  // The pixel field's parameters for a camera: the cells (CSS px), the layer code and breaks, the palette with alphas (index = class), the backdrop.
+  function pixelPalette(L) {
+    const code = PixelField.layerCode(L), pal = new Float32Array(48), al = new Float32Array(16);
+    for (let i = 0; i < 16; i++) {
+      let hex = theme.neutral, a = 1; const j = Math.max(0, i - 1);
+      if (code === 0) hex = theme.ramp6[Math.min(5, j)]; else if (code === 1) hex = theme.div6[Math.min(5, j)]; else if (code === 2) hex = theme.ind9[Math.min(8, j)];
+      else { hex = theme.density; a = MM.countAlpha[Math.min(7, j)] / PixelField.LAYER_ALPHA; }   // the cell layers: the density colour at the count alphas (the compose multiplies by the layer's alpha)
+      const c = hex2rgb(hex); pal[3 * i] = c[0] / 255; pal[3 * i + 1] = c[1] / 255; pal[3 * i + 2] = c[2] / 255; al[i] = a;
+    }
+    return { pal, alpha: al };
   }
-  const tintFade = k => Motion.clamp(1 - (k - 0.5) / 1.0, 0, 1), glowFade = k => Motion.clamp(1 - (k - 1.5) / 1.5, 0, 1);
-  function kmBitmapCam(k, pad) { const ext = BM.extents.national, W = Math.ceil((ext.x[1] - ext.x[0]) * k) + pad, H = Math.ceil((ext.y[1] - ext.y[0]) * k) + pad; return { W, H, cam: { cx: (ext.x[0] + ext.x[1]) / 2, cy: (ext.y[0] + ext.y[1]) / 2, k, ox: W / 2, oy: H / 2 } }; }
-  function drawKmBitmap(b, alpha, smooth) { const c = cam(), f = c.k / b.cam.k, [px, py] = Motion.project(c, b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k); mctx.save(); stage.base(); mctx.globalAlpha *= alpha; mctx.imageSmoothingEnabled = !!smooth; mctx.drawImage(b.cv, px, py, b.W * f, b.H * f); mctx.restore(); }
-  function regionTint(y) {
-    const key = y + '|' + theme.dark; if (tintCache.has(key)) return tintCache.get(key);
-    const { W, H, cam: camB } = kmBitmapCam(TINT_K, 4), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), st = { width: W, height: H, scale: 1, base() { g.setTransform(1, 0, 0, 1, 0, 0); } };
-    Motion.camTransform(g, st, camB);
-    for (const name of regIndex.keys()) { if (name === 'Russia' || name === 'outside the basemap outline' || name === 'region not recorded') continue; const i = regRow(name, y); if (i == null) continue; const d = REG.d1[i]; if (d === 255) continue; const cls = IND_CLASS[d] || 9; g.fillStyle = desat(theme.ind9[cls - 1], 0.5); g.fill(regionPath(name), 'evenodd'); }
-    st.base(); const out = { cv, cam: camB, W, H }; tintCache.set(key, out); if (tintCache.size > 2) tintCache.delete(tintCache.keys().next().value); return out;
+  function pixelParams(c, L) {
+    const kk = c.k / 1000, camx = c.cx * 1000, camy = c.cy * 1000, Cx = Math.round(camx), Cy = Math.round(camy), P = pixelPalette(L);
+    return { W: stage.width, H: stage.height, dpr: stage.scale, shift: [GL_R[0] - Cx, GL_R[1] - Cy], off: [c.ox + (Cx - camx) * kk, c.oy - (Cy - camy) * kk], kk, code: PixelField.layerCode(L), breaks: YEAR_BREAKS, pal: P.pal, alpha: P.alpha, back: hex2rgb(theme.neutral).map(v => v / 255) };
   }
-  function glowFor(y, L, d) {
-    const kg = kFit() / 8, key = [y, L, theme.dark, kg.toFixed(6)].join('|'); if (glowCache && glowCache.key === key) return glowCache;
-    const { W, H, cam: camB } = kmBitmapCam(kg, 8), buf = new Float32Array(W * H * 4), pal = firmPalette(L), alphaOf = n => (n >= 100 ? 236 : n >= 10 ? 200 : n >= 2 ? 140 : 96) / 255;
-    for (let i = 0; i < d.nn.length; i++) { const px = Math.floor(camB.ox + (d.x[i] / 1000 - camB.cx) * kg), py = Math.floor(camB.oy - (d.y[i] / 1000 - camB.cy) * kg); if (px < 0 || py < 0 || px >= W || py >= H) continue; const col = pal[firmClass(d, i, L)] || pal[0], a = alphaOf(d.nn[i]), o = 4 * (py * W + px), rem = 1 - buf[o + 3]; buf[o] += col[0] * a * rem; buf[o + 1] += col[1] * a * rem; buf[o + 2] += col[2] * a * rem; buf[o + 3] += a * rem; }
-    const blur = (src, dst, horiz) => { const r = 2, n = 2 * r + 1; for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) { let s0 = 0, s1 = 0, s2 = 0, s3 = 0; for (let t = -r; t <= r; t++) { const x2 = horiz ? xx + t : xx, y2 = horiz ? yy : yy + t; if (x2 < 0 || y2 < 0 || x2 >= W || y2 >= H) continue; const o = 4 * (y2 * W + x2); s0 += src[o]; s1 += src[o + 1]; s2 += src[o + 2]; s3 += src[o + 3]; } const o = 4 * (yy * W + xx); dst[o] = s0 / n; dst[o + 1] = s1 / n; dst[o + 2] = s2 / n; dst[o + 3] = s3 / n; } };
-    const tmp = new Float32Array(W * H * 4); blur(buf, tmp, true); blur(tmp, buf, false);
-    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'), img = g.createImageData(W, H), p8 = img.data;
-    for (let o = 0; o < buf.length; o += 4) { const a = Math.min(1, buf[o + 3]); if (a <= 0) continue; p8[o] = Math.round(buf[o] / a); p8[o + 1] = Math.round(buf[o + 1] / a); p8[o + 2] = Math.round(buf[o + 2] / a); p8[o + 3] = Math.round(a * 255); }
-    g.putImageData(img, 0, 0); glowBuilds++; glowCache = { key, cv, cam: camB, W, H }; return glowCache;
+  const dotsAlphas = k => { const dk = dotsK(); let t = Motion.step(k, dk, 0.4 * dk, Motion.ease.linear); if (t > 0.999999) t = 1; return { pix: 1 - t, dots: t }; };
+  // The year dissolve and the opening sweep (round 14, the author's decisions): the dissolve crossfades the previous year's pixel field into the new one over 0.25 s
+  // (kept under reduced motion, a crossfade); the sweep, once per tab on the first opening of the Firms view at the country view, lets every field pixel and every
+  // listed mark fade in as an invisible edge passes from west to east over 1.3 s; any input completes it, and it never runs under reduced motion.
+  const DISSOLVE_MS = 250, SWEEP_MS = 1300;
+  let fieldAnim = { dissolve: null, sweep: null, raf: 0 }, pixPrevKey = '', pixKey = '', pixDrawn = { cells: 0, engine: null, level: null, firms: 0 };
+  const sweepX = () => { const s = fieldAnim.sweep; if (!s) return null; const u = Math.min(1, (performance.now() - s.t0) / SWEEP_MS); return { x: Motion.lerp(-s.feather, stage.width + s.feather, Motion.ease.inOutSine(u)), feather: s.feather, done: u >= 1 }; };
+  const dissolveT = () => { const s = fieldAnim.dissolve; if (!s) return 1; const t = Math.min(1, (performance.now() - s.t0) / DISSOLVE_MS); return Motion.ease.inOutSine(t); };
+  function fieldTick() {
+    fieldAnim.raf = 0; const sw = sweepX(); if (sw && sw.done) fieldAnim.sweep = null; if (fieldAnim.dissolve && dissolveT() >= 1) fieldAnim.dissolve = null;
+    if (state.mode !== 'firms') { fieldAnim.sweep = null; fieldAnim.dissolve = null; return; }
+    drawFieldOnly(cam()); if (fieldAnim.sweep || sw) drawMarks(cam());
+    if (fieldAnim.sweep || fieldAnim.dissolve) fieldAnim.raf = requestAnimationFrame(fieldTick);
   }
-  function drawFirmsGround(c) {
-    const y = state.year, d = firmYears.get(y), L = state.layer, tf = tintFade(c.k), gf = glowFade(c.k); firmsFade = { tint: tf, glow: gf };
-    if (firmsLayersOff) { firmsFade = { tint: 0, glow: 0 }; return; }
-    if (tf > 0 && REG) drawKmBitmap(regionTint(y), TINT_A * tf, false);
-    if (gf > 0 && d) drawKmBitmap(glowFor(y, L, d), GLOW_A * gf, true);
+  function fieldAnimate() { if (!fieldAnim.raf) fieldAnim.raf = requestAnimationFrame(fieldTick); }
+  function maybeSweep() {
+    fieldAnim.sweepPending = false;
+    if (reduceMotion() || state.mode !== 'firms' || state.cam.k > 1.5 * kFit()) return false;
+    if (!firmYears.has(state.year)) { fieldAnim.sweepPending = true; return false; }   // the field arrives with the year's data: the sweep starts then
+    try { if (sessionStorage.getItem('atlas-sweep')) return false; sessionStorage.setItem('atlas-sweep', '1'); } catch (e) { /* no storage: sweep once per load */ if (fieldAnim.swept) return false; }
+    fieldAnim.swept = true; fieldAnim.sweep = { t0: performance.now(), feather: Math.max(60, stage.width * 0.12) }; fieldAnimate(); return true;
   }
-  // ---- the binned Firms view (round 13, the author's request of 25 October 2026) -------------------------------------------------------------
-  // Below the dots zoom the year's addresses are binned on the Cells view's own ladder and drawn as gapped squares, one colour per square from the layer's
-  // statistic over the addresses inside it: 25 km squares at the country (the national 25 km grid), 1 km squares from k 1.5 (the city windows' grid, here
-  // everywhere), the dots from k 20 as before; each hand-over a crossfade. The squares share the grids' origin (the km plane's), so a flip between the views
-  // at any zoom shows the same squares. Per square: n firms, p coordinate pairs, a with a statement, f filers with a class, the revenue by industry class (each
-  // address's revenue split by its mix shares) and the filers by revenue-change class. The population is the address file's: firms on no list at house- and
-  // street-level geocodes (the Cells view counts every located eligible firm); the legend says so. Squares of 6 px and more are filled per frame inside the
-  // view (the bins sorted by column, the x-band found by a binary search); smaller ones are rendered once into a bitmap of the view with a margin of its own
-  // size, redrawn when the view leaves it or the zoom drifts past 40 percent (a build touches the bins inside the margin once).
-  const MOSAIC_DOTS_K = 20, MOSAIC_LEVELS = [25, 1];
+  function endSweep() { if (!fieldAnim.sweep) return; fieldAnim.sweep = null; if (state.mode === 'firms') { drawFieldOnly(cam()); drawMarks(cam()); } }
+  ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(t => window.addEventListener(t, endSweep, { capture: true, passive: true }));
+  // The 2D path's pixel field: the CPU engine's image at the cells' resolution, drawn scaled by the device ratio without smoothing.
+  function pixel2d(f, c, d, L, i0, i1, keepPrev) {
+    const P = pixelParams(c, L), view = { cx: c.cx, cy: c.cy, k: c.k, ox: c.ox, oy: c.oy, W: P.W, H: P.H };
+    const S = PixelField.cpuSums(d, view, P.code, i0, i1, POW), C = PixelField.cpuClassify(S, P.code, P.breaks);
+    const colourOf = cls => [P.pal[3 * cls] * 255, P.pal[3 * cls + 1] * 255, P.pal[3 * cls + 2] * 255, P.alpha[cls] * PixelField.LAYER_ALPHA];
+    const pm = PixelField.cpuCompose(C, P.W, P.H, colourOf, P.back.map(v => v * 255)), img = new ImageData(P.W, P.H), px = img.data;
+    for (let o = 0; o < pm.length; o += 4) { const a = pm[o + 3]; if (!a) continue; px[o] = pm[o] * 255 / a; px[o + 1] = pm[o + 1] * 255 / a; px[o + 2] = pm[o + 2] * 255 / a; px[o + 3] = a; }   // straight colour for putImageData
+    if (keepPrev) { const t = f.prev; f.prev = f.cells; f.cells = t; }
+    f.cells.width = P.W; f.cells.height = P.H; f.cells.getContext('2d').putImageData(img, 0, 0);
+    let cells = 0; for (let o = 3; o < pm.length; o += 4) if (pm[o]) cells++; return cells;
+  }
+  function blit2dCells(f, w) {
+    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, t = dissolveT(), sw = sweepX();
+    ctx2.save(); ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.imageSmoothingEnabled = false;
+    if (t < 1 && f.prev.width) { ctx2.globalAlpha = w * (1 - t); ctx2.drawImage(f.prev, 0, 0, f.prev.width * stage.scale, f.prev.height * stage.scale); ctx2.globalCompositeOperation = 'lighter'; }
+    ctx2.globalAlpha = w * t; ctx2.drawImage(f.cells, 0, 0, f.cells.width * stage.scale, f.cells.height * stage.scale);
+    ctx2.globalCompositeOperation = 'source-over';
+    if (sw) { const g = ctx2.createLinearGradient((sw.x - sw.feather) * stage.scale, 0, sw.x * stage.scale, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx2.globalCompositeOperation = 'destination-in'; ctx2.globalAlpha = 1; ctx2.fillStyle = g; ctx2.fillRect(0, 0, W, H); ctx2.globalCompositeOperation = 'source-over'; }
+    ctx2.restore();
+  }
+  // ---- the address files' 1 km squares (round 13, the author's request of 25 October 2026; the Cells view's from round 14) -----------------------------------------
+  // A year's addresses binned on a 1 km grid at the km plane's origin. Per square: n firms, p coordinate pairs, a with a statement, f filers with a class, the revenue
+  // by industry class (each address's revenue split by its mix shares) and the filers by revenue-change class; each square's addresses are grouped, so its mix and
+  // leader read its own addresses only. The population is the address file's: firms on no list at house- and street-level geocodes (the Cells view's other grids
+  // count every located eligible firm); the legend says so. Round 13 drew these squares, with a 25 km level, in the Firms view; round 14 moved them to the Cells
+  // view, on the GPU, or without WebGL2 on the map canvas: squares of 6 px and more filled per frame inside the view (the bins sorted by column, the x-band found by
+  // a binary search), smaller ones rendered once into a bitmap of the view with a margin of its own size, redrawn when the view leaves it or the zoom drifts past
+  // 40 percent.
+  const MOSAIC_DOTS_K = 20, MOSAIC_LEVELS = [1];
   const dotsK = () => Math.min(MOSAIC_DOTS_K, minSide() / 20 / 1.4);   // the hand-over to the dots starts at k 20 and runs over a 1.4 x band (20 to 28), or lower on a map whose fine rung (the 250 m preset, minSide / 20) lies under 28, so that preset always shows the dots (a 400 px phone: 13.1 to 18.3)
-  const mosaicAlphas = k => { const dk = dotsK(), to1 = Motion.step(k, 1.5, 1.0, Motion.ease.linear); let toDots = Motion.step(k, dk, 0.4 * dk, Motion.ease.linear); if (toDots > 0.999999) toDots = 1; return { 25: 1 - to1, 1: to1 * (1 - toDots), dots: toDots }; };
-  const mosaicLevelAt = k => (mosaicAlphas(k)[25] >= 0.5 ? 25 : 1);   // the level the hover and the legend speak of
   const binKey = (bx, by) => (bx + 20000) * 40000 + (by + 20000);
   const mosaicCache = new Map(), mosaicBitmaps = new Map(); let mosaicBuilds = 0, mosaicBitmapBuilds = 0, mosaicState = { level: null, mode: null, drawn: 0 }, mosaicOff = false;
   function mosaicBins(y, T) {
@@ -766,27 +670,48 @@ void main() {
     const { acc, tot } = binDivisions(b, j, d);
     if (!tot) return null; let div = -1, bv = 0; for (const [ind, v] of acc) if (v > bv) { bv = v; div = ind; } return { div, share: Math.round(100 * bv / tot) };
   }
-  function drawFirms(c, fieldNew = true) {   // fieldNew false: the squares on the map canvas only, the field canvas keeps its frame (round 14)
-    const y = state.year, d = firmYears.get(y), L = state.layer;
+  let fieldCamKey = '';   // the camera the field canvas was last drawn at (a year still loading keeps the old field only while the camera stays)
+  function drawFirms(c, fieldNew = true) {   // fieldNew false: the field canvas keeps its frame (round 14)
+    const y = state.year, d = firmYears.get(y), camKey = [c.cx, c.cy, c.k, stage.width, stage.height, stage.scale].join('|');
     if (!d) {
-      firmStatus = `Loading ${y} addresses…`; clearField();
-      ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; drawMap(); countFirmsInView(); refreshHover(); } })
+      firmStatus = `Loading ${y} addresses…`; if (!(fieldAnim.dissolve && camKey === fieldCamKey)) { clearField(); fieldCamKey = ''; }   // a year change keeps the old year's field until the new one arrives and dissolves into it
+      ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; if (fieldAnim.sweepPending) maybeSweep(); drawMap(); countFirmsInView(); refreshHover(); prefetchYears(y); } })
         .catch(e => { console.error(e); firmStatus = `Addresses for ${y} could not be loaded (${e.message}).`; if (state.mode === 'firms' && state.year === y) drawLegend(); });
       return;
     }
     firmStatus = null;
-    const k = c.k, A = mosaicAlphas(k);
-    if (!mosaicOff && k < dotsK() * 1.4) for (const T of MOSAIC_LEVELS) { const al = A[T]; if (al > 0) { const b = mosaicBins(y, T); if (b) drawMosaicLevel(c, b, L, T, al); } }   // the squares on the map canvas, under the field and the marks (round 13)
     if (!fieldNew) return;
-    const op = A.dots < 1 ? String(A.dots) : ''; fieldC.style.opacity = op; if (field2d) field2d.canvas.style.opacity = op;
-    if (k < dotsK()) { clearField(); if (field2d) field2d.canvas.hidden = true; fieldRegime = { u: 0, smax: 0, additive: false, over: false, mosaic: mosaicLevelAt(k) }; return; }
-    const pad = markRadius(markRule(k), 65535) / k * 1000 + 1000;
-    const i0 = lowerBound(d.x, (c.cx - c.ox / k) * 1000 - pad), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + pad);
-    const discs = k >= 20, idx = discs ? discOrder(c, d, i0, i1) : null;   // the switch depends on the zoom alone (author's decision, 24 October 2026); below it the squares since round 13
-    if (useGL()) { if (field2d) field2d.canvas.hidden = true; glDraw(c, d, L, i0, i1, discs, idx); }
-    else { const f = ensureField2d(); if (discs) discs2d(f, c, d, L, idx); else blit2d(f, c, d, L, i0, i1); }
-    fieldRegime.mosaic = A[1] > 0 ? 1 : null;
+    fieldC.style.opacity = ''; if (field2d) field2d.canvas.style.opacity = '';
+    drawFieldOnly(c); fieldCamKey = camKey;
   }
+  // The field canvas from the year's addresses: the pixel field at weight 1 - dots, recomposed when the view, the year, the layer or the theme changed, then the
+  // discs at weight dots; the dissolve and the sweep only redraw the copy (fieldTick).
+  function drawFieldOnly(c) {
+    const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return;
+    const k = c.k, A = dotsAlphas(k), key = [y, L, theme.dark, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, useGL() ? 1 : 0].join('|');
+    const m = 2 / k, p0 = lowerBound(d.x, (c.cx - c.ox / k - m) * 1000), p1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k + m) * 1000);   // the pixel field's x-band, two cells of margin
+    let idx = null; if (A.dots > 0) { const pad = markRadius(markRule(k), 65535) / k * 1000 + 1000; idx = discOrder(c, d, lowerBound(d.x, (c.cx - c.ox / k) * 1000 - pad), lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + pad)); }
+    if (fieldAnim.dissolve && fieldAnim.dissolve.t0 == null && !(A.pix > 0)) fieldAnim.dissolve = null;   // nothing to dissolve at the dots zoom
+    const fresh = key !== pixKey, keepPrev = fresh && !!fieldAnim.dissolve && fieldAnim.dissolve.t0 == null && pixKey !== '';
+    if (fieldAnim.dissolve && fresh && !keepPrev && fieldAnim.dissolve.t0 != null) fieldAnim.dissolve = null;   // a camera move completes the dissolve
+    if (useGL()) {
+      if (field2d) field2d.canvas.hidden = true;
+      glUpload(y, d); const buf = glYears.get(y); if (!buf) return;
+      gl.viewport(0, 0, fieldC.width, fieldC.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      if (A.pix > 0) { const P = pixelParams(c, L); if (fresh) { pfGL.compose(buf, p0, p1, P, keepPrev); pixKey = key; } const sw = sweepX(); pfGL.blit(fieldC.width, fieldC.height, P, A.pix, dissolveT(), sw ? sw.x : null, sw ? sw.feather : 1); }
+      else if (fresh) pixKey = '';
+      if (idx) glDiscs(c, glYears.get(y), L, idx, A.dots);
+    } else {
+      const f = ensureField2d(); f.ctx.setTransform(1, 0, 0, 1, 0, 0); f.ctx.clearRect(0, 0, f.canvas.width, f.canvas.height);
+      if (A.pix > 0) { if (fresh) { pixDrawn.cells = pixel2d(f, c, d, L, p0, p1, keepPrev); pixKey = key; } blit2dCells(f, A.pix); }
+      else if (fresh) pixKey = '';
+      if (idx) discs2d(f, c, d, L, idx, A.dots);
+    }
+    if (keepPrev) { fieldAnim.dissolve.t0 = performance.now(); fieldAnimate(); }
+    pixDrawn = { cells: pixDrawn.cells, engine: useGL() ? 'webgl2' : '2d', pix: A.pix, dots: A.dots, level: A.dots >= 1 ? 'dots' : A.pix >= 1 ? 'pixel' : 'both' };
+  }
+  // The neighbouring years load in idle time once a year is shown (the cache holds three), so the slider's next step need not wait for the download.
+  function prefetchYears(y) { if (state.mode !== 'firms') return; for (const yy of [y + 1, y - 1]) if (FM && FM.files[yy] && !firmYears.has(yy)) onIdle(() => { if (state.mode === 'firms' && Math.abs(state.year - yy) === 1) ensureYear(yy).catch(() => {}); }); }
   // Listed firms on the marks layer, above the field (25 October 2026): before its listing year a firm keeps its ordinary
   // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
   // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
@@ -828,12 +753,96 @@ void main() {
     if (!manualMasks.has(y)) { const mask = new Uint8Array(TRN ? TRN.n : 0), yi = y - 2014; let count = 0; if (TRN) for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.filed[i][yi] !== '-') { mask[i] = 1; count++; } manualMasks.set(y, { mask, count }); }
     return manualMasks.get(y);
   }
-  function replayPulse() { if (!FIRMS_OK || state.mode !== 'firms') return 0; const m = manualMask(state.year); if (!m.count) return 0; beginPulse(m.mask, m.count); return m.count; }
+  function replayPulse() { if (state.mode !== 'firms') return cellsPulse(); if (!FIRMS_OK) return 0; const m = manualMask(state.year); if (!m.count) return 0; beginPulse(m.mask, m.count); return m.count; }
   function syncPulseButton() {
     const b = $('pulse'); if (!b) return;
-    const show = FIRMS_OK && state.mode === 'firms', y = state.year, count = show ? manualMask(y).count : 0;
+    const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
     b.hidden = !show; b.disabled = !count;
-    const label = count ? `Replay the bloom of the firms listed in ${y}` : `No firm on these lists was listed in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+    const label = !count ? `No firm on these lists was listed in ${y}` : state.mode === 'firms' ? `Replay the bloom of the firms listed in ${y}` : `Pulse the cells holding a firm listed in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+  }
+  // ---- the Cells view's squares and pulse (round 14, the author's decisions of 25 October 2026) ---------------------------------------------------------------------
+  // The 1 km squares from the address files everywhere, and the 2021 250 m windows, on the field canvas above the 100 km and 25 km cells: one instanced quad per square
+  // (js/pixel-field.js), coloured as round 13's squares and the windows' cells were (the share classes on the windows' breaks in the five-step ramp, the industry
+  // classes, the density colour at the count alphas, the grey under 50 firms on the share layer). While the 250 m cells come in, the 1 km squares fade to a quarter
+  // outside the window and out inside it (the hand-over of round 10). Without WebGL2 the same squares draw on the map canvas (drawCellsSquares2d).
+  const SQ_BELOW = 15, SQ_BELOW_FINE = 14;   // the palette's grey entries: the squares' 0.5 and the windows' 0.55, as the canvas drew them
+  function squaresPalette(L) {
+    const pal = new Float32Array(48), al = new Float32Array(16).fill(1), put = (i, hex, a) => { const c = hex2rgb(hex); pal[3 * i] = c[0] / 255; pal[3 * i + 1] = c[1] / 255; pal[3 * i + 2] = c[2] / 255; al[i] = a; };
+    if (L === 'share') theme.ramp5.forEach((h, i) => put(i, h, 1)); else if (L === 'industry') theme.ind9.forEach((h, i) => put(i + 1, h, 1)); else MM.countAlpha.forEach((a, i) => put(i, theme.density, a));
+    put(SQ_BELOW, theme.below, 0.5); put(SQ_BELOW_FINE, theme.below, 0.55); return { pal, al };
+  }
+  function microSet(y, L) {   // the year's squares as grid indices and palette indices, uploaded once per year and layer
+    const key = 'm|' + y + '|' + L; if (sqGL.sets.has(key)) return sqGL.sets.get(key);
+    const b = mosaicCache.get(y + '|1'); if (!b) return null;
+    const pos = new Float32Array(2 * b.count), cls = new Uint8Array(b.count);
+    for (let j = 0; j < b.count; j++) { pos[2 * j] = b.bx[j]; pos[2 * j + 1] = b.by[j]; const cl = mosaicClass(b, j, L); cls[j] = cl === 'below' ? SQ_BELOW : cl === 'count' ? MM.countClass(b.n[j]) : cl; }
+    return sqGL.upload(key, pos, cls);
+  }
+  function windowSet(label, L) {   // a 2021 250 m window's cells: the share classes as buildDensityPaths draws them (50 firms and a known count), or the count classes
+    const key = 'w|' + label + '|' + L; if (sqGL.sets.has(key)) return sqGL.sets.get(key);
+    const d = win025[label].d, pos = new Float32Array(2 * d.count), cls = new Uint8Array(d.count);
+    for (let i = 0; i < d.count; i++) { pos[2 * i] = d.ix[i]; pos[2 * i + 1] = d.iy[i]; let cl = MM.countClass(d.n[i]); if (L === 'share') { cl = SQ_BELOW_FINE; if (d.a[i] >= 0 && d.n[i] >= 50) { const sh = 100 * d.a[i] / d.n[i]; cl = 0; while (cl < FINE_BREAKS.length && sh >= FINE_BREAKS[cl]) cl++; } } cls[i] = cl; }
+    return sqGL.upload(key, pos, cls);
+  }
+  let cellsDrawn = { engine: null, micro: 0, fine: 0 };   // the last Cells draw's squares (the audit reads it)
+  const fineWindow = c => { if (!(fineA(c.k) > 0)) return null; const near = nearestCity(c).city.label; return win025[near] ? { label: near, w: win025[near] } : null; };
+  function drawCellsField(c) {
+    const L = state.layer, on = MICRO_LAYERS.has(L), y = microYear(), am = on ? microA(c.k, y) : 0, af = on ? fineA(c.k) : 0, fw = af > 0 ? fineWindow(c) : null;
+    cellsDrawn = { engine: useGL() ? 'webgl2' : '2d', micro: am, fine: fw ? af : 0 };
+    if (field2d) field2d.canvas.hidden = true;
+    if (!useGL()) return;   // the 2D path draws the squares on the map canvas
+    gl.viewport(0, 0, fieldC.width, fieldC.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!(am > 0) && !fw) return;
+    const P = squaresPalette(L), q = { cam: c, dpr: stage.scale, canvas: [fieldC.width, fieldC.height], pal: P.pal, al: P.al };
+    if (am > 0) { const sset = microSet(y, L), o = fw ? fw.w.d.origin : null; if (sset) { sqGL.draw(sset, Object.assign({}, q, { origin: [0, 0], T: 1, gap: c.k >= 5 ? 0.12 : 0, w: am, win: o ? [o[0] - c.cx, o[1] - c.cy, o[0] + 24 - c.cx, o[1] + 24 - c.cy] : null, winIn: 1 - af, winOut: 1 - 0.75 * af })); drawLog.push('squares'); } }
+    if (fw) { sqGL.draw(windowSet(fw.label, L), Object.assign({}, q, { origin: fw.w.d.origin, T: 0.25, gap: 0.025, w: af })); drawLog.push('fine'); }
+  }
+  function drawCellsSquares2d(c) {   // the 2D path: round 13's drawing of the squares and the windows' paths, on the map canvas after the cells
+    if (useGL() || !MICRO_LAYERS.has(state.layer)) return;
+    const L = state.layer, y = microYear(), am = microA(c.k, y), af = fineA(c.k), fw = af > 0 ? fineWindow(c) : null;
+    if (am > 0) { const b = mosaicCache.get(y + '|1'); drawAround(c, fw ? winRect(fw.w.d, 24) : null, fw ? af : 0, a => drawMosaicLevel(c, b, L, 1, am * a), false); drawLog.push('squares'); }
+    if (fw) { if (L === 'share') MM.drawDensityShares(mctx, stage, c, fw.w.paths, theme.ramp5, theme.below, af); else MM.drawDensityCounts(mctx, stage, c, fw.w.paths, theme.density, af); drawLog.push('fine'); }
+  }
+  function drawCellsMarks(c) {   // the Cells view's marks canvas: the ghost names and the city labels above the squares, the pulse rings between them (the Firms view's order)
+    clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
+    drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');
+    if (cellPulse) cellPulseRings(c);
+    drawLabels(kctx, c, 'marks');
+  }
+  // The Cells view's pulse (round 14): the button pulses every cell at the shown level that holds a firm listed in the shown year (dated and present that year;
+  // undated firms never pulse), with the Firms view's two rings at the cell's centre and its west-to-east stagger over the cells in view; under reduced motion
+  // the still highlight for the same 1.8 s. The automatic pulse on a forward year change stays in the Firms view.
+  const CELL_PULSE_LAYERS = new Set(['share', 'industry']);
+  let cellPulse = null, cellPulseRaf = 0, cellPulseTimer = 0;
+  function endCellPulse() { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) clearTimeout(cellPulseTimer); cellPulseTimer = 0; if (cellPulse) { cellPulse = null; setLive(false); } }
+  function cellGridAt(x, y, c) {   // the grid the hover reads at a point: a 2021 250 m window, the 1 km squares, the 25 km cells, the 100 km cells
+    const fw = fineA(c.k) >= 0.5 ? fineWindow(c) : null;
+    if (fw) { const o = fw.w.d.origin; if (x >= o[0] && x < o[0] + 24 && y >= o[1] && y < o[1] + 24) return { g: 0.25, o }; }
+    if (microA(c.k, microYear()) >= 0.5) return { g: 1, o: [0, 0] };
+    if (alpha25(c.k) >= 0.5 && ((state.layer === 'share' && c25[state.year]) || (state.layer === 'industry' && ind25[state.year]))) return { g: G25, o: [0, 0] };
+    return { g: 100, o: [0, 0] };
+  }
+  function cellsPulse() {
+    endCellPulse(); if (!TRN || !CELL_PULSE_LAYERS.has(state.layer)) return 0;
+    const m = manualMask(state.year); if (!m.count) return 0;
+    const c = cam(), k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), seen = new Map();
+    for (let i = 0; i < TRN.n; i++) { if (!m.mask[i]) continue; const x = TRN.x[i], y = TRN.y[i], G = cellGridAt(x, y, c), jx = Math.floor((x - G.o[0]) / G.g), jy = Math.floor((y - G.o[1]) / G.g), key = G.g + ':' + jx + ':' + jy; if (!seen.has(key)) seen.set(key, { x: G.o[0] + (jx + 0.5) * G.g, y: G.o[1] + (jy + 0.5) * G.g, delay: 0 }); }
+    const cells = [...seen.values()], ox = c.ox - c.cx * k, oy = c.oy + c.cy * k; let x0 = Infinity, x1 = -Infinity;
+    for (const q of cells) { const px = ox + q.x * k, py = oy - q.y * k; if (px < -MARK_MARGIN || px > stage.width + MARK_MARGIN || py < -MARK_MARGIN || py > stage.height + MARK_MARGIN) continue; if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; }
+    const span = x1 > x0 ? x1 - x0 : 0; for (const q of cells) q.delay = span ? LR.spreadMs * Motion.clamp((q.x - x0) / span, 0, 1) : 0;
+    cellPulse = { t0: performance.now(), cells, count: cells.length, static: reduceMotion(), at: null }; setLive(true);
+    if (cellPulse.static) cellPulseTimer = setTimeout(() => { cellPulseTimer = 0; cellPulse = null; setLive(false); if (state.mode !== 'firms') drawCellsMarks(cam()); }, PULSE_MS);
+    else cellPulseRaf = requestAnimationFrame(cellPulseTick);
+    drawCellsMarks(c); return cells.length;
+  }
+  function cellPulseTick() { cellPulseRaf = 0; if (!cellPulse) return; if (performance.now() - cellPulse.t0 >= PULSE_MS) { cellPulse = null; setLive(false); } if (state.mode !== 'firms') drawCellsMarks(cam()); if (cellPulse) cellPulseRaf = requestAnimationFrame(cellPulseTick); }
+  function cellPulseRings(c) {
+    const P = cellPulse, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), r = MM.listedRadius(LR, 1), t = P.at != null ? P.at : performance.now() - P.t0, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k;
+    for (const q of P.cells) {
+      const px = ox + q.x * k, py = oy - q.y * k; if (px < -MARK_MARGIN || px > stage.width + MARK_MARGIN || py < -MARK_MARGIN || py > stage.height + MARK_MARGIN) continue;
+      if (P.static) { MM.pulseRing(kctx, px, py, r, LR, 1, theme, true); continue; }
+      MM.pulsePhase((t - q.delay) / 1000, PH); if (PH.on && PH.p > 0 && PH.p < 1) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, false);
+    }
   }
   const MARK_MARGIN = 80;   // CSS px beyond the view inside which marks are drawn: the street zoom's flash and ring reach 72.6 px (round 9)
   const PH = { on: false, swell: 0, release: 0, grow: 0, glowA: 0, p: 0 };   // the bloom phase of the mark being drawn, reused (no allocation per frame)
@@ -861,10 +870,11 @@ void main() {
           if (!PH.on) continue;   // before its own start the firm shows its rimmed mark only
           const rr = r + MM.flashPeak(r) * PH.swell, core = PH.release < 1 ? MM.coreAt(ch === '1' ? theme.coreRed : theme.coreLand, PH.release) : null;
           const tt = st ? 0 : Motion.clamp((tNow - pulseDelay[i]) / DECAY_MS, 0, 1);
-          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, core);
-        } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo);
+          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, core, LR);
+        } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo, null, LR);
       }
     }
+    { const sw = sweepX(); if (sw) { kctx.save(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); const g = kctx.createLinearGradient(sw.x - sw.feather, 0, sw.x, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); kctx.globalCompositeOperation = 'destination-in'; kctx.fillStyle = g; kctx.fillRect(0, 0, stage.width, stage.height); kctx.restore(); } }   // the opening sweep: the listed marks fade in with the field (round 14); the names and labels below are drawn whole
     drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');   // the floating names above the field and the marks (round 12, part D)
     if (pulse) for (let i = 0; i < TRN.n; i++) {   // the pulse rings above the names: the same geometry as the marks pass, rings only, while a pulse runs
       if (!pulse.mask[i] || TRN.red_from[i] > year) continue; const ch = TRN.filed[i][yi]; if (ch === '-') continue;
@@ -882,9 +892,8 @@ void main() {
     const c = cam(), k = c.k, rule = markRule(k), LR = MM.listedRule(rule, k, kFit()), yi = state.year - 2014;
     const out = { kind: 'none', region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y, ix: Math.floor(km.x / 100), iy: Math.floor(km.y / 100), grid: 100 };
     const d = firmYears.get(state.year);
-    if (d && k < dotsK()) {   // the square under the cursor (round 13)
-      const T = mosaicLevelAt(k), b = mosaicBins(state.year, T); if (b) { const bx = Math.floor(km.x / T), by = Math.floor(km.y / T), j = b.idx.get(binKey(bx, by));
-        if (j !== undefined) Object.assign(out, { kind: 'bin', T, bx, by, j, grid: T, origin: [0, 0], n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], rev: b.rev[j], cls: mosaicClass(b, j, 'fin'), lead: state.layer === 'industry' ? binLeader(b, j, d) : null }); }
+    if (d && k < dotsK()) {   // the pixel drawn under the cursor (round 14): the owner of the block that covers the cursor's cell, by the drawing's own rule
+      const px = pixelAt(km, d); if (px) Object.assign(out, px);
     } else if (d) {
       const Rpx = markRadius(rule, 65535) + 2, Rm = Rpx / k * 1000, xm = km.x * 1000, ym = km.y * 1000;
       const i0 = lowerBound(d.x, xm - Rm), i1 = lowerBound(d.x, xm + Rm); let best = -1, bd = Infinity, br = 0;
@@ -911,10 +920,29 @@ void main() {
     if (ln) {
       out.listed = { n: ln, red: lred, ring: lring, rim: lrim, rim_from: lrim ? rimA : null, rim_to: lrim ? rimB : null, within_km: k < 20 ? Math.max(MM.listedRadius(LR, 1) + 2, LISTED_HIT) / k : 0, top: top.filter(i => i >= 0) };
       if (out.kind === 'firm') out.address = { rec: out.rec, n: out.n, a: out.a, f: out.f, cls: out.cls, ind: out.ind, ish: out.ish, px: out.px, py: out.py, r: out.r };   // the address under the same cursor keeps its line and its panel row
-      if (out.kind === 'bin') out.bin = { T: out.T, bx: out.bx, by: out.by, j: out.j, n: out.n, p: out.p, a: out.a, f: out.f, rev: out.rev, cls: out.cls, lead: out.lead };   // the square likewise (round 13)
+      if (out.kind === 'pixel') out.pixel = { cell: out.cell, camKey: out.camKey, kmPx: out.kmPx, n: out.n, p: out.p, a: out.a, f: out.f, cls: out.cls, lead: out.lead, mix: out.mix, size: out.size };   // the pixel likewise (round 14)
       Object.assign(out, { kind: 'listed', px: lpx, py: lpy, r: lr });   // a listed mark wins the tie
     }
     return out;
+  }
+  // The pixel at the cursor (round 14): the cells of a 5 by 5 window around the cursor's cell summed and classified by the field's own CPU rule, the winner of the
+  // cursor's cell found as the drawing finds it, and that cell's coordinate pairs summed for the tile, the panel and the mix box.
+  function pixelAt(km, d) {
+    const c = cam(), k = c.k, code = PixelField.layerCode(state.layer);
+    const gx0 = Math.floor(c.ox + (km.x - c.cx) * k), gy0 = Math.floor(c.oy - (km.y - c.cy) * k);   // the cursor's cell (CSS px)
+    const view = { cx: c.cx, cy: c.cy, k, ox: c.ox - (gx0 - 2), oy: c.oy - (gy0 - 2), W: 5, H: 5 };   // the cursor's cell at (2, 2); the margin reaches one cell further
+    const i0 = lowerBound(d.x, (c.cx + (gx0 - 3 - c.ox) / k) * 1000), i1 = lowerBound(d.x, (c.cx + (gx0 + 4 - c.ox) / k) * 1000);
+    const S = PixelField.cpuSums(d, view, code, i0, i1, POW), C = PixelField.cpuClassify(S, code, YEAR_BREAKS), w = PixelField.winnerAt(C, 2, 2);
+    if (w.j < 0 && !w.back) return null;
+    const j = w.j >= 0 ? w.j : 3 * S.W + 3, gx = gx0 - 3 + (j % S.W), gy = gy0 - 3 + Math.floor(j / S.W);   // the owner's cell, or the cursor's own cell where only the backdrop covers it
+    const ax = c.ox - c.cx * k, ay = c.oy + c.cy * k, kk = k / 1000, acc = new Map(); let n = 0, a = 0, f = 0, p = 0, tot = 0;
+    for (let i = i0; i < i1; i++) { if (Math.floor(ax + d.x[i] * kk) !== gx || Math.floor(ay - d.y[i] * kk) !== gy) continue; n += d.nn[i]; a += d.a[i]; f += d.f[i]; p++;
+      if (d.rv[i]) { const r = POW[d.rv[i]]; tot += r; for (let m = 0; m < d.mixInd.length; m++) { const ind = d.mixInd[m][i]; if (ind === 255) break; acc.set(ind, (acc.get(ind) || 0) + r * d.mixSh[m][i] / 100); } } }
+    if (!p) return null;
+    const rows = tot ? [...acc].sort((u, v) => v[1] - u[1]).slice(0, 8).map(([code2, v]) => ({ code: code2, share: Math.round(100 * v / tot) })) : [];
+    const size = w.j >= 0 ? w.size : 1, cxp = size === 2 ? gx + 1 : gx + 0.5, cyp = size === 2 ? gy + 1 : gy + 0.5;   // the block's centre: a 2 by 2 block runs right and down from its cell
+    return { kind: 'pixel', cell: [gx, gy], camKey: [c.cx, c.cy, c.k].join(','), kmPx: 1 / k, n, p, a, f, cls: code === 1 && w.j >= 0 ? w.cls : null, lead: rows.length ? { div: rows[0].code, share: rows[0].share } : null,
+             mix: { rows, other: rows.length ? Math.max(0, 100 - rows.reduce((t, r) => t + r.share, 0)) : 0 }, size, px: cxp, py: cyp, r: size / 2 };
   }
   const hitAt = km => (state.mode === 'firms' ? firmAt(km) : cellAt(km));
   const breakLabels = (breaks, m) => Array.from({ length: m }, (_, i) => i === 0 ? `< ${breaks[0]}%` : i === m - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
@@ -973,6 +1001,8 @@ void main() {
   $('mixtoggle').addEventListener('click', () => { const v = mixOpen() ? 'closed' : 'open'; writePref('atlas-mix', v); openMix(v); });
   function mixRowsFor(h) {   // the hovered unit's rows, or null for the view's
     if (!h) return null;
+    if (h.micro) { if (h.j == null) return { rows: [], other: 0, unit: '1 km square at the cursor', empty: true }; const b = mosaicCache.get(h.yearShown + '|1'), d = firmYears.get(h.yearShown); if (!b || !d) return null; const mix = binMix(b, h.j, d); return { rows: mix.rows, other: mix.other, unit: '1 km square at the cursor', empty: !mix.rows.length }; }   // the 1 km square (round 14)
+    { const pxh = h.kind === 'pixel' ? h : h.pixel; if (pxh) return { rows: pxh.mix.rows, other: pxh.mix.other, unit: 'pixel at the cursor', empty: !pxh.mix.rows.length }; }   // the pixel under the cursor (round 14)
     { const bn = h.kind === 'bin' ? h : h.bin; if (bn) { const d = firmYears.get(state.year), b = mosaicBins(state.year, bn.T); if (!d || !b) return null; const mix = binMix(b, bn.j, d); return { rows: mix.rows, other: mix.other, unit: `${bn.T} km square at the cursor`, empty: !mix.rows.length }; } }   // the square under the cursor (round 13)
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none') {
       const ad = h.kind === 'firm' ? h : h.address; if (!ad || ad.rec == null) return null; const d = firmYears.get(state.year); if (!d || !d.mixInd) return null;
@@ -1396,20 +1426,20 @@ void main() {
   const viewMix = { key: '', rows: null, other: 0, unit: '' };
   function computeViewMix() {
     if (state.layer !== 'industry' || !IND_T) { viewMix.key = ''; viewMix.rows = null; return; }
-    const c = cam(), key = [state.mode, state.year, c.cx.toFixed(3), c.cy.toFixed(3), c.k.toFixed(5), stage.width, stage.height, indCityLoaded].join('|');
+    const c = cam(), micro = state.mode !== 'firms' && microA(c.k, state.year) >= 0.5, key = [state.mode, state.year, c.cx.toFixed(3), c.cy.toFixed(3), c.k.toFixed(5), stage.width, stage.height, micro ? 1 : 0].join('|');
     if (viewMix.key === key) return;
     const acc = new Float64Array(100), hw = stage.width / 2 / c.k, hh = stage.height / 2 / c.k, x0 = c.cx - hw, x1 = c.cx + hw, y0 = c.cy - hh, y1 = c.cy + hh; let other = 0, total = 0;
-    if (state.mode === 'firms') {
+    if (state.mode === 'firms' || micro) {   // the coordinate pairs in view, which the Cells view's 1 km squares sum too (round 14)
       const d = firmYears.get(state.year); if (!d || !d.mixInd) { viewMix.rows = null; viewMix.key = ''; return; }   // no cache without the year's data
       const i0 = lowerBound(d.x, x0 * 1000), i1 = lowerBound(d.x, x1 * 1000);
       for (let i = i0; i < i1; i++) { const yv = d.y[i] / 1000; if (yv < y0 || yv > y1) continue; const w = POW[d.rv[i]]; if (!w) continue; total += w; let sum = 0; for (let k = 0; k < d.mk; k++) { const code = d.mixInd[k][i]; if (code === 255) break; const sh = d.mixSh[k][i]; sum += sh; acc[code] += w * sh; } other += w * Math.max(0, 100 - sum); }
-      viewMix.unit = 'coordinate pairs in view';
+      viewMix.unit = micro ? '1 km squares in view' : 'coordinate pairs in view';
     } else {
-      const y = state.year, near = nearestCity(c).city.label, fine = c.k >= 1.5 && indCity[near] && indCity[near][y], grid25 = alpha25(c.k) >= 0.5 && ind25[y];
-      const d = fine ? indCity[near][y] : grid25 ? ind25[y] : ind100[y]; if (!d || !d.rv) { viewMix.rows = null; viewMix.key = ''; return; }
-      const g = fine ? 1 : grid25 ? G25 : 100, o = fine ? d.origin : [0, 0], k = d.k || 1;
+      const y = state.year, grid25 = alpha25(c.k) >= 0.5 && ind25[y];
+      const d = grid25 ? ind25[y] : ind100[y]; if (!d || !d.rv) { viewMix.rows = null; viewMix.key = ''; return; }
+      const g = grid25 ? G25 : 100, o = [0, 0], k = d.k || 1;
       for (let i = 0; i < d.count; i++) { const cx0 = o[0] + d.ix[i] * g, cy0 = o[1] + d.iy[i] * g; if (cx0 + g < x0 || cx0 > x1 || cy0 + g < y0 || cy0 > y1) continue; const w = POW[d.rv[i]]; if (!w) continue; total += w; let sum = 0; for (let j = 0; j < k; j++) { const code = d.top ? d.top[i * k + j] : d.dom[i]; if (code === 255) break; const sh = d.top ? d.tsh[i * k + j] : d.dsh[i]; sum += sh; acc[code] += w * sh; } other += w * Math.max(0, 100 - sum); }
-      viewMix.unit = `${fine ? '1 km' : grid25 ? '25 km' : '100 km'} cells in view`;
+      viewMix.unit = `${grid25 ? '25 km' : '100 km'} cells in view`;
     }
     const rows = []; for (let code = 0; code < 100; code++) if (acc[code] > 0) rows.push({ code, v: acc[code] }); rows.sort((p, q) => q.v - p.v || p.code - q.code);
     let rest = other; for (const r of rows.slice(8)) rest += r.v; const T = total || 1;
@@ -1417,36 +1447,38 @@ void main() {
   }
 
   function drawLegend() {
-    const L = state.layer, c = cam(); const sw = col => `<span class="sw" style="background:${col}"></span>`, bar = col => `<span class="sw bars" style="--c:${col}"></span>`;   // ramp swatches as bars (round 10)
+    const L = state.layer, c = cam(); const popRow = extra => `<div class="row p">1 km squares: firms on no list with a house- or street-level geocode${extra || ''}</div>`;   // the squares' population (round 14)
+    const sw = col => `<span class="sw" style="background:${col}"></span>`, bar = col => `<span class="sw bars" style="--c:${col}"></span>`;   // ramp swatches as bars (round 10)
     let title = '', html = '', note = '';
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const dot = (bg, border) => `<span class="sw dot" style="background:${bg}${border ? ';border:2px solid ' + border : ''}"></span>`;
-      const sqT = c.k < dotsK() ? mosaicLevelAt(c.k) : 0, sq = sqT ? ` <span class="u">(${sqT} km squares)</span>` : '';   // the binned levels (round 13)
-      if (sqT && L === 'share') { const br = sqT >= 25 ? YEAR_BREAKS : FINE_BREAKS, ramp = sqT >= 25 ? theme.ramp6 : theme.ramp5; title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: share of the firms in the square with a ${ys} statement</div>` + ramp.map((col, i) => `<div class="row">${bar(col)}${breakLabels(br, ramp.length)[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in the square</div>`; }
-      else if (sqT && L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>${sq}`; html = `<div class="row p">Colour: the median revenue-change class of the square’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median)</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm in the square has a usable baseline</div>`; }
-      else if (sqT && L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: the class with the largest revenue in the square (each address’s revenue split by its divisions), in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm in the square has a revenue value</div>`; }
-      else if (sqT) { title = `<b>Firms at registered addresses, ${ys}</b>${sq}`; html = `<div class="row p">Colour: firms on no list in the square (this layer is a cell layer)</div>` + MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
+      // The pixel field (round 14) below the dots zoom: the layer's statistic per pixel, the blocks, the faint backdrop where some firms carry no value; the dots above.
+      const pix = dotsAlphas(c.k).pix >= 0.5, unit = pix ? ` <span class="u">(1 px = ${pixelSize(1 / c.k)})</span>` : '', faint = col => sw(hexAlpha(col, PixelField.BACKDROP_ALPHA));
+      if (pix && L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Colour: share of the pixel’s firms with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
+      else if (pix && L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>${unit}`; html = `<div class="row p">Colour: the median revenue-change class of the pixel’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median)</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no firm in the pixel has a usable baseline</div>`; }
+      else if (pix && L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Colour: the class with the largest revenue in the pixel, each coordinate pair counted in its leading class</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no firm in the pixel has a revenue value</div>`; }
+      else if (pix) { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Brightness: firms on no list in the pixel (this layer is a cell layer)</div>` + MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
       else if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row p">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
       else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm at the coordinate pair has a usable baseline</div>`; }
       else if (L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a revenue value</div>`; }
       else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
-      if (firmsFade.tint > 0 && REG) html += `<div class="row p">Regions tinted by their leading industry at the national zoom.</div>`;   // the tint under the field (round 10)
-      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${c.k >= 20 ? 'Each dot is one coordinate pair. Larger dots hold more firms.' : 'Each square bins the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.'}</div>`;
+      if (pix) html += `<div class="row p">Blocks of 2 and 3 px: 10 and 100 or more ${L === 'fin' ? 'filers' : 'firms'} in the pixel</div>`;
+      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${pix ? 'Each pixel sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.' : 'Each dot is one coordinate pair. Larger dots hold more firms.'}</div>`;
       note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.` + (TRN.name ? ' Hover a listed firm for its name.' : '');
     } else if (L === 'density') {
-      title = '<b>Firms per cell</b> <span class="u">(' + (c.k < 1.5 ? '5 km' : c.k < 24 ? '1 km' : '250 m') + ')</span>';
-      html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('');
+      const micro = microA(c.k, 2021) >= 0.5, f250 = fineA(c.k) >= 0.5;
+      title = '<b>Firms per cell</b> <span class="u">(' + (f250 ? '250 m' : micro ? '1 km squares' : '5 km') + ')</span>';
+      html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('') + (micro && !f250 ? popRow() : '');
       note = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021 (${fmt.int(F.eligible_firms_2021)} eligible); the most shared coordinate pair holds ${fmt.int(F.largest_location_firms)} firms.`;
     } else if (L === 'share') {
-      const near = nearestCity(c).city.label, hasWin = state.year === 2021 ? !!win1[near] : !!(cityYear[near] && cityYear[near][state.year]);
-      const fine = c.k >= 1.5 && hasWin, grid25 = alpha25(c.k) >= 0.5 && !!c25[state.year];
-      const breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
+      const y = state.year, micro = microA(c.k, y) >= 0.5, f250 = y === 2021 && fineA(c.k) >= 0.5, grid25 = alpha25(c.k) >= 0.5 && !!c25[y];
+      const fine = micro || f250, breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
       const labels = ramp.map((_, i) => i === 0 ? `< ${breaks[0]}%` : i === ramp.length - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
-      title = `<b>Share with a statement, ${state.year}</b> <span class="u">(${fine ? (c.k < 24 ? '1 km' : '250 m') : grid25 ? '25 km' : '100 km'} cells)</span>`;
-      html = ramp.map((col, i) => `<div class="row">${bar(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
-      const t = totals[state.year]; note = t ? `${state.year}${state.year === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${state.year <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
-      if (fine && state.year !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
+      title = `<b>Share with a statement, ${y}</b> <span class="u">(${f250 ? '250 m cells' : micro ? '1 km squares' : grid25 ? '25 km cells' : '100 km cells'})</span>`;
+      html = ramp.map((col, i) => `<div class="row">${bar(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>` + (micro && !f250 ? popRow() : '');
+      const t = totals[y]; note = t ? `${y}${y === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${y <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
+      if (micro && y !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
       const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
       const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? C25.change.class_cells : C100.change_classes.cells;
@@ -1458,10 +1490,10 @@ void main() {
       html = theme.ramp5.map((col, i) => `<div class="row">${bar(col)}${C100.cohort_class_labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 eligible firms</div>`;
       note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.` + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     } else if (L === 'industry' && IND_T) {
-      const y = state.year, near = nearestCity(c).city.label, fine = c.k >= 1.5 && !!(indCity[near] && indCity[near][y]), grid25 = alpha25(c.k) >= 0.5 && !!ind25[y];
-      title = `<b>Leading industry by revenue, ${y}${y === 2025 ? '*' : ''}</b> <span class="u">(${fine ? '1 km' : grid25 ? '25 km' : '100 km'} cells)</span>`;
-      html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm with a revenue value</div>`;
-      note = `${y}${y === 2025 ? '*' : ''}: the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. Division names from NACE Rev. 2 (Eurostat); OKVED 2 uses the same two-digit codes.` + (fine ? '' : c.k >= 1.5 ? ' No 1 km cells for this year or city.' : '');
+      const y = state.year, micro = microA(c.k, y) >= 0.5, grid25 = alpha25(c.k) >= 0.5 && !!ind25[y];
+      title = `<b>Leading industry by revenue, ${y}${y === 2025 ? '*' : ''}</b> <span class="u">(${micro ? '1 km squares' : grid25 ? '25 km cells' : '100 km cells'})</span>`;
+      html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm with a revenue value</div>` + (micro ? popRow(', the class with the largest revenue') : '');
+      note = `${y}${y === 2025 ? '*' : ''}: the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. Division names from NACE Rev. 2 (Eurostat); OKVED 2 uses the same two-digit codes.`;
     } else if (L === 'lists') {
       // Three classes, the ones listClass draws (ramp5[2], [3], [4]), each with its cell count; 1 to 4 members show no count.
       const grid25 = c25[2021] && alpha25(c.k) >= 0.5, counts = grid25 ? list25Counts : listClassCounts;
@@ -1474,6 +1506,7 @@ void main() {
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]}</div>`).join('');
       note = 'Revenue cohort by cash share; cells with 50 or more observed firms; composition changes with observation.' + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     }
+    if (state.mode !== 'firms' && TRN) html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> in the tile: firms on these lists (treated) in the cell, ${layerYear()}</div>`;   // the tile's red count (round 14), in the layer's own year
     if (title !== lastLegend.title) { $('legendtitle').innerHTML = title; lastLegend.title = title; }
     let rewrote = false;
     if (html !== lastLegend.html) { $('legendbody').innerHTML = html; lastLegend.html = html; dropObstacles(); rewrote = true; }
@@ -1489,28 +1522,27 @@ void main() {
   function cellAt(km) {
     const c = cam(); const L = state.layer; const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), key = cellKey(ix, iy);
     const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
-    if (L === 'industry' && c.k >= 1.5) {   // the 1 km city window of the year, when the cursor is inside it
-      const near = nearestCity(c).city.label, w = indCity[near] && indCity[near][state.year]; out.city = near;
-      if (w && km.x >= w.origin[0] && km.x < w.origin[0] + 90 && km.y >= w.origin[1] && km.y < w.origin[1] + 90) {
-        const jx = Math.floor(km.x - w.origin[0]), jy = Math.floor(km.y - w.origin[1]), i = w.map.get(cellKey(jx, jy));
-        out.grid = 1; out.fine = true; out.origin = w.origin; out.yearShown = state.year;
-        if (i != null) Object.assign(out, indHit(w, i)); else { out.dom = null; out.nrev = null; }
+    // Round 14: the 2021 250 m windows where they are drawn at half strength or more (the density layer, the share layer in 2021), then the 1 km squares from the
+    // address files once they are, then the national 5 km counts on the density layer; the 25 km and 100 km cells below answer elsewhere.
+    if (fineA(c.k) >= 0.5) {
+      const near = nearestCity(c).city.label, w = win025[near] ? win025[near].d : null; out.city = near;
+      if (w && km.x >= w.origin[0] && km.x < w.origin[0] + 24 && km.y >= w.origin[1] && km.y < w.origin[1] + 24) {
+        const jx = Math.floor((km.x - w.origin[0]) / 0.25), jy = Math.floor((km.y - w.origin[1]) / 0.25);
+        Object.assign(out, { grid: 0.25, fine: true, origin: w.origin, yearShown: 2021, n: null, a: null });
+        for (let i = 0; i < w.count; i++) if (w.ix[i] === jx && w.iy[i] === jy) { out.n = w.n[i]; out.a = w.a[i] >= 0 ? w.a[i] : null; break; }
         return out;
       }
     }
-    if (L === 'density' || (L === 'share' && c.k >= 1.5)) {
-      const near = nearestCity(c).city.label; let layer = null, g = 5, origin = [0, 0], yearShown = 2021; out.city = near;
-      const inWin = (d, size) => km.x >= d.origin[0] && km.x < d.origin[0] + size && km.y >= d.origin[1] && km.y < d.origin[1] + size;
-      const w1 = L === 'density' || state.year === 2021 ? win1[near] : (cityYear[near] && cityYear[near][state.year]);
-      if (c.k >= 24 && win025[near] && (L === 'density' || state.year === 2021) && inWin(win025[near].d, 24)) { layer = win025[near].d; g = 0.25; origin = layer.origin; }
-      else if (c.k >= 1.5 && w1 && inWin(w1.d, 90)) { layer = w1.d; g = 1; origin = layer.origin; if (!(L === 'density' || state.year === 2021)) yearShown = state.year; }
-      else if (L === 'density') { layer = nat; g = 5; }
-      if (layer) {   // no window here: the national grids below answer instead
-        const jx = Math.floor((km.x - origin[0]) / g), jy = Math.floor((km.y - origin[1]) / g);
-        out.grid = g; out.fine = true; out.origin = origin; out.yearShown = yearShown;
-        for (let i = 0; i < layer.count; i++) if (layer.ix[i] === jx && layer.iy[i] === jy) { out.n = layer.n[i]; out.a = layer.a[i] >= 0 ? layer.a[i] : null; return out; }
-        out.n = null; out.a = null; return out;
-      }
+    { const y = microYear(); if (MICRO_LAYERS.has(L) && microA(c.k, y) >= 0.5) {
+      const b = mosaicCache.get(y + '|1'), d = firmYears.get(y), bx = Math.floor(km.x), by = Math.floor(km.y), j = b.idx.get(binKey(bx, by));
+      Object.assign(out, { grid: 1, origin: [0, 0], micro: true, yearShown: y, n: null });
+      if (j !== undefined) { Object.assign(out, { j, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j] }); if (L === 'industry') out.lead = binLeader(b, j, d); }
+      return out;
+    } }
+    if (L === 'density') {   // the national 5 km counts (2021)
+      const jx = Math.floor(km.x / 5), jy = Math.floor(km.y / 5); Object.assign(out, { grid: 5, fine: true, origin: [0, 0], yearShown: 2021, n: null, a: null });
+      for (let i = 0; i < nat.count; i++) if (nat.ix[i] === jx && nat.iy[i] === jy) { out.n = nat.n[i]; out.a = nat.a[i] >= 0 ? nat.a[i] : null; break; }
+      return out;
     }
     if (alpha25(c.k) >= 0.5 && (L === 'share' || L === 'change' || L === 'lists' || (L === 'industry' && ind25[state.year]))) {   // the 25 km cells (M10, and M11 for the industry layer)
       const jx = Math.floor(km.x / G25), jy = Math.floor(km.y / G25), k25 = cellKey(jx, jy);
@@ -1530,6 +1562,7 @@ void main() {
     return out;
   }
   const band = n => (n < 10 ? 'fewer than 10' : fmt.int(n));
+  const pixelSize = km => (km >= 1 ? `${fmt.dec(km, 1)}\u00a0km` : `${Math.round(km * 1000)}\u00a0m`);   // a pixel's side at the current zoom (round 14)
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // One listed firm as a tooltip line: its mark's glyph (solid red with a statement, hollow red without one, a dotted ring before
   // its listing year), its display name from the list file (a shared name marked), and its listing year.
@@ -1559,11 +1592,24 @@ void main() {
     return '';
   }
   function listedLine(i) { return `${listedGlyph(i, state.year)}${listedName(i)} · ${num(listedYear(i))}${listedShare(i)}`; }
+  // The Cells view's tile (round 14, the author's decision of 25 October 2026): the legend's solid red dot and a bold red number at the right end of the first line,
+  // the firms on these lists (treated) present in the layer's own year at coordinates inside the hovered cell, exact and 0 included; one legend row defines it.
   function tipText(h) {
+    const html = tipBody(h); if (state.mode === 'firms') return html;
+    const n = listedInCell(h); if (n == null) return html;
+    const i = html.indexOf('<br>'), first = i < 0 ? html : html.slice(0, i), rest = i < 0 ? '' : html.slice(i + 4);
+    return `<div class="t-l1"><span>${first}</span><span class="lc"><span class="dot"></span>${fmt.int(n)}</span></div>${rest}`;
+  }
+  function tipBody(h) {
     const L = state.layer; const lines = [];
     if (h.region) lines.push(`<b class="loc">${esc(h.region)}</b>`);   // the region line in tracked capitals (round 10)
-    if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none' || h.kind === 'bin') {
-      const ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin;
+    if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none' || h.kind === 'bin' || h.kind === 'pixel') {
+      const ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin, pxh = h.kind === 'pixel' ? h : h.pixel;
+      if (pxh) {   // the pixel under the cursor (round 14): its firms on no list, their statements, the layer's statistic
+        lines.push(`Pixel at the cursor, about ${pixelSize(pxh.kmPx)}: ${num(fmt.int(pxh.n))} firm${pxh.n === 1 ? '' : 's'} on no list at ${num(fmt.int(pxh.p))} coordinate pair${pxh.p === 1 ? '' : 's'}, ${num(fmt.int(pxh.a))} with a statement${pxh.n ? ` (${num(fmt.pct(100 * pxh.a / pxh.n))})` : ''}`);
+        if (state.layer === 'fin') lines.push(pxh.f && pxh.cls ? `${fmt.int(pxh.f)} with a baseline and a value, median class ${CLASS_LABELS[pxh.cls - 1]}` : 'No firm with a usable baseline and a value');
+        if (state.layer === 'industry') lines.push(pxh.lead ? `${esc(divShort(pxh.lead.div))} (${divPad(pxh.lead.div)}), ${pxh.lead.share}% of revenue in the pixel` : 'No firm with a revenue value in the pixel');
+      }
       if (bn) {   // the square under the cursor (round 13): its firms on no list, their statements, the layer's statistic
         lines.push(`${bn.T} km square, ${num(state.year)}: ${num(fmt.int(bn.n))} firms on no list at ${num(fmt.int(bn.p))} coordinate pair${bn.p === 1 ? '' : 's'}, ${num(fmt.int(bn.a))} with a statement${bn.n ? ` (${num(fmt.pct(100 * bn.a / bn.n))})` : ''}`);
         if (state.layer === 'fin') lines.push(bn.f ? `${fmt.int(bn.f)} with a baseline and a value, median class ${CLASS_LABELS[bn.cls - 1]}` : 'No firm with a usable baseline and a value');
@@ -1586,6 +1632,15 @@ void main() {
         }
       }
       if (AN && state.mode === 'firms' && h.kind !== 'none' && h.kmx != null && Math.min(Math.hypot(h.kmx - AN.a.x_km, h.kmy - AN.a.y_km), Math.hypot(h.kmx - AN.b.x_km, h.kmy - AN.b.y_km)) * 1000 <= 35) lines.push(`The two firms of the film, ${num(fmt.int(AN.distance_m))} m apart.`);   // round 12, part D, item 5: the cursor within 35 m of either firm of the video's pair; the neighbour stays unnamed
+      return lines.join('<br>');
+    }
+    if (h.micro) {   // a 1 km square from the address files (round 14): their population, firms on no list at house- and street-level geocodes
+      if (h.n == null) lines.push(`1 km square, ${num(h.yearShown)}: no firms on no list at house- or street-level geocodes`);
+      else {
+        const low = L === 'share' && h.n < 50;
+        lines.push(`1 km square, ${num(h.yearShown)}: ${num(fmt.int(h.n))} firm${h.n === 1 ? '' : 's'} on no list at ${num(fmt.int(h.p))} coordinate pair${h.p === 1 ? '' : 's'}, ${num(fmt.int(h.a))} with a statement` + (low ? '. Share not shown under 50 firms' : ` (${num(fmt.pct(100 * h.a / h.n))})`));
+        if (L === 'industry') lines.push(h.lead ? `${esc(divShort(h.lead.div))} (${divPad(h.lead.div)}), ${h.lead.share}% of revenue in the square` : 'No firm with a revenue value in the square');
+      }
       return lines.join('<br>');
     }
     if (L === 'industry') {   // the leading division and the ranked mix of the cell (round 9)
@@ -1621,7 +1676,7 @@ void main() {
     }
     // The hover ring and the cell square in the cursor colour, cased in the stage colour so they read on lilac and pale cells too (round 9).
     const cased = draw => { octx.strokeStyle = theme.stage; octx.globalAlpha = 0.6; octx.lineWidth = 4.5; draw(); octx.globalAlpha = 1; octx.strokeStyle = cursorStill ? theme.cursor : theme.cursorLive; octx.lineWidth = 2.5; draw(); };
-    if (h.kind === 'firm' || h.kind === 'listed') { cased(() => { octx.beginPath(); octx.arc(h.px, h.py, h.r + 3, 0, Math.PI * 2); octx.stroke(); }); return; }
+    if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'pixel') { cased(() => { octx.beginPath(); octx.arc(h.px, h.py, h.r + 3, 0, Math.PI * 2); octx.stroke(); }); return; }   // a pixel's block takes the ring too (round 14)
     if (h.kind === 'none') return;
     const g = h.grid, o = h.origin || [0, 0];
     const x0 = o[0] + Math.floor((h.kmx - o[0]) / g) * g, y0 = o[1] + Math.floor((h.kmy - o[1]) / g) * g;
@@ -1674,7 +1729,7 @@ void main() {
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -1710,7 +1765,7 @@ void main() {
       const has = state.layer === 'density' ? yearCells[2021].has(cellKey(ix, iy)) : (h.n != null || h.n21 != null || h.n_base != null || h.sanctioned != null || h.gov != null || h.c != null || h.dom != null);
       if (!has) return null;
       t = city ? { target: cityTarget(city), rung: 'city' } : { target: cellTarget(ix, iy), rung: 'cell' };
-    } else if (h.fine && h.grid < 5) {
+    } else if ((h.fine && h.grid < 5) || h.micro) {
       const g = h.grid, o = h.origin || [0, 0], cx = o[0] + Math.floor((h.kmx - o[0]) / g) * g + g / 2, cy = o[1] + Math.floor((h.kmy - o[1]) / g) * g + g / 2;
       t = g === 1 ? { target: fineTarget(cx, cy), rung: 'fine' } : zoomOn(cx, cy);
     } else {
@@ -1844,7 +1899,7 @@ void main() {
     const foot = ['tlat', 'tlon', 'tscale', 'tunit', 'tfirms'].map(id => $(id).textContent.length).join(',') + ($('tfirmsw').hidden ? 'h' : '');
     if (fresh || foot !== hoverUnit.foot || !hoverUnit.tw) { hoverUnit.tw = tip.offsetWidth; hoverUnit.th = tip.offsetHeight; hoverUnit.foot = foot; }   // one forced layout per unit or footer width change
     const tw = hoverUnit.tw, th = hoverUnit.th, obs = tileObstacles();   // the panels' boxes are read once per layout
-    const mark = h.kind === 'firm' || h.kind === 'listed', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
+    const mark = h.kind === 'firm' || h.kind === 'listed' || h.kind === 'pixel', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
     tip.style.left = b.x + 'px'; tip.style.top = b.y + 'px';
     tileState = { box: b, cursor: [x, y], mark: mark ? [h.px, h.py] : null, anchor: b.anchor, fallback: !!b.fallback, slid: !!b.slid, searched: !!b.searched, relaxed: b.relaxed || null };
     setCross(x, y, !!opts.touch); drawOverlay(h); syncCursor(h); armStill(!!opts.touch);
@@ -1856,7 +1911,8 @@ void main() {
     const g = h.grid, o = h.origin || [0, 0], L = h.listed, ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin;
     const cell = g != null && h.kmx != null ? Math.floor((h.kmx - o[0]) / g) + ',' + Math.floor((h.kmy - o[1]) / g) : '';
     const pair = !!(AN && state.mode === 'firms' && h.kind !== 'none' && h.kmx != null && Math.min(Math.hypot(h.kmx - AN.a.x_km, h.kmy - AN.a.y_km), Math.hypot(h.kmx - AN.b.x_km, h.kmy - AN.b.y_km)) * 1000 <= 35);
-    return [state.mode, state.layer, state.year, theme.dark ? 1 : 0, narrow() ? 1 : 0, h.kind || 'cell', h.region || '', g, o.join(','), cell, h.fine ? 1 : 0, h.city || '', ad ? ad.rec : '', bn ? bn.T + ':' + bn.j : '', L ? [L.n, L.red, L.ring, L.rim, L.top.join('.'), L.within_km.toFixed(4)].join(':') : '', pair ? 1 : 0].join('|');
+    const pxh = h.kind === 'pixel' ? h : h.pixel;
+    return [state.mode, state.layer, state.year, theme.dark ? 1 : 0, narrow() ? 1 : 0, h.kind || 'cell', h.region || '', g, o.join(','), cell, h.fine ? 1 : 0, h.micro ? 1 : 0, h.city || '', ad ? ad.rec : '', bn ? bn.T + ':' + bn.j : '', pxh ? pxh.cell.join(',') + '@' + pxh.camKey : '', L ? [L.n, L.red, L.ring, L.rim, L.top.join('.'), L.within_km.toFixed(4)].join(':') : '', pair ? 1 : 0].join('|');
   }
   let hoverQueued = false;
   function refreshHover() { if (press || pinch || flight || !lastPointer || !lastPointer.inside) return; showHoverAt(lastPointer.x, lastPointer.y, { tick: true, touch: cursorStill }); }
@@ -1964,11 +2020,21 @@ void main() {
     const lead = (code, share) => (code === 0 ? `no OKVED 2 division code&nbsp;·&nbsp;${share}%` : `<span class="ksw" style="background:${mixColour(code)}"></span>${esc(divShort(code))} (${divPad(code)})&nbsp;·&nbsp;${share}%<span class="sub">${esc(indClassLabel(code))}</span>`);
     const mixRows = (list, rest) => '<div class="mix">' + list.map(m => `<div class="r"><span class="ksw" style="background:${mixColour(m.code)}"></span><span class="nm" title="${esc(m.title)} (${divPad(m.code)})">${esc(m.short)} (${divPad(m.code)})</span><span class="pc">${m.share ? m.share + '%' : '<1%'}</span></div>`).join('') + (rest ? `<div class="r"><span class="ksw"></span><span class="nm">other divisions</span><span class="pc">${rest}%</span></div>` : '') + '</div>';
     if (h && h.region) row('Region', esc(h.region), 'loc');
-    const cellHit = !!h && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none' && h.kind !== 'bin', ad = h && (h.kind === 'firm' ? h : h.address), bn = h && (h.kind === 'bin' ? h : h.bin);
+    const cellHit = !!h && !h.micro && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none' && h.kind !== 'bin' && h.kind !== 'pixel', ad = h && (h.kind === 'firm' ? h : h.address), bn = h && (h.kind === 'bin' ? h : h.bin), pxh = h && (h.kind === 'pixel' ? h : h.pixel);
+    if (pxh) {   // the pixel under the cursor (round 14)
+      row('Pixel', `about ${pixelSize(pxh.kmPx)}`); row('Firms', `${fmt.int(pxh.n)} on no list at ${fmt.int(pxh.p)} pair${pxh.p === 1 ? '' : 's'}`); row(`${y} statement`, pxh.n ? `${fmt.int(pxh.a)} (${pct(pxh.a, pxh.n)})` : 'none');
+      if (L === 'fin') { if (pxh.f && pxh.cls) { row('Baseline', `${fmt.int(pxh.f)} with a value`); row('Median class', CLASS_LABELS[pxh.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'industry') row('Leading', pxh.lead ? lead(pxh.lead.div, pxh.lead.share) : 'no firm with a revenue value');
+    }
     if (bn) {   // the square under the cursor (round 13)
       row('Square', `${bn.T} km`); row('Firms', `${fmt.int(bn.n)} on no list at ${fmt.int(bn.p)} pair${bn.p === 1 ? '' : 's'}`); row(`${y} statement`, bn.n ? `${fmt.int(bn.a)} (${pct(bn.a, bn.n)})` : 'none');
       if (L === 'fin') { if (bn.f) { row('Baseline', `${fmt.int(bn.f)} with a value`); row('Median class', CLASS_LABELS[bn.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
       if (L === 'industry') row('Leading', bn.lead ? lead(bn.lead.div, bn.lead.share) : 'no firm with a revenue value');
+    }
+    if (h && h.micro) {   // a 1 km square from the address files (round 14)
+      row('Square', `1 km, ${h.yearShown}`);
+      if (h.n == null) row('Firms', 'none on no list at house- or street-level geocodes');
+      else { row('Firms', `${fmt.int(h.n)} on no list at ${fmt.int(h.p)} pair${h.p === 1 ? '' : 's'}`); row(`${h.yearShown} statement`, `${fmt.int(h.a)}` + (L === 'share' && h.n < 50 ? ', share not shown under 50 firms' : ` (${pct(h.a, h.n)})`)); if (L === 'industry') row('Leading', h.lead ? lead(h.lead.div, h.lead.share) : 'no firm with a revenue value'); }
     }
     if (cellHit) {
       row('Cell', h.fine ? (h.grid < 1 ? '250 m' : `${h.grid} km`) : `${h.grid} km (${h.ix}, ${h.iy})`);
@@ -2002,7 +2068,7 @@ void main() {
       if (Ls.n > Ls.top.length) blocks.push(`<div class="lf more">and ${fmt.int(Ls.n - Ls.top.length)} more</div>`);
       row('', blocks.join(''), 'block');
     }
-    if (h && !cellHit && h.ix != null) row('Cell', `100 km (${h.ix}, ${h.iy})`);   // the chart's cell under the cursor in the Firms view
+    if (h && !cellHit && !h.micro && h.ix != null) row('Cell', `100 km (${h.ix}, ${h.iy})`);   // the chart's cell under the cursor in the Firms view
     info.innerHTML = rows.length ? rows.map(([k, v, t]) => (t === 'block' ? `<div class="listed">${v}</div>` : t === 'full' ? `<div class="full">${v}</div>` : t === 'loc' ? `<span>${k}</span><b class="loc">${v}</b>` : `<span>${k}</span><b>${v}</b>`)).join('') : `<span class="muted">${state.mode === 'firms' ? 'Hover a mark' : 'Hover a cell'}</span><b></b>`;
     const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
     if (!h) return;
@@ -2012,6 +2078,12 @@ void main() {
       const cap = Motion.measure(ctx, caption, 11, 400) <= w - 16 ? caption : caption.replace(/, (\d{4} to \d{4}|by year)$/, '');   // a caption wider than the canvas drops its year suffix, which the axis shows (round 10)
       Motion.text(ctx, cap, 8, hh - 2, { size: 11, color: theme.dim });
     };
+    if (h.micro) {   // the 25 km cell around the square, by year: an address file carries one year, the 25 km cells carry every year
+      const key25 = cellKey(Math.floor(h.kmx / G25), Math.floor(h.kmy / G25)), pts = [];
+      if (C25) for (const y of years) { const d = c25[y]; if (!d) continue; const i = d.map.get(key25); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); }
+      if (!pts.length) return note('Fewer than 50 located firms in every year in the 25 km cell around this square');
+      return chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], 'share with a statement, its 25 km cell, by year');
+    }
     if (h.fine) {
       // 1 km city cells carry year series for 2019 to 2024 (cellsyears.city_1km); 250 m cells and the 5 km density cells carry 2021 only.
       if (h.n == null && h.nrev == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);   // the industry layer's 1 km hit carries the revenue count, not n: its series comes from the city grid below (25 October)
@@ -2065,18 +2137,18 @@ void main() {
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
   const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Listed firms are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters; the full filed name is shown in the Under the cursor panel. Firms on no list are never named. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; endCellPulse(); layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share' || state.layer === 'industry'); }
   $('pulse').addEventListener('click', () => replayPulse());
   // The view switch (round 5): cells as before, or every registered address as a mark.
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; endPulse(); endCellPulse(); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') startPulse(prev, state.year); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
+  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -2285,7 +2357,7 @@ void main() {
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
     verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
-    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, fine: !!h.fine, n: h.n == null ? null : h.n, listed: h.listed || null }; },
+    hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, origin: h.origin || [0, 0], fine: !!h.fine, micro: !!h.micro, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
     zoomBy(f, km) { const c = cam(); const p = km ? { x: km[0], y: km[1], px: c.ox + (km[0] - c.cx) * c.k, py: c.oy - (km[1] - c.cy) * c.k } : null; return flyTo(p ? stepAt(p, f) : stepCentre(f), { instant: true }).then(() => this.camera()); },   // an instant step by a factor, anchored at a km point or the centre (the audit's wheel)
@@ -2300,14 +2372,22 @@ void main() {
     frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); layersDirty(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
     field() { return useGL() ? glKind : '2d'; },
-    fieldRegime() { return Object.assign({ float: glFloat ? glFloat.name : null }, fieldRegime); },   // the additive and over weights of the last field draw (round 11, item 1)
-    fieldStats() {   // the per-pixel firm counts of the current view under the block rule (round 11, item 1): the maximum and percentiles, for the tone curve's record
-      const d = state.mode === 'firms' ? firmYears.get(state.year) : null; if (!d) return null; const c = cam(), k = c.k, sc = stage.scale, W = Math.round(stage.width * sc), H = Math.round(stage.height * sc), acc = new Float32Array(W * H), ax = (c.ox - c.cx * k) * sc, ay = (c.oy + c.cy * k) * sc, kk = k / 1000 * sc, dprI = Math.max(1, Math.round(sc));
-      const i0 = lowerBound(d.x, (c.cx - c.ox / k) * 1000 - 1000), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k) * 1000 + 1000);
-      for (let i = i0; i < i1; i++) { const n = d.nn[i], bw = dprI * (n >= 100 ? 3 : n >= 10 ? 2 : 1), bx = Math.floor(ax + d.x[i] * kk) - ((bw - 1) >> 1), by = Math.floor(ay - d.y[i] * kk) - ((bw - 1) >> 1); for (let yy = Math.max(0, by); yy < Math.min(H, by + bw); yy++) for (let xx = Math.max(0, bx); xx < Math.min(W, bx + bw); xx++) acc[yy * W + xx] += n; }
-      const vals = Array.from(acc).filter(v => v > 0).sort((a, b) => a - b), q = p => vals[Math.min(vals.length - 1, Math.floor(p * vals.length))];
-      return { pixels: vals.length, max: vals[vals.length - 1], p50: q(0.5), p75: q(0.75), p90: q(0.9), p99: q(0.99), p999: q(0.999), smax: sMax(k), k };
+    fieldRegime() { return Object.assign({ gl: useGL(), error: glError }, pixDrawn); },   // the last field draw: the engine and the pixel field's and the dots' weights (round 14)
+    // The pixel field against an independent sum (round 14): the CPU engine's cells for the current view, their summed firms and the firms at the coordinate pairs
+    // inside the view's cells, which must agree, and on the GPU the share of composed pixels that differ from the CPU's image by more than 2 levels.
+    pixelStats() {
+      const d = state.mode === 'firms' ? firmYears.get(state.year) : null; if (!d) return null; const c = cam(), k = c.k, L = state.layer, P = pixelParams(c, L), view = { cx: c.cx, cy: c.cy, k, ox: c.ox, oy: c.oy, W: P.W, H: P.H };
+      const i0 = lowerBound(d.x, (c.cx - c.ox / k - 2 / k) * 1000), i1 = lowerBound(d.x, (c.cx + (stage.width - c.ox) / k + 2 / k) * 1000);
+      const S = PixelField.cpuSums(d, view, P.code, i0, i1, POW), C = PixelField.cpuClassify(S, P.code, P.breaks); let sumN = 0, inView = 0, cells = 0;
+      for (let y = 1; y < S.H - 1; y++) for (let x = 1; x < S.W - 1; x++) { const j = y * S.W + x; if (S.n[j] > 0) { sumN += S.n[j]; cells++; } }
+      const ax = c.ox - c.cx * k, ay = c.oy + c.cy * k, kk = k / 1000; for (let i = i0; i < i1; i++) { const gx = Math.floor(ax + d.x[i] * kk), gy = Math.floor(ay - d.y[i] * kk); if (gx >= 0 && gy >= 0 && gx < P.W && gy < P.H) inView += d.nn[i]; }
+      const colourOf = cls => [P.pal[3 * cls] * 255, P.pal[3 * cls + 1] * 255, P.pal[3 * cls + 2] * 255, P.alpha[cls] * PixelField.LAYER_ALPHA], cpu = PixelField.cpuCompose(C, P.W, P.H, colourOf, P.back.map(v => v * 255));
+      let gpuDiff = null; if (useGL() && pixKey) { const g = pfGL.readComposed(P); let bad = 0, lit = 0; for (let o = 0; o < g.length; o += 4) { if (g[o + 3] || cpu[o + 3]) lit++; if (Math.max(Math.abs(g[o] - cpu[o]), Math.abs(g[o + 1] - cpu[o + 1]), Math.abs(g[o + 2] - cpu[o + 2]), Math.abs(g[o + 3] - cpu[o + 3])) > 2) bad++; } gpuDiff = { bad, lit, share: lit ? bad / lit : 0 }; }
+      const blocks = [0, 0, 0, 0]; for (let j = 0; j < C.size.length; j++) blocks[C.size[j]]++;
+      return { k, cells, sumN, inView, blocks, gpuDiff, engine: useGL() ? 'webgl2' : '2d', layer: L, year: state.year };
     },
+    sweep(on) { if (on === false) endSweep(); else if (on) { try { sessionStorage.removeItem('atlas-sweep'); } catch (e) { /* no storage */ } fieldAnim.swept = false; maybeSweep(); } const sw = sweepX(); return { on: !!fieldAnim.sweep, pending: !!fieldAnim.sweepPending, x: sw ? sw.x : null, raf: fieldAnim.raf }; },   // the opening sweep (round 14): start it again, end it, or read it
+    dissolve() { return { on: !!fieldAnim.dissolve, t: dissolveT(), started: !!(fieldAnim.dissolve && fieldAnim.dissolve.t0 != null) }; },
     glState() { return { kind: glKind, lost: glLost, isContextLost: gl ? gl.isContextLost() : null, error: glError, events: glEvents.slice() }; },
     loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
@@ -2332,8 +2412,11 @@ void main() {
     wireSeek(x) { wireStop(); wireAnimate(Math.max(0, x)); return wireX(); },   // a frames hook: the track scrolled to x at once (round 12)
     wireItemX(kind, n = 0) { const el = wireTrack().querySelectorAll('.wi.' + kind)[n]; return el ? wirePos(el)[0] : null; },   // a frames hook: the left edge of the n-th item of a kind on the track
     ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
-    mosaic() { const c = cam(), A = mosaicAlphas(c.k), y = state.year, levels = {}; for (const T of MOSAIC_LEVELS) { const b = mosaicCache.get(y + '|' + T); levels[T] = b ? { count: b.count, sumN: b.sumN } : null; } return { k: c.k, dotsK: dotsK(), alphas: A, state: mosaicState, builds: mosaicBuilds, bitmapBuilds: mosaicBitmapBuilds, bitmaps: mosaicBitmaps.size, levels, fieldOpacity: fieldC.style.opacity || '1', regime: fieldRegime }; },   // the binned Firms view (round 13)
-    binAt(x, y) { const k = cam().k, T = mosaicLevelAt(k), b = mosaicBins(state.year, T); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x / T), Math.floor(y / T))); return j === undefined ? null : { T, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry'), fin: mosaicClass(b, j, 'fin') }; },
+    mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
+    binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
+    tileCount() { const el = $('tipbody').querySelector('.lc'); if (!el) return null; const cs = getComputedStyle(el); return { text: el.textContent, colour: cs.color, size: parseFloat(cs.fontSize), weight: cs.fontWeight, year: layerYear(), dot: !!el.querySelector('.dot'), first: el.parentElement.classList.contains('t-l1') }; },   // the Cells tile's red count (round 14)
+    cellPulseAt(ms) { endCellPulse(); if (ms == null) { drawCellsMarks(cam()); return 0; } const n = cellsPulse(); if (cellPulse) { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) { clearTimeout(cellPulseTimer); cellPulseTimer = 0; } cellPulse.at = ms; drawCellsMarks(cam()); } return n; },   // a frozen Cells pulse at ms (round 14); cellPulseAt(null) clears it
+    cellPulseState() { return cellPulse ? { count: cellPulse.count, static: cellPulse.static, cells: cellPulse.cells.map(q => [q.x, q.y, q.delay]) } : null; },
     mosaicOff(v) { if (v != null) { mosaicOff = !!v; drawMap(); } return mosaicOff; },   // the squares off, for the contrast probe
     anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
     anniversary(iso) { const a = anniversaryLine(iso); return a ? a.text : null; },   // the builder for a given ISO day (item 6)
@@ -2353,37 +2436,15 @@ void main() {
     contextCost(n = 30) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); updateContext(true); mx = Math.max(mx, performance.now() - a); } return { mean: +((performance.now() - t0) / n).toFixed(3), max: +mx.toFixed(3) }; },
     listedRule() { const c = cam(), L = MM.listedRule(markRule(c.k), c.k, kFit()), rMax = MM.listedRadius(L, 65535), rMin = MM.listedRadius(L, 1); return Object.assign({ k: c.k, rMin, rMax, cull: MARK_MARGIN, pulseMs: PULSE_MS, decayMs: DECAY_MS, flashMax: MM.flashPeak(rMax), glowMax: 2 * (rMax + MM.flashPeak(rMax)) }, L); },   // the rule at the current zoom, for the audit
     pulseAt(ms) { if (ms == null) { endPulse(); drawMarks(cam()); return 0; } const m = manualMask(state.year); if (!m.count) return 0; endPulse(); makePulse(m.mask); pulse = { t0: performance.now() - ms, mask: m.mask, count: m.count, static: false, at: ms }; setLive(true); drawMarks(cam()); return m.count; },   // a frozen pulse frame at ms, for the comparison pictures; pulseAt(null) clears it
-    ready() { return Promise.all([state.mode === 'firms' ? ensureYear(state.year) : Promise.resolve(), indCityPending || Promise.resolve()]).then(() => {}); },
+    ready() { const micro = state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && FIRMS_OK, y = microYear(); return Promise.all([state.mode === 'firms' ? ensureYear(state.year) : micro ? ensureYear(y).then(() => { if (!mosaicCache.has(y + '|1')) { mosaicBins(y, 1); layersDirty(); drawMap(); } }) : Promise.resolve()]).then(() => {}); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
     drawOrder() { return drawLog.slice(); },   // the last drawMap's steps: basemap, mark, then the layer
     handover() { return Object.assign({}, handover); },
-    mosaicContrast(n = 300) {   // the squares' WCAG contrast against the composite beneath them with the two layers on and off (round 13: the round-10 check carried to the squares)
-      if (state.mode !== 'firms') return null; const y = state.year, c = cam(), L = state.layer, T = mosaicLevelAt(c.k), b = mosaicBins(y, T); if (!b || c.k >= dotsK()) return null;
-      const W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(b.count / n));
-      for (let j = 0; j < b.count && pts.length < n; j += step) { const [px, py] = Motion.project(c, (b.bx[j] + 0.5) * T, (b.by[j] + 0.5) * T); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; const cl = mosaicClass(b, j, L); pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(mosaicColour(L, cl, T)), mosaicAlphaOf(cl, b.n[j])]); }
-      const lum = ([r, g, bb]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bb); }, ratio = (a, bb) => { const x = lum(a), z = lum(bb); return (Math.max(x, z) + 0.05) / (Math.min(x, z) + 0.05); };
-      const sample = () => { const img = mctx.getImageData(0, 0, W, mctx.canvas.height).data, rs = []; for (const [px, py, col, al] of pts) { const o = 4 * (py * W + px), a = img[o + 3] / 255, ground = [img[o], img[o + 1], img[o + 2]].map((v, k) => Math.round(v * a + stg[k] * (1 - a))), sq = col.map((v, k) => Math.round(v * al + ground[k] * (1 - al))); rs.push(ratio(sq, ground)); } return rs; };
-      mosaicOff = true; drawMap(); const on = sample(); firmsLayersOff = true; drawMap(); const off = sample(); firmsLayersOff = false; mosaicOff = false; drawMap();
-      let so = 0, sf = 0, mx = 0; for (let i = 0; i < on.length; i++) { so += on[i]; sf += off[i]; mx = Math.max(mx, Math.abs(on[i] - off[i])); }
-      return { n: on.length, on: so / on.length, off: sf / off.length, diff: so / on.length - sf / off.length, maxDiff: mx, layer: L, year: y, level: T };
-    },
-    dotContrast(n = 300) {   // the dots' WCAG contrast against the composite beneath them with the two layers on and off (round 10, the author's check of 25 October)
-      if (state.mode !== 'firms') return null; const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return null; const c = cam(), W = mctx.canvas.width, sc = stage.scale || 1, stg = hex2rgb(theme.stage), pts = [], step = Math.max(1, Math.floor(d.nn.length / n));
-      for (let i = 0; i < d.nn.length && pts.length < n; i += step) { const [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); if (px < 1 || py < 1 || px >= stage.width - 1 || py >= stage.height - 1) continue; pts.push([Math.round(px * sc), Math.round(py * sc), hex2rgb(firmColour(L, firmClass(d, i, L)))]); }
-      const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }, ratio = (a, b) => { const x = lum(a), z = lum(b); return (Math.max(x, z) + 0.05) / (Math.min(x, z) + 0.05); };
-      const sample = () => { const img = mctx.getImageData(0, 0, W, mctx.canvas.height).data, rs = []; for (const [px, py, col] of pts) { const o = 4 * (py * W + px), a = img[o + 3] / 255, ground = [img[o], img[o + 1], img[o + 2]].map((v, k) => Math.round(v * a + stg[k] * (1 - a))); rs.push(ratio(col, ground)); } return rs; };
-      drawMap(); const on = sample(); firmsLayersOff = true; drawMap(); const off = sample(); firmsLayersOff = false; drawMap();
-      let so = 0, sf = 0, mx = 0; for (let i = 0; i < on.length; i++) { so += on[i]; sf += off[i]; mx = Math.max(mx, Math.abs(on[i] - off[i])); }
-      return { n: on.length, on: so / on.length, off: sf / off.length, diff: so / on.length - sf / off.length, maxDiff: mx, layer: L, year: y };
-    },
-    firmsLayerAlphas(o) { if (o) { if (o.tint != null) TINT_A = o.tint; if (o.glow != null) GLOW_A = o.glow; glowCache = null; tintCache.clear(); drawMap(); } return { tint: TINT_A, glow: GLOW_A }; },   // the two layers' strengths (the audit's and the author's tuning)
     grain(on) { document.documentElement.classList.toggle('nograin', on === false); return !document.documentElement.classList.contains('nograin'); },   // the surface grain on or off, for the audit's contrast guard (round 10)
     card(id, open, persist) { if (persist) writePref('atlas-card-' + id, open ? 'open' : 'closed'); setCard(id, open == null ? null : open ? 'open' : 'closed'); return cardOpen(id); },   // a card's collapse state (round 10)
     cards() { return Object.fromEntries(CARDS.map(id => [id, cardOpen(id)])); },
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
-    firmsLayers() { const c = cam(), ext = BM.extents.national, pr = (x, y) => Motion.project(c, x, y), rect = b => { if (!b) return null; const f = c.k / b.cam.k, [px, py] = pr(b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k); return [px, py, px + b.W * f, py + b.H * f]; }, e0 = pr(ext.x[0], ext.y[1]), e1 = pr(ext.x[1], ext.y[0]), tb = tintCache.get(state.year + '|' + theme.dark) || null;
-      return { tint: firmsFade.tint, glow: firmsFade.glow, tintYears: [...tintCache.keys()], glowKey: glowCache ? glowCache.key : null, glowSize: glowCache ? [glowCache.W, glowCache.H] : null, builds: glowBuilds, cover: { extent: [e0[0], e0[1], e1[0], e1[1]], view: [stage.width, stage.height], tint: rect(tb), glow: rect(glowCache), glowBlurPx: glowCache ? 2 * c.k / glowCache.cam.k : null } }; },   // the two layers' fades and caches, and where their bitmaps lie on screen against the country's extent (round 11, item 5)   // the two layers under the field (round 10)
     ghost() { const c = cam(); return { alpha: GHOST_ALPHA, drawn: ghostDrawn, laid: ghostLayout(c.k).length, bucket: Math.floor(Math.log2(c.k)), colour: theme.go }; },   // the ghost names (round 10; floating at a fixed size and opacity since round 12, part D)
     hoverRegion() { return hoverRegionName; },
     pxOf(x, y) { const c = cam(); return [c.ox + (x - c.cx) * c.k, c.oy - (y - c.cy) * c.k]; },   // a km point on the screen (the region-fill states)

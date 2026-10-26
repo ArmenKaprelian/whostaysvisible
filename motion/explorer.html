@@ -157,6 +157,10 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .t-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
 .t-foot .firms { flex: 1 0 100%; }   /* the firms in view on their own line under the coordinate and the scale (round 11, item 3) */
 .mapwrap.cursor-live .t-foot { color: var(--context-live); }
+.tooltip .t-l1 { display: flex; justify-content: space-between; align-items: center; gap: 10px; }   /* the Cells view's first line with the listed count at its right end (round 14) */
+.tooltip .lc { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; color: var(--treated); font: 700 19px/1 var(--font); font-variant-numeric: tabular-nums; }
+.tooltip .lc .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--treated); }   /* the legend's solid red dot */
+.maplegend .lcn { color: var(--treated); font-weight: 700; }
 /* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
 .ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the data wire (round 10, item 14): 34 px */
 .ctx .toggle { pointer-events: auto; color: var(--context); }
@@ -434,6 +438,7 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>
+<script src="js/pixel-field.js"></script>
 <script src="js/explorer-app.js"></script>
 </body>
 </html>
