@@ -1911,6 +1911,8 @@ Five atlas requests the same evening. The toggles: the collapse triangles are dr
 
 **Links to the exact view.** The page's address carries the view, the layer, the year and the camera, as `#firms/industry/2024/55.75580,37.61730/20km`: the centre in degrees (5 decimals, about a metre) and the span of the map's shorter side in km, so a link opens on the same ground on any screen; the country's fitted view reads `/fit`. The address follows every settled view, replaced in place rather than added to the history, and a link opened later, or a hash typed by hand, restores the view; `#Moscow` and `#Moscow-firms` keep their meaning. On the published page the address bar belongs to the host, so a "LINK TO THIS VIEW" button under the GO TO card's presets copies the artifact's own address with the view appended (where the browser refuses the clipboard, the link appears selected in a field beneath). Whether the host passes an address's fragment to the page is checked on the host after the publish.
 
+**The author's approval (25 October 2026).** The frames of the second release (`build/r25-review/`, sheets A to D) were approved, with the two proposals: a search from the Cells view opens the Firms view, where listed firms are drawn, and the link button sits under the presets in the GO TO card. Still open by the author's choice: the presentation tour (not to be built unless asked for a talk) and the minimap's graticule fix. Before either publish: the five-width audit at zero findings and the measurement in the author's Brave on both screens.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
