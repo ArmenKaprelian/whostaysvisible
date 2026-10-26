@@ -14,26 +14,45 @@ Three rules are checked here: no shipped data file carries an identifier key (in
 label (25 October 2026: firms on the five lists are named, firms on no list never; basemap.json's region and window
 names are place names and stay allowed); the neighbour firm (anchors.b) carries no name. The script prints the files by group with their sizes
 so each artifact publish stays under 64 MB, and exits non-zero on a rule breach or a file over the
-artifact's caps (16 MB page or text file, 15 MB binary file)."""
+artifact's caps (16 MB page or text file, 15 MB binary file).
+
+With --from COMMIT (round 14) the pages, the stylesheet and the scripts are read from that commit instead of the working tree, so an approved commit can be
+published while later work sits uncommitted or in later commits; the data files still come from the working tree, and the set is refused if a tracked data
+file differs from the commit's. The build stamp then names that commit."""
 import json, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(MOTION, "publish")
 os.makedirs(OUT, exist_ok=True)
 FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">'
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
+def git(*args, text=True):
+    return subprocess.run(["git"] + list(args), cwd=MOTION, capture_output=True, text=text, check=True).stdout
 def build_id():   # the commit the set is built from, for the pages' console greeting (round 12, part D); a dirty shipped file is said so
+    if FROM:
+        h = git("rev-parse", "--short=12", FROM + "^{commit}").strip()
+        if git("diff", "--name-only", FROM, "--", "data").strip(): raise SystemExit("publish-set: tracked data files differ from " + FROM + "; refused")
+        return "commit " + h
     try:
-        git = lambda *args: subprocess.run(["git"] + list(args), cwd=MOTION, capture_output=True, text=True, check=True).stdout.strip()
-        h = git("rev-parse", "--short=12", "HEAD"); dirty = git("status", "--porcelain", "--", "explorer.html", "explainer.html", "js", "css", "data")
+        h = git("rev-parse", "--short=12", "HEAD").strip(); dirty = git("status", "--porcelain", "--", "explorer.html", "explainer.html", "js", "css", "data").strip()
     except Exception:
         return "an unrecorded build"
     return "commit " + h + (" with uncommitted changes" if dirty else "")
+def source(path):   # a page, the stylesheet or a script: from the working tree, or from the --from commit
+    if FROM: return git("show", FROM + ":motion/" + path, text=False)
+    return open(os.path.join(MOTION, path), "rb").read()
 BUILD = build_id()
 BUILD_META = '<meta name="build" content="%s">' % BUILD
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
-SCRIPTS = ["motion-core.js", "map-layers.js", "charts.js", "explainer-scenes.js", "treated-scenes.js", "explorer-app.js"]
+def page_scripts():   # the scripts the two pages load, read from the pages themselves (round 14: js/pixel-field.js joined the atlas), so the set follows --from too
+    names = []
+    for page in ("explainer.html", "explorer.html"):
+        for n in re.findall(r'<script src="js/([^"]+)"', source(page).decode("utf-8")):
+            if n not in names: names.append(n)
+    return names
+SCRIPTS = page_scripts()
 ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
 NAME_KEY = re.compile(r"^(name|name_alt|name_filed|name_shared|name_case|names|label_long)$", re.I)   # firm-name keys (25 October 2026): allowed only where listed below
 NAME_ALLOWED = {"treated.json": {"name", "name_filed", "name_case", "name_shared"}, "treatednational.json": {"name", "name_filed", "name_case", "name_shared"}, "anchors.json": {"label_long"},
@@ -45,7 +64,7 @@ VIDEOS = [("Teaser, 46 s", "/_blob/c5240020b128598cd541799c0fb71eb8")]   # the r
 VIDEO_NOTE = '<p class="note">Video at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) is larger than the asset cap and travels as a file.</p>'
 
 def convert(name):
-    src = open(os.path.join(MOTION, name), encoding="utf-8").read()
+    src = source(name).decode("utf-8")
     title = re.search(r"<title>.*?</title>", src, re.S).group(0)
     head = re.search(r"<head>(.*?)</head>", src, re.S).group(1)
     body = re.search(r"<body>(.*?)</body>", src, re.S).group(1)
@@ -55,7 +74,7 @@ def convert(name):
     if style:
         parts.append(style.group(0))
     if css_link:
-        css = open(os.path.join(MOTION, "css", "theme.css"), encoding="utf-8").read()
+        css = source("css/theme.css").decode("utf-8")
         parts.append("<style>\n" + css + "\n</style>")
     if name == "explainer.html":
         anchor = "</p>\n<footer class=\"efoot\">" if "</p>\n<footer class=\"efoot\">" in body else "</p>\n<script"   # the note sits before the footer since round 10 (before the scripts until round 9)
@@ -69,7 +88,8 @@ def convert(name):
 def copy(sub, name):
     src = os.path.join(MOTION, sub, name); dst = os.path.join(OUT, sub, name)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copyfile(src, dst)
+    if sub == "js": open(dst, "wb").write(source(sub + "/" + name))   # the scripts follow --from; the data stay the working tree's
+    else: shutil.copyfile(src, dst)
     return os.path.getsize(dst)
 
 def keys_of(obj, out):
