@@ -1746,7 +1746,7 @@ void main() {
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -2396,7 +2396,7 @@ void main() {
   }
   let finding = false;   // set while the search switches the view, so the switch does not end the pulse it is about to start
   function findFirm(i) {
-    endFound(); findPin = i; finding = true;
+    endFound(); findPin = -1; finding = true;
     let y = state.year;
     if (TRN.filed[i][y - 2014] === '-') { let best = null; for (let d = 1; d <= 11 && best == null; d++) { if (y - d >= 2014 && TRN.filed[i][y - d - 2014] !== '-') best = y - d; else if (y + d <= 2025 && TRN.filed[i][y + d - 2014] !== '-') best = y + d; } if (best != null) y = best; }
     if (y !== state.year) { window.__atlas.year(y); endPulse(); }
@@ -2405,9 +2405,9 @@ void main() {
     const t = { cx: TRN.x[i], cy: TRN.y[i], k: clampK(Math.max(state.cam.k, minSide() / 20)) };
     return flyTo(t).then(r => { if (r.done) landFound(i); return r; });
   }
-  function landFound(i) {   // the tooltip at the firm's mark, then the pulse
+  function landFound(i) {   // the tooltip at the firm's mark with its name first (until the camera next moves), then the pulse
     const c = cam(), px = c.ox + (TRN.x[i] - c.cx) * c.k, py = c.oy - (TRN.y[i] - c.cy) * c.k;
-    lastPointer = { x: px, y: py, inside: true }; showHoverAt(px, py, { touch: true });
+    findPin = i; lastPointer = { x: px, y: py, inside: true }; showHoverAt(px, py, { touch: true });
     found = { i, t0: performance.now(), static: reduceMotion() };
     if (found.static) { redrawMarksNow(); foundTimer = setTimeout(() => { foundTimer = 0; found = null; redrawMarksNow(); }, PULSE_MS); }
     else foundRaf = requestAnimationFrame(foundTick);

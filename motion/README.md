@@ -1913,6 +1913,30 @@ Five atlas requests the same evening. The toggles: the collapse triangles are dr
 
 **The author's approval (25 October 2026).** The frames of the second release (`build/r25-review/`, sheets A to D) were approved, with the two proposals: a search from the Cells view opens the Firms view, where listed firms are drawn, and the link button sits under the presets in the GO TO card. Still open by the author's choice: the presentation tour (not to be built unless asked for a talk) and the minimap's graticule fix. Before either publish: the five-width audit at zero findings and the measurement in the author's Brave on both screens.
 
+**The measurement sitting in the author's Brave (25 October 2026, evening).** Through the Claude extension, in one Brave window holding the atlas tab, maximised, with Brave focused and untouched; first on the laptop panel (1.33, 165 Hz), then on the external monitor (1, 144 Hz); the old page (v31, `build/before/`), the speed release (66cbe88, `build/p1/`) and the redesign (the working tree), each on the Cells and Firms views of the industry layer in 2024: a full draw at the country view and at the Moscow preset (timed with a one-pixel read of the map, the marks and the field), five flights (Russia to Moscow, Moscow to the 20 km rung, back to Russia, and the pair again), 40-step wheel runs in and out, and the hover. The raw figures are in `review/2026-10-25-brave-sitting.json`.
+
+What the sitting found first: in this Brave on GNOME (Wayland) a page whose content changes gets a frame only every 3 to 6 refresh intervals, 18 to 36 ms on the laptop panel and 21 to 28 ms on the external monitor, measured with a 2 px box moved every frame on a plain directory listing as well as on the atlas (24 ms on a blank page, 24 on a page holding only a WebGL canvas, 6 on a page holding only a CPU-drawn 2D canvas, 18 on a GPU-drawn one); a page without any change gets a frame once a second. Unfocused, the window fell to those rates at once. This floor, set by the browser and the desktop rather than the page, caps every animation at about 28 to 55 fps on the laptop and 36 to 48 fps on the external monitor, and makes the measurement rule's idle check (idle frames at the refresh) unattainable; the sitting checked instead that the window was live (frames with a moving box under 45 ms, no gap over 250 ms). The cause lies outside the lab (a Brave flag such as the X11 backend, or GNOME's fractional scaling, are the first things to try); the lab cannot remove it.
+
+| Laptop (1.33, 165 Hz) | v31 | speed release | redesign |
+|---|---|---|---|
+| Cells, full draw at the country / Moscow (ms) | 163 / 39 | 24 / 15 | 35 / 11 |
+| Cells flights (fps, five) | 13 to 23 | 29 to 35 | 14 to 29 |
+| Cells wheel in / out (fps) | 12 / 13 | 20 / 28 | 20 / 21 |
+| Firms, full draw at the country / Moscow (ms) | 220 / 92 | 84 / 87 | 34 / 19 |
+| Firms flights (fps) | 14 to 30 | 19 to 29 | 15 to 24 |
+| Firms wheel in / out (fps) | 10 / 10 | 17 / 18 | 20 / 21 |
+
+| External monitor (1, 144 Hz) | v31 | speed release | redesign |
+|---|---|---|---|
+| Cells, full draw at the country / Moscow (ms) | 36 / 16 | 18 / 11 | 30 / 6 |
+| Cells flights (fps) | 32 to 44 | 37 to 44 | 36 to 44 |
+| Cells wheel in / out (fps) | 32 / 33 | 37 / 34 | 29 / 31 |
+| Firms, full draw at the country / Moscow (ms) | 84 / 48 | 58 / 43 | 24 / 16 |
+| Firms flights (fps) | 21 to 38 | 25 to 34 | 34 to 43 |
+| Firms wheel in / out (fps) | 20 / 22 | 25 / 26 | 17 / 30 (one 1 s gap) |
+
+Reading: the thin-line fix carries the laptop (a 1.33 screen), where the Cells view's full draw at the country fell from 163 to 24 ms; at a device ratio of 1 the old page was already near the floor. The redesign's Firms view draws in a third to a fifth of the time and its flights reach the floor on the external monitor. Flights at or near the floor cannot show further gains, and single runs vary with the floor (18 ms in one laptop run, 36 in another), which explains the laptop's spread for the redesign's Cells flights (one flight at 14 fps, the others 22 to 29; the external monitor's run put all five at the floor). The redesign's Cells draw at the country includes a read of the marks canvas, which now carries the ghost names in the Cells view too; a real frame does no such read. Re-checked under the sitting: the map canvas on the GPU (`?canvas=gpu`) is slower again on the laptop (Cells flights 18 to 23 fps against 29 to 35, the full draw at Moscow 88 ms against 15), so the CPU setting stays.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
