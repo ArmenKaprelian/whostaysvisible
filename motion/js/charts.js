@@ -135,9 +135,11 @@
     const tickSize = size >= 20 ? size - 2 : size;   // small panels keep their tick labels at the text size
     for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === 1 ? theme.ink : theme.grid; ctx.lineWidth = t === 1 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(t), box.x - 14, y, { size: tickSize, color: theme.muted, align: 'right', baseline: 'middle' }); }
     const years = []; for (let x = xDomain[0]; x <= xDomain[1]; x++) years.push(x);
-    // thinTicks: every other year, the last kept, when the year labels would touch (the atlas's narrow panels).
-    const thin = thinTicks && sx(xDomain[0] + 1) - sx(xDomain[0]) < Motion.measure(ctx, String(xDomain[1]), size) + 6;
-    years.filter(x => !thin || (xDomain[1] - x) % 2 === 0).forEach(x => T(ctx, String(x), sx(x), box.y + box.h + (thinTicks ? size + 8 : 32), { size, color: highlightX === x ? theme.ink : theme.muted, align: 'center', weight: highlightX === x ? 600 : 400 }));
+    // thinTicks: every n-th year counted back from the last, n the smallest step at which the year labels do not touch (the atlas's narrow panels: every other year
+    // from about 390 px, every third or only the two ends on a narrower phone, round 14).
+    const dx = sx(xDomain[0] + 1) - sx(xDomain[0]), need = Motion.measure(ctx, String(xDomain[1]), size) + 6;
+    const step = thinTicks ? ([1, 2, 3, 4, 5].find(s => s * dx >= need) || xDomain[1] - xDomain[0]) : 1;
+    years.filter(x => (xDomain[1] - x) % step === 0).forEach(x => T(ctx, String(x), sx(x), box.y + box.h + (thinTicks ? size + 8 : 32), { size, color: highlightX === x ? theme.ink : theme.muted, align: 'center', weight: highlightX === x ? 600 : 400 }));
     if (highlightX != null) { ctx.fillStyle = theme.highlightBand; ctx.fillRect(sx(highlightX) - 46, box.y, 92, box.h); }
     const xReveal = xDomain[0] + (xDomain[1] - xDomain[0]) * progress;
     const ends = [];

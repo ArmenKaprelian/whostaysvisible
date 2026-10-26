@@ -584,6 +584,29 @@ def main():
             cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
             state("share", 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); { const el = document.getElementById('findinput'); el.focus(); const hits = A.find('zzqxw'); window.__extra = { hits: hits.length, none: document.querySelector('#findlist .none') ? document.querySelector('#findlist .none').textContent : null }; el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); el.blur(); }", "findnone",
                   lambda r: [] if r["extra"] and r["extra"]["hits"] == 0 and r["extra"]["none"] == "No list member by that name" else [("find", "none", json.dumps(r["extra"]))])
+            # the tile on a phone (round 14, the author's decision of 25 October 2026), in a phone's viewport with touch: where the floating tile has no place, it docks along
+            # the map's top edge at the map's width less 12 px margins, clear of the zoom box, the scale bar and the strip, the point below it with the hover's clearance, and a
+            # hidden tile leaves the docked form; on a map under 450 px tall a search lands the firm at 62 percent of the map's height (360 by 800: a revenue-layer search whose
+            # tile docks; 375 by 667: a share-layer search whose tile docks above the scale bar)
+            if w == 400:
+                PHONEJS = "await A.ready(); { const el = document.getElementById('findinput'); el.focus(); const i = A.find(%r)[0].i; el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); for (let t = 0; t < 100 && !(A.foundState().found && A.foundState().found.i === i); t++) await new Promise(q => setTimeout(q, 100)); el.blur(); await new Promise(q => setTimeout(q, 200)); const T = MOTION_DATA.treatednational, c = A.camera(), m = document.getElementById('mapwrap').getBoundingClientRect(), t = A.tile(), tip = document.getElementById('tip'); window.__extra = { W: m.width, H: m.height, fy: m.height / 2 - (T.y[i] - c.cy) * c.k, fx: m.width / 2 + (T.x[i] - c.cx) * c.k, docked: !!t.docked, fallback: !!t.fallback, box: t.box, cursor: t.cursor, cls: tip.className, tw: tip.getBoundingClientRect().width }; A.hoverOff(); window.__extra.after = { cls: tip.className, width: tip.style.width }; A.hoverPx(t.cursor[0], t.cursor[1], { touch: true }); }"   # shown again for the overlap checks
+                def phone_ok(frac):
+                    def f(r):
+                        x = r["extra"]; bad = []
+                        if not x: return [("phone", "state", "no report")]
+                        if not x["docked"] or x["fallback"]: bad.append(("phone", "dock", "docked %s, last resort %s" % (x["docked"], x["fallback"])))
+                        else:
+                            b = x["box"]
+                            if abs(b["x"] - 12) > 0.5 or abs(b["y"] - 12) > 0.5 or abs(b["x1"] - (x["W"] - 2 - 12)) > 1.5: bad.append(("phone", "dock", "the docked tile at %s on a %s px map" % (json.dumps({k: round(b[k], 1) for k in ("x", "y", "x1", "y1")}), round(x["W"]))))
+                            if x["cursor"][1] < b["y1"] + 14 - 0.5: bad.append(("phone", "dock", "the point at y %.1f under the docked tile ending at %.1f" % (x["cursor"][1], b["y1"])))
+                        if "docked" in x["after"]["cls"] or x["after"]["width"]: bad.append(("phone", "dock", "a hidden tile kept its docked form: %s" % json.dumps(x["after"])))
+                        if abs(x["fy"] / x["H"] - frac) > 0.005 or abs(x["fx"] - x["W"] / 2) > 1: bad.append(("phone", "landing", "the firm at (%.1f, %.1f) on a %.0f by %.0f map, expected %.2f of its height" % (x["fx"], x["fy"], x["W"], x["H"], frac)))
+                        return bad
+                    return f
+                for pw, ph, lyr, q, frac in ((360, 800, "fin", "aeroflot", 0.5), (375, 667, "share", "gazprom", 0.62)):
+                    cdp.call("Emulation.setDeviceMetricsOverride", {"width": pw, "height": ph, "deviceScaleFactor": 1, "mobile": True}); cdp.call("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 5}); time.sleep(0.5)
+                    state(lyr, 2024, "A.mode('firms'); A.preset('Russia'); " + PHONEJS % q, "phone%d" % ph, phone_ok(frac))
+                cdp.call("Emulation.setTouchEmulationEnabled", {"enabled": False}); cdp.call("Emulation.setDeviceMetricsOverride", {"width": w, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.5)
             # links to the exact view (round 14): a settled view writes the address; the link button copies the artifact's address with it (or shows it in a field where the clipboard is
             # refused); the address read back restores the view, the layer, the year and the camera; a reload of it does too (below, with the presets' anchors)
             def vlink_ok(r):

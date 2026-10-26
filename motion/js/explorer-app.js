@@ -1803,7 +1803,7 @@ void main() {
   const pointers = new Map(); let press = null, pinch = null, lastPointer = null, lastTap = null;
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -1859,6 +1859,21 @@ void main() {
     for (const d of touch ? [24, Math.max(14, r + 9)] : [Math.max(14, r + 9)]) for (const drop of tiers) { const obs = drop.length ? obsAll.filter(o => !drop.includes(o.id)) : obsAll; const b = placeTileAmong(x, y, tw, th, obs, touch, r, d); if (!b.fallback) { if (drop.length) b.relaxed = drop.map(id => id === 'mapnote' ? 'note' : id === 'mixbox' ? 'mix' : id); return b; } }
     return placeTileAmong(x, y, tw, th, obsAll, touch, r);
   }
+  // The docked tile (round 14, the author's decision of 25 October 2026): on a map under 600 px wide, where the floating tile has no clear place, the tile spans the map's
+  // width less 12 px margins along its top edge, so its lines wrap less and it is shorter. It may cover the note, the mix box and the legend, never the zoom box, the scale
+  // bar or the strip, and the point stays below it with the hover's clearance, the crosshair joining the two.
+  function dockTile(x, y, obs, r) {
+    const tip = $('tip'), d = Math.max(14, r + 9);
+    tip.classList.add('docked'); tip.style.width = (stage.width - 24) + 'px';
+    const b = { x: 12, y: 12, x1: stage.width - 12, y1: 12 + tip.offsetHeight, anchor: -3, docked: true };
+    if (y >= b.y1 + d && !obs.some(o => (o.id === 'zoombox' || o.id === 'scalebar' || o.id === 'ctxstrip') && meets(b, o))) {
+      const soft = obs.filter(o => (o.id === 'mapnote' || o.id === 'mixbox' || o.id === 'legend') && meets(b, o)).map(o => (o.id === 'mapnote' ? 'note' : o.id === 'mixbox' ? 'mix' : o.id));
+      if (soft.length) b.relaxed = soft;
+      return b;
+    }
+    undockTile(); return null;
+  }
+  function undockTile() { const tip = $('tip'); tip.classList.remove('docked'); tip.style.width = ''; }
   function placeTileAmong(x, y, tw, th, obs, touch, r, dd) {
     const d = dd != null ? dd : touch ? 24 : Math.max(14, r + 9), W = stage.width, H = stage.height;
     const cands = [[x + d, y + d], [x - d - tw, y + d], [x + d, y - d - th], [x - d - tw, y - d - th], [x - tw / 2, y + d], [x - tw / 2, y - d - th], [x + d, y - th / 2], [x - d - tw, y - th / 2]];
@@ -1913,13 +1928,14 @@ void main() {
     { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); requestDraw(); } }   // the map redraws with the region's fill on a region change only, coalesced with any queued draw   // the strip follows the cursor's region (round 10)
     const tip = $('tip'), key = unitKey(h), fresh = key !== hoverUnit.key;
     if (fresh) $('tipbody').innerHTML = tipText(h);
-    fillFoot(km, !!opts.tick); tip.style.display = 'block';
+    fillFoot(km, !!opts.tick); tip.style.display = 'block'; if (tip.classList.contains('docked')) undockTile();   // the floating form is measured and placed first
     const foot = ['tlat', 'tlon', 'tscale', 'tunit', 'tfirms'].map(id => $(id).textContent.length).join(',') + ($('tfirmsw').hidden ? 'h' : '');
     if (fresh || foot !== hoverUnit.foot || !hoverUnit.tw) { hoverUnit.tw = tip.offsetWidth; hoverUnit.th = tip.offsetHeight; hoverUnit.foot = foot; }   // one forced layout per unit or footer width change
     const tw = hoverUnit.tw, th = hoverUnit.th, obs = tileObstacles();   // the panels' boxes are read once per layout
-    const mark = h.kind === 'firm' || h.kind === 'listed' || h.kind === 'pixel', b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
+    const mark = h.kind === 'firm' || h.kind === 'listed' || h.kind === 'pixel'; let b = placeTile(x, y, tw, th, obs, !!opts.touch, mark ? h.r : 0);
+    if (b.fallback && narrow()) { const dk = dockTile(x, y, obs, mark ? h.r : 0); if (dk) b = dk; }
     tip.style.left = b.x + 'px'; tip.style.top = b.y + 'px';
-    tileState = { box: b, cursor: [x, y], mark: mark ? [h.px, h.py] : null, anchor: b.anchor, fallback: !!b.fallback, slid: !!b.slid, searched: !!b.searched, relaxed: b.relaxed || null };
+    tileState = { box: b, cursor: [x, y], mark: mark ? [h.px, h.py] : null, anchor: b.anchor, fallback: !!b.fallback, slid: !!b.slid, searched: !!b.searched, docked: !!b.docked, relaxed: b.relaxed || null };
     setCross(x, y, !!opts.touch); drawOverlay(h); syncCursor(h); armStill(!!opts.touch);
     if (fresh) { drawCellPanel(h); fillMixBox(h); hoverUnit.key = key; }   // the panel, its chart and the mix box once per hovered unit
     return h;
@@ -2406,7 +2422,8 @@ void main() {
     if (y !== state.year) { window.__atlas.year(y); endPulse(); }
     if (FIRMS_OK && state.mode !== 'firms') { window.__atlas.mode('firms'); endSweep(); }
     finding = false;
-    const t = { cx: TRN.x[i], cy: TRN.y[i], k: clampK(Math.max(state.cam.k, minSide() / 20)) };
+    const k = clampK(Math.max(state.cam.k, minSide() / 20)), low = narrow() && stage.height < 450 ? 0.62 : 0.5;   // on a phone map under 450 px tall the firm lands at 62 percent of its height, leaving the docked tile room above it (the author's decision of 25 October 2026)
+    const t = { cx: TRN.x[i], cy: TRN.y[i] + (low - 0.5) * stage.height / k, k };
     return flyTo(t).then(r => { if (r.done) landFound(i); return r; });
   }
   function landFound(i) {   // the tooltip at the firm's mark with its name first (until the camera next moves), then the pulse

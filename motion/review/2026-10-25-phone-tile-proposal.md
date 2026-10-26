@@ -35,3 +35,7 @@ Taps, last-resort placements per 200 seeded taps on the map, the same points in 
 Tall Firms-view tiles near the middle of a short map: a pixel in central Moscow with 66 listed firms makes a 261 px tile that has no clear place on a 343 by 413 map even at full width. These need a shorter tile, a separate decision. The 360 by 640 screen, an older and shorter Android size, keeps about half of its revenue and industry searches on the last resort.
 
 Frames: `motion/build/r27-dock/` (sheets 1 to 5, today against the proposal; sheet 5 is a remaining case). The prototype's code differs from e7ea0c5 by `dockTile` and `undockTile`, the scale-aside class and the lower landing in `findFirm`, all behind the flag.
+
+## Decision (25 October 2026)
+
+The author adopted parts 1 and 2 and kept the scale bar visible. The figures above for the dock and for the dock with the lower landing assumed that the docked tile set the scale bar aside, as the prototype did; with the scale bar visible the dock ends above it, and the lower landing has no measured effect. The adopted build's figures are in `motion/README.md` (round 14, "The tile on small phones").
