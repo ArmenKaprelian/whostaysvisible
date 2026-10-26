@@ -94,7 +94,7 @@
     if (!M.hairlines) { ctx.stroke(path); return; }
     const m = ctx.getTransform(), s = Math.hypot(m.a, m.b), d = ctx.lineWidth * s;
     if (!(d > 1.0001 && d < 1.6)) { ctx.stroke(path); return; }
-    const lw = ctx.lineWidth, ga = ctx.globalAlpha; ctx.lineWidth = 1 / s; ctx.globalAlpha = Math.min(1, ga * d); ctx.stroke(path); ctx.lineWidth = lw; ctx.globalAlpha = ga;
+    const lw = ctx.lineWidth, ga = ctx.globalAlpha; ctx.lineWidth = 0.999 / s; ctx.globalAlpha = Math.min(1, ga * d); ctx.stroke(path); ctx.lineWidth = lw; ctx.globalAlpha = ga;   // 0.999, not 1: Skia takes its hairline path only while the device width is at most 1 in single precision, and 1 / s * s rounded above 1 at some zooms (34 ms a frame instead of 1.4 at 2.1 times the fit, found 25 October 2026)
   };
   M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true, lod0Colour = null, lod0Alpha = 1, lod0Px = null, afterLand = null } = {}) {   // afterLand(ctx): drawn right after the land fill and before every line (round 10: the Firms view's tint and glow)   // lod0Colour, lod0Alpha, lod0Px: the national regional borders' own tone, fade and width (round 10, G13b; the atlas passes the ghost tone fading by k 3)
     Motion.camTransform(ctx, stage, cam);
