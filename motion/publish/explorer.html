@@ -1,10 +1,10 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit ac30b5a505c8">
+<meta name="build" content="commit 66cbe88e4fd4">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
-   Dark on every device, whatever the browser's colour scheme (round 10, 26 October 2026: the light media block is gone); the
+   Dark on every device, whatever the browser's colour scheme (round 10, 25 October 2026: the light media block is gone); the
    theme button switches to light through data-theme and the choice is remembered per viewer. The dark theme shares the
    explainer's near-black navy stage with the lit navy land (round 9: css/theme.css); the light theme uses the manuscript's production colours. The two accents, fuchsia for
    the cursor layer and green for the context layer, never colour data; the full neon rests and the live variants show while
@@ -18,7 +18,7 @@
   --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F; --context-live: #9AFFB8; --scheme: dark;
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
-  --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 26 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
+  --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 25 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
   --ghost: #1F3350;   /* one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22): 2.5 percent on the dark theme */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets in the live cursor colour (W14b) */
@@ -84,7 +84,7 @@ button, select { font: inherit; }
 .btn:focus-visible, .toggle:focus-visible, .mapwrap:focus-visible { outline: none; }
 .btn:focus-visible::after, .toggle:focus-visible::after, .mapwrap:focus-visible::after { content: ""; position: absolute; inset: -6px; pointer-events: none; z-index: 6; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
 .mapwrap:focus-visible::after { inset: 2px; }
-main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(400px, 20vw, 520px); gap: 12px; }   /* the side column: 400 px up to 2,000 px wide, then a fifth of the viewport to 520 px (the author's screen of 26 October, about 2,500 px wide, had the minimap and the cards at 400 px) */
+main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(400px, 20vw, 520px); gap: 12px; }   /* the side column: 400 px up to 2,000 px wide, then a fifth of the viewport to 520 px (the author's screen of 25 October, about 2,500 px wide, had the minimap and the cards at 400 px) */
 /* Below 900 px the page scrolls: the map is a fixed-height block and the panels stack under it (the earlier
    viewport-locked layout squeezed the panels into a strip on a phone). */
 @media (max-width: 900px) { html, body { height: auto; min-height: 100%; } main { display: block; } .mapwrap { height: 62vh; min-height: 360px; max-height: 560px; margin-bottom: 12px; } .side { overflow: visible; } header { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .hright { margin-left: auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }   /* on phones the lock-up stacks under the title, left-aligned, the theme button at the right of the title row (round 11) */
@@ -112,7 +112,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .kv b.loc { font-size: 12px; }
 .maplegend .row { margin: 2px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; padding-left: 20px; text-indent: -20px; }   /* legend row labels in tracked capitals (round 10); a wrapped row hangs under its text, not under the swatch */
 .maplegend .row.p { text-transform: none; letter-spacing: 0; font-weight: 400; padding-left: 0; text-indent: 0; }   /* the legend's sentence lines stay mixed case */
-.lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }   /* the overlays' titles in the neon green (26 October) */
+.lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }   /* the overlays' titles in the neon green (25 October) */
 .lhead .ltitle b { font-weight: 500; }
 .mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; color: var(--muted); max-width: 43%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }   /* 43 percent beside the legend's 53 (round 10: the wider type) */
 .mapwrap.narrow .mapnote { font-size: 11.5px; line-height: 1.3; max-width: 62%; }   /* a phone-width map: a smaller, wider note that ends above the scale bar (round 10) */
@@ -207,18 +207,18 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .card.act { border-color: var(--cursor); }
 /* The GO TO card (round 10, the author's item 21): travel neither acts on the data nor reads it, so the card and its buttons take the page's neutral, the ink,
    with the pressed city (the preset the camera sits at) in a solid ink fill and the hover in full white; every other panel keeps its role colour. */
-.card.go { border-color: var(--go); }   /* the GO TO card's neutral (item 21, amended 26 October): travel neither acts on the data nor reads it */
+.card.go { border-color: var(--go); }   /* the GO TO card's neutral (item 21, amended 25 October): travel neither acts on the data nor reads it */
 .card.go .btn { border-color: var(--go); }
 .card.go .btn:hover { border-color: var(--go-live); }
 .card.go .btn[aria-pressed="true"] { background: var(--go); color: var(--stage); border-color: var(--go); }
 .card.go .btn[aria-pressed="true"]:hover { background: var(--go-live); border-color: var(--go-live); }
 .card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--context); margin: 0; font-weight: 500; }
-/* Collapse toggles on the six cards (the author's addition of 26 October, before step 5): the map overlays' square toggle at the right of the title row, in the neon green with the
+/* Collapse toggles on the six cards (the author's addition of 25 October, before step 5): the map overlays' square toggle at the right of the title row, in the neon green with the
    fuchsia focus corners; collapsed, a card shows its title row only; the state remembered per viewer; all open by default on every screen. */
 .chead { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .chead h2 { flex: 1 1 auto; min-width: 0; }
 .ctoggle { color: var(--context); }
-.card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 26 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
+.card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 25 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 /* The method block (round 10, the author's correction): under VIEW, a green i button toggles the block, collapsed by default and remembered; the block shows two lines
    under a fade with a More toggle (remembered too); the first section follows the view and the layer, the second holds the reading notes. */
@@ -241,7 +241,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 #modes { margin-bottom: 8px; }
 #modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-/* The year row (round 10, the author's corrections of 26 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Plex Mono 700 in tracked capitals on one
+/* The year row (round 10, the author's corrections of 25 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Plex Mono 700 in tracked capitals on one
    baseline, the value in tabular figures and unstriped (under the display floor); the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
    neon green, drawn whole as every symbol is; while a pulse runs the value and the thumb step up to the live green and settle back over 0.3 s; the track and its fill stay fuchsia;
    the brackets open outward by 2 px over 0.12 s while hovered or dragged and close on release, no motion at rest and none under reduced motion; the native thumb is a 24 px
@@ -294,7 +294,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .minimap .city:hover, .minimap .city:focus-visible, .minimap .frame:hover, .minimap .frame:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
 .minimap .city:hover .ld, .minimap .city:focus-visible .ld { stroke: var(--context-live); }
 .minimap .city:focus-visible .box, .minimap .frame:focus-visible .box { stroke: var(--cursor-live); stroke-width: 2; }
-/* The selected preset (the author's correction of 26 October): the city whose preset the camera is on, after a click, a hash link or a flight there, shows its dot, leader, box
+/* The selected preset (the author's correction of 25 October): the city whose preset the camera is on, after a click, a hash link or a flight there, shows its dot, leader, box
    stroke and name in the full neon green until the camera leaves it; RUSSIA likewise at the fit; a hover keeps the name in the ink. */
 .minimap [aria-pressed="true"] { color: var(--context); }
 .minimap [aria-pressed="true"] .ld { stroke: var(--context); }
@@ -309,7 +309,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 .muted { color: var(--muted); }
-/* The Under the cursor panel (the author's correction of 26 October): one label per row in tracked capitals, the value at the left and wrapping inside the card; the
+/* The Under the cursor panel (the author's correction of 25 October): one label per row in tracked capitals, the value at the left and wrapping inside the card; the
    leading division as a swatch, its short name, the code and the share with the class beneath; the ranked mix as swatch rows; each listed firm as a name line with
    its listing year and one muted line of state, memberships and revenue. Nothing is right-aligned, so no value walks across the card. */
 .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 10px; font-size: 13px; align-items: baseline; }
