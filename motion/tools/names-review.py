@@ -37,7 +37,7 @@ def main():
     missing = len(moscow - pairs)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), lineterminator="\n"); w.writeheader(); w.writerows(rows)
     by_case = {}
     for r in rows: by_case[r["script_case"]] = by_case.get(r["script_case"], 0) + 1
     print("%s: %d named listed firms (%d unnamed left out), by case %s; %d rows also in the Moscow file; Moscow name pairs not found nationally: %d"

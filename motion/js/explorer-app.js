@@ -2161,7 +2161,7 @@ void main() {
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; endPulse(); endCellPulse(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
@@ -2394,12 +2394,14 @@ void main() {
     if (found.static) { MM.pulseRing(ctx, px, py, r, LR, 1, theme, true); return; }
     MM.pulsePhase((found.at != null ? found.at : performance.now() - found.t0) / 1000, PH); if (PH.on && PH.p > 0 && PH.p < 1) MM.pulseRing(ctx, px, py, r, LR, PH.p, theme, false);
   }
+  let finding = false;   // set while the search switches the view, so the switch does not end the pulse it is about to start
   function findFirm(i) {
-    endFound(); findPin = i;
+    endFound(); findPin = i; finding = true;
     let y = state.year;
     if (TRN.filed[i][y - 2014] === '-') { let best = null; for (let d = 1; d <= 11 && best == null; d++) { if (y - d >= 2014 && TRN.filed[i][y - d - 2014] !== '-') best = y - d; else if (y + d <= 2025 && TRN.filed[i][y + d - 2014] !== '-') best = y + d; } if (best != null) y = best; }
     if (y !== state.year) { window.__atlas.year(y); endPulse(); }
     if (FIRMS_OK && state.mode !== 'firms') { window.__atlas.mode('firms'); endSweep(); }
+    finding = false;
     const t = { cx: TRN.x[i], cy: TRN.y[i], k: clampK(Math.max(state.cam.k, minSide() / 20)) };
     return flyTo(t).then(r => { if (r.done) landFound(i); return r; });
   }
