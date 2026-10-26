@@ -48,16 +48,15 @@ def audit_boxes(boxes, canvases, min_size, overlap):
             if small > 0 and x / small > overlap: out.append(("overlap", p["scene"], "%s | %s" % (p["str"], q["str"])))
     return out
 
-DOT_CONTRAST_KEEP = 0.80   # the dots' mean contrast with the two Firms-view layers on, as a share of the bare value: the author accepted the measured 0.83 to 0.87 (share, industry, fin) on 25 October 2026 in place of the 0.1 rule; the floor sits under it
 CUR_W = None   # the width under audit, for the DOM rules that depend on it (round 11)
 PANEL_H, PANEL_H_LISTED = 300, 560   # the Under the cursor panel's rows at most this tall (the industry layer's five swatch rows at 400 px) and with three listed firms named
 CAPS_JS = "(() => { const want = [['header h1', 700, false], ['.byline .who', 500, true], ['.card h2', 500, true], ['#theme', 500, true], ['.yearrow .ui', 700, true], ['#yearlabel', 700, true], ['#modes .modelabel', 500, true], ['#modes .btn', 500, true], ['#layers .btn', 500, true], ['#presets .btn', 500, true], ['#legendtitle', 500, true], ['#legendbody .row:not(.p)', 500, true], ['#mixtitle', 500, true], ['#cellinfo > span', 500, true], ['.wi.tip', 500, true], ['.loc', 500, true]];\n  const bad = [];\n  for (const [sel, wt, tracked] of want) { const els = [...document.querySelectorAll(sel)]; if (!els.length) { bad.push(sel + ': no element'); continue; }\n    for (const el of els.slice(0, 3)) { const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);\n      if (cs.textTransform !== 'uppercase') bad.push(sel + ': transform ' + cs.textTransform); if (parseInt(cs.fontWeight) !== wt) bad.push(sel + ': weight ' + cs.fontWeight);\n      if (tracked ? Math.abs(ls - 0.08 * fs) > 0.06 : ls !== 0) bad.push(sel + ': spacing ' + cs.letterSpacing + ' at ' + fs + 'px'); if (!/IBM Plex Mono/.test(cs.fontFamily)) bad.push(sel + ': family ' + cs.fontFamily); } }\n  const u = [...document.querySelectorAll('.u')]; if (!u.length) bad.push('.u: no element'); for (const el of u.slice(0, 5)) if (getComputedStyle(el).textTransform !== 'none') bad.push('.u: transform ' + getComputedStyle(el).textTransform);\n  for (const [sel, txt] of [['#zoom-in', 'ZOOM IN (+)'], ['#zoom-out', 'ZOOM OUT (−)'], ['#zoom-fit', 'FIT THE WHOLE COUNTRY (0)']]) if (document.querySelector(sel).title !== txt) bad.push(sel + ': title ' + document.querySelector(sel).title); const by = getComputedStyle(document.documentElement).getPropertyValue('--by').replace(/[^A-Za-z. ]/g, '').trim(); if (by !== 'Armen G. Kaprelian') bad.push('--by: ' + by); const who = document.querySelector('.byline .who'); if (!who || who.textContent.trim() !== 'Armen G. Kaprelian · PhD Candidate, Claremont Graduate University') bad.push('byline: ' + (who && who.textContent));  if (!document.querySelector('meta[name=author]') || document.querySelector('meta[name=author]').content !== 'Armen G. Kaprelian') bad.push('meta author missing'); for (const [sel, min] of [['.card.act', 2.9], ['.card:not(.act)', 2.9], ['#theme', 2.9], ['#modes .btn', 2.9], ['#layers .btn', 2.9], ['#presets .btn', 2.9], ['#zoom-in', 2.9], ['#pulse', 2.9], ['#methodbtn', 2.9], ['.toggle', 2.9], ['#zoombox', 1.9], ['#legend', 1.9], ['#mapnote', 1.9], ['#mixbox', 1.9], ['#tip', 1.9]]) { const el = document.querySelector(sel); if (!el) continue; const cs = getComputedStyle(el); if (parseFloat(cs.borderTopWidth) < min || cs.borderTopLeftRadius !== '0px' || cs.boxShadow !== 'none') bad.push(sel + ': border ' + cs.borderTopWidth + ' radius ' + cs.borderTopLeftRadius + ' shadow ' + cs.boxShadow); } { const hd = document.querySelector('header'), hb = hd.getBoundingClientRect(), bb = document.querySelector('.byline').getBoundingClientRect(); if (innerWidth >= 1200 && hb.height > (innerWidth >= 1600 ? 48 : 92)) bad.push('header taller than its row (one row at 1,600 px and above, two at 1,200): ' + hb.height); if (bb.bottom > hb.bottom + 0.5 || hd.scrollHeight > hd.clientHeight + 1) bad.push('the byline spills out of the header: byline bottom ' + bb.bottom + ' header bottom ' + hb.bottom); const tb = document.querySelector('#theme').getBoundingClientRect(); if (innerWidth > 900 && (tb.left < bb.right + 8 || tb.right < hb.right - 0.5)) bad.push('the theme button is not at the right edge past the byline: button ' + tb.left + '-' + tb.right + ', byline right ' + bb.right + ', header right ' + hb.right); } const tg = document.querySelector('.tagline'); if (!tg || tg.textContent !== 'Where Russian firms file, and where their statements stop appearing.') bad.push('tagline: ' + (tg && tg.textContent)); const lic = document.querySelector('footer .lic'); if (!lic || !lic.textContent.startsWith('Data: RFSD v3.1.0, CC BY 4.0')) bad.push('licence line: ' + (lic && lic.textContent)); { const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(); const col = el => getComputedStyle(el).borderTopColor; const rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; const go = document.querySelector('.card.go'), act = document.querySelector('.card.act'), read = document.querySelector('.card:not(.act):not(.go)'); if (!go || col(go) !== rgb(tok('--go'))) bad.push('GO TO card border ' + (go && col(go)) + ' expected ' + tok('--go')); for (const b of document.querySelectorAll('#presets .btn:not(.russia)')) if (col(b) !== rgb(tok('--go'))) { bad.push('preset border ' + col(b) + ' expected ' + tok('--go')); break; } { const rb = document.querySelector('#presets .btn.russia'); if (!rb || col(rb) !== rgb(tok('--context'))) bad.push('RUSSIA border ' + (rb && col(rb)) + ' expected ' + tok('--context')); } if (!act || col(act) !== rgb(tok('--cursor'))) bad.push('LAYER card border ' + (act && col(act))); if (!read || col(read) !== rgb(tok('--context'))) bad.push('reading card border ' + (read && col(read))); const yu = document.querySelector('.yearrow .ui'), yl = document.querySelector('#yearlabel'), cu = getComputedStyle(yu), cl = getComputedStyle(yl); if (cu.fontSize !== '16px' || cl.fontSize !== '16px' || cu.fontWeight !== cl.fontWeight || Math.abs(yu.getBoundingClientRect().bottom - yl.getBoundingClientRect().bottom) > 0.5) bad.push('year row: ' + cu.fontSize + ' ' + cl.fontSize + ' ' + cu.fontWeight + '/' + cl.fontWeight + ' bottoms ' + yu.getBoundingClientRect().bottom + '/' + yl.getBoundingClientRect().bottom); for (const [sel, el] of [['#yearlabel', yl], ['.lockup .mk', document.querySelector('.lockup .mk')], ['#yearthumb', document.querySelector('#yearthumb')], ['#pulse svg', document.querySelector('#pulse svg')], ['.sw.dot', document.querySelector('.sw.dot')]]) if (!el) { if (sel !== '.sw.dot') bad.push(sel + ': missing'); } else { const cs = getComputedStyle(el); if ((cs.maskImage && cs.maskImage !== 'none') || (cs.webkitMaskImage && cs.webkitMaskImage !== 'none')) bad.push('striped symbol or value: ' + sel); } const st = document.querySelector('header h1 .striped'); if (!st || (getComputedStyle(st).maskImage === 'none' && getComputedStyle(st).webkitMaskImage === 'none')) bad.push('the title is not striped'); for (const sel of ['.card h2', '#legendtitle', '#mixtitle', '#notelabel', '.ctoggle']) { const el = document.querySelector(sel); if (el && getComputedStyle(el).color !== rgb(tok('--context'))) bad.push(sel + ': ' + getComputedStyle(el).color + ' expected the neon green'); } const csq = sel => getComputedStyle(document.querySelector(sel)); if (csq('#yearlabel').color !== rgb(tok('--context'))) bad.push('year value at rest ' + csq('#yearlabel').color + ' expected ' + tok('--context')); if (csq('#yearthumb').color !== rgb(tok('--context'))) bad.push('thumb at rest ' + csq('#yearthumb').color); if (csq('.yearrow .ui').color !== rgb(tok('--ink'))) bad.push('YEAR label ' + csq('.yearrow .ui').color); if (csq('#pulse').borderTopColor !== rgb(tok('--treated')) || csq('#pulse').color !== rgb(tok('--treated'))) bad.push('pulse button ' + csq('#pulse').borderTopColor + ' / ' + csq('#pulse').color + ' expected the listed red'); if (csq('#yearthumb path').strokeWidth !== '3px' || document.querySelector('#yearthumb').getAttribute('viewBox') !== '-2.4 -2.4 28.8 28.8') bad.push('thumb geometry ' + csq('#yearthumb path').strokeWidth + ' ' + document.querySelector('#yearthumb').getAttribute('viewBox')); }\n  return bad; })()"
 
-def audit_dom(dom, mode=None):
+def audit_dom(dom, mode=None, layer=None):
     """The visible overlays must lie inside the map (0.5 px tolerance); the panels must never intersect one
     another. The tooltip follows the cursor and sits above the panels, so it is held inside the map but not
-    counted against them. The pulse button (25 October 2026) is shown in the firms view only, inside the year
-    row, clear of the slider and the year label, at least 24 px square."""
+    counted against them. The pulse button (25 October 2026) is shown in the firms view and, since round 14, in the
+    Cells view on the share and industry layers, inside the year row, clear of the slider and the year label, at least 24 px square."""
     out = []; m = dom["map"]
     hd = dom.get("header")   # the header's three groups (round 11, item 8): the title block, the centred lock-up and the theme button never touch, each inside the header; above 900 px the lock-up is centred on the header's width
     if hd:
@@ -72,7 +71,7 @@ def audit_dom(dom, mode=None):
             if abs(lc - hc) > 1.5: out.append(("header", "dom", "the lock-up is off the header's centre by %.1f px" % (lc - hc)))
     if dom.get("pulse") is not None and mode is not None:
         p = dom["pulse"]
-        if p["visible"] != (mode == "firms"): out.append(("pulse", "dom", "visible %s in the %s view" % (p["visible"], mode)))
+        if p["visible"] != ((mode == "firms" or layer in ("share", "industry")) and bool(dom.get("yearrow") and dom["yearrow"]["visible"])): out.append(("pulse", "dom", "visible %s in the %s view on the %s layer" % (p["visible"], mode, layer)))
         if p["visible"]:
             yr = dom["yearrow"]
             if p["x"] < yr["x"] - 0.5 or p["y"] < yr["y"] - 0.5 or p["x1"] > yr["x1"] + 0.5 or p["y1"] > yr["y1"] + 0.5: out.append(("pulse", "dom", "outside the year row %s" % json.dumps({k: round(p[k], 1) for k in ("x", "y", "x1", "y1")})))
@@ -195,7 +194,7 @@ def main():
                 r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; window.__extra = null; A.layer(%r); A.year(%d); await A.ready(); %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null, mode: mb ? mb.dataset.mode : 'cells', extra: window.__extra }; })()" % (layer, year, setup, layer, year), await_promise=True, timeout=180)
                 n_boxes += len(r["boxes"]); n_states += 1
                 if r["dom"].get("tipRelaxed"): n_relaxed += 1; relaxed.append("%d:%s:%s" % (w, tag, "+".join(r["dom"]["tipRelaxed"])))
-                found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"], r.get("mode"))
+                found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"], r.get("mode"), layer)
                 if check: found += check(r)
                 for kind, scene, key in found:
                     findings.append("%-11s width %d  %-7s %-5s %-8s %-10s %s" % (kind, w, layer, year, tag, scene, key))
@@ -316,15 +315,108 @@ def main():
                 if x["s3"]["open"] or x["s3"]["pressed"] != "false": bad.append(("method", "dom", "closed again: %s" % json.dumps(x["s3"])[:120]))
                 return bad
             state("share", 2021, "A.preset('Russia'); window.__extra = { s0: A.methodState(), s1: A.method(true), s2: A.methodMore(true), s3: (A.methodMore(false), A.method(false)) };", "method", method_check)
-            # the city-window hand-over (round 10, the author's item 19): at the Moscow preset the window is at full strength, the outside layer at a quarter with the ghost outline; at the regional zoom nothing fades
-            def hand_is(one, alpha, outline):
-                return lambda r: [] if r["extra"] and abs(r["extra"]["one"] - one) < 1e-6 and abs(r["extra"]["outsideAlpha"] - alpha) < 1e-6 and r["extra"]["outline"] == outline else [("handover", "cells", "expected one %s alpha %s outline %s, got %s" % (one, alpha, outline, json.dumps(r["extra"])))]
-            def hand_preset(width):   # at the Moscow preset the 1 km window is at full strength from 768 px up; the 376 px phone map sits at k 3.96, 0.94 of the way up the window's ramp
-                lo = 0.99 if width >= 768 else 0.9
-                return lambda r: [] if r["extra"] and r["extra"]["one"] >= lo and abs(r["extra"]["outsideAlpha"] - (1 - 0.75 * r["extra"]["one"])) < 1e-6 and r["extra"]["outline"] is True else [("handover", "cells", "expected one >= %s with alpha 1 - 0.75 one and the outline, got %s" % (lo, json.dumps(r["extra"])))]
-            for lyr, yr in (("share", 2024), ("density", 2021), ("industry", 2024)):
-                state(lyr, yr, "A.mode('cells'); A.preset('Moscow'); A.redraw(); window.__extra = A.handover();", "hand" + lyr, hand_preset(w))
-                state(lyr, yr, "A.mode('cells'); await A.jump({ cx: m[0], cy: m[1], k: 1.0 }); A.redraw(); window.__extra = A.handover();", "handoff" + lyr, hand_is(0, 1, False))
+            # the Cells view's squares (round 14, the author's decisions of 25 October 2026): the 1 km squares from the address files at full strength from k 2.5 on the share,
+            # industry and density layers (density in 2021), summing the year's firms on no list; the 2021 250 m windows over them from k 40 (the share layer in 2021 and the density
+            # layer only); none at the country view; the legend names the grid; the 25 km cells take over from 100 km between 1.5 and 2.7 times the fitted zoom
+            def sq_ok(micro, fine, word, hover_micro=None):
+                def chk(r):
+                    x = r["extra"]; bad = []
+                    if not x: return [("squares", "state", "no report")]
+                    M = x["M"]; d = M["drawn"]
+                    if abs((d.get("micro") or 0) - micro) > 0.02 or abs((d.get("fine") or 0) - fine) > 0.02: bad.append(("squares", "weight", "1 km at %s and 250 m at %s, expected %s and %s at k %.3f" % (d.get("micro"), d.get("fine"), micro, fine, r["cam"]["k"])))
+                    if micro > 0:
+                        if not M["level"] or M["level"]["sumN"] != x["firms"]: bad.append(("squares", "sum", "the %s squares hold %s firms, the year's file %s" % (M["year"], M["level"] and M["level"]["sumN"], x["firms"])))
+                        if "squares" not in M["log"]: bad.append(("squares", "drawn", "no squares in the draw: %s" % json.dumps(M["log"])))
+                    if fine > 0 and "fine" not in M["log"]: bad.append(("squares", "drawn", "no 250 m cells in the draw: %s" % json.dumps(M["log"])))
+                    if word not in x["legend"]: bad.append(("squares", "legend", "the legend's title lacks %r: %s" % (word, x["legend"][:120])))
+                    if hover_micro is not None and bool(x["hover"] and x["hover"].get("micro")) != hover_micro: bad.append(("squares", "hover", "the hover reads %s, expected a square %s" % (json.dumps(x["hover"])[:160], hover_micro)))
+                    if micro > 0 and (x["cost"]["mean"] > 10 or x["cost"]["max"] > 16): bad.append(("squares", "cost", "frame cost %.1f ms mean, %.1f max" % (x["cost"]["mean"], x["cost"]["max"])))
+                    return bad
+                return chk
+            SQJS = "await A.ready(); A.redraw(); const M = A.mosaic(); const h = A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); const legend = document.getElementById('legendtitle').innerText; const cost = A.frameCost(20); window.__extra = { M, legend, hover: h, cost, firms: MOTION_DATA.firms.by_year[M.year].firms }; if (A.hoverOff) A.hoverOff();"
+            state("share", 2024, "A.mode('cells'); A.preset('Russia'); " + SQJS, "sqnat", sq_ok(0, 0, "(100 km)", False))
+            state("share", 2024, "A.mode('cells'); A.preset('Moscow'); " + SQJS, "sqshare", sq_ok(1, 0, "(1 km)", True))
+            state("industry", 2024, "A.mode('cells'); A.preset('Moscow'); " + SQJS, "sqind", sq_ok(1, 0, "(1 km)", True))
+            state("density", 2021, "A.mode('cells'); A.preset('Moscow'); " + SQJS, "sqdens", sq_ok(1, 0, "(1 km)", True))
+            state("share", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); " + SQJS, "sqfine", sq_ok(1, 1 if side / 20 >= 40 else min(1, max(0, (side / 20 - 24) / 16)), "(250 m)" if side / 20 >= 32 else "(1 km)"))
+            state("share", 2024, "A.mode('cells'); A.preset('Central Moscow (250 m)'); " + SQJS, "sqfine24", sq_ok(1, 0, "(1 km)", True))
+            for f_, word in ((1.4, "(100 km)"), (2.8, "(25 km)")):
+                state("share", 2024, "A.mode('cells'); await A.jump({ cx: m[0] + 300, cy: m[1] - 200, k: A.kFit() * %r }); await A.ready(); A.redraw(); window.__extra = { legend: document.getElementById('legendtitle').innerText };" % f_, "band%s" % f_,
+                      lambda r, word=word: [] if r["extra"] and word in r["extra"]["legend"] else [("squares", "band", "at %.2f times the fit the legend reads %s, expected %r" % (r["cam"]["k"] / P["kfit"], json.dumps(r["extra"])[:120], word))])
+            # the tile's red count (round 14): the firms on these lists present in the layer's own year at coordinates inside the hovered cell, against an independent count over the
+            # listed file, at every grid (100 km, 25 km, 1 km, 250 m, the 5 km density cells) and at an empty cell; the count bold red 19 px with the legend's dot at the first line's end
+            def count_ok(r):
+                x = r["extra"]
+                if not x or not x.get("tc"): return [("count", "tile", "no count in the tile: %s" % json.dumps(x)[:200])]
+                bad = []; tc = x["tc"]
+                if tc["text"].replace(",", "") != str(x["n"]): bad.append(("count", "value", "the tile shows %s, the independent count is %s (grid %s, year %s)" % (tc["text"], x["n"], x["grid"], tc["year"])))
+                if tc["year"] != x["yl"]: bad.append(("count", "year", "the count reads %s, the layer's own year is %s" % (tc["year"], x["yl"])))
+                if not tc["dot"] or not tc["first"]: bad.append(("count", "place", "dot %s, on the first line %s" % (tc["dot"], tc["first"])))
+                if abs(tc["size"] - 19) > 0.01 or str(tc["weight"]) != "700" or tc["colour"] != x["red"]: bad.append(("count", "style", "%s px, weight %s, colour %s (expected 19, 700, %s)" % (tc["size"], tc["weight"], tc["colour"], x["red"])))
+                return bad
+            CNT = "const T = MOTION_DATA.treatednational, yl = %d, X = %s, Y = %s; const h = A.hoverKm(X, Y, { show: true }); const g = h.grid, o = h.origin || [0, 0], x0 = o[0] + Math.floor((X - o[0]) / g) * g, y0 = o[1] + Math.floor((Y - o[1]) / g) * g; let n = 0; for (let i = 0; i < T.n; i++) { if (T.filed[i][yl - 2014] === '-') continue; if (T.x[i] >= x0 && T.x[i] < x0 + g && T.y[i] >= y0 && T.y[i] < y0 + g) n++; } const tk = getComputedStyle(document.documentElement).getPropertyValue('--treated').trim(); window.__extra = { n, yl, grid: g, tc: A.tileCount(), red: 'rgb(' + [1, 3, 5].map(i => parseInt(tk.slice(i, i + 2), 16)).join(', ') + ')' };"
+            for lyr, yr, setup, X, Y, yl, tg in [("share", 2024, "A.preset('Russia');", "m[0] + 10", "m[1] + 10", 2024, "cnt100"), ("share", 2021, "A.preset('Russia');", "m[0]", "m[1]", 2021, "cnt100b"),
+                                                 ("share", 2024, "await A.jump({ cx: m[0], cy: m[1], k: A.kFit() * 3 });", "m[0] + 5", "m[1] - 7", 2024, "cnt25"), ("share", 2024, "A.preset('Moscow');", "m[0] + 1.3", "m[1] + 0.6", 2024, "cnt1"),
+                                                 ("industry", 2022, "A.preset('Moscow');", "m[0] - 2.2", "m[1] + 1.1", 2022, "cnt1i"), ("share", 2021, "A.preset('Central Moscow (250 m)');", "m[0] + 0.1", "m[1] + 0.1", 2021, "cnt250"),
+                                                 ("density", 2021, "A.preset('Russia');", "m[0]", "m[1]", 2021, "cnt5"), ("change", 2021, "A.preset('Russia');", "m[0]", "m[1]", 2024, "cntchg"), ("cohort", 2021, "A.preset('Russia');", "m[0]", "m[1]", 2021, "cntcoh"),
+                                                 ("fin", 2021, "A.preset('Russia');", "m[0] + 300", "m[1]", 2024, "cntfin"), ("share", 2024, "A.preset('Russia');", "A.cities.Murmansk[0]", "A.cities.Murmansk[1] + 400", 2024, "cnt0")]:
+                state(lyr, yr, "A.mode('cells'); " + setup + " await A.ready(); A.redraw(); " + CNT % (yl, X, Y), tg, count_ok)
+            # the count's contrast on both themes' tiles (19 px bold is large text: at least 3 to 1 against the panel), and the tile's body in the GO TO card's ice with the footer in the reading green
+            def lum(h):
+                c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]; c = [v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+                return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+            def contrast(a, b): la, lb = lum(a), lum(b); return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+            def ice_ok(r):
+                x = r["extra"]; bad = []
+                if not x: return [("tile", "colour", "no report")]
+                for th in x["themes"]:
+                    if th["body"] != th["go"]: bad.append(("tile", "colour", "%s theme: the tile's text is %s, expected the GO TO ice %s" % (th["scheme"], th["body"], th["go"])))
+                    if th["foot"] not in (th["ctx"], th["ctxLive"]): bad.append(("tile", "colour", "%s theme: the footer is %s, expected the reading green" % (th["scheme"], th["foot"])))
+                    cr = contrast(th["treated"], th["panel"])
+                    if cr < 3.0: bad.append(("count", "contrast", "%s theme: the red count measures %.2f to 1 on the tile, under 3" % (th["scheme"], cr)))
+                    if not th["tc"]: bad.append(("count", "tile", "%s theme: no count" % th["scheme"]))
+                return bad
+            ICE = "const css = () => getComputedStyle(document.documentElement), tok = n => css().getPropertyValue(n).trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; const read = () => ({ scheme: tok('--scheme'), body: getComputedStyle(document.getElementById('tipbody')).color, foot: getComputedStyle(document.getElementById('tipfoot')).color, go: rgb(tok('--go')), ctx: rgb(tok('--context')), ctxLive: rgb(tok('--context-live')), treated: tok('--treated'), panel: tok('--panel'), tc: A.tileCount() }); const themes = []; A.preset('Moscow'); await A.ready(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); window.__extra = { themes };"
+            state("share", 2024, "A.mode('cells'); " + ICE, "tileice", ice_ok)
+            # the Cells view's pulse (round 14): at the country in 2022 every 100 km cell holding a firm listed that year pulses once, its rings at the cell's centre, staggered west to east
+            # over the cells in view; at Moscow on the industry layer the 1 km squares do; under reduced motion the still highlight
+            N22C = "(() => { const T = MOTION_DATA.treatednational; let n = 0; for (let i = 0; i < T.n; i++) if (T.red_from[i] === %d && !T.undated[i] && T.filed[i][%d] !== '-') n++; return n; })()"
+            def cpulse_ok(g):
+                def chk(r):
+                    x = r["extra"]; bad = []
+                    if not x or not x["s"]: return [("cpulse", "state", "no pulse: %s" % json.dumps(x)[:200])]
+                    cells = x["s"]["cells"]
+                    if x["n"] != len(cells) or not (0 < len(cells) <= x["firms"]): bad.append(("cpulse", "count", "%s cells pulsed (returned %s) for %s firms listed in the year" % (len(cells), x["n"], x["firms"])))
+                    for cx, cy, dl in cells:
+                        if abs(((cx / g) % 1) - 0.5) > 1e-6 or abs(((cy / g) % 1) - 0.5) > 1e-6: bad.append(("cpulse", "centre", "a ring at (%.3f, %.3f), not a %s km cell's centre" % (cx, cy, g))); break
+                    spread = x["rule"]["spreadMs"]
+                    if any(dl < -1e-6 or dl > spread + 1e-6 for _, _, dl in cells): bad.append(("cpulse", "stagger", "a delay outside 0 to %s ms" % spread))
+                    vis = sorted(cells, key=lambda c: c[0])   # the delays grow with x over every cell (clamped outside the view), so the order holds for all
+                    if any(b[2] < a[2] - 1e-6 for a, b in zip(vis, vis[1:]) if a[0] < b[0]): bad.append(("cpulse", "stagger", "the delays do not grow from west to east"))
+                    if x["s"]["static"]: bad.append(("cpulse", "motion", "a still pulse with motion allowed"))
+                    if not x["visible"]: bad.append(("cpulse", "button", "the pulse button is hidden in the Cells view on this layer"))
+                    return bad
+                return chk
+            CP = "await A.ready(); A.redraw(); const n = A.cellPulseAt(600), s = A.cellPulseState(); window.__extra = { n, s, firms: %s, rule: A.listedRule(), visible: !document.getElementById('pulse').hidden }; A.cellPulseAt(null);"
+            state("share", 2022, "A.mode('cells'); A.preset('Russia'); " + CP % (N22C % (2022, 8)), "cpulse", cpulse_ok(100))
+            state("industry", 2022, "A.mode('cells'); A.preset('Moscow'); " + CP % (N22C % (2022, 8)), "cpulse1", cpulse_ok(1))
+            state("density", 2021, "A.mode('cells'); A.preset('Russia'); await A.ready(); window.__extra = { n: A.pulse(), hidden: document.getElementById('pulse').hidden };", "cpulseoff", lambda r: [] if r["extra"] and r["extra"]["n"] == 0 and r["extra"]["hidden"] else [("cpulse", "button", "on the density layer: %s" % json.dumps(r["extra"]))])
+            # the legend's two sides (round 14): the key side by default with the "i" shown, the reading side at the key side's width, back again; then the reading side left on for the DOM rules
+            def sides_ok(r):
+                x = r["extra"]; bad = []
+                if not x: return [("legend", "sides", "no report")]
+                k0, r1, k2 = x["k0"], x["r1"], x["k2"]
+                if k0["reading"] or not k0["info"] or k0["pressed"] != "false": bad.append(("legend", "sides", "the default side: %s" % json.dumps(k0)[:160]))
+                if not r1["reading"] or r1["pressed"] != "true" or abs(r1["w"] - k0["w"]) > 0.5 or "red number" not in r1["text"] or "< 55%" in r1["text"]: bad.append(("legend", "sides", "the reading side: width %.1f against %.1f, %s" % (r1["w"], k0["w"], json.dumps(r1)[:200])))
+                if k2["reading"] or abs(k2["w"] - k0["w"]) > 0.5 or abs(k2["h"] - k0["h"]) > 0.5: bad.append(("legend", "sides", "back to the key: %s against %s" % (json.dumps(k2)[:120], json.dumps(k0)[:120])))
+                if "red number" in k0["text"]: bad.append(("legend", "sides", "the key side shows the reading text"))
+                return bad
+            LS = "const L = () => { const el = document.getElementById('legend'), b = el.getBoundingClientRect(), i = document.getElementById('legendinfo'); return { w: b.width, h: b.height, reading: el.classList.contains('reading'), info: !i.hidden, pressed: i.getAttribute('aria-pressed'), text: document.getElementById('legendbody').innerText }; }; A.legendSide(false); A.legend(true); A.redraw(); const k0 = L(); document.getElementById('legendinfo').click(); const r1 = L(); document.getElementById('legendinfo').click(); const k2 = L(); window.__extra = { k0, r1, k2 };"
+            state("share", 2024, "A.mode('cells'); A.preset('Moscow'); await A.ready(); " + LS, "lsides", sides_ok)
+            state("fin", 2025, "A.mode('firms'); A.preset('Russia'); await A.ready(); " + LS, "lsidesf", lambda r: [] if r["extra"] and r["extra"]["r1"]["reading"] and abs(r["extra"]["r1"]["w"] - r["extra"]["k0"]["w"]) <= 0.5 and "Each pixel" in r["extra"]["r1"]["text"] else [("legend", "sides", json.dumps(r["extra"])[:240])])
+            state("industry", 2024, "A.mode('cells'); A.preset('Moscow'); await A.ready(); A.legend(true); A.legendSide(true);", "lread")
+            state("industry", 2024, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.legend(true); A.legendSide(true);", "lreadf")
+            state("share", 2024, "A.legendSide(false); A.legend(null); A.mode('cells'); A.preset('Russia');", "lkey")
             # the data wire (round 10, W14 and E15): every item of the 50-item cycle re-derived from the data files by wire_check.py for 2021 and 2024 at the Russia preset and
             # inside Moscow Oblast; tips at every fifth slot and drawn from the page's TIPS; one cat item at the keyed slot, never beside a named firm; the lead carries a place name
             if w >= 768:
@@ -464,22 +556,47 @@ def main():
                     if not x["presets"]: bad.append(("minimap", "dom", "the button list is hidden at %d px" % w))
                 return bad
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); const mm = A.minimap(), d = A.redraw().dom; const clicks = []; for (const lbl of ['Moscow', 'Novosibirsk', 'Vladivostok', 'Russia']) { const a = mm.visible ? await A.minimapClick(lbl) : null; A.preset(lbl); const b = A.camera(); if (a) clicks.push([lbl, a, b]); } A.preset('Russia'); const selOf = () => [...document.querySelectorAll('#minimap [aria-pressed=\"true\"]')].map(e => e.id); const sel = [selOf()]; A.preset('Moscow'); sel.push(selOf()); const tk = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')', g = document.querySelector('#mm-moscow'), selGreen = !!g && getComputedStyle(g).color === rgb(tk) && getComputedStyle(g.querySelector('text')).fill === rgb(tk) && getComputedStyle(g.querySelector('.ld')).stroke === rgb(tk); A.preset('Russia'); window.__extra = { visible: mm.visible, labels: mm.labels.length, rings: mm.rings, violations: mm.violations, presets: d.presets.visible, domvis: d.minimap.visible, clicks, sel, selGreen, builds: mm.builds, rebuilt: A.minimapVerify(), titles: mm.titles };", "minimap", mm_check)
-            # the region tint and the glow under the dot field (round 10, F13): both full at the Russia preset, both gone at Moscow; the glow cached (no rebuild across twenty frames)
-            def fl_is(tint, glow):
-                def chk(r):
-                    x = r["extra"]; bad = []
-                    if not x: return [("firmsLayers", "map", "no report")]
-                    if abs(x["tint"] - tint) > 1e-6 or abs(x["glow"] - glow) > 1e-6: bad.append(("firmsLayers", "map", "fades tint %s glow %s, expected %s and %s" % (x["tint"], x["glow"], tint, glow)))
-                    if glow > 0 and (not x["glowKey"] or x["builds"] < 1 or x["builds"] != x["builds2"]): bad.append(("firmsLayers", "map", "glow builds %s then %s (key %s)" % (x["builds"], x["builds2"], x["glowKey"])))
-                    if tint > 0 and not x["tintYears"]: bad.append(("firmsLayers", "map", "no tint cached"))
-                    return bad
-                return chk
-            for lyr in ("share", "industry", "fin"):
-                state(lyr, 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); A.redraw(); const f1 = A.firmsLayers(); await A.frameCost(20); window.__extra = Object.assign(A.firmsLayers(), { builds2: A.firmsLayers().builds, builds: f1.builds });", "flayers" + lyr, fl_is(1, 1))
-                # the dots' contrast against the composite beneath them, with and without the two layers (the author's check of 25 October). The author asked for 0.1; measured on
-                # 25 October at the Russia preset the tint alone (8 percent, desaturated) costs 1.0 of 9.2 on the share layer and the glow at 15 percent 2.2, so no visible layer meets
-                # 0.1. Provisional rule until the author decides: the mean contrast with the layers stays at or above two thirds of the bare value (share 0.68, industry 0.71, fin 0.77 measured).
-                state(lyr, 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); window.__extra = A.mosaicContrast(300);", "mosaiccontrast" + lyr, lambda r: [] if r["extra"] and r["extra"]["n"] >= 100 and r["extra"]["on"] >= DOT_CONTRAST_KEEP * r["extra"]["off"] else [("firmsLayers", "contrast", "square contrast with the layers %s against %s bare (ratio %s, floor %s, over %s dots)" % (r["extra"] and round(r["extra"]["on"], 3), r["extra"] and round(r["extra"]["off"], 3), r["extra"] and round(r["extra"]["on"] / r["extra"]["off"], 3), DOT_CONTRAST_KEEP, r["extra"] and r["extra"]["n"]))])
+            # the search by name (round 14, the author's request of 25 October 2026): the typed letters against the display and filed names, one to ten hits, each a listed firm whose
+            # names hold the letters as the page normalises them; the list opens, Escape closes it; ArrowDown and Enter choose the second hit, which flies to the firm in the Firms view
+            # (from the Cells view too), at the 20 km rung or closer, opens the tooltip with the firm's name, pulses its mark and writes the address; the field and its list stay inside the card
+            def find_ok(r):
+                x = r["extra"]; bad = []
+                if not x: return [("find", "state", "no report")]
+                if not (1 <= len(x["hits"]) <= 10): bad.append(("find", "hits", "%d hits for %r" % (len(x["hits"]), x["q"])))
+                if any(x["qn"] not in k for k in x["keys"]): bad.append(("find", "match", "a hit whose names lack %r: %s" % (x["qn"], json.dumps(x["keys"])[:200])))
+                if not x["listOpen"] or x["expanded"] != "true" or not x["escClosed"]: bad.append(("find", "list", "open %s, expanded %s, closed by Escape %s" % (x["listOpen"], x["expanded"], x["escClosed"])))
+                st = x["st"]
+                if not st["found"] or st["found"]["i"] != x["chosen"] or st["pin"] != x["chosen"]: bad.append(("find", "found", "chose %s, found %s" % (x["chosen"], json.dumps(st)[:160])))
+                if st["mode"] != "firms": bad.append(("find", "view", "the search left the map in the %s view" % st["mode"]))
+                if abs(st["cam"]["cx"] - x["fx"]) > 1e-6 or abs(st["cam"]["cy"] - x["fy"]) > 1e-6 or st["cam"]["k"] < x["kmin"] * (1 - 1e-9): bad.append(("find", "camera", "the camera %s, the firm at (%.4f, %.4f), k at least %.4f" % (json.dumps(st["cam"]), x["fx"], x["fy"], x["kmin"])))
+                if x["name"] not in x["tip"]: bad.append(("find", "tooltip", "the tooltip lacks %r: %s" % (x["name"], x["tip"][:200])))
+                if not x["closed"]: bad.append(("find", "list", "the list stays open after the choice"))
+                if not st["hash"].startswith("#firms/"): bad.append(("find", "address", "the address did not follow the flight: %r" % st["hash"]))
+                b, c, l = x["box"], x["card"], x["list"]
+                if b["x"] < c["x"] - 0.5 or b["x1"] > c["x1"] + 0.5 or l["x"] < c["x"] - 0.5 or l["x1"] > c["x1"] + 0.5: bad.append(("find", "layout", "the field %s or its list %s leaves the card %s" % (json.dumps(b), json.dumps(l), json.dumps(c))))
+                if x["static"] != x["rm"]: bad.append(("find", "motion", "the pulse is %s under reduced motion %s" % ("still" if x["static"] else "moving", x["rm"])))
+                return bad
+            FINDJS = "const Q = %r, rect = e => { const b = e.getBoundingClientRect(); return { x: b.left, x1: b.right, y: b.top, y1: b.bottom }; }, el = document.getElementById('findinput'), fl = document.getElementById('findlist'); el.focus(); const hits = A.find(Q).map(h => h.i); const listOpen = !fl.hidden, expanded = el.getAttribute('aria-expanded'), list = rect(fl), box = rect(el), card = rect(document.getElementById('card-goto')); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); const escClosed = fl.hidden; A.find(Q); const chosen = hits.length > 1 ? hits[1] : hits[0]; if (hits.length > 1) el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); for (let t = 0; t < 80 && !(A.foundState().found && A.foundState().found.i === chosen); t++) await new Promise(q => setTimeout(q, 100)); const T = MOTION_DATA.treatednational, st = A.foundState(), cv = window.__atlasCanvases.map; window.__extra = { q: Q, qn: Q.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim(), hits, keys: hits.map(i => A.findKeys(i)), listOpen, expanded, escClosed, chosen, st, fx: T.x[chosen], fy: T.y[chosen], kmin: Math.min(Math.round(cv.w), Math.round(cv.h)) / 20, name: T.name[chosen], tip: document.getElementById('tipbody').innerText, closed: fl.hidden, box, card, list, static: !!(st.found && st.found.static), rm: matchMedia('(prefers-reduced-motion: reduce)').matches }; A.hoverOff();"
+            state("share", 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); " + FINDJS % "avtomat", "find", find_ok)
+            state("industry", 2024, "A.mode('cells'); A.preset('Russia'); await A.ready(); " + FINDJS % "ракетно", "findcells", find_ok)
+            cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]})
+            state("share", 2024, "A.mode('cells'); A.preset('Moscow'); await A.ready(); " + FINDJS % "aeroflot", "findrm", find_ok)
+            cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
+            state("share", 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); { const el = document.getElementById('findinput'); el.focus(); const hits = A.find('zzqxw'); window.__extra = { hits: hits.length, none: document.querySelector('#findlist .none') ? document.querySelector('#findlist .none').textContent : null }; el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); el.blur(); }", "findnone",
+                  lambda r: [] if r["extra"] and r["extra"]["hits"] == 0 and r["extra"]["none"] == "No list member by that name" else [("find", "none", json.dumps(r["extra"]))])
+            # links to the exact view (round 14): a settled view writes the address; the link button copies the artifact's address with it (or shows it in a field where the clipboard is
+            # refused); the address read back restores the view, the layer, the year and the camera; a reload of it does too (below, with the presets' anchors)
+            def vlink_ok(r):
+                x = r["extra"]; bad = []
+                if not x: return [("link", "state", "no report")]
+                if x["hash"] != "#" + x["vh"]: bad.append(("link", "address", "the address %r, the view %r" % (x["hash"], x["vh"])))
+                if not re.match(r"^firms/fin/2022/-?\d+\.\d{5},-?\d+\.\d{5}/\d+(\.\d+)?km$", x["vh"]): bad.append(("link", "format", "the view reads %r" % x["vh"]))
+                if not x["link"].endswith("#" + x["vh"]): bad.append(("link", "button", "the link %r does not carry the view" % x["link"]))
+                if not (x["status"] == "Link copied" or x["field"] == x["link"]): bad.append(("link", "button", "status %r, field %r, link %r" % (x["status"], x["field"], x["link"])))
+                b, c = x["btn"], x["card"]
+                if b["x"] < c["x"] - 0.5 or b["x1"] > c["x1"] + 0.5: bad.append(("link", "layout", "the button %s leaves the card %s" % (json.dumps(b), json.dumps(c))))
+                return bad
+            state("fin", 2022, "A.mode('firms'); await A.jump({ cx: m[0] + 12.3, cy: m[1] - 4.5, k: 7.25 }); await A.ready(); { const rect = e => { const b = e.getBoundingClientRect(); return { x: b.left, x1: b.right }; }; document.getElementById('copylink').click(); await new Promise(q => setTimeout(q, 400)); const f = document.getElementById('linkfield'); window.__extra = { hash: location.hash, vh: A.viewHash(), link: A.viewLink(), status: document.getElementById('linkstatus').textContent, field: f.hidden ? null : f.value, btn: rect(document.getElementById('copylink')), card: rect(document.getElementById('card-goto')) }; f.hidden = true; document.getElementById('linkstatus').textContent = ''; }", "vlink", vlink_ok)
             # the note's default (round 10, the author's correction of 25 October): collapsed at the national zoom while the strip is open, expanded in a city window or with the strip closed, the viewer's choice winning
             if w >= 768:
                 def note_is(open_, label): return lambda r: [] if r["extra"] and r["extra"]["open"] is open_ else [("note", "default", "%s: expected open %s, got %s" % (label, open_, json.dumps(r["extra"])))]
@@ -487,7 +604,6 @@ def main():
                 state("share", 2024, "A.mode('cells'); A.note(null); A.strip(true); A.preset('Moscow'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState();", "notecity", note_is(True, "city window"))
                 state("share", 2024, "A.mode('cells'); A.note(null); A.strip(false); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.strip(true);", "notestripoff", note_is(True, "national, strip closed"))
                 state("share", 2024, "A.mode('cells'); A.note(true); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.note(null);", "notemem", note_is(True, "national, the viewer's choice"))
-            state("share", 2024, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.redraw(); window.__extra = Object.assign(A.firmsLayers(), { builds2: A.firmsLayers().builds });", "flayersoff", fl_is(0, 0))
             # ghost names, hairline borders, the hovered region's outline and the strip following the cursor (round 10, G13)
             # the ghost names float at a fixed size and opacity at every zoom (round 12, part D): the floors at the country, at least one name at the Moscow and Central Moscow presets in both views, the GO TO token as their colour
             def ghost_ok(floor, label):
@@ -565,8 +681,8 @@ def main():
             state("share", 2021, SET + "A.preset('Moscow'); await A.click(m[0], m[1]);", "clk2", cam_k(side / 20, "a click at the Moscow preset lands on the 20 km scale", mx, my))
             state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]);", "clk3", cam_k(min(2.5 * P["cm"]["k"], 200), "a click at Central Moscow steps x2.5"))
             state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]); await A.click(m[0], m[1], { shift: true });", "clk3b", cam_k(P["cm"]["k"], "a zoom on the clicked cell and a Shift+click out return to the preset's zoom near the subject", mx, my, 2.0))   # the step out is anchored at the cursor: 2.5 times the cell centre's offset, at most 1.8 km for a 1 km cell
-            px, py = (int((mx + 60) // 25) + 0.5) * 25, (int(my // 25) + 0.5) * 25
-            state("share", 2021, SET + "A.preset('Moscow'); await A.click(m[0] + 60, m[1]);", "clkpan", cam_k(P["moscow"]["k"], "a click on a 25 km cell outside the window pans to it at the same zoom", px, py, 1e-6))
+            px, py = (mx + 60) // 1 + 0.5, my // 1 + 0.5
+            state("share", 2021, SET + "A.preset('Moscow'); await A.ready(); await A.click(m[0] + 60, m[1]);", "clkpan", cam_k(side / 20, "a click on a 1 km square 60 km from Moscow lands on the 20 km rung at the square (round 14: the squares cover the country)", px, py, 1e-6))
             cx, cy = (int((mx + 300) // 100) + 0.5) * 100, (int(my // 100) + 0.5) * 100
             state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0] + 300, m[1]);", "clkcell", cam_k(side / 500, "a click on the cell 300 km east of Moscow lands on its centre", cx, cy, 1e-6))
             state("share", 2021, SET + "A.preset('Russia'); await A.zoom(1); await A.zoom(1); await A.zoom(1);", "zoom3", cam_k(8 * P["kfit"], "three zoom-ins from Russia give 8 x kFit", P["russia"]["cx"], P["russia"]["cy"], 1e-6))
@@ -623,10 +739,10 @@ def main():
                     return bad
                 return f
             state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixhov100", mix_ok("100 km cell at the cursor"))
-            state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.redraw(); A.hoverKm(m[0] + 0.2, m[1] + 0.2, { show: true }); " + MIXJS, "mixhov1", mix_ok("1 km cell at the cursor"))
+            state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.redraw(); A.hoverKm(m[0] + 0.2, m[1] + 0.2, { show: true }); " + MIXJS, "mixhov1", mix_ok("1 km square at the cursor"))
             state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverOff(); " + MIXJS, "mixview", mix_ok("100 km cells in view"))
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); A.hoverKm(AN.a[0], AN.a[1], { show: true }); " + MIXJS, "mixaddr", mix_ok("coordinate pair at the cursor"))
-            state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixsq", mix_ok("1 km square at the cursor"))
+            state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverOff(); " + MIXJS, "mixviewf", mix_ok("coordinate pairs in view"))
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); " + MIXJS, "mixoff", lambda r: [] if r["extra"] and not r["extra"]["visible"] else [("mix", "hidden", "the box shows off the industry layer")])
             state("industry", 2021, "A.mode('cells'); A.mixbox(false); A.preset('Russia'); " + MIXJS, "mixclosed", mix_ok("", closed=True))
@@ -704,7 +820,7 @@ def main():
                         qe = min(1, max(0, math.log2(60 / L["k"]) / math.log2(120)))
                         if abs(L["q"] - qe) > 1e-6: bad.append(("rule", name, "q %.3f at k %.3f, expected %.3f" % (L["q"], L["k"], qe)))
                     if x and not (abs(x["russia"]["q"] - 1) < 1e-6 and x["russia"]["q"] >= x["moscow"]["q"] >= x["central"]["q"] >= 0): bad.append(("rule", "q", json.dumps({k: round(v["q"], 3) for k, v in x.items()})))   # central may reach 0: on a screen 1,400 px tall the 250 m preset's k passes 60, where the formula ends (seen at 2,560 by 1,400 on 25 October)
-                    if x and (abs(x["russia"]["alpha"] - 0.6) > 1e-6 or abs(x["russia"]["floor"] - 0.85) > 1e-6): bad.append(("rule", "quiet", "at the country alpha %.3f floor %.3f, expected 0.60 and 0.85 (round 11)" % (x["russia"]["alpha"], x["russia"]["floor"])))   # the national extra (round 11, item 2)
+                    if x and (abs(x["russia"]["alpha"] - 0.48) > 1e-6 or abs(x["russia"]["floor"] - 0.85 * 0.82) > 1e-6): bad.append(("rule", "quiet", "at the country alpha %.3f floor %.3f, expected 0.48 and 0.697 (round 11's 0.60 and 0.85 with B'')" % (x["russia"]["alpha"], x["russia"]["floor"])))   # the national extra (round 11, item 2) with the cased marks of round 14 (B'')
                     if x and (x["moscow"].get("q2", 0) > 1e-6 or abs(x["moscow"]["alpha"] - (1 - 0.2 * x["moscow"]["q"])) > 1e-6): bad.append(("rule", "quiet", "at the city preset q2 %.3f alpha %.3f (q %.3f): the extra must end at the city zoom" % (x["moscow"].get("q2", 0), x["moscow"]["alpha"], x["moscow"]["q"])))
                     return bad
                 state("share", 2021, F + "{ const out = {}; for (const [k, p] of [['russia', 'Russia'], ['moscow', 'Moscow'], ['central', 'Central Moscow (250 m)']]) { A.preset(p); out[k] = A.listedRule(); } window.__extra = out; A.preset('Moscow'); }", tag + "rules", rules_ok)
@@ -722,68 +838,50 @@ def main():
                 state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.a[0], AN.a[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pair", pair_ok(True))
                 state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.b[0], AN.b[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pairb", pair_ok(True))
                 state("share", 2021, F + "{ A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); const h = A.hoverKm(AN.a[0] + 0.1, AN.a[1], { show: true }); window.__extra = { kind: h && h.kind, text: document.getElementById('tipbody').innerText, AN }; }", tag + "pair100", pair_ok(False))
-                # the additive field (round 11, item 1): additive below k 1.5 (a float target on WebGL), both weights inside the band, "over" alone from k 3; the firms in view (item 3) at the
-                # country equal the manifest's firms on no list plus the listed firms present, and the tile's footer shows them in the Firms view only; the floor's bitmaps cover the extent (item 5)
-                def regime_ok(mosaic, over):   # round 13: the squares below the dots zoom (the level reported), the dots' "over" field from k 20, the additive field retired there
+                # the pixel field (round 14, the author's decision of 25 October 2026): the video's per-pixel rule below the dots zoom, the dots from it, a crossfade over 1.4 x; the field's
+                # cells sum the firms on no list in view (at the country, the year's whole file); on WebGL the composed image matches the CPU engine's within rounding; the hovered pixel's
+                # figures equal an independent sum over every address of the year; the tile names the pixel
+                def regime_ok(level):
                     def chk(r):
-                        x = r["extra"]; bad = []
+                        x = r["extra"]
                         if not x: return [("field", "regime", "no report")]
-                        if x.get("mosaic") != mosaic or x["over"] != over or x["additive"]: bad.append(("field", "regime", "mosaic %s over %s additive %s at k %.3f, expected level %s, over %s, no additive field" % (x.get("mosaic"), x["over"], x["additive"], r["cam"]["k"], mosaic, over)))
-                        return bad
+                        return [] if x.get("level") == level else [("field", "regime", "level %s (pixel %s, dots %s) at k %.3f, expected %s" % (x.get("level"), x.get("pix"), x.get("dots"), r["cam"]["k"], level))]
                     return chk
-                state("share", 2024, F + "A.preset('Russia'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regimeadd", regime_ok(25, False))
-                state("share", 2024, F + "A.preset('Russia'); await A.ready(); await A.jump({ cx: m[0], cy: m[1], k: 2.2 }); A.redraw(); window.__extra = A.fieldRegime();", tag + "regimeband", regime_ok(1, False))
-                state("industry", 2024, F + "A.preset('Moscow'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regimeover", regime_ok(1, False))
-                state("share", 2024, F + "A.preset('Central Moscow (250 m)'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regimedots", regime_ok(None, True))
-                state("share", 2024, F + "A.preset('Russia'); await A.ready(); await A.jump({ cx: m[0], cy: m[1], k: A.mosaic().dotsK * 1.2 }); A.redraw(); window.__extra = A.fieldRegime();", tag + "regimefade", regime_ok(1, True))
-                # the binned Firms view (round 13): the level, the mode and the alphas at the country, in the two crossfades, at the city preset and at the dots; the squares' firms sum to the year's firms on
-                # no list on both levels; the tile and the legend name the square; the frame cost within the acceptance at the country and in the crossfade
-                def mosaic_ok(level, mode, alphas, tipword, legendword, opacity, cost=True):   # cost: the frame-cost rule, for the levels the squares draw alone (the discs' 2D fallback at the dots zoom costs what it did)
-                    def chk(r):
-                        x = r["extra"]; bad = []
-                        if not x: return [("mosaic", "state", "no report")]
-                        M = x["M"]
-                        if level is not None:   # the drawing mode follows the page's rule: direct paths when a square is 6 px or wider or the level has at most 20,000 squares, else the cached bitmap
-                            cnt = (M["levels"].get(str(level)) or {}).get("count", 0); exp_mode = "direct" if (level * M["k"] >= 6 or cnt <= 20000) else "bitmap"
-                            if M["state"]["level"] != level or M["state"]["mode"] != exp_mode: bad.append(("mosaic", "level", "level %s mode %s, expected %s %s at k %.2f with %s squares" % (M["state"]["level"], M["state"]["mode"], level, exp_mode, M["k"], cnt)))
-                        for kk, v in alphas.items():
-                            if abs(M["alphas"][kk] - v) > 0.02: bad.append(("mosaic", "alpha", "alpha %s is %.3f, expected %.2f at k %.3f" % (kk, M["alphas"][kk], v, M["k"])))
-                        if M["fieldOpacity"] != opacity: bad.append(("mosaic", "opacity", "the field's opacity is %r, expected %r" % (M["fieldOpacity"], opacity)))
-                        firms = x["firms"]
-                        for lv, L_ in M["levels"].items():
-                            if L_ and L_["sumN"] != firms: bad.append(("mosaic", "sum", "the %s km squares hold %s firms, the year's file %s" % (lv, L_["sumN"], firms)))
-                        if tipword and tipword not in x["tip"]: bad.append(("mosaic", "tile", "the tile lacks %r: %s" % (tipword, x["tip"][:120])))
-                        if not tipword and "square" in x["tip"]: bad.append(("mosaic", "tile", "the tile names a square at the dots: %s" % x["tip"][:120]))
-                        if legendword and legendword not in x["legend"]: bad.append(("mosaic", "legend", "the legend lacks %r: %s" % (legendword, x["legend"][:120])))
-                        if not legendword and "squares" in x["legend"]: bad.append(("mosaic", "legend", "the legend names squares at the dots: %s" % x["legend"][:120]))
-                        if cost and (x["cost"]["mean"] > 10 or x["cost"]["max"] > 16): bad.append(("mosaic", "cost", "frame cost %.1f ms mean, %.1f max" % (x["cost"]["mean"], x["cost"]["max"])))
-                        if x["hover"] not in ("bin", "listed", "firm"): bad.append(("mosaic", "hover", "hover kind %s" % x["hover"]))
-                        return bad
-                    return chk
-                MOSJS = "await A.ready(); A.redraw(); const h = A.hoverKm(m[0] + 0.3, m[1] + 0.2, { show: true }); const tip = document.getElementById('tipbody').innerText, legend = document.getElementById('legendtitle').innerText; const cost = await A.frameCost(20); window.__extra = { M: A.mosaic(), tip, legend, hover: h && h.kind, cost, firms: MOTION_DATA.firms.by_year[document.getElementById('year').value].firms }; if (A.hoverOff) A.hoverOff();"
-                state("share", 2024, F + "A.preset('Russia'); " + MOSJS, tag + "mosaic25", mosaic_ok(25, "direct", {"25": 1, "1": 0, "dots": 0}, "25 km square", "25 km squares", "0"))
-                state("share", 2024, F + "A.preset('Russia'); await A.jump({ cx: m[0], cy: m[1], k: 2.2 }); " + MOSJS, tag + "mosaicband", mosaic_ok(1, "bitmap", {"25": 0.3, "1": 0.7, "dots": 0}, "1 km square", "1 km squares", "0"))
-                state("industry", 2024, F + "A.preset('Moscow'); " + MOSJS, tag + "mosaic1", mosaic_ok(1, "direct", {"25": 0, "1": 1, "dots": 0}, "1 km square", "1 km squares", "0"))
-                state("share", 2024, F + "A.preset('Russia'); await A.jump({ cx: m[0], cy: m[1], k: A.mosaic().dotsK * 1.2 }); " + MOSJS, tag + "mosaicfade", mosaic_ok(1, "direct", {"25": 0, "1": 0.5, "dots": 0.5}, "", "", "0.5", cost=False))
-                state("share", 2024, F + "A.preset('Central Moscow (250 m)'); " + MOSJS, tag + "mosaicdots", mosaic_ok(None, None, {"25": 0, "1": 0, "dots": 1}, "", "", "1", cost=False))
+                state("share", 2024, F + "A.preset('Russia'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regpix", regime_ok("pixel"))
+                state("industry", 2024, F + "A.preset('Moscow'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regpixc", regime_ok("pixel"))
+                state("share", 2024, F + "A.preset('Russia'); await A.ready(); await A.jump({ cx: m[0], cy: m[1], k: A.fieldRegime().dotsK * 1.2 }); A.redraw(); window.__extra = A.fieldRegime();", tag + "regboth", regime_ok("both"))
+                state("share", 2024, F + "A.preset('Central Moscow (250 m)'); await A.ready(); A.redraw(); window.__extra = A.fieldRegime();", tag + "regdots", regime_ok("dots"))
+                def pix_ok(r):
+                    x = r["extra"]; bad = []
+                    if not x or not x.get("S"): return [("pixel", "stats", "no report")]
+                    S = x["S"]
+                    if S["sumN"] != S["inView"]: bad.append(("pixel", "sum", "the field's cells hold %s firms, the addresses in view %s" % (S["sumN"], S["inView"])))
+                    if x.get("national") is not None and S["inView"] != x["national"]: bad.append(("pixel", "sum", "at the country the field holds %s of the year's %s firms on no list" % (S["inView"], x["national"])))
+                    if S["gpuDiff"] is not None and S["gpuDiff"]["share"] > 0.005: bad.append(("pixel", "gpu", "%s of %s lit pixels differ from the CPU image by more than 2 levels" % (S["gpuDiff"]["bad"], S["gpuDiff"]["lit"])))
+                    if S["blocks"][2] < 1 or S["blocks"][3] < 1: bad.append(("pixel", "blocks", "cells by block size %s" % S["blocks"]))
+                    hp, ps = x["hp"], x["ps"]
+                    if not hp or not ps: bad.append(("pixel", "hover", "no pixel under the cursor: %s" % json.dumps(x.get("hp"))))
+                    elif (hp["n"], hp["a"], hp["p"]) != (ps["n"], ps["a"], ps["p"]): bad.append(("pixel", "hover", "the hovered pixel reads %s, the independent sum %s" % (json.dumps(hp), json.dumps(ps))))
+                    if "Pixel at the cursor" not in x["tip"]: bad.append(("pixel", "tile", "the tile does not name the pixel: %s" % x["tip"][:120]))
+                    return bad
+                PIX = "await A.ready(); A.redraw(); const S = A.pixelStats(); { const c = A.camera(), AN = A.anchors(), at = c.k > 1 && AN ? AN.a : [m[0] + 30, m[1] - 20]; A.hoverKm(at[0], at[1], { show: true }); } const hp = A.hoverPixel(); const ps = hp ? A.pixelSum(hp.cell[0], hp.cell[1]) : null; window.__extra = { S, hp, ps, tip: document.getElementById('tipbody').innerText, national: %s }; if (A.hoverOff) A.hoverOff();"
+                for lyr in ("share", "fin", "industry"):
+                    state(lyr, 2025, F + "A.preset('Russia'); " + PIX % "MOTION_DATA.firms.by_year[2025].firms", tag + "pix" + lyr, pix_ok)
+                state("share", 2024, F + "A.preset('Moscow'); " + PIX % "null", tag + "pixcity", pix_ok)
+                # the opening sweep (once per tab at the country view; any input completes it) and the year dissolve (0.25 s; a camera move completes it)
+                state("share", 2024, F + "A.preset('Russia'); await A.ready(); const s1 = A.sweep(true); window.dispatchEvent(new Event('pointerdown')); window.__extra = { s1, s2: A.sweep() };", tag + "sweep",
+                      lambda r: [] if r["extra"] and r["extra"]["s1"]["on"] and not r["extra"]["s2"]["on"] else [("sweep", "state", "started %s, after a press %s" % (r["extra"] and json.dumps(r["extra"]["s1"]), r["extra"] and json.dumps(r["extra"]["s2"])))])
+                state("share", 2023, F + "A.preset('Russia'); A.layer('share'); A.year(2024); await A.ready(); await new Promise(q => setTimeout(q, 300)); A.year(2023); const d0 = A.dissolve(); await A.ready(); await new Promise(q => setTimeout(q, 700)); window.__extra = { d0, d2: A.dissolve() };", tag + "dissolve",
+                      lambda r: [] if r["extra"] and r["extra"]["d0"]["on"] and not r["extra"]["d2"]["on"] else [("dissolve", "state", json.dumps(r["extra"]))])
                 state("share", 2021, F + "A.preset('Russia'); await A.ready(); const T = MOTION_DATA.treatednational; let lp = 0; for (let i = 0; i < T.n; i++) if (T.filed[i][7] !== '-') lp++; const n = A.firmsInView(); A.hoverKm(m[0], m[1], { show: true }); window.__extra = { n, expected: MOTION_DATA.firms.by_year[2021].firms + lp, tile: A.tile().firms, shown: !document.getElementById('tfirmsw').hidden, text: document.getElementById('tfirms').textContent };", tag + "inview",
                       lambda r: [] if r["extra"] and r["extra"]["n"] == r["extra"]["expected"] == r["extra"]["tile"] and r["extra"]["shown"] and r["extra"]["text"].replace(",", "") == str(r["extra"]["n"]) else [("tile", "firms", json.dumps(r["extra"]))])
                 state("share", 2021, F + "A.preset('Moscow'); await A.ready(); const n = A.firmsInView(); A.mode('cells'); A.hoverKm(m[0], m[1], { show: true }); window.__extra = { n, national: MOTION_DATA.firms.by_year[2021].firms, shownInCells: !document.getElementById('tfirmsw').hidden }; A.mode('firms');", tag + "inviewcity",
                       lambda r: [] if r["extra"] and 0 < r["extra"]["n"] < r["extra"]["national"] and not r["extra"]["shownInCells"] else [("tile", "firms", json.dumps(r["extra"]))])
-                def cover_ok(r):
-                    x = r["extra"]; bad = []
-                    if not x or not x.get("cover"): return [("floor", "cover", "no report")]
-                    c = x["cover"]; e = c["extent"]
-                    for name, pad in (("tint", 0), ("glow", c["glowBlurPx"] or 0)):
-                        b = c.get(name)
-                        if not b: bad.append(("floor", "cover", "no %s bitmap at the floor" % name)); continue
-                        if b[0] > e[0] - pad + 0.5 or b[1] > e[1] - pad + 0.5 or b[2] < e[2] + pad - 0.5 or b[3] < e[3] + pad - 0.5: bad.append(("floor", "cover", "the %s bitmap %s does not cover the extent %s with %.1f px to spare" % (name, json.dumps([round(v) for v in b]), json.dumps([round(v) for v in e]), pad)))
-                    if x["tint"] < 1 - 1e-6 or x["glow"] < 1 - 1e-6: bad.append(("floor", "cover", "fades at the floor: tint %s glow %s" % (x["tint"], x["glow"])))
-                    return bad
-                state("share", 2024, F + "A.preset('Russia'); await A.ready(); await A.zoom(-1); A.redraw(); window.__extra = A.firmsLayers();", tag + "floorcover", cover_ok)
                 # under prefers-reduced-motion the button highlights without animation: the count is there at once and the frame loop is not used
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]})
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2022, 8)), tag + "rmpulse", pulsed_is(2022, "under reduced motion the button still pulses (a still highlight)"))
+                state("share", 2024, F + "A.preset('Russia'); await A.ready(); window.__extra = A.sweep(true);", tag + "rmsweep", lambda r: [] if r["extra"] and not r["extra"]["on"] else [("sweep", "motion", "the sweep ran under reduced motion: %s" % json.dumps(r["extra"]))])
+                state("share", 2022, "A.mode('cells'); A.preset('Russia'); await A.ready(); A.pulse(); window.__extra = A.cellPulseState(); A.cellPulseAt(null);", tag + "rmcpulse", lambda r: [] if r["extra"] and r["extra"]["static"] and r["extra"]["count"] > 0 else [("cpulse", "motion", "under reduced motion the Cells pulse is not the still highlight: %s" % json.dumps(r["extra"])[:160])])
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
             F0 = cdp.evaluate("window.__atlas.field()", await_promise=False); fields.add(F0)
             firms_states(GL if F0 in GL else ("2d",), "firms")
@@ -826,6 +924,13 @@ def main():
                 n_states += 1; exp_line = WC.anniversary(WIRE_DATA, "2026-05-19")
                 if r["today"] != "2026-05-19" or not r["lead"].endswith(". " + exp_line) or exp_line in r["slot"] or not r["src"].endswith("+anniversary"): findings.append("%-11s width %d  on the anchor firm's day: %s" % ("anniversary", w, json.dumps(r)[:300]))
                 cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid})
+                VIEW = {"cx": mx + 12.3, "cy": my - 4.5, "k": 7.25}
+                cdp.call("Page.navigate", {"url": url + qsep + "v=view"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                vh = cdp.evaluate("(async () => { const A = window.__atlas; A.layer('fin'); A.year(2022); A.mode('firms'); await A.jump(%s); return A.viewHash(); })()" % json.dumps(VIEW), await_promise=True, timeout=60)
+                cdp.call("Page.navigate", {"url": url + qsep + "v=view2#" + vh}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                r = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, cam: A.camera(), hash: location.hash }; })()", await_promise=False)
+                n_states += 1
+                if r["mode"] != "firms" or r["layer"] != "fin" or r["year"] != "2022" or not same_cam(r["cam"], VIEW, 0.002, 1e-5): findings.append("%-11s width %d  the address %s reopened %s, expected the Firms view, fin, 2022 at %s" % ("link", w, vh, json.dumps(r), json.dumps(VIEW)))
                 for frag, mode in (("#Moscow", "cells"), ("#Moscow-firms", "firms")):
                     # a new document URL each time (a fragment-only navigation fires no load event), then the page's own readiness
                     cdp.call("Page.navigate", {"url": url + qsep + "v=hash" + mode + frag}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()

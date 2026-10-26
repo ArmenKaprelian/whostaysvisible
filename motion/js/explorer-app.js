@@ -271,7 +271,7 @@
     const L = state.layer;
     if (state.mode === 'firms') { drawLog.push('firms'); if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; layersDirty(); }
       const key = layersKey(c), fieldNew = key !== lastFieldKey; drawFirms(c, fieldNew); lastFieldKey = key;
-      if (key !== lastMarksKey || pulse) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
+      if (key !== lastMarksKey || pulse || found) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
     else if (L === 'density') { drawLog.push('density');
       const am = microA(c.k, 2021); if (c.k >= 1.2 && !flight && !motion) ensureMicro(2021);
       if (am < 1) drawNat(c, 1 - am, null, false);   // the national 5 km counts (2021), fading as the 1 km squares come in
@@ -310,7 +310,7 @@
     if (state.mode !== 'firms') {   // the Cells view (round 14): the 1 km and 250 m squares on the field canvas, the ghost names, the labels and the pulse rings on the marks canvas, both above the cells
       if (!layersOn) { fieldC.hidden = false; marksC.hidden = false; layersOn = true; layersDirty(); }
       const key = layersKey(c); if (key !== lastFieldKey) { drawCellsField(c); lastFieldKey = key; }
-      if (key !== lastMarksKey || cellPulse) { drawCellsMarks(c); lastMarksKey = key; } else drawLog.push('ghost');
+      if (key !== lastMarksKey || cellPulse || found) { drawCellsMarks(c); lastMarksKey = key; } else drawLog.push('ghost');
     }
     if (!flight) { drawLegend(); drawScaleBar(); }
   }
@@ -807,6 +807,7 @@ void main() {
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');
     if (cellPulse) cellPulseRings(c);
+    if (found) foundRings(kctx, c);
     drawLabels(kctx, c, 'marks');
   }
   // The Cells view's pulse (round 14): the button pulses every cell at the shown level that holds a firm listed in the shown year (dated and present that year;
@@ -882,6 +883,7 @@ void main() {
       const r = MM.listedRadius(LR, TRN.pile[i]); if (st) { PH.on = true; PH.p = 1; } else MM.pulsePhase((tNow - pulseDelay[i]) / 1000, PH); if (!PH.on) continue;
       if (st || (PH.p > 0 && PH.p < 1)) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, st);
     }
+    if (found) foundRings(kctx, c);   // the firm found by name (round 14)
     drawLabels(kctx, c, 'marks');
   }
   // Hover in firms mode: the nearest address within its mark radius plus 2 px, found through the sorted x column, and the
@@ -914,7 +916,7 @@ void main() {
       const red = TRN.red_from[i] <= state.year;
       ln++; if (red) { lred++; if (ch === '0') lring++; } else { lrim++; const yf = TRN.red_from[i]; if (yf < rimA) rimA = yf; if (yf > rimB) rimB = yf; }
       if (dist < ld) { ld = dist; lpx = px; lpy = py; lr = r; }
-      const key = (red ? 0 : 1e6) + TRN.red_from[i] * 100 + Math.min(99, dist);
+      const key = (i === findPin ? -1e9 : 0) + (red ? 0 : 1e6) + TRN.red_from[i] * 100 + Math.min(99, dist);   // the firm found by name first (round 14)
       for (let s = 0; s < 3; s++) if (key < topKey[s]) { for (let q = 2; q > s; q--) { top[q] = top[q - 1]; topKey[q] = topKey[q - 1]; } top[s] = i; topKey[s] = key; break; }
     }
     if (ln) {
@@ -956,7 +958,7 @@ void main() {
   function setCard(id, v) { cardUI[id] = v; applyCards(); if (v === 'open') { drawCellPanel(state.hover); drawNational(); drawGroups(); drawOdds(); } }
   function readPref(key) { try { const v = localStorage.getItem(key); return v === 'open' || v === 'closed' ? v : null; } catch (e) { return null; } }
   function writePref(key, v) { try { localStorage.setItem(key, v); } catch (e) { /* no storage */ } }
-  const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note'), ctx: readPref('atlas-context') };
+  const ui = { legend: readPref('atlas-legend'), note: readPref('atlas-note'), ctx: readPref('atlas-context'), legendRead: readPref('atlas-legend-read') };   // legendRead: 'open' shows the legend's reading side (round 14)
   CARDS.forEach(id => { cardUI[id] = readPref('atlas-card-' + id); $('ct-' + id).addEventListener('click', () => { const v = cardOpen(id) ? 'closed' : 'open'; writePref('atlas-card-' + id, v); setCard(id, v); }); }); applyCards();
   const legendOpen = () => (ui.legend ? ui.legend === 'open' : stage.width >= 600);
   // The note (round 10, the author's correction of 25 October): without a stored choice it starts collapsed at the national and regional zooms while the strip is open (the strip carries the fact)
@@ -968,6 +970,7 @@ void main() {
     dropObstacles();
     const lo = legendOpen(), no = noteOpen();
     $('legendbody').hidden = !lo; const lt = $('legendtoggle'); lt.setAttribute('aria-expanded', String(lo)); lt.setAttribute('aria-label', lo ? 'Collapse the legend' : 'Expand the legend');
+    { const has = lo && lastLegend.read, on = has && ui.legendRead === 'open', b = $('legendinfo'), label = on ? 'Show the legend’s key' : 'Show how to read the legend'; $('legend').classList.toggle('reading', on); b.hidden = !has; b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', label); b.title = label; }   // the legend's two sides (round 14)
     $('notebody').hidden = !no; $('notelabel').hidden = no; const nt = $('notetoggle'); nt.setAttribute('aria-expanded', String(no)); nt.setAttribute('aria-label', no ? 'Collapse the note' : 'Expand the note');
   }
   // On a narrow map (under 600 px) one panel is open at a time: opening the legend closes the note and the reverse.
@@ -976,6 +979,7 @@ void main() {
   function setLegend(v) { ui.legend = v; if (v === 'open' && narrow()) ui.note = 'closed'; if (v === 'open' && tight() && mixOpen()) { mixUI.open = 'closed'; applyMix(); } applyPanels(); }
   function setNote(v) { ui.note = v; if (v === 'open' && narrow()) ui.legend = 'closed'; applyPanels(); }
   $('legendtoggle').addEventListener('click', () => { const v = legendOpen() ? 'closed' : 'open'; writePref('atlas-legend', v); setLegend(v); });
+  $('legendinfo').addEventListener('click', () => { ui.legendRead = ui.legendRead === 'open' ? 'closed' : 'open'; writePref('atlas-legend-read', ui.legendRead); applyPanels(); if (state.hover && !hoverQueued) { hoverQueued = true; queueMicrotask(() => { hoverQueued = false; refreshHover(); }); } });   // the reading side and back (round 14); a showing tile is re-placed against the box's new height
   $('notetoggle').addEventListener('click', () => { const v = noteOpen() ? 'closed' : 'open'; writePref('atlas-note', v); setNote(v); });
   // ---- the revenue mix box (round 9, the author's correction of 25 October 2026) --------------------------------------------
   // A translucent box at the top left of the map on the industry layer: the revenue mix of what the cursor is over (the
@@ -1129,6 +1133,8 @@ void main() {
     { text: 'The Firms view draws every registered address by year.', firms: true },
     { text: 'Firms on the five lists (treated) turn red from their listing year.', firms: true },
     { text: 'Open the atlas at a city: add its name to the link, as in #Moscow.' },
+    { text: 'Type a name under GO TO to fly to a firm on these lists.' },
+    { text: 'The link button under GO TO copies a link to this exact view.' },
     { text: 'Map focused: + and − zoom, 0 fits the country, the arrows pan.', mouse: true },
   ];
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
@@ -1416,7 +1422,7 @@ void main() {
     setTimeout(() => { if (stripState.glyphName === name) ina.classList.remove('live'); }, 450);
   }
   stripState.glyphCur = 'A'; applyStrip();
-  const lastLegend = { title: null, html: null, note: null };
+  const lastLegend = { title: null, html: null, note: null, read: false };
   // The industry legend's counts for the current view (round 9): the cells of the active grid whose squares meet the camera's km
   // rectangle, or the addresses in the visible x band and y range; recomputed only when the view, year, layer or mode changed.
   // The revenue mix of the view (round 9, the author's correction): the eight largest divisions by their share of the summed
@@ -1446,43 +1452,49 @@ void main() {
     viewMix.rows = rows.slice(0, 8).map(r => ({ code: r.code, share: Math.round(r.v / T) })); viewMix.other = Math.round(rest / T); viewMix.key = key;
   }
 
+  // The legend (round 14, the author's request of 25 October 2026): two sides in one box. The key side, shown by default, holds the title and the rows with a swatch, so
+  // the box is as wide as its longest class label; the green "i" in the title row turns it to the reading side, the sentences that say how to read the colours,
+  // wrapped to the key side's width (the key side keeps the box's width while hidden). The choice is remembered per viewer.
   function drawLegend() {
-    const L = state.layer, c = cam(); const popRow = extra => `<div class="row p">1 km squares: firms on no list with a house- or street-level geocode${extra || ''}</div>`;   // the squares' population (round 14)
+    const L = state.layer, c = cam(); const popRow = extra => `<div class="row p">1 km squares: firms on no list with a house- or street-level geocode${extra || ''}.</div>`;   // the squares' population (round 14)
     const sw = col => `<span class="sw" style="background:${col}"></span>`, bar = col => `<span class="sw bars" style="--c:${col}"></span>`;   // ramp swatches as bars (round 10)
-    let title = '', html = '', note = '';
+    let title = '', html = '', read = '', note = '';
     if (state.mode === 'firms') {
       const y = state.year, by = FM.by_year[y], ys = y + (y === 2025 ? '*' : '');
       const dot = (bg, border) => `<span class="sw dot" style="background:${bg}${border ? ';border:2px solid ' + border : ''}"></span>`;
       // The pixel field (round 14) below the dots zoom: the layer's statistic per pixel, the blocks, the faint backdrop where some firms carry no value; the dots above.
-      const pix = dotsAlphas(c.k).pix >= 0.5, unit = pix ? ` <span class="u">(1 px = ${pixelSize(1 / c.k)})</span>` : '', faint = col => sw(hexAlpha(col, PixelField.BACKDROP_ALPHA));
-      if (pix && L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Colour: share of the pixel’s firms with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
-      else if (pix && L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>${unit}`; html = `<div class="row p">Colour: the median revenue-change class of the pixel’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median)</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no firm in the pixel has a usable baseline</div>`; }
-      else if (pix && L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Colour: the class with the largest revenue in the pixel, each coordinate pair counted in its leading class</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no firm in the pixel has a revenue value</div>`; }
-      else if (pix) { title = `<b>Firms at registered addresses, ${ys}</b>${unit}`; html = `<div class="row p">Brightness: firms on no list in the pixel (this layer is a cell layer)</div>` + MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
-      else if (L === 'share') { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement</div>` + theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join('') + '<div class="row p">A single firm shows the first colour (no statement) or the last (statement available).</div>'; }
-      else if (L === 'fin') { title = `<b>Firms on no list (comparison group), ${ys}</b>`; html = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change</div>` + theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no firm at the coordinate pair has a usable baseline</div>`; }
-      else if (L === 'industry' && IND_T) { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes</div>` + IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no firm at the coordinate pair has a revenue value</div>`; }
-      else { title = `<b>Firms at registered addresses, ${ys}</b>`; html = `<div class="row">${sw(theme.neutral)}every coordinate pair (this layer is a cell layer)</div>`; }
-      if (pix) html += `<div class="row p">Blocks of 2 and 3 px: 10 and 100 or more ${L === 'fin' ? 'filers' : 'firms'} in the pixel</div>`;
-      html += `<div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}On one of the five lists (treated), before its listing year</div><div class="row">${dot(theme.treated)}Listed (treated), red from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}Listed (treated), no statement that year</div><div class="row p">${pix ? 'Each pixel sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.' : 'Each dot is one coordinate pair. Larger dots hold more firms.'}</div>`;
+      const pix = dotsAlphas(c.k).pix >= 0.5, faint = col => sw(hexAlpha(col, PixelField.BACKDROP_ALPHA));
+      title = L === 'fin' ? `<b>Firms on no list (comparison group), ${ys}</b>` : `<b>Firms at registered addresses, ${ys}</b>`;
+      if (pix && L === 'share') { read = `<div class="row p">Colour: share of the pixel’s firms with a ${ys} statement.</div>`; html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
+      else if (pix && L === 'fin') { read = `<div class="row p">Colour: the median revenue-change class of the pixel’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median).</div>`; html = theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no usable baseline</div>`; }
+      else if (pix && L === 'industry' && IND_T) { read = `<div class="row p">Colour: the class with the largest revenue in the pixel, each coordinate pair counted in its leading class.</div>`; html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no revenue value</div>`; }
+      else if (pix) { read = `<div class="row p">Brightness: firms on no list in the pixel (this layer is a cell layer).</div>`; html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
+      else if (L === 'share') { read = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement. A single firm shows the first colour (no statement) or the last (statement available).</div>`; html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
+      else if (L === 'fin') { read = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change.</div>`; html = theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no usable baseline</div>`; }
+      else if (L === 'industry' && IND_T) { read = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes.</div>`; html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no revenue value</div>`; }
+      else { read = '<div class="row p">This layer is a cell layer: the Firms view draws every coordinate pair in one colour.</div>'; html = `<div class="row">${sw(theme.neutral)}every coordinate pair</div>`; }
+      // The listed marks as one group under its header (round 14: the rows had repeated "(treated)" and set the box's width).
+      html += `<div class="row h">On one of the five lists (treated)</div><div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}before its listing year</div><div class="row">${dot(theme.treated)}from its listing year, statement available</div><div class="row">${dot(theme.land, theme.treated)}from its listing year, no statement</div>`;
+      read += pix ? `<div class="row p">Blocks of 2 and 3 px: 10 and 100 or more ${L === 'fin' ? 'filers' : 'firms'} in the pixel.</div><div class="row p">Each pixel (about ${pixelSize(1 / c.k)} at this zoom) sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.</div>`
+        : '<div class="row p">Each dot is one coordinate pair. Larger dots hold more firms.</div>';
       note = firmStatus || `${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} distinct coordinate pairs; ${fmt.int(by.listed)} firms on these lists (treated). ${fmt.int(by.city_level)} firms with other geocodes are not drawn.` + (TRN.name ? ' Hover a listed firm for its name.' : '');
     } else if (L === 'density') {
       const micro = microA(c.k, 2021) >= 0.5, f250 = fineA(c.k) >= 0.5;
-      title = '<b>Firms per cell</b> <span class="u">(' + (f250 ? '250 m' : micro ? '1 km squares' : '5 km') + ')</span>';
-      html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join('') + (micro && !f250 ? popRow() : '');
+      title = '<b>Firms per cell</b> <span class="u">(' + (f250 ? '250 m' : micro ? '1 km' : '5 km') + ')</span>';
+      html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); if (micro && !f250) read += popRow();
       note = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021 (${fmt.int(F.eligible_firms_2021)} eligible); the most shared coordinate pair holds ${fmt.int(F.largest_location_firms)} firms.`;
     } else if (L === 'share') {
       const y = state.year, micro = microA(c.k, y) >= 0.5, f250 = y === 2021 && fineA(c.k) >= 0.5, grid25 = alpha25(c.k) >= 0.5 && !!c25[y];
       const fine = micro || f250, breaks = fine ? FINE_BREAKS : YEAR_BREAKS, ramp = fine ? theme.ramp5 : theme.ramp6;
       const labels = ramp.map((_, i) => i === 0 ? `< ${breaks[0]}%` : i === ramp.length - 1 ? `≥ ${breaks[i - 1]}%` : `${breaks[i - 1]}–${breaks[i]}%`);
-      title = `<b>Share with a statement, ${y}</b> <span class="u">(${f250 ? '250 m cells' : micro ? '1 km squares' : grid25 ? '25 km cells' : '100 km cells'})</span>`;
-      html = ramp.map((col, i) => `<div class="row">${bar(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>` + (micro && !f250 ? popRow() : '');
+      title = `<b>Share with a statement, ${y}</b> <span class="u">(${f250 ? '250 m' : micro ? '1 km' : grid25 ? '25 km' : '100 km'})</span>`;   // the grid's size alone (round 14: the legend's width); the reading side names the squares' population
+      html = ramp.map((col, i) => `<div class="row">${bar(col)}${labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`; if (micro && !f250) read += popRow();
       const t = totals[y]; note = t ? `${y}${y === 2025 ? '*' : ''}: ${fmt.pct(t.share)} of ${fmt.int(t.eligible)} eligible firms have a statement; ${fmt.pct(t.located_share)} located. Provider: ${y <= 2018 ? 'Rosstat' : 'FNS'}.` : '';
       if (micro && y !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
       const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
       const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? C25.change.class_cells : C100.change_classes.cells;
-      title = `<b>Change in the share, 2024 against 2021</b> <span class="u">(${grid25 ? '25' : '100'} km cells)</span>`;
+      title = `<b>Change in the share, 2024 against 2021</b> <span class="u">(${grid25 ? '25' : '100'} km)</span>`;
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]} (${fmt.int(counts[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
       note = `${fmt.int(grid25 ? C25.change.supported : 658)} supported cells; located share ${fmt.pct(C100.change_totals.availability_share_percent[0])} → ${fmt.pct(C100.change_totals.availability_share_percent[1])}. Annual populations at registered addresses, not the same firms.`;
     } else if (L === 'cohort') {
@@ -1491,13 +1503,13 @@ void main() {
       note = `${fmt.int(F.cohorts.revenue_cash)} cohort firms; located cohort firms over located eligible firms per 2021 cell; pooled quintile classes.` + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     } else if (L === 'industry' && IND_T) {
       const y = state.year, micro = microA(c.k, y) >= 0.5, grid25 = alpha25(c.k) >= 0.5 && !!ind25[y];
-      title = `<b>Leading industry by revenue, ${y}${y === 2025 ? '*' : ''}</b> <span class="u">(${micro ? '1 km squares' : grid25 ? '25 km cells' : '100 km cells'})</span>`;
-      html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm with a revenue value</div>` + (micro ? popRow(', the class with the largest revenue') : '');
+      title = `<b>Leading industry by revenue, ${y}${y === 2025 ? '*' : ''}</b> <span class="u">(${micro ? '1 km' : grid25 ? '25 km' : '100 km'})</span>`;
+      html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.below)}no firm with a revenue value</div>`; if (micro) read += popRow(', coloured by the class with the largest revenue');
       note = `${y}${y === 2025 ? '*' : ''}: the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. Division names from NACE Rev. 2 (Eurostat); OKVED 2 uses the same two-digit codes.`;
     } else if (L === 'lists') {
       // Three classes, the ones listClass draws (ramp5[2], [3], [4]), each with its cell count; 1 to 4 members show no count.
       const grid25 = c25[2021] && alpha25(c.k) >= 0.5, counts = grid25 ? list25Counts : listClassCounts;
-      title = `<b>Sanctions-list members (treated), 2021</b> <span class="u">(${grid25 ? '25' : '100'} km cells)</span>`;   // the grid size as a unit phrase (round 10)
+      title = `<b>Sanctions-list members (treated), 2021</b> <span class="u">(${grid25 ? '25' : '100'} km)</span>`;   // the grid size as a unit phrase (round 10)
       html = ['5–19', '20–49', '≥ 50'].map((lab, i) => `<div class="row">${bar(theme.ramp5[i + 2])}${lab} located members (${fmt.int(counts[i + 1])} cells)</div>`).join('');
       note = 'Memberships are fixed. Cells with 1 to 4 members show no count. The hover gives the government strategic list (treated) separately.';
     } else if (L === 'fin') {
@@ -1506,10 +1518,15 @@ void main() {
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]}</div>`).join('');
       note = 'Revenue cohort by cash share; cells with 50 or more observed firms; composition changes with observation.' + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     }
-    if (state.mode !== 'firms' && TRN) html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> in the tile: firms on these lists (treated) in the cell, ${layerYear()}</div>`;   // the tile's red count (round 14), in the layer's own year
+    if (state.mode !== 'firms' && TRN) {   // the tile's red count (round 14), in the layer's own year: its key row, and its definition on the reading side
+      const ly = layerYear();
+      html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> listed (treated), ${ly}</div>`;
+      read += `<div class="row p">The red number in the tile counts the firms on these lists (treated) present in ${ly} at coordinates inside the hovered cell, at the cell’s own size. A cell without them shows 0.</div>`;
+    }
+    const body = `<div class="lg-key">${html}</div>` + (read ? `<div class="lg-read">${read}</div>` : '');
     if (title !== lastLegend.title) { $('legendtitle').innerHTML = title; lastLegend.title = title; }
     let rewrote = false;
-    if (html !== lastLegend.html) { $('legendbody').innerHTML = html; lastLegend.html = html; dropObstacles(); rewrote = true; }
+    if (body !== lastLegend.html) { $('legendbody').innerHTML = body; lastLegend.html = body; lastLegend.read = !!read; dropObstacles(); rewrote = true; }
     if (note !== lastLegend.note) { $('notebody').textContent = note; $('mapnote').hidden = !note; lastLegend.note = note; dropObstacles(); rewrote = true; }   // the note's box changes with its text (round 9)
     if (rewrote && state.hover && !hoverQueued) { hoverQueued = true; queueMicrotask(() => { hoverQueued = false; refreshHover(); }); }   // a showing tile is re-placed against the panels' new boxes (round 9)
     applyPanels();
@@ -1729,7 +1746,7 @@ void main() {
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -2137,18 +2154,18 @@ void main() {
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
   const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year); firms on at least one of the five lists (treated) from the national pass (M8), red from their listing year. Listed firms are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters; the full filed name is shown in the Under the cursor panel. Firms on no list are never named. Other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { $('layerprov').textContent = state.mode === 'firms' ? FIRMS_PROV : LAYERS.find(x => x.id === state.layer).prov; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; endCellPulse(); layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { state.layer = L.id; endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   function syncYearRow() { $('yearrow').hidden = !(state.mode === 'firms' || state.layer === 'share' || state.layer === 'industry'); }
   $('pulse').addEventListener('click', () => replayPulse());
   // The view switch (round 5): cells as before, or every registered address as a mark.
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; endPulse(); endCellPulse(); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; state.mode = m; endPulse(); endCellPulse(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
+  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
@@ -2289,7 +2306,110 @@ void main() {
     let s = raw.toLowerCase(), firms = false; if (s.endsWith('-firms')) { firms = true; s = s.slice(0, -6); }
     const p = PRESETS.find(p => p.slug.toLowerCase() === s || p.slug.toLowerCase().replace(/-/g, '_') === s); return p ? { preset: p, firms } : null;
   }
-  window.addEventListener('hashchange', () => { const hp = presetFromHash(); if (hp) flyTo(hp.preset.target()); });
+  window.addEventListener('hashchange', () => { const hp = presetFromHash(); if (hp) { if (hp.firms && FIRMS_OK && state.mode !== 'firms') window.__atlas.mode('firms'); flyTo(hp.preset.target()); return; } const v = viewFromHash(); if (v) applyView(v, false); });   // a preset's anchor, or a view typed or pasted into the address
+  // ---- links to the exact view (round 14, the author's request of 25 October 2026) ------------------------------------------------------------------------------------
+  // The page's address carries the view, the layer, the year and the camera, as #firms/industry/2024/55.75580,37.61730/20km: the centre in degrees and the span of the
+  // map's shorter side in km, so a link opens on the same ground on any screen (the country's fitted view reads /fit). The address follows every settled view, replaced in
+  // place rather than added to the history; a link opened later, or a hash typed by hand, restores the view. The presets' anchors (#Moscow, #Moscow-firms) keep their
+  // meaning. On the published page the address bar belongs to the host, so the GO TO card's link button copies the artifact's own address with the view appended.
+  const ARTIFACT_URL = 'https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n';
+  function forwardLAEA(lat, lon) { const { lam0, phi0, R } = LAEA, phi = lat * Math.PI / 180, d = lon * Math.PI / 180 - lam0, kp = Math.sqrt(2 / (1 + Math.sin(phi0) * Math.sin(phi) + Math.cos(phi0) * Math.cos(phi) * Math.cos(d))); return [R * kp * Math.cos(phi) * Math.sin(d), R * kp * (Math.cos(phi0) * Math.sin(phi) - Math.sin(phi0) * Math.cos(phi) * Math.cos(d))]; }
+  function viewHash() {
+    const c = state.cam, fit = Math.abs(c.k / kFit() - 1) < 1e-6 && Math.abs(c.cx - NAT.cx) < 1e-6 && Math.abs(c.cy - NAT.cy) < 1e-6;
+    let tail = 'fit'; if (!fit) { const [lat, lon] = inverseLAEA(c.cx, c.cy); tail = `${lat.toFixed(5)},${lon.toFixed(5)}/${+(minSide() / c.k).toPrecision(6)}km`; }
+    return `${state.mode}/${state.layer}/${state.year}/${tail}`;
+  }
+  function viewFromHash() {
+    const raw = decodeURIComponent(location.hash.slice(1)).trim(); if (!raw.includes('/')) return null;
+    const v = {};
+    for (const tok of raw.split('/')) { const t = tok.trim(), tl = t.toLowerCase(); if (!t) continue;
+      if (tl === 'cells' || tl === 'firms') v.mode = tl; else if (LAYERS.some(L => L.id === tl)) v.layer = tl; else if (/^\d{4}$/.test(t) && +t >= 2014 && +t <= 2025) v.year = +t; else if (tl === 'fit') v.fit = true;
+      else if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(t)) { const [la, lo] = t.split(',').map(Number); if (Math.abs(la) <= 90 && Math.abs(lo) <= 180) v.at = [la, lo]; }
+      else if (/^\d+(\.\d+)?km$/i.test(t) && parseFloat(t) > 0) v.span = parseFloat(t); }
+    return Object.keys(v).length ? v : null;
+  }
+  function viewTarget(v) { if (v.fit) return fitTarget(); if (!v.at) return null; const [x, y] = forwardLAEA(v.at[0], v.at[1]); return { cx: x, cy: y, k: clampK(v.span ? minSide() / v.span : state.cam.k) }; }
+  function applyView(v, instant) {   // the camera first at load (so the Firms view's opening sweep reads the view it opens on), the year before the view (no bloom on the way in)
+    const A = window.__atlas, t = viewTarget(v);
+    if (t && instant) state.cam = { cx: t.cx, cy: t.cy, k: t.k };
+    if (v.layer && v.layer !== state.layer) A.layer(v.layer);
+    if (v.year && v.year !== state.year) { A.year(v.year); endPulse(); }
+    if (v.mode && v.mode !== state.mode && (v.mode === 'cells' || FIRMS_OK)) A.mode(v.mode);
+    if (t && !instant) flyTo(t);
+  }
+  let hashOn = false;   // the address keeps the anchor it opened with until the view first changes
+  function writeHash() { if (!hashOn) return; const h = '#' + viewHash(); if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) { /* a frame without access to its history */ } } }
+  const viewLink = () => (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === 'file:' ? location.href.split('#')[0] : ARTIFACT_URL) + '#' + viewHash();
+  $('copylink').addEventListener('click', () => {   // the clipboard where the browser allows it, else the link shown selected in a field beneath
+    const link = viewLink(), st = $('linkstatus'), fld = $('linkfield');
+    const shown = () => { fld.value = link; fld.hidden = false; fld.focus(); fld.select(); st.textContent = 'Copy it from the field'; };
+    const done = () => { fld.hidden = true; st.textContent = 'Link copied'; setTimeout(() => { if (st.textContent === 'Link copied') st.textContent = ''; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, shown); else shown();
+  });
+  // ---- find a firm on these lists by name (round 14, the author's request of 25 October 2026; review/2026-10-25-listed-names-memo.md) ---------------------------------
+  // A field in the GO TO card matches the typed letters against the display names and the filed names of the listed file, without case, accents or punctuation (a name's
+  // start first, then a word's start, then anywhere, then every typed word somewhere), and lists the first ten hits, each with its mark's glyph in the shown year, its
+  // listing year and its region. A choice, by click, tap or Enter, flies to the firm in the Firms view (from the Cells view too, where listed firms are not drawn), at the
+  // 20 km rung or closer, in the shown year or, where the firm has no record that year, the nearest year with one; the tooltip opens at its mark with its name first, and
+  // the mark then pulses once with the button's two rings (the still highlight under reduced motion). Only firms on the five lists carry names; firms on no list never appear.
+  const FIND_MAX = 10;
+  const normName = s => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  let findKeys = null, findPin = -1, found = null, foundRaf = 0, foundTimer = 0;
+  const findIndex = () => findKeys || (findKeys = Array.from({ length: TRN.n }, (_, i) => { const a = normName(TRN.name[i]), b = TRN.name_filed ? normName(TRN.name_filed[i]) : ''; return a ? ' ' + a + (b && b !== a ? ' | ' + b : '') + ' ' : ''; }));
+  function findMatches(q) {
+    const qn = normName(q); if (qn.length < 2 || !TRN || !TRN.name) return [];
+    const toks = qn.split(' '), keys = findIndex(), hits = [];
+    for (let i = 0; i < TRN.n; i++) { const k = keys[i]; if (!k) continue; const at = k.indexOf(' ' + qn); let score; if (at === 0) score = 0; else if (at > 0) score = 1; else if (k.indexOf(qn) >= 0) score = 2; else if (toks.length > 1 && toks.every(t => k.indexOf(t) >= 0)) score = 3; else continue; hits.push([score, TRN.name[i].length, i]); }
+    hits.sort((u, v) => u[0] - v[0] || u[1] - v[1] || TRN.name[u[2]].localeCompare(TRN.name[v[2]]) || u[2] - v[2]);
+    return hits.slice(0, FIND_MAX).map(h => h[2]);
+  }
+  const findInput = $('findinput'), findList = $('findlist'); let findItems = [], findActive = -1;
+  let findOpen = false;   // the list shows only while the field is being typed in: a choice, Escape or leaving the field closes it
+  function renderFind() {
+    const q = findOpen ? normName(findInput.value) : '';
+    findList.innerHTML = findOpen && findItems.length ? findItems.map((i, j) => { const rg = TRN.regions && TRN.reg ? TRN.regions[TRN.reg[i]] : ''; return `<button type="button" tabindex="-1" role="option" class="fo${j === findActive ? ' on' : ''}" id="fo-${j}" data-i="${i}" aria-selected="${j === findActive}">${listedGlyph(i, state.year)}${listedName(i)}<span class="fm">${TRN.undated[i] ? 'undated' : 'listed ' + TRN.red_from[i]}${rg ? ' · ' + esc(rg) : ''}</span></button>`; }).join('')
+      : q.length >= 2 ? '<div class="none">No list member by that name</div>' : '';
+    const open = !!findList.innerHTML; findList.hidden = !open; findInput.setAttribute('aria-expanded', String(open));
+    if (open && findActive >= 0) { findInput.setAttribute('aria-activedescendant', 'fo-' + findActive); const el = $('fo-' + findActive); if (el) el.scrollIntoView({ block: 'nearest' }); } else findInput.removeAttribute('aria-activedescendant');
+  }
+  function closeFind() { findOpen = false; findItems = []; findActive = -1; renderFind(); }
+  function chooseFind(i) { findInput.value = TRN.name[i]; closeFind(); findInput.blur(); { const r = wrap.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight + 1) wrap.scrollIntoView({ block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth' }); } return findFirm(i); }   // on the phone layout the card sits below the map: the map comes into view for the flight
+  if (!TRN || !TRN.name) $('find').hidden = true;
+  else {
+    findInput.addEventListener('input', () => { findOpen = true; findItems = findMatches(findInput.value); findActive = findItems.length ? 0 : -1; renderFind(); });
+    findInput.addEventListener('keydown', ev => {
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { if (!findItems.length) return; ev.preventDefault(); findActive = (findActive + (ev.key === 'ArrowDown' ? 1 : findItems.length - 1)) % findItems.length; renderFind(); }
+      else if (ev.key === 'Enter') { ev.preventDefault(); if (findActive >= 0 && findItems[findActive] != null) chooseFind(findItems[findActive]); }
+      else if (ev.key === 'Escape') { if (!findList.hidden) { ev.preventDefault(); closeFind(); } else if (findInput.value) { ev.preventDefault(); findInput.value = ''; } }   // the list first, then the text
+    });
+    findList.addEventListener('pointerdown', ev => ev.preventDefault());   // the field keeps the focus, so the list stays until the choice lands
+    findList.addEventListener('click', ev => { const b = ev.target.closest('.fo[data-i]'); if (b) chooseFind(+b.dataset.i); });
+    findInput.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== findInput) closeFind(); }, 0));
+  }
+  const redrawMarksNow = () => (state.mode === 'firms' ? drawMarks(cam()) : drawCellsMarks(cam()));
+  function endFound() { if (foundRaf) cancelAnimationFrame(foundRaf); foundRaf = 0; if (foundTimer) clearTimeout(foundTimer); foundTimer = 0; if (found) { found = null; redrawMarksNow(); } }
+  function foundTick() { foundRaf = 0; if (!found) return; if (performance.now() - found.t0 >= PULSE_MS) found = null; redrawMarksNow(); if (found) foundRaf = requestAnimationFrame(foundTick); }
+  function foundRings(ctx, c) {   // the found firm's two rings at its mark, after the pulse's rings on the marks canvas
+    const i = found.i, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), px = c.ox + (TRN.x[i] - c.cx) * k, py = c.oy - (TRN.y[i] - c.cy) * k, r = MM.listedRadius(LR, TRN.pile[i]);
+    if (found.static) { MM.pulseRing(ctx, px, py, r, LR, 1, theme, true); return; }
+    MM.pulsePhase((found.at != null ? found.at : performance.now() - found.t0) / 1000, PH); if (PH.on && PH.p > 0 && PH.p < 1) MM.pulseRing(ctx, px, py, r, LR, PH.p, theme, false);
+  }
+  function findFirm(i) {
+    endFound(); findPin = i;
+    let y = state.year;
+    if (TRN.filed[i][y - 2014] === '-') { let best = null; for (let d = 1; d <= 11 && best == null; d++) { if (y - d >= 2014 && TRN.filed[i][y - d - 2014] !== '-') best = y - d; else if (y + d <= 2025 && TRN.filed[i][y + d - 2014] !== '-') best = y + d; } if (best != null) y = best; }
+    if (y !== state.year) { window.__atlas.year(y); endPulse(); }
+    if (FIRMS_OK && state.mode !== 'firms') { window.__atlas.mode('firms'); endSweep(); }
+    const t = { cx: TRN.x[i], cy: TRN.y[i], k: clampK(Math.max(state.cam.k, minSide() / 20)) };
+    return flyTo(t).then(r => { if (r.done) landFound(i); return r; });
+  }
+  function landFound(i) {   // the tooltip at the firm's mark, then the pulse
+    const c = cam(), px = c.ox + (TRN.x[i] - c.cx) * c.k, py = c.oy - (TRN.y[i] - c.cy) * c.k;
+    lastPointer = { x: px, y: py, inside: true }; showHoverAt(px, py, { touch: true });
+    found = { i, t0: performance.now(), static: reduceMotion() };
+    if (found.static) { redrawMarksNow(); foundTimer = setTimeout(() => { foundTimer = 0; found = null; redrawMarksNow(); }, PULSE_MS); }
+    else foundRaf = requestAnimationFrame(foundTick);
+  }
   $('methodintro').textContent = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021, 100 km cells by year, city windows at 1 km and 250 m. ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records, financial years ${F.years}; boundaries geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every number is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json).`;   // the method block's first lines (round 10): the counts from the former description and the records line from the former footer
   $('methodread').textContent = 'Descriptive associations, not causal effects; absence from the archive is not withdrawal or concealment; the lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, resident, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the firms view).';   // the former footer's reading notes
   $('footer').innerHTML = `<div class="lic">Data: ${F.release}, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0 · © 2026 Armen G. Kaprelian</div>`;   // one line (round 10): the author line is inserted before it below, the data licences at the right
@@ -2372,7 +2492,7 @@ void main() {
     frameCost(n = 20) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); layersDirty(); drawMap({ flight: true }); mx = Math.max(mx, performance.now() - a); } const mean = (performance.now() - t0) / n; drawMap(); return { mean, max: mx }; },
     mode(m) { const b = modesEl.querySelector(`button[data-mode="${m}"]`); if (b) b.click(); return state.mode; },
     field() { return useGL() ? glKind : '2d'; },
-    fieldRegime() { return Object.assign({ gl: useGL(), error: glError }, pixDrawn); },   // the last field draw: the engine and the pixel field's and the dots' weights (round 14)
+    fieldRegime() { return Object.assign({ gl: useGL(), error: glError, dotsK: dotsK() }, pixDrawn); },   // the last field draw: the engine and the pixel field's and the dots' weights (round 14)
     // The pixel field against an independent sum (round 14): the CPU engine's cells for the current view, their summed firms and the firms at the coordinate pairs
     // inside the view's cells, which must agree, and on the GPU the share of composed pixels that differ from the CPU's image by more than 2 levels.
     pixelStats() {
@@ -2414,6 +2534,15 @@ void main() {
     ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
     mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
     binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
+    hoverPixel() { const h = state.hover, p = h && (h.kind === 'pixel' ? h : h.pixel); return p ? { cell: p.cell, n: p.n, a: p.a, p: p.p, size: p.size } : null; },   // the hovered pixel (round 14)
+    pixelSum(gx, gy) { const d = firmYears.get(state.year); if (!d) return null; const c = cam(); let n = 0, a = 0, p = 0; for (let i = 0; i < d.n; i++) { const sx = c.ox + (d.x[i] / 1000 - c.cx) * c.k, sy = c.oy - (d.y[i] / 1000 - c.cy) * c.k; if (Math.floor(sx) === gx && Math.floor(sy) === gy) { n += d.nn[i]; a += d.a[i]; p++; } } return { n, a, p }; },   // every address of the year tested against one CSS pixel, for the audit's independent sum
+    legendSide(v) { if (v != null) { ui.legendRead = v ? 'open' : 'closed'; applyPanels(); } return ui.legendRead === 'open'; },   // the legend's reading side on or off (round 14)
+    find(q) { const el = $('findinput'); el.value = q; el.dispatchEvent(new Event('input')); return [...document.querySelectorAll('#findlist .fo[data-i]')].map(b => ({ i: +b.dataset.i, name: TRN.name[+b.dataset.i], text: b.textContent })); },   // the search as typed (round 14)
+    findKeys(i) { return findIndex()[i]; },
+    foundState() { return { found: found ? { i: found.i, static: found.static } : null, pin: findPin, hash: location.hash, mode: state.mode, year: state.year, cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k } }; },
+    viewHash() { return viewHash(); },
+    foundAt(ms) { if (!found) return false; if (foundRaf) cancelAnimationFrame(foundRaf); foundRaf = 0; found.at = ms; redrawMarksNow(); return true; },   // a frozen frame of the found firm's pulse, for the pictures
+    viewLink() { return viewLink(); },
     tileCount() { const el = $('tipbody').querySelector('.lc'); if (!el) return null; const cs = getComputedStyle(el); return { text: el.textContent, colour: cs.color, size: parseFloat(cs.fontSize), weight: cs.fontWeight, year: layerYear(), dot: !!el.querySelector('.dot'), first: el.parentElement.classList.contains('t-l1') }; },   // the Cells tile's red count (round 14)
     cellPulseAt(ms) { endCellPulse(); if (ms == null) { drawCellsMarks(cam()); return 0; } const n = cellsPulse(); if (cellPulse) { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) { clearTimeout(cellPulseTimer); cellPulseTimer = 0; } cellPulse.at = ms; drawCellsMarks(cam()); } return n; },   // a frozen Cells pulse at ms (round 14); cellPulseAt(null) clears it
     cellPulseState() { return cellPulse ? { count: cellPulse.count, static: cellPulse.static, cells: cellPulse.cells.map(q => [q.x, q.y, q.delay]) } : null; },
@@ -2456,5 +2585,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); redrawAll(); syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); });
 })();
