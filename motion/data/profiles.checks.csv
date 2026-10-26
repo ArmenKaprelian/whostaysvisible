@@ -1,0 +1,28 @@
+"check","expected","observed","tolerance","pass"
+"2021: located firms equal M5's total",3277638,3277638,0,TRUE
+"2021: the regions' firms add up to the national row",3277638,3277638,0,TRUE
+"2021: every region of regions.json is present (and no other)",0,0,0,TRUE
+"2021: firms per region equal regions.json's (max abs diff)",0,0,0,TRUE
+"2021: firms with a statement per region equal regions.json's (max abs diff)",0,0,0,TRUE
+"2021: every city window present",22,22,0,TRUE
+"2021: firms per window equal cellsyears' city_1km sums (max abs diff)",0,0,0,TRUE
+"2021: medians only where 50 or more firms",0,0,0,TRUE
+"2021: medians positive where present",0,0,0,TRUE
+"2021: statements never exceed firms, revenue and asset counts never exceed statements",0,0,0,TRUE
+"2024: located firms equal M5's total",3083823,3083823,0,TRUE
+"2024: the regions' firms add up to the national row",3083823,3083823,0,TRUE
+"2024: every region of regions.json is present (and no other)",0,0,0,TRUE
+"2024: firms per region equal regions.json's (max abs diff)",0,0,0,TRUE
+"2024: firms with a statement per region equal regions.json's (max abs diff)",0,0,0,TRUE
+"2024: every city window present",22,22,0,TRUE
+"2024: firms per window equal cellsyears' city_1km sums (max abs diff)",0,0,0,TRUE
+"2024: medians only where 50 or more firms",0,0,0,TRUE
+"2024: medians positive where present",0,0,0,TRUE
+"2024: statements never exceed firms, revenue and asset counts never exceed statements",0,0,0,TRUE
+"windows: every window-year has its divisions",0,0,0,TRUE
+"windows: top shares non-increasing",0,0,0,TRUE
+"windows: listed shares within 0 to 100",0,0,0,TRUE
+"change: the regions' firms add up to the national row",1123855,1123855,0,TRUE
+"change: never more firms than had revenue in either year",0,0,0,TRUE
+"change: medians only where 50 or more firms",0,0,0,TRUE
+"change: every window present",22,22,0,TRUE
