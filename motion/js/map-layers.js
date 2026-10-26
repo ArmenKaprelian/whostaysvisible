@@ -36,7 +36,11 @@
     for (const line of bm.graticule) { const r = M.decodeRing(line); grat.moveTo(r.xs[0], r.ys[0]); for (let i = 1; i < r.xs.length; i++) grat.lineTo(r.xs[i], r.ys[i]); }
     const cities = []; const c = bm.cities;
     for (let i = 0; i < c.label.length; i++) cities.push({ label: c.label[i], x: c.x_km[i], y: c.y_km[i], lon: c.lon[i], lat: c.lat[i] });
-    return { lod0, lod1, grat, extents: bm.extents, cities, lod1MinK: bm.lod1.use_when_px_per_km_at_least || 9 };
+    // The land's levels and the parts with their bounds (round 14, the atlas only, through M.landLevels): the land as one outline at five tolerances (M1), and
+    // each lod0 part with its km box so a deeper view fills and strokes only the parts that meet it (a ring outside the view cannot change the even-odd fill inside it).
+    const land = bm.land ? bm.land.levels.map(L => ({ tol: L.tolerance_km, path: M.partsToPath([{ rings: L.rings }]) })) : null;
+    const lod0Parts = bm.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = 0, y = 0; for (let i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; const X = x / 10, Y = y / 10; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; } } return { x0, y0, x1, y1, path: M.partsToPath([p]) }; });
+    return { lod0, lod1, grat, extents: bm.extents, cities, lod1MinK: bm.lod1.use_when_px_per_km_at_least || 9, land, lod0Parts };
   };
   // The fine geometry of a city window applies only when the whole viewport lies inside its box.
   M.chooseLod = function (bmp, cam, stage) {
@@ -67,19 +71,47 @@
   M.mark = function (ctx, cx, cy, size, colour, alpha = 1) { ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.beginPath(); ctx.arc(cx, cy, 2.5 * size / 24, 0, Math.PI * 2); ctx.fill(); ctx.restore(); };
   M.markAGK = function (ctx, cx, cy, size, colour, alpha = 1) {   // drawn whole at every size: no symbol takes the striped style (the author's correction of 25 October to item 18)
     ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = colour; ctx.fillStyle = colour; brackets(ctx, cx, cy, size); ctx.font = Motion.font(Math.round(size * 0.3), 500); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AGK', cx, cy + size * 0.02); ctx.restore(); };
+  // Thin lines on a fractional device ratio (round 14, measured in the author's Brave at 1.33 on 25 October 2026): a 1 CSS px stroke is 1.33 device px there,
+  // which takes the canvas off its hairline path, and the 58,490-vertex regional borders then cost 40 to 58 ms a frame against 2 ms at 1 device px. A stroke
+  // whose device width lies between 1 and 1.6 px is drawn as a 1 device px hairline with its alpha multiplied by the width it replaces, the same ink per unit
+  // length (capped at alpha 1). A visible change (lines one device pixel wide and stronger), so it is the atlas's alone: M.hairlines is 1 there and 0 in the
+  // video, which draws exactly as before. Used for the borders and outlines, never for the listed marks.
+  M.hairlines = 0;
+  // The land by level of detail (round 14, the atlas only, M.landLevels 1 there): at the national zooms the land is filled from the unioned outline at the coarsest
+  // tolerance under 0.3 CSS px, deeper in from the lod0 parts that meet the view (the same pixels as the whole lod0), so the 58,490-vertex fill is not redrawn whole.
+  M.landLevels = 0; M.LAND_TOL_PX = 0.3;
+  let lod0ViewMemo = { key: '', path: null };
+  M.lod0InView = function (bmp, cam, stage) {
+    const k = cam.k, ox = cam.ox == null ? stage.width / 2 : cam.ox, oy = cam.oy == null ? stage.height / 2 : cam.oy;
+    const x0 = cam.cx - ox / k, x1 = cam.cx + (stage.width - ox) / k, y0 = cam.cy - (stage.height - oy) / k, y1 = cam.cy + oy / k;
+    const ids = []; for (let i = 0; i < bmp.lod0Parts.length; i++) { const p = bmp.lod0Parts[i]; if (p.x1 >= x0 && p.x0 <= x1 && p.y1 >= y0 && p.y0 <= y1) ids.push(i); }
+    if (ids.length === bmp.lod0Parts.length) return bmp.lod0;
+    const key = ids.join(','); if (lod0ViewMemo.key === key) return lod0ViewMemo.path;
+    const path = new Path2D(); for (const i of ids) path.addPath(bmp.lod0Parts[i].path);
+    lod0ViewMemo = { key, path }; return path;
+  };
+  M.strokeHair = function (ctx, path) {
+    if (!M.hairlines) { ctx.stroke(path); return; }
+    const m = ctx.getTransform(), s = Math.hypot(m.a, m.b), d = ctx.lineWidth * s;
+    if (!(d > 1.0001 && d < 1.6)) { ctx.stroke(path); return; }
+    const lw = ctx.lineWidth, ga = ctx.globalAlpha; ctx.lineWidth = 1 / s; ctx.globalAlpha = Math.min(1, ga * d); ctx.stroke(path); ctx.lineWidth = lw; ctx.globalAlpha = ga;
+  };
   M.drawBasemap = function (ctx, stage, cam, bmp, theme, { landAlpha = 1, borderPx = 0.8, graticule = true, borders = true, lod0Colour = null, lod0Alpha = 1, lod0Px = null, afterLand = null } = {}) {   // afterLand(ctx): drawn right after the land fill and before every line (round 10: the Firms view's tint and glow)   // lod0Colour, lod0Alpha, lod0Px: the national regional borders' own tone, fade and width (round 10, G13b; the atlas passes the ghost tone fading by k 3)
     Motion.camTransform(ctx, stage, cam);
     const fine = M.windowLod(bmp, cam, stage);
     const w1 = fine ? Motion.clamp((cam.k - 6) / 6, 0, 1) : 0;
     const path = w1 >= 0.5 && fine ? fine : bmp.lod0;
+    const lod0View = M.landLevels && bmp.lod0Parts ? M.lod0InView(bmp, cam, stage) : bmp.lod0;   // the parts that meet the view, or the whole lod0
+    let landPath = path === bmp.lod0 ? lod0View : path;
+    if (M.landLevels && path === bmp.lod0 && bmp.land) for (const L of bmp.land) if (L.tol * cam.k <= M.LAND_TOL_PX) { landPath = L.path; break; }   // the coarsest level whose tolerance stays under 0.3 CSS px
     ctx.save(); ctx.globalAlpha *= landAlpha;
-    ctx.fillStyle = theme.land; ctx.fill(path, 'evenodd');
+    ctx.fillStyle = theme.land; ctx.fill(landPath, 'evenodd');
     if (afterLand) afterLand(ctx);
     if (graticule) { ctx.strokeStyle = theme.graticule; ctx.lineWidth = 1.0 / cam.k; ctx.stroke(bmp.grat); }   // a whiter 1 px line since round 9 (0.7 px before)
     if (borders) {
       ctx.strokeStyle = theme.border; ctx.lineWidth = Math.min(borderPx, 1) / cam.k; ctx.lineJoin = 'round';
-      if (w1 < 1 && lod0Alpha > 0) { ctx.save(); ctx.globalAlpha *= (1 - w1) * lod0Alpha; if (lod0Colour) ctx.strokeStyle = lod0Colour; if (lod0Px) ctx.lineWidth = lod0Px / cam.k; ctx.stroke(bmp.lod0); ctx.restore(); }
-      if (w1 > 0 && fine) { ctx.save(); ctx.globalAlpha *= w1; ctx.stroke(fine); ctx.restore(); }
+      if (w1 < 1 && lod0Alpha > 0) { ctx.save(); ctx.globalAlpha *= (1 - w1) * lod0Alpha; if (lod0Colour) ctx.strokeStyle = lod0Colour; if (lod0Px) ctx.lineWidth = lod0Px / cam.k; M.strokeHair(ctx, lod0View); ctx.restore(); }
+      if (w1 > 0 && fine) { ctx.save(); ctx.globalAlpha *= w1; M.strokeHair(ctx, fine); ctx.restore(); }
     }
     ctx.restore();
     stage.base();
@@ -106,7 +138,7 @@
       ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p);
     }
     ctx.restore();
-    if (outline && outline.alpha > 0) { ctx.save(); ctx.globalAlpha *= outline.alpha; ctx.strokeStyle = outline.colour; ctx.lineWidth = (outline.px || 1) / cam.k; for (const [c, p] of paths) ctx.stroke(p); ctx.restore(); }
+    if (outline && outline.alpha > 0) { ctx.save(); ctx.globalAlpha *= outline.alpha; ctx.strokeStyle = outline.colour; ctx.lineWidth = (outline.px || 1) / cam.k; for (const [c, p] of paths) M.strokeHair(ctx, p); ctx.restore(); }
     stage.base();
   };
 

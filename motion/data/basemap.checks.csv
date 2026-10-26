@@ -15,3 +15,7 @@
 "graticule: 18 meridians and 8 parallels",26,26,0,TRUE
 "graticule: every meridian ends within 0.05 km of the pole",0,0,0,TRUE
 "graticule: every parallel is closed (first and last vertex within 1e-6 km)",0,0,0,TRUE
+"land union: area against the parts' own areas (percent, abs)",0,0.00000581091075470084,0.05,TRUE
+"land union: five levels, coarsest first",5,5,0,TRUE
+"land levels: rings with a dropped vertex farther than the level's tolerance (count)",0,0,0,TRUE
+"land levels: vertices never fall as the tolerance falls (count of decreases)",0,0,0,TRUE

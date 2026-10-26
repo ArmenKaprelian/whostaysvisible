@@ -1,13 +1,13 @@
 {
   "id": "basemap",
-  "run_id": "20261025T162250Z-ro-M1-basemap.R",
+  "run_id": "20261026T000411Z-ro-M1-basemap.R",
   "mode": "ro",
-  "time_utc": "2026-10-25T16:23:00Z",
+  "time_utc": "2026-10-26T00:07:57Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M1-basemap.R",
-    "sha256": "8b2a898027170ada8402ffd73b6091775744ad9a6ad011f08ff2901303e95cb0"
+    "sha256": "1acb6e2cda5b245d5fbb20b17d3d787ba7cd79f9fadf71dcf76c34518f6fc370"
   },
-  "lab_commit": "743304ebb0155f9a568d78e0474bb13cf1ab765b",
+  "lab_commit": "f4b1106d280a230a61227e21df90a13d997208bf",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -145,6 +145,11 @@
       "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
     },
     {
+      "package": "polyclip",
+      "version": "1.10.7",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
       "package": "R6",
       "version": "2.6.1",
       "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
@@ -217,10 +222,10 @@
   },
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/basemap.json",
-    "json_sha256": "3940d05f5368f67dc1903a24ceddeefe28d6f1183945da85807efb23d70c5d9f",
-    "json_bytes": 659133,
+    "json_sha256": "e681002a4146424ce0ea772afbb20ec64b657ef6587826859437271fac7b0ba3",
+    "json_bytes": 1159783,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/basemap.js",
-    "js_sha256": "889aab0b94affe5aedfb2370365fa2a863074dab1bc6ae98ed74884255f8d56d",
-    "names": ["projection", "extents", "windows", "cities", "lod0", "lod1", "graticule", "source", "notes", "name", "longitude_origin", "latitude_origin", "earth_radius_km", "units", "encoding", "national", "Moscow", "St Petersburg", "x", "y", "Novosibirsk", "Vladivostok", "Yekaterinburg", "Kazan", "Nizhny Novgorod", "Krasnodar", "Kaliningrad", "Rostov-on-Don", "Samara", "Chelyabinsk", "Omsk", "Ufa", "Perm", "Voronezh", "Volgograd", "Krasnoyarsk", "Irkutsk", "Khabarovsk", "Murmansk", "Tyumen", "label", "lon", "lat", "x_km", "y_km", "tolerance_km", "parts", "rings", "grow_km", "use_when_px_per_km_at_least", "box", "region_names", "title", "boundary_id", "year_represented", "build_date", "provider", "provider_license", "geoboundaries_acknowledgement", "url", "pinned_commit", "attribution_url", "processing"]
+    "js_sha256": "70b82dc79bf3dea2bf20d0f52e504af4a22b2d05895008cb7e99cdce36ebef8b",
+    "names": ["projection", "extents", "windows", "cities", "lod0", "land", "lod1", "graticule", "source", "notes", "name", "longitude_origin", "latitude_origin", "earth_radius_km", "units", "encoding", "national", "Moscow", "St Petersburg", "x", "y", "Novosibirsk", "Vladivostok", "Yekaterinburg", "Kazan", "Nizhny Novgorod", "Krasnodar", "Kaliningrad", "Rostov-on-Don", "Samara", "Chelyabinsk", "Omsk", "Ufa", "Perm", "Voronezh", "Volgograd", "Krasnoyarsk", "Irkutsk", "Khabarovsk", "Murmansk", "Tyumen", "label", "lon", "lat", "x_km", "y_km", "tolerance_km", "parts", "rings", "rule", "levels", "grow_km", "use_when_px_per_km_at_least", "box", "region_names", "title", "boundary_id", "year_represented", "build_date", "provider", "provider_license", "geoboundaries_acknowledgement", "url", "pinned_commit", "attribution_url", "processing"]
   }
 }

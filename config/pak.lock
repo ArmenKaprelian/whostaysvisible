@@ -1144,6 +1144,44 @@
       "install_args": [],
       "repotype": "cran",
       "sysreqs_packages": {}
+    },
+    {
+      "ref": "installed::/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib/polyclip",
+      "package": "polyclip",
+      "version": "1.10-7",
+      "type": "installed",
+      "direct": true,
+      "binary": true,
+      "dependencies": [],
+      "deps": [
+        {
+          "ref": "R",
+          "type": "depends",
+          "package": "R",
+          "op": ">=",
+          "version": "3.5.0"
+        }
+      ],
+      "vignettes": false,
+      "needscompilation": true,
+      "metadata": {
+        "RemoteType": "installed",
+        "RemotePkgRef": "installed::/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib/polyclip",
+        "RemotePkgPlatform": "x86_64-pc-linux-gnu",
+        "RemoteSha": "1.10-7"
+      },
+      "sources": [],
+      "target": "src/contrib/polyclip_1.10-7.tar.gz",
+      "platform": "x86_64-pc-linux-gnu",
+      "rversion": "R 4.5.2",
+      "built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-10-25 23:58:31 UTC; unix",
+      "directpkg": true,
+      "license": "BSL",
+      "dep_types": ["Depends", "Imports", "LinkingTo"],
+      "params": [],
+      "install_args": [],
+      "repotype": "cran",
+      "sysreqs_packages": {}
     }
   ]
 }

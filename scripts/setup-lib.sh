@@ -10,7 +10,7 @@ cd "$LAB"
 Rscript --vanilla - <<'RS'
 lab <- Sys.getenv("LAB_ROOT", unset = getwd())
 lib <- file.path(lab, "lib")
-pkgs <- c("patchwork", "ggrepel")
+pkgs <- c("patchwork", "ggrepel", "polyclip")   # polyclip (round 14): the land as one unioned outline for the basemap levels (M1)
 pak::pkg_install(pkgs, lib = lib, ask = FALSE)
 pak::lockfile_create(pkgs, lockfile = file.path(lab, "config", "pak.lock"), lib = lib)
 ip <- utils::installed.packages()

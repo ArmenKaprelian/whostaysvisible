@@ -95,6 +95,22 @@ ring_hausdorff <- function(orig, simp) {
 shoelace <- function(xy) abs(sum(xy[-nrow(xy), 1] * xy[-1, 2] - xy[-1, 1] * xy[-nrow(xy), 2])) / 2
 
 lod0 <- lapply(parts, function(p) { p$rings <- lapply(p$rings, simplify_ring, tol = tol_km); p })
+
+# The land as one outline (round 14, 25 October 2026): the union of every part, so the atlas fills the country without its internal borders, at five
+# tolerances for the national zooms (the atlas uses a level only while its tolerance stays under 0.3 CSS px, and lod0 above; the video keeps lod0).
+# The union is Clipper's (polyclip, nonzero fill) after orienting each part's first ring counter-clockwise and its other rings clockwise, so holes stay holes
+# and parts that touch or overlap merge.
+ring_signed <- function(xy) sum(xy[-nrow(xy), 1] * xy[-1, 2] - xy[-1, 1] * xy[-nrow(xy), 2]) / 2
+orient <- function(xy, ccw) if ((ring_signed(xy) > 0) != ccw) xy[nrow(xy):1, , drop = FALSE] else xy
+land_in <- unlist(lapply(parts, function(p) lapply(seq_along(p$rings), function(r) { xy <- orient(p$rings[[r]], r == 1L); list(x = xy[-nrow(xy), 1], y = xy[-nrow(xy), 2]) })), recursive = FALSE)
+land_union <- polyclip::polysimplify(land_in, filltype = "nonzero", eps = 1e-4)
+land_union <- lapply(land_union, function(r) { xy <- cbind(r$x, r$y); rbind(xy, xy[1, ]) })
+area_parts <- sum(vapply(parts, function(p) abs(ring_signed(p$rings[[1]])) - sum(vapply(p$rings[-1], function(xy) abs(ring_signed(xy)), 0)), 0))
+area_union <- sum(vapply(land_union, ring_signed, 0))
+land_tols <- c(16, 8, 4, 2, 1)
+# A small island collapses under a coarse tolerance, and simplify_ring then returns it at full detail; here it steps down by quarters until it keeps three vertices.
+simplify_land <- function(xy, tol) { t <- tol; repeat { r <- simplify_ring(xy, t); if (nrow(r) < nrow(xy) || t < 0.01) return(r); t <- t / 4 } }
+land_levels <- lapply(land_tols, function(t) { rs <- lapply(land_union, simplify_land, tol = t); list(tol = t, rings = rs, haus = max(mapply(ring_hausdorff, land_union, rs)), vertices = sum(vapply(rs, nrow, 0L)) - length(rs)) })
 haus <- unlist(lapply(seq_len(n_parts), function(i) vapply(seq_along(parts[[i]]$rings), function(r) ring_hausdorff(parts[[i]]$rings[[r]], lod0[[i]]$rings[[r]]), 0)))
 area_in <- sum(unlist(lapply(parts, function(p) vapply(p$rings, shoelace, 0))))
 area_out <- sum(unlist(lapply(lod0, function(p) vapply(p$rings, shoelace, 0))))
@@ -138,7 +154,7 @@ names(lod1) <- cities$label
 n_vertices_lod1 <- sum(unlist(lapply(lod1, function(w) unlist(lapply(w$parts, function(p) vapply(p$rings, nrow, 0L) - 1L)))))
 lod1_parts <- sum(vapply(lod1, function(w) length(w$parts), 0L))
 
-# Graticule for the pages (round 10, 26 October 2026; the production figure keeps its own ranges): meridians every 20 degrees around the
+# Graticule for the pages (round 10, 25 October 2026; the production figure keeps its own ranges): meridians every 20 degrees around the
 # full circle from 10 N to the pole, so the far-side lines fan upward from the pole and fill the band the stage shows beyond it, and
 # parallels every 10 degrees from 10 N to 80 N as closed rings (the author's screenshot had the lines ending below the top of the map;
 # round 11 moved the southern end from 20 N to 10 N, since the zoom floor at three-quarters of the fit showed the ends near the bottom of a
@@ -159,6 +175,8 @@ out <- list(
   windows = windows,
   cities = cities,
   lod0 = list(tolerance_km = tol_km, parts = encode_parts(lod0)),
+  land = list(rule = "the union of every part (Clipper via polyclip, nonzero fill after orienting outer rings counter-clockwise and holes clockwise), simplified by Douglas-Peucker at each tolerance; filled even-odd; for the atlas's national zooms only, each level while its tolerance stays under 0.3 CSS px",
+              levels = lapply(land_levels, function(L) list(tolerance_km = L$tol, rings = lapply(L$rings, encode_ring)))),
   lod1 = list(tolerance_km = tol1_km, grow_km = grow1_km, use_when_px_per_km_at_least = 9,
               windows = lapply(lod1, function(w) list(label = w$label, box = w$box, region_names = w$region_names, parts = encode_parts(w$parts)))),
   graticule = lapply(grat, encode_line),
@@ -183,7 +201,12 @@ checks <- motion_checks(
   motion_check("St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast", 2, sum(c("Saint Petersburg", "Leningrad oblast") %in% lod1$`St Petersburg`$region_names)),
   motion_check("graticule: 18 meridians and 8 parallels", 26, length(grat)),
   motion_check("graticule: every meridian ends within 0.05 km of the pole", 0, sum(vapply(grat[1:18], function(xy) sqrt(sum((xy[nrow(xy), ] - pole_xy)^2)), 0) > 0.05)),
-  motion_check("graticule: every parallel is closed (first and last vertex within 1e-6 km)", 0, sum(vapply(grat[19:26], function(xy) sqrt(sum((xy[nrow(xy), ] - xy[1, ])^2)), 0) > 1e-6)))
+  motion_check("graticule: every parallel is closed (first and last vertex within 1e-6 km)", 0, sum(vapply(grat[19:26], function(xy) sqrt(sum((xy[nrow(xy), ] - xy[1, ])^2)), 0) > 1e-6)),
+  motion_check("land union: area against the parts' own areas (percent, abs)", 0, 100 * abs(area_union - area_parts) / area_parts, 0.05),
+  motion_check("land union: five levels, coarsest first", 5, sum(diff(vapply(land_levels, `[[`, 0, "tol")) < 0) + 1),
+  motion_check("land levels: rings with a dropped vertex farther than the level's tolerance (count)", 0, sum(vapply(land_levels, function(L) as.integer(L$haus > L$tol + 1e-9), 0L))),
+  motion_check("land levels: vertices never fall as the tolerance falls (count of decreases)", 0, sum(diff(vapply(land_levels, `[[`, 0, "vertices")) < 0)))
+message(sprintf("  land union: %d rings, area %.0f km2 (parts %.0f); levels %s", length(land_union), area_union, area_parts, paste(sprintf("%g km: %d vertices", land_tols, vapply(land_levels, `[[`, 0, "vertices")), collapse = ", ")))
 message(sprintf("  vertices: in %d, LOD0 %d (%.1f%%), LOD1 %d in %d clipped parts over %d windows; max Hausdorff %.3f km; area change %.3f%%",
                 n_vertices_in, n_vertices_lod0, 100 * n_vertices_lod0 / n_vertices_in, n_vertices_lod1, lod1_parts, length(lod1), max(haus), 100 * (area_out - area_in) / area_in))
 message("  Moscow LOD1 regions: ", paste(lod1$Moscow$region_names, collapse = "; "))
