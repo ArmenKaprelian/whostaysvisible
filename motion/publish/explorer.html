@@ -1,6 +1,6 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit e7ea0c5a9660">
+<meta name="build" content="commit 132e5a6f301f">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
@@ -148,6 +148,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .tooltip b { font-variant-numeric: tabular-nums; }
 .mapwrap.cursor-live .tooltip { border-color: var(--cursor-live); }
 .mapwrap.narrow .tooltip { max-width: 64%; font-size: 12px; padding: 5px 7px; line-height: 1.3; }
+.mapwrap.narrow .tooltip.docked { max-width: none; box-sizing: border-box; }   /* the docked tile on a phone map (round 14): the map's width less 12 px margins, set by the script as its outer width */
 .mapwrap.narrow .t-foot { font-size: 11px; }   /* a phone-width map: the tile leaves room beside it for the zoom box and the scale bar (round 9) */
 .tile .num { font-family: var(--font); font-size: 12px; font-variant-numeric: tabular-nums; }
 .t-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
