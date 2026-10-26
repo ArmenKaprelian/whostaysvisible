@@ -571,7 +571,7 @@ def main():
                 if abs(st["cam"]["cx"] - x["fx"]) > 1e-6 or abs(st["cam"]["cy"] - x["fy"]) > 1e-6 or st["cam"]["k"] < x["kmin"] * (1 - 1e-9): bad.append(("find", "camera", "the camera %s, the firm at (%.4f, %.4f), k at least %.4f" % (json.dumps(st["cam"]), x["fx"], x["fy"], x["kmin"])))
                 if x["name"] not in x["tip"]: bad.append(("find", "tooltip", "the tooltip lacks %r: %s" % (x["name"], x["tip"][:200])))
                 if not x["closed"]: bad.append(("find", "list", "the list stays open after the choice"))
-                if not st["hash"].startswith("#firms/"): bad.append(("find", "address", "the address did not follow the flight: %r" % st["hash"]))
+                if not st["hash"].startswith("#firms_"): bad.append(("find", "address", "the address did not follow the flight: %r" % st["hash"]))
                 b, c, l = x["box"], x["card"], x["list"]
                 if b["x"] < c["x"] - 0.5 or b["x1"] > c["x1"] + 0.5 or l["x"] < c["x"] - 0.5 or l["x1"] > c["x1"] + 0.5: bad.append(("find", "layout", "the field %s or its list %s leaves the card %s" % (json.dumps(b), json.dumps(l), json.dumps(c))))
                 if x["static"] != x["rm"]: bad.append(("find", "motion", "the pulse is %s under reduced motion %s" % ("still" if x["static"] else "moving", x["rm"])))
@@ -590,7 +590,7 @@ def main():
                 x = r["extra"]; bad = []
                 if not x: return [("link", "state", "no report")]
                 if x["hash"] != "#" + x["vh"]: bad.append(("link", "address", "the address %r, the view %r" % (x["hash"], x["vh"])))
-                if not re.match(r"^firms/fin/2022/-?\d+\.\d{5},-?\d+\.\d{5}/\d+(\.\d+)?km$", x["vh"]): bad.append(("link", "format", "the view reads %r" % x["vh"]))
+                if not re.match(r"^firms_fin_2022_-?\d+\.\d{5}_-?\d+\.\d{5}_\d+(\.\d+)?km$", x["vh"]): bad.append(("link", "format", "the view reads %r" % x["vh"]))
                 if not x["link"].endswith("#" + x["vh"]): bad.append(("link", "button", "the link %r does not carry the view" % x["link"]))
                 if not (x["status"] == "Link copied" or x["field"] == x["link"]): bad.append(("link", "button", "status %r, field %r, link %r" % (x["status"], x["field"], x["link"])))
                 b, c = x["btn"], x["card"]
@@ -931,10 +931,13 @@ def main():
                 VIEW = {"cx": mx + 12.3, "cy": my - 4.5, "k": 7.25}
                 cdp.call("Page.navigate", {"url": url + qsep + "v=view"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
                 vh = cdp.evaluate("(async () => { const A = window.__atlas; A.layer('fin'); A.year(2022); A.mode('firms'); await A.jump(%s); return A.viewHash(); })()" % json.dumps(VIEW), await_promise=True, timeout=60)
-                cdp.call("Page.navigate", {"url": url + qsep + "v=view2#" + vh}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
-                r = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, cam: A.camera(), hash: location.hash }; })()", await_promise=False)
-                n_states += 1
-                if r["mode"] != "firms" or r["layer"] != "fin" or r["year"] != "2022" or not same_cam(r["cam"], VIEW, 0.002, 1e-5): findings.append("%-11s width %d  the address %s reopened %s, expected the Firms view, fin, 2022 at %s" % ("link", w, vh, json.dumps(r), json.dumps(VIEW)))
+                if not re.match(r"^[A-Za-z0-9._~-]+$", vh): findings.append("%-11s width %d  the address %r holds characters the host does not pass on (letters, digits and . _ ~ - only)" % ("link", w, vh))
+                p = vh.split("_"); vh_old = "/".join(p[:3]) + "/" + ",".join(p[3:5]) + "/" + p[5] if len(p) == 6 else vh   # the first build's slash form still opens the view
+                for k, frag in enumerate((vh, vh_old)):
+                    cdp.call("Page.navigate", {"url": url + qsep + "v=view%d#" % (k + 2) + frag}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
+                    r = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, cam: A.camera(), hash: location.hash }; })()", await_promise=False)
+                    n_states += 1
+                    if r["mode"] != "firms" or r["layer"] != "fin" or r["year"] != "2022" or not same_cam(r["cam"], VIEW, 0.002, 1e-5): findings.append("%-11s width %d  the address %s reopened %s, expected the Firms view, fin, 2022 at %s" % ("link", w, frag, json.dumps(r), json.dumps(VIEW)))
                 for frag, mode in (("#Moscow", "cells"), ("#Moscow-firms", "firms")):
                     # a new document URL each time (a fragment-only navigation fires no load event), then the page's own readiness
                     cdp.call("Page.navigate", {"url": url + qsep + "v=hash" + mode + frag}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()

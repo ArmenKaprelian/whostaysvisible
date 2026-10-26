@@ -2309,24 +2309,27 @@ void main() {
   }
   window.addEventListener('hashchange', () => { const hp = presetFromHash(); if (hp) { if (hp.firms && FIRMS_OK && state.mode !== 'firms') window.__atlas.mode('firms'); flyTo(hp.preset.target()); return; } const v = viewFromHash(); if (v) applyView(v, false); });   // a preset's anchor, or a view typed or pasted into the address
   // ---- links to the exact view (round 14, the author's request of 25 October 2026) ------------------------------------------------------------------------------------
-  // The page's address carries the view, the layer, the year and the camera, as #firms/industry/2024/55.75580,37.61730/20km: the centre in degrees and the span of the
-  // map's shorter side in km, so a link opens on the same ground on any screen (the country's fitted view reads /fit). The address follows every settled view, replaced in
+  // The page's address carries the view, the layer, the year and the camera, as #firms_industry_2024_55.75580_37.61730_20km: the centre in degrees and the span of the
+  // map's shorter side in km, so a link opens on the same ground on any screen (the country's fitted view ends in _fit). The address follows every settled view, replaced in
   // place rather than added to the history; a link opened later, or a hash typed by hand, restores the view. The presets' anchors (#Moscow, #Moscow-firms) keep their
-  // meaning. On the published page the address bar belongs to the host, so the GO TO card's link button copies the artifact's own address with the view appended.
+  // meaning. On the published page the address bar belongs to the host, so the GO TO card's link button copies the artifact's own address with the view appended. The
+  // host passes on only an anchor of letters, digits and . _ ~ - (the first build's #firms/fin/2022/55.75411,37.61358/47.5km never reached the page there; it still parses).
   const ARTIFACT_URL = 'https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n';
   function forwardLAEA(lat, lon) { const { lam0, phi0, R } = LAEA, phi = lat * Math.PI / 180, d = lon * Math.PI / 180 - lam0, kp = Math.sqrt(2 / (1 + Math.sin(phi0) * Math.sin(phi) + Math.cos(phi0) * Math.cos(phi) * Math.cos(d))); return [R * kp * Math.cos(phi) * Math.sin(d), R * kp * (Math.cos(phi0) * Math.sin(phi) - Math.sin(phi0) * Math.cos(phi) * Math.cos(d))]; }
   function viewHash() {
     const c = state.cam, fit = Math.abs(c.k / kFit() - 1) < 1e-6 && Math.abs(c.cx - NAT.cx) < 1e-6 && Math.abs(c.cy - NAT.cy) < 1e-6;
-    let tail = 'fit'; if (!fit) { const [lat, lon] = inverseLAEA(c.cx, c.cy); tail = `${lat.toFixed(5)},${lon.toFixed(5)}/${+(minSide() / c.k).toPrecision(6)}km`; }
-    return `${state.mode}/${state.layer}/${state.year}/${tail}`;
+    let tail = 'fit'; if (!fit) { const [lat, lon] = inverseLAEA(c.cx, c.cy); tail = `${lat.toFixed(5)}_${lon.toFixed(5)}_${+(minSide() / c.k).toPrecision(6)}km`; }
+    return `${state.mode}_${state.layer}_${state.year}_${tail}`;
   }
-  function viewFromHash() {
-    const raw = decodeURIComponent(location.hash.slice(1)).trim(); if (!raw.includes('/')) return null;
-    const v = {};
-    for (const tok of raw.split('/')) { const t = tok.trim(), tl = t.toLowerCase(); if (!t) continue;
+  function viewFromHash() {   // tokens split at _ (or / in the first build's form); the first two decimal degrees are the latitude and the longitude
+    const raw = decodeURIComponent(location.hash.slice(1)).trim(); if (!/[\/_]/.test(raw)) return null;
+    const v = {}, deg = [];
+    for (const tok of raw.split(/[\/_]/)) { const t = tok.trim(), tl = t.toLowerCase(); if (!t) continue;
       if (tl === 'cells' || tl === 'firms') v.mode = tl; else if (LAYERS.some(L => L.id === tl)) v.layer = tl; else if (/^\d{4}$/.test(t) && +t >= 2014 && +t <= 2025) v.year = +t; else if (tl === 'fit') v.fit = true;
-      else if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(t)) { const [la, lo] = t.split(',').map(Number); if (Math.abs(la) <= 90 && Math.abs(lo) <= 180) v.at = [la, lo]; }
+      else if (/^-?\d+\.\d+$/.test(t)) deg.push(+t);
+      else if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(t)) deg.push(...t.split(',').map(Number));
       else if (/^\d+(\.\d+)?km$/i.test(t) && parseFloat(t) > 0) v.span = parseFloat(t); }
+    if (deg.length >= 2 && Math.abs(deg[0]) <= 90 && Math.abs(deg[1]) <= 180) v.at = [deg[0], deg[1]];
     return Object.keys(v).length ? v : null;
   }
   function viewTarget(v) { if (v.fit) return fitTarget(); if (!v.at) return null; const [x, y] = forwardLAEA(v.at[0], v.at[1]); return { cx: x, cy: y, k: clampK(v.span ? minSide() / v.span : state.cam.k) }; }
