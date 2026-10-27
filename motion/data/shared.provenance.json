@@ -1,0 +1,86 @@
+{
+ "id": "shared",
+ "tool": "motion/tools/shared_pairs.py",
+ "tool_sha256": "94d037af7caee67b497bebf422d3c53db21d8c849330bed63cf0ed6f1fb4d229",
+ "run_utc": "2026-10-27T08:28:34Z",
+ "inputs": [
+  {
+   "path": "data/firms/firms-2014.bin.gz",
+   "sha256": "e7686ec801011ce813161ba7e153123357baa1cc4b8efa6ed78a0f775e8020a0",
+   "bytes": 6419408
+  },
+  {
+   "path": "data/firms/firms-2015.bin.gz",
+   "sha256": "41f26991d22853724e93d8f3888ee19f77adcf9050c684967fa28556da14fe97",
+   "bytes": 6688766
+  },
+  {
+   "path": "data/firms/firms-2016.bin.gz",
+   "sha256": "55b3376be48cc8042b5c64451b32258aa14234a9c60b564adf19b52440e6f6fd",
+   "bytes": 6833091
+  },
+  {
+   "path": "data/firms/firms-2017.bin.gz",
+   "sha256": "ec0cf480b960ffbf894616d6cb8bebda6b7c63cd9194248c2c5cfc6663a019c5",
+   "bytes": 6885256
+  },
+  {
+   "path": "data/firms/firms-2018.bin.gz",
+   "sha256": "ae785d6aa9d28ca3f3cd230b99cad645e9528a9c02d0ff8d1a73e8564c4bddaa",
+   "bytes": 6791033
+  },
+  {
+   "path": "data/firms/firms-2019.bin.gz",
+   "sha256": "5b335feaf5b4cd36386f0b7d6ee9feaef513c6db002bf97fbdc4b81a75cb6352",
+   "bytes": 6702112
+  },
+  {
+   "path": "data/firms/firms-2020.bin.gz",
+   "sha256": "18f6e318860ed58a587f558b533f7f3e758e962a38c1951eb5e164b4fbb79334",
+   "bytes": 6721235
+  },
+  {
+   "path": "data/firms/firms-2021.bin.gz",
+   "sha256": "7be88dfb19e77f2d11b08c48860f98eef7fb48a7c65f94d494651980a402a5ce",
+   "bytes": 6586618
+  },
+  {
+   "path": "data/firms/firms-2022.bin.gz",
+   "sha256": "b5165bd558c9635dce1eb9441eb44bffa2de406ae9ffa974f07af003fe652269",
+   "bytes": 6512203
+  },
+  {
+   "path": "data/firms/firms-2023.bin.gz",
+   "sha256": "55fea65087598c6be594dbd2ee67d599c69eb78501eb7d6ad831cb9f0a796fdf",
+   "bytes": 6500313
+  },
+  {
+   "path": "data/firms/firms-2024.bin.gz",
+   "sha256": "637770d6f5ec9e1affe4147c686b15618cf532e75f89afdc48beb9426d9aaf89",
+   "bytes": 6510016
+  },
+  {
+   "path": "data/firms/firms-2025.bin.gz",
+   "sha256": "236d7b69c2e397c165fb4e21cd3d9ac69ae667f092a738c0567a3db94515bbfb",
+   "bytes": 6460520
+  },
+  {
+   "path": "data/firms.json",
+   "sha256": "198c0a512457f25fda8f3644e9995ca3a0d88c6a23e3fecc2b6440fa9c68dfb4",
+   "bytes": 18563
+  },
+  {
+   "path": "data/basemap.json",
+   "sha256": "e681002a4146424ce0ea772afbb20ec64b657ef6587826859437271fac7b0ba3",
+   "bytes": 1159783
+  }
+ ],
+ "checks": "60 of 60 passed (shared.checks.csv)",
+ "output": {
+  "json": "data/shared.json",
+  "json_sha256": "e121b86e5fe64ead3311170658fc4dc2969d3c6ea8d807a1052ae48629e7f289",
+  "json_bytes": 1611094,
+  "js": "data/shared.js",
+  "js_sha256": "d19120d56989ef0e97a337d2c64e6069c8955ecfa9ea647906d0fd6129b498bb"
+ }
+}
