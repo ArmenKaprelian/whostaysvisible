@@ -5,7 +5,7 @@ Each shot is one JSON object on the command line or in a --shots file: {"name", 
 "pulse" (ms into the pulse, frozen through __atlas.pulseAt; without it any automatic pulse a year step started is ended, so the frame is at rest), "hover" ("red": the nearest red listed mark to the
 preset's city in the shown year; "rim": the nearest rimmed one; "city": the preset city's own point; [x, y]: km), "focus" (an element id to show with its
 focus-visible ring), "hoverpseudo" (an element id held in its :hover state through CSS.forcePseudoState; round 10), "jump" ([k] or [cx, cy, km-space k]: an instant camera jump after the preset, the centre kept when only k is given; round 10, the F13 checkpoint), "legend" (true: the legend opened), "tip" (true: the strip shows its first tip; round 10), "js" (a statement run after the setup, such as scrolling the side column), "tap" ([px, py] in CSS px: a touch tap through __atlas.tapAt), "live" (true: hold the cursor layer's moving state through __atlas.live), "swatches" (true: a strip of the page's colour tokens along the bottom), "theme" ("dark" | "light"),
-"dpr", "crop" ([x, y, w, h] in CSS px, scaled by --zoom)}. Nothing on the page is changed beyond the shot's own state.
+"dpr", "crop" ([x, y, w, h] in CSS px, scaled by --zoom), "opt" (round 16: the page's ?opt= variants for this shot, as "8Gb,wsA")}. Nothing on the page is changed beyond the shot's own state.
 
 Usage: python3 -I motion/tools/atlas-frames.py --url http://127.0.0.1:8765/explorer.html --out DIR [--width 1600 --height 1000]
        [--zoom 3] --shots shots.json | --shot '{...}' ...
@@ -52,14 +52,14 @@ def main():
         port = wait_port_file(profile, proc); cdp = CDP(page_ws_url(port)); cdp.call("Page.enable"); cdp.call("Runtime.enable"); cdp.call("DOM.enable"); cdp.call("CSS.enable")
         cur = None; themeScript = None
         for sh in shots:
-            dpr = sh.get("dpr", 1); theme = sh.get("theme", "dark")
-            if cur != (dpr, theme):
+            dpr = sh.get("dpr", 1); theme = sh.get("theme", "dark"); opt = sh.get("opt")   # round 16: a shot's ?opt= variants (the page reads them at load), so one run covers every variant
+            if cur != (dpr, theme, opt):
                 cdp.call("Emulation.setDeviceMetricsOverride", {"width": a.width, "height": a.height, "deviceScaleFactor": dpr, "mobile": False})
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": theme}]})   # for pages that still read the browser scheme (round 9 and before); the round-10 page reads the remembered choice below
                 if themeScript is not None: cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": themeScript})
                 themeScript = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', %s); } catch (e) {}" % json.dumps(theme)})["identifier"]   # the page no longer reads the browser scheme (round 10): a light shot is a remembered choice
-                cdp.call("Page.navigate", {"url": a.url + ("&" if "?" in a.url else "?") + "v=frames" + str(int(time.time()))}); cdp.wait_event("Page.loadEventFired", timeout=60)
-                cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme)
+                cdp.call("Page.navigate", {"url": a.url + ("&" if "?" in a.url else "?") + "v=frames" + str(int(time.time())) + ("&opt=" + opt if opt else "")}); cdp.wait_event("Page.loadEventFired", timeout=60)
+                cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme, opt)
             js = """(async () => { const A = window.__atlas; A.pulseAt(null); A.mode(%s); if (%s) A.layer(%s); A.preset(%s); A.year(%d); await A.ready(); { const J = %s; if (Array.isArray(J)) { const c0 = A.camera(); await A.jump(J.length >= 3 ? { cx: J[0], cy: J[1], k: J[2] } : { cx: c0.cx, cy: c0.cy, k: J[0] }); } } if (%s == null) A.pulseAt(null); A.redraw(); if (%s) A.legend(true); if (%s) { A.tip('reset'); A.tip(true); } %s
               let hit = null; const H = %s;
               if (H === 'red' || H === 'rim') { const T = MOTION_DATA.treatednational, m = A.cities[%s] || A.camera() && [A.camera().cx, A.camera().cy], yi = %d - 2014; let b = -1, bd = Infinity;

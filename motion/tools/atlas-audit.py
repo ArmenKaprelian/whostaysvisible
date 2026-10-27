@@ -165,6 +165,7 @@ def main():
     ap.add_argument("--min-size", type=float, default=11)
     ap.add_argument("--overlap", type=float, default=0.15)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--only", default=None, help="round 16: comma-separated substrings of state tags; only matching states run (a quick pass while building, never for a review or a publish)")
     ap.add_argument("--skip-once", action="store_true", help="leave out the checks that belong once to a whole audit (the agent guide's), for tools/audit_five.py, which runs them once itself")
     a = ap.parse_args()
     url = a.url + ("&" if "?" in a.url else "?") + "__audit=1"
@@ -212,6 +213,7 @@ def main():
             if not landing["prov"].startswith("The division"): findings.append("%-11s width %d  landing provenance %r" % ("landing", w, landing["prov"]))
             n_states += 1
             def state(layer, year, setup, tag, check=None):
+                if a.only and not any(t in tag for t in a.only.split(",")): return   # --only (round 16)
                 nonlocal n_boxes, n_states, n_relaxed
                 r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; window.__extra = null; A.layer(%r); A.year(%d); await A.ready(); %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null, mode: mb ? mb.dataset.mode : 'cells', extra: window.__extra }; })()" % (layer, year, setup, layer, year), await_promise=True, timeout=180)
                 n_boxes += len(r["boxes"]); n_states += 1
@@ -653,13 +655,37 @@ def main():
                 state("share", 2024, "A.mode('cells'); A.note(true); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.note(null);", "notemem", note_is(True, "national, the viewer's choice"))
             # ghost names, hairline borders, the hovered region's outline and the strip following the cursor (round 10, G13)
             # the ghost names float at a fixed size and opacity at every zoom (round 12, part D): the floors at the country, at least one name at the Moscow and Central Moscow presets in both views, the GO TO token as their colour
-            def ghost_ok(floor, label):
-                return lambda r: [] if r["extra"] and abs(r["extra"]["alpha"] - 0.3) < 1e-9 and r["extra"]["drawn"] >= floor and r["extra"]["colour"] == r["extra"]["go"] else [("ghost", "map", "%s %s" % (label, json.dumps(r["extra"])))]
-            GO = "window.__extra = Object.assign(A.ghost(), { go: getComputedStyle(document.documentElement).getPropertyValue('--go').trim() });"
+            # round 16 (item 8): the names in the tile's ice from 8F on, the GO TO ice for 8A; the names that grow with the zoom (8F, 8Ga, 8Gb) are gone at the city presets, where they would lie over the dots
+            def ghost_ok(floor, label, city=False):
+                def f(r):
+                    x = r["extra"]
+                    if not x: return [("ghost", "map", "%s no report" % label)]
+                    opt = x.get("opt") or "A"   # a page from before round 16 reports no option: as published
+                    want = x["go"] if opt == "A" else x["tile"]
+                    grows = opt in ("F", "Ga", "Gb")
+                    fl = 0 if (city and grows) else floor
+                    ok = abs(x["alpha"] - 0.3) < 1e-9 and x["drawn"] >= fl and x["colour"].upper() == want.upper() and (not (city and grows) or x["drawn"] == 0)
+                    return [] if ok else [("ghost", "map", "%s %s" % (label, json.dumps(x)))]
+                return f
+            GO = "window.__extra = Object.assign(A.ghost(), { go: getComputedStyle(document.documentElement).getPropertyValue('--go').trim(), tile: getComputedStyle(document.documentElement).getPropertyValue('--tile-ink').trim() });"
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.redraw(); " + GO, "ghost", ghost_ok(12 if w >= 1600 else 1 if w <= 400 else 5, "at the Russia preset"))
-            state("share", 2021, "A.mode('cells'); A.preset('Moscow'); A.redraw(); " + GO, "ghostcity", ghost_ok(1, "at the Moscow preset"))
-            state("share", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); A.redraw(); " + GO, "ghoststreet", ghost_ok(1, "at the Central Moscow preset"))
-            state("share", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.redraw(); " + GO + " A.mode('cells');", "ghostfirms", ghost_ok(1, "at the Moscow preset in the Firms view"))
+            state("share", 2021, "A.mode('cells'); A.preset('Moscow'); A.redraw(); " + GO, "ghostcity", ghost_ok(1, "at the Moscow preset", True))
+            state("share", 2021, "A.mode('cells'); A.preset('Central Moscow (250 m)'); A.redraw(); " + GO, "ghoststreet", ghost_ok(1, "at the Central Moscow preset", True))
+            state("share", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.redraw(); " + GO + " A.mode('cells');", "ghostfirms", ghost_ok(1, "at the Moscow preset in the Firms view", True))
+            # the dots at the city presets (round 15's cloud check, round 16's names on the ground): no name is drawn over them
+            def ground_ok(r):
+                g = (r.get("extra") or {}).get("ghost") or {}
+                return [] if not g.get("drawn") or (g.get("opt") or "A") == "A" else [("ground", "map", "%d name(s) still drawn at the city preset" % g["drawn"])]
+            for city in ("Moscow", "St Petersburg"):
+                state("industry", 2024, "A.mode('cells'); A.preset(%r); await A.ready(); A.redraw(); window.__extra = { ghost: A.ghost() };" % city, "ground-" + city[:3], ground_ok)
+            # no sideways scroll, in the side column or the page (round 16, the author's report of 27 October 2026: the GO TO card's graticule ran 3 px past the card's border
+            # and the column showed a horizontal scrollbar in Firefox and Brave)
+            def sidex_ok(r):
+                x = r.get("extra") or {}; out = []
+                if w > 900 and x.get("side", 1) > 0: out.append(("sidex", "dom", "the side column scrolls sideways by %s px" % x.get("side")))
+                if x.get("page", 1) > 0: out.append(("sidex", "dom", "the page scrolls sideways by %s px" % x.get("page")))
+                return out
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); await A.ready(); { const s = document.querySelector('.side'), d = document.documentElement; window.__extra = { side: s.scrollWidth - s.clientWidth, page: d.scrollWidth - d.clientWidth }; }", "sidex", sidex_ok)
             def near_any(pixels, rgb, tol): return any(all(abs(p[i] - rgb[i]) <= tol for i in range(3)) for p in pixels)
             # the hairline borders are under the data tiles, so the sample runs on the lists layer (85 coloured cells in 2021) over eight vertices of Moscow Oblast's first ring: at least one must read the ghost tone
             state("lists", 2021, "A.mode('cells'); A.strip(true); A.preset('Russia'); if (A.hoverOff) A.hoverOff(); A.redraw(); { const vs = [0, 9, 18, 27, 36, 45, 54, 63].map(i => { const v = A.regionVertex('Moscow Oblast', i); return { v, px: A.pixelsAt('map', v.px, v.py) }; }); window.__extra = { vs, ghost: getComputedStyle(document.documentElement).getPropertyValue('--ghost').trim() }; }", "borders",
