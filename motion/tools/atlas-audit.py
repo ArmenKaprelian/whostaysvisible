@@ -197,9 +197,11 @@ def rgb_of(c):
     return None, None
 # The REFERENCES panel's CORRECTIONS (round 17, the author's rule of 27 October 2026): an entry only where a published version showed something wrong that a reader
 # could have seen or quoted (a figure, a map mark, a count, a source or a factual claim); wording changes, records-only fixes and fixes made before a publish get none.
-# One entry per correction, newest first: the publish date in bold in the page's long form, then one or two sentences, at most CORRECTION_MAX_CHARS characters in all,
-# with no semicolon, em-dash or "listed". At most CORRECTIONS_MAX entries, and every correction stays on the page: a ninth fails here and the author decides how to
-# condense, never a drop. The limits are rules, not content, so they stay beside the check; the patch that makes a qualifying fix adds its entry.
+# One entry per publish that corrects something (the author's decision of 27 October 2026), newest first: the publish date in bold in the page's long form, then one
+# or two sentences naming what it corrected by kind and count, at most CORRECTION_MAX_CHARS characters in all, with no semicolon, em-dash or "listed"; the round's
+# README record holds the detail. No two entries share a date. At most CORRECTIONS_MAX entries, and every correction stays on the page: a ninth fails here and the
+# author decides how to condense, never a drop. The limits are rules, not content, so they stay beside the check; the patch that makes a qualifying fix adds it to
+# the entry for the next publish, dated when that publish happens.
 CORRECTIONS_MAX = 8
 CORRECTION_MAX_CHARS = 300
 CORRECTION_MAX_SENTENCES = 2
@@ -223,6 +225,7 @@ def corrections_check(entries):
         for name, rx in (("a semicolon", r";"), ("an em-dash", "\u2014"), ('"listed"', r"\blisted\b")):
             if re.search(rx, t, re.I): bad.append("entry %d carries %s" % (i, name))
     if dates != sorted(dates, reverse=True): bad.append("the entries are not newest first: %s" % ", ".join(d.isoformat() for d in dates))
+    if len(set(dates)) != len(dates): bad.append("two entries share a publish date: one entry per publish (%s)" % ", ".join(sorted({d.isoformat() for d in dates if dates.count(d) > 1})))
     return bad
 def refs_block(cdp, w, a, once, page_src):
     out = []; F = lambda msg: out.append("%-11s width %d  %s" % ("refs", w, msg))
