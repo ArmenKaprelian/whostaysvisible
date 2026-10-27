@@ -354,7 +354,7 @@
   const lowerBound = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo; };
   // The artifact host serves only listed file types, so a year's gzipped bytes travel as base64 inside a
   // script (data/firms/firms-YYYY.js, the lab's pattern for binary arrays), injected on demand.
-  const loadScript = src => new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = () => ok(); el.onerror = () => fail(new Error('could not load ' + src)); document.head.appendChild(el); });
+  const loadScript = src => new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = () => { el.remove(); ok(); }; el.onerror = () => { el.remove(); fail(new Error('could not load ' + src)); }; document.head.appendChild(el); });   // round 17: the element goes once it has run (a revisited year loads again under the three-year cache, and each load had left its element and two handlers in the head)
   const twinNotes = {};   // the comment field of each twin's gzip header (round 10, the authorship mark; the bytes inside are unchanged)
   function gzipComment(u8) { const flg = u8[3]; let p = 10; if (flg & 4) p += 2 + (u8[p] | (u8[p + 1] << 8)); if (flg & 8) { while (u8[p]) p++; p++; } if (!(flg & 16)) return ''; let s = ''; while (u8[p]) s += String.fromCharCode(u8[p++]); return s; }
   async function loadYear(y) {
@@ -3031,12 +3031,13 @@ void main() {
   // TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the guide built into the page (js/agent-guide.js) to the clipboard by the
   // email copy's path, then a short notice, ">text copied", in a semi-transparent box above the button; where the clipboard is refused, the guide in a read-only
   // field at the same place, selected. No download, no new window, no request, no data: or blob: URL; Escape or a click elsewhere closes the field.
-  { const btn = $('teachagent'), toast = $('agenttoast'), box = $('agentbox'), field = $('agenttext'); let tt = 0;
+  { const btn = $('teachagent'), toast = $('agenttoast'), box = $('agentbox'), field = $('agenttext'), url = window.AGENT_GUIDE_URL || ''; let tt = 0;
+    if (url) { toast.textContent = '>link copied'; btn.title = 'COPY A LINK TO A GUIDE TO THIS ATLAS FOR YOUR AI AGENT'; btn.setAttribute('aria-label', 'Copy a link to a guide to this atlas for your AI agent'); box.classList.add('url'); field.setAttribute('aria-label', 'A link to the guide to this atlas for your AI agent, selected to copy'); }   // round 17 (the author's request of 27 October 2026): with a link set by tools/agent_guide.py the button copies it, for the reader to paste to their agent; without one, the text as before
     const above = (el, w, h) => { const r = btn.getBoundingClientRect(); el.style.left = Math.round(Math.max(12, Math.min(innerWidth - w - 12, r.left))) + 'px'; el.style.top = Math.round(Math.max(12, r.top - h - 8)) + 'px'; };
     const notice = () => { clearTimeout(tt); toast.classList.remove('out'); toast.hidden = false; above(toast, toast.offsetWidth, toast.offsetHeight); tt = setTimeout(() => { toast.classList.add('out'); tt = setTimeout(() => { toast.hidden = true; toast.classList.remove('out'); }, reduceMotion() ? 0 : 220); }, 1600); };
-    const showField = () => { field.value = window.AGENT_GUIDE || ''; box.hidden = false; above(box, box.offsetWidth, box.offsetHeight); field.focus(); field.select(); field.scrollTop = 0; };
+    const showField = () => { field.value = url || window.AGENT_GUIDE || ''; box.hidden = false; above(box, box.offsetWidth, box.offsetHeight); field.focus(); field.select(); field.scrollTop = 0; };
     const closeField = () => { box.hidden = true; };
-    btn.addEventListener('click', e => { e.stopPropagation(); const t = window.AGENT_GUIDE || ''; if (!t) return; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(notice, showField); else showField(); });
+    btn.addEventListener('click', e => { e.stopPropagation(); const t = url || window.AGENT_GUIDE || ''; if (!t) return; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(notice, showField); else showField(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden) closeField(); });
     document.addEventListener('pointerdown', e => { if (!box.hidden && !box.contains(e.target) && e.target !== btn) closeField(); }); }
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });

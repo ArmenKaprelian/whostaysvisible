@@ -467,9 +467,11 @@ footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; pl
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
 footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the LIGHT THEME button's style beside the email copy */
+footer #copymail, footer #teachagent { vertical-align: middle; }   /* round 17: the copy button and TEACH YOUR AGENT sat on the text's baseline, TEACH YOUR AGENT 3.4 px under the copy button; centred on the line, both share the X buttons' centre */
 .agenttoast { position: fixed; z-index: 30; padding: 6px 12px; background: color-mix(in srgb, var(--panel) 90%, transparent); border: 2px solid var(--context); color: var(--context); font-family: var(--font); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; white-space: nowrap; pointer-events: none; opacity: 1; transition: opacity 0.2s; }   /* the short notice: a semi-transparent box over the page */
 .agenttoast.out { opacity: 0; }
 .agentbox { position: fixed; z-index: 30; box-sizing: border-box; width: min(560px, calc(100vw - 24px)); height: min(320px, calc(100vh - 24px)); padding: 8px; background: var(--panel); border: 3px solid var(--context); }   /* where the clipboard is refused: the guide in a read-only field, selected, at the button */
+.agentbox.url { height: auto; } .agentbox.url textarea { height: auto; }   /* round 17: a link in place of the guide, one row of the field */
 .agentbox textarea { box-sizing: border-box; width: 100%; height: 100%; resize: none; background: var(--stage); color: var(--ink); border: 1px solid var(--grid); font-family: var(--font); font-size: 11px; line-height: 1.45; padding: 6px; }
 @media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
