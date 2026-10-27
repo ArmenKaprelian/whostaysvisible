@@ -1,0 +1,56 @@
+{
+ "terms": [
+  {
+   "term": "Eligible firms",
+   "text": "Every firm-year record the RFSD marks eligible, with or without a financial statement. Eligibility is the provider’s operational classification, not a verified legal duty to file."
+  },
+  {
+   "term": "Registered at year-end",
+   "text": "Eligible firms that are also registered at the end of the financial year, the second population in the national chart."
+  },
+  {
+   "term": "Statement availability",
+   "text": "A statement is available when the release holds the firm’s own filing for that year, filed and not imputed. A share with a statement is the fraction of eligible firms in a group and year that have one."
+  },
+  {
+   "term": "Located firms",
+   "text": "Eligible firms whose registered address has map coordinates. Unlocated firms stay in the counts but are not drawn."
+  },
+  {
+   "term": "Coordinate pairs",
+   "text": "The distinct coordinates of geocoded registered addresses. Several firms can share one, since a registered address can be a business centre or an address rented for registration and correspondence."
+  },
+  {
+   "term": "House-, street-level and other geocodes",
+   "text": "A house- or street-level geocode matches a registered address to a building or a street. Other geocodes are coordinates without a verified house or street match, so the atlas counts those firms but does not draw them."
+  },
+  {
+   "term": "Firms on the five lists (treated)",
+   "text": "Firms on at least one of the five lists: the sanctions list, the decree list, the 2020 filing-exemption list, the government strategic list and the presidential strategic list. Treated names the study’s group, not an effect."
+  },
+  {
+   "term": "Firms on no list (comparison group)",
+   "text": "Eligible firms on none of the five lists. Firms whose list membership is unknown are kept apart from this group."
+  },
+  {
+   "term": "The 50-firm support rule",
+   "text": "A share is shown only where 50 or more firms make up its denominator. Cells, squares and regions with fewer are grey."
+  },
+  {
+   "term": "Revenue cohort",
+   "text": "Firms eligible in 2021 with usable 2021 statements for revenue, cash relative to assets and the controls (the revenue cohort by cash share). Later survival, filing and list membership do not change who belongs."
+  },
+  {
+   "term": "State-related firms",
+   "text": "Firms whose registry ownership code is state or municipal ownership, mixed ownership with state participation, or state-corporation ownership. The codes do not establish operational control or disclosure protection."
+  },
+  {
+   "term": "Unitary enterprises",
+   "text": "Firms with the unitary-enterprise legal form, which the chapter describes as state entities. They largely overlap with the state-related firms."
+  }
+ ],
+ "notes": [
+  "Definitions in the chapter’s wording where the term is shared with it, else the atlas’s own; the provenance names each source."
+ ],
+ "author": "by Armen G. Kaprelian"
+}

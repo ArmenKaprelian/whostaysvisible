@@ -42,7 +42,8 @@ PUB = {"US Department of the Treasury": TREAS, "U.S. Department of the Treasury,
        "SkyTruth (with Global Fishing Watch data)": "SkyTruth", "Ministry of the Russian Federation for the Development of the Far East and Arctic, Investment Portal of the Arctic Zone of Russia": "Ministry for the Development of the Russian Far East and Arctic",
        "State Secretariat for Economic Affairs (SECO), Switzerland": "Swiss State Secretariat for Economic Affairs", "Bruegel (Ugn\u0117 Keliauskait\u0117, Georg Zachmann)": "Bruegel", "Direction g\u00e9n\u00e9rale du Tr\u00e9sor (France)": "Direction g\u00e9n\u00e9rale du Tr\u00e9sor",
        "Cambridge University Press (Richard Connolly)": "Cambridge University Press", "National Bureau of Economic Research (Fern\u00e1ndez-Villaverde, Li, Xu and Zanetti)": "National Bureau of Economic Research",
-       "Oxford Institute for Energy Studies (Vitaly Yermakov)": "Oxford Institute for Energy Studies"}
+       "Oxford Institute for Energy Studies (Vitaly Yermakov)": "Oxford Institute for Energy Studies",
+       "The Moscow Times, Russian service (Reuters report)": "Reuters", "GMK Center (citing Interfax)": "GMK Center"}
 RA, NEWS, ENTRY, IMPL = "recent actions notice", "news report", "sanctions list entry", "implementing regulation"
 TYPE = {"recent actions (SDN list update)": RA, "recent-actions notice": RA, "recent actions notice (entities added to the SDN List)": RA, "recent actions notice (SDN list additions)": RA,
         "recent actions notice (SDN additions and SSI changes)": RA, "recent actions (Sectoral Sanctions Identifications List)": RA, "news article": NEWS, "news item": NEWS,
@@ -53,7 +54,8 @@ TYPE = {"recent actions (SDN list update)": RA, "recent-actions notice": RA, "re
         "Council Implementing Regulation (EU) 2024/196": IMPL, "fact sheet, Office of the Spokesperson (archived)": "fact sheet", "fact sheet (archived)": "fact sheet", "analysis (PDF)": "analysis",
         "analysis (blog post)": "analysis", "energy comment": "analysis", "working paper (No. 33486)": "working paper", "Minerals Yearbook 2019, The Mineral Industry of Russia (advance release)": "yearbook",
         "shareholder structure page (undated, read 2026-10-27)": "web page", "power plant profile": "web page", "notice on a decision (Southern Main Branch)": "notice",
-        "register of notices on issuers (Southern Main Branch, filtered list)": "register of notices", "final rule (Entity List additions)": "final rule", "notice of sanctions actions": "Federal Register notice"}
+        "register of notices on issuers (Southern Main Branch, filtered list)": "register of notices", "final rule (Entity List additions)": "final rule", "notice of sanctions actions": "Federal Register notice",
+        "trade magazine column (Rob Bates, Cutting Remarks)": "trade column", "trade column (John Jeffay, Memo)": "trade column", "interview with Alrosa's chief executive (newspaper No. 85, p. 1)": "interview"}
 UNTYPED = {"publication.pravo.gov.ru/document/0600202607020002": "budget execution law", "publication.pravo.gov.ru/file/pdf?eoNumber=0600202607020002": "budget execution law",
            "publication.pravo.gov.ru/document/0700202601030002": "budget law", "centreforaviation.com/news/krasnodar-pashkovsky-airport-reopens-1331637": NEWS, "www.kommersant.ru/doc/8041867": NEWS}   # five sources the agents left untyped, typed from their titles
 
@@ -105,17 +107,22 @@ def main():
         for o in json.load(open(path, encoding="utf-8")):
             u, kind = o["unit"], o["kind"]
             if u in leave: prov_units.append({"unit": u, "kind": kind, "agent": X, "left_out": leave[u]}); continue
+            alt = u in approval.get("alternatives_taken", {})   # the author's pick of the alternative shown beside the text (27 October 2026)
+            if alt and not o.get("alternative"): raise SystemExit("insights_build: %s has no alternative to take" % u)
+            body = o["alternative"] if alt else o
             srcs, seen = [], set()
-            for s in o.get("sources") or []:   # a page cited twice for two snippets ships once, and so does a document under two links (a page and its PDF)
+            for s in body.get("sources") or []:   # a page cited twice for two snippets ships once, and so does a document under two links (a page and its PDF)
                 pub, ty = label(s); k1, k2 = s.get("url"), (pub, ty, s.get("date"))
                 if k1 in seen or k2 in seen: continue
                 seen.update((k1, k2)); srcs.append({"publisher": pub, "type": ty, "date": s.get("date"), "url": s.get("url")})
             fe = approval.get("fit_edits", {}).get(u, {})   # an approved text changed to fit its box (approval.json says why)
-            if fe and fe.get("was") != o["short"] and fe.get("was") != o["full"]: raise SystemExit("insights_build: the fit edit for %s no longer matches its text" % u)
-            rec = {"full": fe.get("full", o["full"]), "short": fe.get("short", o["short"]), "sources": srcs}
+            if fe and fe.get("was") != body["short"] and fe.get("was") != body["full"]: raise SystemExit("insights_build: the fit edit for %s no longer matches its text" % u)
+            ed = approval.get("edits", {}).get(u, {})   # a rewording the author approved, applied only over the exact text it replaces
+            if ed and (ed["was_full"] != body["full"] or ed["was_short"] != body["short"]): raise SystemExit("insights_build: the edit for %s no longer matches its text" % u)
+            rec = {"full": ed.get("full", fe.get("full", body["full"])), "short": ed.get("short", fe.get("short", body["short"])), "sources": srcs}
             (out["regions"] if kind == "region" else out["cities"])[u] = rec; n_src += len(srcs)
-            prov_units.append({"unit": u, "kind": kind, "agent": X, "status": o.get("status"), "classification": o.get("classification"), "changes": o.get("changes"),
-                               "named_firms": o.get("named_firms"), "sources_lab": [{"publisher": s.get("publisher"), "type": s.get("type"), "title": s.get("title_lab"), "snippet": s.get("snippet_lab"), "bib": s.get("bib"), "url": s.get("url")} for s in o.get("sources") or []]})
+            prov_units.append({"unit": u, "kind": kind, "agent": X, "text": "alternative" if alt else "edited" if ed else "draft", "status": o.get("status"), "classification": o.get("classification"), "changes": o.get("changes"),
+                               "named_firms": o.get("named_firms"), "sources_lab": [{"publisher": s.get("publisher"), "type": s.get("type"), "title": s.get("title_lab"), "snippet": s.get("snippet_lab"), "bib": s.get("bib"), "url": s.get("url")} for s in body.get("sources") or []]})
     allow = json.load(open(os.path.join(P2, "check-allow.json"), encoding="utf-8"))
     checks = text_checks(out, regions_ok, windows_ok, OFF_LIST, allow)
     obj = dict(out, approved="27 October 2026", notes=["One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",

@@ -178,7 +178,8 @@ REFS_OPEN_JS = r"""(() => { const d = document.getElementById('refs'), A = windo
   const ls = document.getElementById('refs-links'), la = ls ? [...ls.querySelectorAll('a')] : [], all = [...d.querySelectorAll('a')];
   out.lastLink = la.length ? la[la.length - 1].href : null; out.lastLabel = ls ? ls.querySelector('li:last-child b').textContent : null; out.badRel = all.filter(a => a.target !== '_blank' || !/noopener/.test(a.rel) || !/noreferrer/.test(a.rel)).map(a => a.href).slice(0, 3);
   out.bg = cs(d).backgroundColor; out.ink = cs(d.querySelector('li b') || d).color; out.muted = cs(d.querySelector('li') || d).color; out.link = all.length ? cs(all[0]).color : null;
-  const ins = document.getElementById('refs-insights'); out.insights = ins ? ins.querySelectorAll('li').length : 0; out.inner = [innerWidth, innerHeight]; out.cursorMark = !!d.querySelector('.rcursor');
+  const ins = document.getElementById('refs-insights'); out.insights = ins ? ins.querySelectorAll('li').length : 0; out.defs = [...document.querySelectorAll('#refs-definitions li')].map(li => li.textContent); out.inner = [innerWidth, innerHeight]; out.cursorMark = !!d.querySelector('.rcursor');
+  { const b = document.getElementById('refsbtn'); out.btn = [b.classList.contains('on'), b.getAttribute('aria-expanded'), getComputedStyle(b).backgroundColor]; }
   out.shut = d.classList.contains('shut'); out.opacity = cs(d).opacity; out.transition = cs(d).transitionDuration; out.glow = cs(d.querySelector('.rglow')).filter; out.mask = cs(d.querySelector('.rlines')).maskImage || cs(d.querySelector('.rlines')).webkitMaskImage;
   return out; })()"""
 def rgb_of(c):
@@ -221,12 +222,15 @@ def refs_block(cdp, w, a, once, page_src):
     R = o["R"]
     if not R["open"]: F("a press on the button did not open the panel"); return out
     if R["focus"] != "refstitle": F("focus on open is on #%s, expected the title" % R["focus"])
+    if not (o["btn"][0] and o["btn"][1] == "true"): F("the REFERENCES button does not show its pressed state while the panel is open: %s" % o["btn"])
     if o["shut"] or abs(float(o["opacity"]) - 1) > 1e-3: F("the open animation did not finish: shut %s, opacity %s" % (o["shut"], o["opacity"]))
     x, y, bw, bh = R["rect"]
     if w <= 900: ex = [16, 16, o["inner"][0] - 32, o["inner"][1] - 32]
     else: m = R["map"]; k = math.sqrt(0.8); ex = [m[0] + m[2] * (1 - k) / 2, m[1] + m[3] * (1 - k) / 2, m[2] * k, m[3] * k]
     if any(abs(u - v) > 1.0 for u, v in zip([x, y, bw, bh], ex)): F("the panel's box %s, expected %s" % ([round(v, 1) for v in (x, y, bw, bh)], [round(v, 1) for v in ex]))
-    want_secs = ["Data", "Methods"] + (["Insights"] if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "insights.json")) else []) + ["The wire’s cat facts", "Type and software", "Corrections", "Links", "Superuser"]
+    DD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"); gloss = json.load(open(os.path.join(DD, "glossary.json"), encoding="utf-8"))["terms"] if os.path.exists(os.path.join(DD, "glossary.json")) else None
+    want_secs = ["Data"] + (["Definitions"] if gloss else []) + ["Methods"] + (["Insights"] if os.path.exists(os.path.join(DD, "insights.json")) else []) + ["Type and software", "Corrections", "Links", "Superuser"]
+    if gloss and o["defs"] != ["%s: %s" % (t["term"], t["text"]) for t in gloss]: F("the DEFINITIONS section differs from glossary.json: %s" % json.dumps(o["defs"][:2])[:200])
     if R["sections"] != want_secs: F("sections %s, expected %s" % (R["sections"], want_secs))
     if [n["t"] for n in o["navs"]] != want_secs: F("shortcuts %s" % [n["t"] for n in o["navs"]])
     if "Insights" in want_secs and o["insights"] != 104: F("the insights section lists %d units, expected 104" % o["insights"])
@@ -238,7 +242,7 @@ def refs_block(cdp, w, a, once, page_src):
     if not o["cursorMark"]: F("the block cursor after the last line is missing")
     if want_note is None or R["note"] != want_note: F("the SUPERUSER note %r against the source block %r" % (R["note"], want_note))
     doc = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]; nid = cdp.call("DOM.querySelector", {"nodeId": doc, "selector": "#superusernote"})["nodeId"]
-    fams = {f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]}; arm = "Noto Sans Armenian" if R["opts"]["arm"] == "B" else "DejaVu Sans Mono"
+    fams = {f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]}; arm = "DejaVu Sans Mono"
     if arm not in fams or fams - {"IBM Plex Mono", arm}: F("the note rendered with %s, expected IBM Plex Mono and %s only" % (sorted(fams), arm))
     contrast_ok(o, True, "dark theme, Cells view")
     # the page's keys stand down while it is open: B (the blink), c-a-t (the cat key)
@@ -248,15 +252,15 @@ def refs_block(cdp, w, a, once, page_src):
     time.sleep(0.4); ex_ = cdp.evaluate("window.__atlas.extras()", await_promise=False)
     if ex_["blink"] or ex_["keyed"] != k0: F("the page's keys acted with the panel open: %s" % json.dumps(ex_))
     # a shortcut scrolls its section to the top of the body (the one-body form)
-    if not R["opts"]["tabs"]:
+    if True:
         for sec in ("refs-type", "refs-links"):   # a section scrolls to the body's top, or the body to its end where too little follows it
             c = centre(cdp, "#refsnav button[data-target='%s']" % sec); click(cdp, *c); time.sleep(0.2)
             sc = cdp.evaluate("(() => { const b = document.getElementById('refsbody'), s = document.getElementById(%s); return { top: s.getBoundingClientRect().top - b.getBoundingClientRect().top, end: b.scrollTop >= b.scrollHeight - b.clientHeight - 1 }; })()" % json.dumps(sec), await_promise=False)
             if not (-1 <= sc["top"] <= 6 or (sc["end"] and sc["top"] >= -1)): F("the %s shortcut left its section %.1f px from the body's top" % (sec, sc["top"]))
     # Escape closes the panel and returns focus; a pop-out open behind it stays
     key(cdp, "Escape", "Escape", 27); time.sleep(0.35)
-    st = cdp.evaluate("(() => ({ open: document.getElementById('refs').open, focus: document.activeElement && document.activeElement.id, pop: window.__atlas.popout() }))()", await_promise=False)
-    if st["open"] or st["focus"] != "refsbtn": F("after Escape: %s" % json.dumps(st))
+    st = cdp.evaluate("(() => ({ open: document.getElementById('refs').open, focus: document.activeElement && document.activeElement.id, pop: window.__atlas.popout(), btn: [document.getElementById('refsbtn').classList.contains('on'), document.getElementById('refsbtn').getAttribute('aria-expanded')] }))()", await_promise=False)
+    if st["open"] or st["focus"] != "refsbtn" or st["btn"][0] or st["btn"][1] != "false": F("after Escape: %s" % json.dumps(st))
     if w > 900 and st["pop"] != "national": F("Escape with the panel open closed the pop-out as well: %s" % json.dumps(st))
     cdp.evaluate("(() => { window.__atlas.popout(null); return true; })()", await_promise=False)
     # a press on the backdrop closes it and does not reach the map; the close toggle closes it

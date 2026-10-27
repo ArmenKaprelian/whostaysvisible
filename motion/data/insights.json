@@ -504,24 +504,6 @@
     }
    ]
   },
-  "Murmansk Oblast": {
-   "full": "In July 2025 Norway joined EU sanctions on 2 Russian fishing companies, one of them Murmansk-based, closing its ports to their ships and, as a rule, denying them licenses to fish in its economic zone.",
-   "short": "Norway shut its ports to 2 EU-sanctioned fishing firms, one from Murmansk",
-   "sources": [
-    {
-     "publisher": "Norwegian Ministry of Foreign Affairs",
-     "type": "press release",
-     "date": "2025-07-07",
-     "url": "https://www.regjeringen.no/no/aktuelt/norge-slutter-opp-om/id3114560/"
-    },
-    {
-     "publisher": "Baird Maritime",
-     "type": "news report",
-     "date": "2026-02-05",
-     "url": "https://www.bairdmaritime.com/fishing/regulation-enforcement/court-junks-russian-companys-bid-to-resume-fishing-in-norwegian-economic-zone"
-    }
-   ]
-  },
   "Arkhangelsk Oblast": {
    "full": "The US State Department's designations of April 2022 covered Sevmash and Zvezdochka, the Severodvinsk yards of the state-owned United Shipbuilding Corporation that build and repair submarines.",
    "short": "US-designated Sevmash and Zvezdochka build and repair submarines",
@@ -607,20 +589,20 @@
    ]
   },
   "Vologda Oblast": {
-   "full": "The US State Department designated Severstal as one of Alexey Mordashov's companies, describing the Cherepovets firm as among Russia's leading domestic steel producers.",
-   "short": "US designated Severstal as a Mordashov company and leading steel producer",
+   "full": "Severstal, registered in Cherepovets, published no IFRS results after its 2021 report until August 2023, saying a large part of its shareholders could not make investment decisions.",
+   "short": "Severstal halted IFRS reports after 2021, resuming in August 2023",
    "sources": [
     {
-     "publisher": "US Department of State",
-     "type": "press statement",
-     "date": "2022-06-02",
-     "url": "https://2021-2025.state.gov/targeting-russias-oligarchs-and-vessels/"
+     "publisher": "Reuters",
+     "type": "news report",
+     "date": "2023-08-29",
+     "url": "https://ru.themoscowtimes.com/2023/08/29/update-1-pribyl-severstali-v-1-pol-23g-sokratilas-na-11-gg-a53286"
     },
     {
-     "publisher": "US Treasury, Office of Foreign Assets Control",
-     "type": "recent actions notice",
-     "date": "2022-06-02",
-     "url": "https://ofac.treasury.gov/recent-actions/20220602"
+     "publisher": "GMK Center",
+     "type": "news report",
+     "date": "2022-04-12",
+     "url": "https://gmk.center/news/severstal-priostanovila-publikaciju-kvartalnoj-finotchetnosti/"
     }
    ]
   },
@@ -1189,26 +1171,26 @@
    ]
   },
   "Khanty-Mansiysk Autonomous Okrug – Ugra": {
-   "full": "In January 2025 the US and UK sanctioned Surgut-based Surgutneftegas directly for the first time, and the UK said it and Gazprom Neft produce over 1 million barrels of oil a day.",
-   "short": "Surgutneftegas (Surgut), oil producer: first direct US and UK sanctions",
+   "full": "Russia has withheld oil output statistics since an April 2023 government order, yet the head of Ugra's subsoil department said the okrug produced about 205 million tonnes in 2024.",
+   "short": "Oil data withheld since 2023, yet Ugra reported about 205 Mt for 2024",
    "sources": [
     {
-     "publisher": "US Treasury",
-     "type": "press release",
-     "date": "2025-01-10",
-     "url": "https://home.treasury.gov/news/press-releases/jy2777"
+     "publisher": "Meduza",
+     "type": "news report",
+     "date": "2023-04-28",
+     "url": "https://meduza.io/news/2023/04/28/pravitelstvo-rf-priostanovilo-publikatsiyu-statistiki-o-dobyche-nefti-i-gaza"
     },
     {
-     "publisher": "US Treasury, Office of Foreign Assets Control",
-     "type": "recent actions notice",
-     "date": "2025-01-10",
-     "url": "https://ofac.treasury.gov/recent-actions/20250110"
+     "publisher": "Expert",
+     "type": "news report",
+     "date": "2026-04-01",
+     "url": "https://expert.ru/news/kabmin-prodlil-na-god-zapret-na-raskrytie-dannykh-o-dobyche-nefti-i-gaza/"
     },
     {
-     "publisher": "UK Foreign, Commonwealth and Development Office",
-     "type": "press release",
-     "date": "2025-01-10",
-     "url": "https://www.gov.uk/government/news/support-for-ukraine-is-unwavering-as-uk-announces-new-sanctions-on-russian-oil-giants"
+     "publisher": "Reuters",
+     "type": "news report",
+     "date": "2025-04-15",
+     "url": "https://ru.themoscowtimes.com/2025/04/15/yugra-sposobna-narastit-dobychu-nefti-na-2-7-glava-departamenta-nedropolzovaniya-a161061"
     }
    ]
   },
@@ -1381,8 +1363,8 @@
    ]
   },
   "Krasnoyarsk Krai": {
-   "full": "In September 2026 Rosneft, under the US blocking sanctions of October 2025, loaded the first crude from its Vostok Oil project at the new Sever Bay terminal on the Taymyr Peninsula.",
-   "short": "Under US blocking sanctions, Rosneft loaded first Vostok Oil crude on Taymyr",
+   "full": "In September 2026 Rosneft, under US blocking sanctions since October 2025, loaded the first crude from its new oil project on the Taymyr Peninsula at the Sever Bay terminal.",
+   "short": "Under US sanctions, Rosneft loaded first Taymyr project crude at Sever Bay",
    "sources": [
     {
      "publisher": "Rosneft",
@@ -1501,32 +1483,32 @@
    ]
   },
   "Sakha Republic": {
-   "full": "Alrosa, 25% owned by the Sakha government and 8% by the republic's districts, is designated by the US and was added to the EU sanctions list in January 2024.",
-   "short": "Alrosa, 33% owned by Sakha and its districts, sanctioned by US and EU",
+   "full": "Alrosa stopped publishing its sales data and quarterly results in April 2022, and in May 2023 its chief executive said disclosure was unsafe while sanctions remained in force.",
+   "short": "Alrosa has withheld sales and financial data since 2022, citing sanctions",
    "sources": [
     {
-     "publisher": "US Treasury",
-     "type": "press release",
-     "date": "2022-04-07",
-     "url": "https://home.treasury.gov/news/press-releases/jy0707"
+     "publisher": "JCK",
+     "type": "trade column",
+     "date": "2022-05-04",
+     "url": "https://www.jckonline.com/editorial-article/russian-diamond-sanctions-working/"
     },
     {
-     "publisher": "Council of the European Union",
-     "type": "implementing regulation",
-     "date": "2024-01-03",
-     "url": "https://eur-lex.europa.eu/eli/reg_impl/2024/196/oj/eng"
+     "publisher": "Kommersant",
+     "type": "interview",
+     "date": "2023-05-17",
+     "url": "https://www.kommersant.ru/doc/5987112"
     },
     {
-     "publisher": "Alrosa",
-     "type": "web page",
-     "date": "2026-10-27",
-     "url": "https://alrosa.ru/en/investors/shareholders/shareholders-structure/"
-    },
-    {
-     "publisher": "Interfax",
+     "publisher": "Kommersant",
      "type": "news report",
-     "date": "2016-05-12",
-     "url": "https://interfax.com/newsroom/top-stories/32287/"
+     "date": "2023-05-17",
+     "url": "https://www.kommersant.ru/doc/5987512"
+    },
+    {
+     "publisher": "IDEX Online",
+     "type": "trade column",
+     "date": "2023-05-18",
+     "url": "https://www.idexonline.com/Memo?id=48566"
     }
    ]
   },
@@ -1785,8 +1767,8 @@
    ]
   },
   "Murmansk": {
-   "full": "Novatek-Murmansk, designated by the US, runs the Belokamenka yard near Murmansk where platforms for the Arctic LNG 2 plant were built.",
-   "short": "US-designated Novatek-Murmansk runs the Arctic LNG 2 platform yard",
+   "full": "The platforms for the Arctic LNG 2 plant were built at the Belokamenka yard near Murmansk, run by Novatek-Murmansk, which the US designated.",
+   "short": "Arctic LNG 2 platforms were built at US-designated Novatek-Murmansk's yard",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
