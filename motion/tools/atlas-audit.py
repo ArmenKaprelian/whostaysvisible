@@ -1245,6 +1245,18 @@ def main():
                     if bool(d.get("popId")) != want or (want and not (d.get("popout") or {}).get("visible")): return [("popout", "dom", "%s: open %s at %d px, expected %s" % (pid, d.get("popId"), w, want))]
                     return []
                 state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.card('%s', true); A.popout('%s'); await new Promise(r => setTimeout(r, 250));" % (pid, pid), "pop-" + pid, pop_ok)
+            # round 17 (the author's request of 27 October 2026): the Under the cursor chart pops out too, follows the hover, and keeps the last unit when the panel clears
+            def popcur_ok(r):
+                d = r["dom"]; x = r.get("extra") or {}; want = w > 900
+                if bool(d.get("popId")) != want: return [("popout", "dom", "cursor: open %s at %d px, expected %s" % (d.get("popId"), w, want))]
+                if not want: return []
+                bad = []
+                if "Moscow" not in (x.get("t1") or "") or "Novosibirsk" not in (x.get("t2") or ""): bad.append(("popout", "cursor", "the pop-out did not follow the hover: %r then %r" % (x.get("t1"), x.get("t2"))))
+                if x.get("t3") != x.get("t2") or not x.get("i3"): bad.append(("popout", "cursor", "the pop-out did not keep the last unit when the panel cleared: %r, %s drawn pixels" % (x.get("t3"), x.get("i3"))))
+                if not (x.get("panel") or "").startswith("Hover"): bad.append(("popout", "cursor", "the panel did not clear: %r" % x.get("panel")))
+                if not (x.get("i1") and x.get("i2")): bad.append(("popout", "cursor", "an empty chart in the pop-out: %s and %s drawn pixels" % (x.get("i1"), x.get("i2"))))
+                return bad
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.popout(null); A.card('cursor', true); const tt = () => document.getElementById('potitle').textContent, ink = () => { const c = document.getElementById('pochart'); if (!c.width) return 0; const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; }, go = n => { const c = A.cities[n]; A.hoverKm(c[0], c[1], { show: true }); }; go('Moscow'); A.popout('cursor'); await new Promise(r => setTimeout(r, 250)); const t1 = tt(), i1 = ink(); go('Novosibirsk'); await new Promise(r => setTimeout(r, 120)); const t2 = tt(), i2 = ink(); A.hoverOff(); A.redraw(); await new Promise(r => setTimeout(r, 120)); window.__extra = { t1, t2, t3: tt(), i1, i2, i3: ink(), panel: document.getElementById('cellinfo').textContent.trim().slice(0, 12) };", "pop-cursor", popcur_ok)
             cdp.evaluate("(() => { window.__atlas.popout(null); return true; })()", await_promise=False)
             # the profiles (item 9): the page's texts against their re-derivation from the data, and every text inside its box at this width
             prof = cdp.evaluate("JSON.stringify(window.__atlas.profiles())", await_promise=False); fit = cdp.evaluate("JSON.stringify(window.__atlas.profileFit())", await_promise=False); n_states += 1

@@ -2106,7 +2106,7 @@ void main() {
   function tileObstacles() {
     if (obsCache) return obsCache;
     const m = wrap.getBoundingClientRect();
-    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'scalebar', 'ctxstrip'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
+    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'scalebar', 'ctxstrip', 'popout'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
   }
   const meets = (a, b, g = 2) => a.x < b.x1 + g && a.x1 > b.x - g && a.y < b.y1 + g && a.y1 > b.y - g;
   // Eight anchors around the cursor, each keeping d px of clearance on at least one axis so the tile never covers the hovered
@@ -2376,13 +2376,22 @@ void main() {
     if (h && !cellHit && !h.micro && h.ix != null) row('Cell', `100 km (${h.ix}, ${h.iy})`);   // the chart's cell under the cursor in the Firms view
     info.innerHTML = rows.length ? rows.map(([k, v, t]) => (t === 'block' ? `<div class="listed">${v}</div>` : t === 'full' ? `<div class="full">${v}</div>` : t === 'loc' ? `<span>${k}</span><b class="loc">${v}</b>` : `<span>${k}</span><b>${v}</b>`)).join('') : `<span class="muted">${state.mode === 'firms' ? 'Hover a mark' : 'Hover a cell'}</span><b></b>`;
     fillPanelProfile(h);   // the profile under the rows (round 15, item 9C)
-    const { ctx, w, hgt = 0 } = chartCtx('cellchart'); const hh = $('cellchart').getBoundingClientRect().height;
-    if (!h) return;
-    const note = t => Motion.paragraph(ctx, t, 8, 24, w - 16, { size: 13, color: theme.muted });
+    drawCursorChart(h); if (h) pop.cursor = h;
+    if (pop.id === 'cursor') drawCursorChart(pop.cursor, 'pochart');   // round 17: the pop-out follows the hover and keeps the last unit when the panel clears
+  }
+  // The Under the cursor chart (round 17, the author's request of 27 October 2026): drawn in its card or, enlarged, in the pop-out with 14 px text like the column's
+  // three charts. Opened, the pop-out follows the hover unit by unit; when the panel clears (a redraw with nothing under the cursor) it keeps the last unit, and its
+  // title names that unit's region.
+  function drawCursorChart(h, target) {
+    const id = target || 'cellchart', big = !!target, sz = big ? 14 : 12, L = big ? 56 : 44;
+    if (big) { const t = $('h2-cursor').textContent + (h && h.region ? ' · ' + h.region : ''); $('potitle').textContent = t; $('popout').setAttribute('aria-label', t); placePopout(); }
+    const { ctx, w, hgt = 0 } = chartCtx(id); const hh = $(id).getBoundingClientRect().height;
+    if (!h) { if (big) Motion.paragraph(ctx, state.mode === 'firms' ? 'Hover a mark' : 'Hover a cell', 8, 24, w - 16, { size: 14, color: theme.muted }); return; }
+    const note = t => Motion.paragraph(ctx, t, 8, 24, w - 16, { size: big ? 14 : 13, color: theme.muted });
     const chart = (pts, xDomain, xTicks, eras, caption) => {
-      CH.lines(ctx, { x: 44, y: 14, w: w - 100, h: hh - 52 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain, yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks, xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras, yFmt: v => v + '%', axisSize: 12, axisDy: 20 });
-      const cap = Motion.measure(ctx, caption, 11, 400) <= w - 16 ? caption : caption.replace(/, (\d{4} to \d{4}|by year)$/, '');   // a caption wider than the canvas drops its year suffix, which the axis shows (round 10)
-      Motion.text(ctx, cap, 8, hh - 2, { size: 11, color: theme.dim });
+      CH.lines(ctx, { x: L, y: 14, w: w - L - (big ? 64 : 56), h: hh - 52 }, [{ label: '{y}', color: theme.accent, points: pts, gapAfter: [2018] }], { xDomain, yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks, xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: sz, lineWidth: big ? 2.5 : 2, eras, yFmt: v => v + '%', axisSize: sz, axisDy: 20 });
+      const cap = Motion.measure(ctx, caption, big ? 12 : 11, 400) <= w - 16 ? caption : caption.replace(/, (\d{4} to \d{4}|by year)$/, '');   // a caption wider than the canvas drops its year suffix, which the axis shows (round 10)
+      Motion.text(ctx, cap, 8, hh - 2, { size: big ? 12 : 11, color: theme.dim });
     };
     if (h.shared) {   // round 16: the share with a statement at shared pairs and elsewhere in this cell or square, by year
       if (h.n == null || !SHD) return note('No firms on no list at house- or street-level geocodes');
@@ -2390,10 +2399,10 @@ void main() {
       for (const yy of SHD.years) { const d = h.win ? (SHD.win[yy] || {})[h.win] : h.grid === 100 ? SHD.c100[yy] : SHD.c25[yy]; if (!d) continue; const i = d.map.get(cellKey(h.ix, h.iy)); if (i == null) continue;
         if (d.n100[i] >= 50) there.push({ x: yy, y: 100 * d.a100[i] / d.n100[i] }); const rn = d.n[i] - d.n100[i]; if (rn >= 50) rest.push({ x: yy, y: 100 * (d.a[i] - d.a100[i]) / rn }); }
       if (!there.length) return note('Fewer than 50 firms at shared pairs in every year');
-      const margin = Math.max(...[['shared', there], ['elsewhere', rest]].filter(([, p]) => p.length).map(([t, p]) => Motion.measure(ctx, t + ' ' + Motion.fmt.pct(p[p.length - 1].y, 1), 12, 500))) + 22;   // the longer end label fits, as the national chart's
-      CH.lines(ctx, { x: 44, y: 14, w: w - 44 - margin, h: hh - 52 }, [{ label: 'shared {y}', color: theme.accentStrong, points: there, gapAfter: [2018] }, { label: 'elsewhere {y}', color: theme.accent, points: rest, gapAfter: [2018] }],
-        { xDomain: [2013.5, 2025.5], yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks: [2014, 2018, 2021, 2025], xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: 12, lineWidth: 2, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', labelFmt: v => Motion.fmt.pct(v, 1), axisSize: 12, axisDy: 20, spreadLabels: true });
-      Motion.text(ctx, 'share with a statement, at shared pairs and elsewhere', 8, hh - 2, { size: 11, color: theme.dim }); return;
+      const margin = Math.max(...[['shared', there], ['elsewhere', rest]].filter(([, p]) => p.length).map(([t, p]) => Motion.measure(ctx, t + ' ' + Motion.fmt.pct(p[p.length - 1].y, 1), sz, 500))) + 22;   // the longer end label fits, as the national chart's
+      CH.lines(ctx, { x: L, y: 14, w: w - L - margin, h: hh - 52 }, [{ label: 'shared {y}', color: theme.accentStrong, points: there, gapAfter: [2018] }, { label: 'elsewhere {y}', color: theme.accent, points: rest, gapAfter: [2018] }],
+        { xDomain: [2013.5, 2025.5], yDomain: [0, 100], theme, yTicks: [0, 50, 100], xTicks: [2014, 2018, 2021, 2025], xFmt: v => (v === 2025 ? "25*" : String(v).slice(2)), labelSize: sz, lineWidth: big ? 2.5 : 2, eras: [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], yFmt: v => v + '%', labelFmt: v => Motion.fmt.pct(v, 1), axisSize: sz, axisDy: 20, spreadLabels: true });
+      Motion.text(ctx, 'share with a statement, at shared pairs and elsewhere', 8, hh - 2, { size: big ? 12 : 11, color: theme.dim }); return;
     }
     if (h.grp) return note('The group layer compares 2021 and 2024: the rows give both years');
     if (h.micro) {   // the 25 km cell around the square, by year: an address file carries one year, the 25 km cells carry every year
@@ -2455,17 +2464,17 @@ void main() {
   // controls stay in reach; its border rests in a dark green and lights to the card's green under the pointer, its title green throughout. A click on the
   // enlarged chart, a second click on the card's chart or Escape puts it back; opening another chart replaces it. Not on the phone layout, where the cards stack
   // under the map and the chart already spans the screen. No dragging, no connector.
-  const pop = { id: null };
-  const POP_CHART = { odds: 'oddschart', national: 'natchart', groups: 'groupchart' }, POP_DRAW = { odds: t => drawOdds(t), national: t => drawNational(t), groups: t => drawGroups(t) };
+  const pop = { id: null, cursor: null };   // cursor: the last unit the Under the cursor chart drew, which its pop-out keeps (round 17)
+  const POP_CHART = { odds: 'oddschart', national: 'natchart', groups: 'groupchart', cursor: 'cellchart' }, POP_DRAW = { odds: t => drawOdds(t), national: t => drawNational(t), groups: t => drawGroups(t), cursor: t => drawCursorChart(pop.cursor, t) };   // round 17: the Under the cursor chart too; LAYER and GO TO have none
   const popAllowed = () => window.matchMedia('(min-width: 901px)').matches;
   function placePopout() {
-    const el = $('popout'); if (!pop.id) { el.hidden = true; return; }
+    const el = $('popout'); if (!pop.id) { el.hidden = true; dropObstacles(); return; }
     const m = wrap.getBoundingClientRect(), W = Math.round(Math.min(640, Math.max(360, 0.6 * m.width)));
     const canvasH = Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
     el.hidden = false; const H = el.getBoundingClientRect().height;
     const ctrl = ['zoombox', 'scalebar'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
     const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 34 : 0)) - 12;
-    el.style.top = Math.round(Math.max(12, floor - H)) + 'px';
+    el.style.top = Math.round(Math.max(12, floor - H)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
   }
   function openPop(id) {
     if (pop.id === id || !id || !popAllowed()) { closePop(); return; }

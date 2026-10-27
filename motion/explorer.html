@@ -427,6 +427,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 @media (min-width: 901px) { canvas.chart.pop { height: 124px; cursor: zoom-in; } canvas.chart.pop.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 15 (the author's item 5.4): compact in the column, a click enlarges the chart over the map */
+@media (min-width: 901px) { #cellchart { cursor: zoom-in; } #cellchart.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 17 (the author's request): the Under the cursor chart pops out like the three above, at its own 170 px in the card */
 /* The pop-out (round 15): the chart enlarged over the map beside its card, joined to the card by a short line across the gap; a click on it, on its card's chart or
    Escape puts it back. No dragging. */
 .popout { position: absolute; right: 12px; z-index: 7; box-sizing: border-box; background-color: color-mix(in srgb, var(--panel) 95%, transparent); border: 3px solid color-mix(in srgb, var(--context) 28%, var(--panel)); padding: 8px 10px 6px; cursor: zoom-out; opacity: 1; transition: opacity 0.15s; }   /* the panel at 95 percent, the map faint through it (the author's pick of 27 October 2026, after 80 and 90; opaque before); at rest the border the green at 28 percent over the panel (40 before), the card's green under the pointer */
