@@ -12,7 +12,7 @@ and the presets, through the page's instant API. Zero findings is the acceptance
 Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,768,1200,1600,2000] [--height 1000]"""
 import re, argparse, math, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from capture import brave_flags, wait_port_file, page_ws_url
+from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
 import wire_check as WC   # the wire's re-derivation (round 10)
 import grainguard as GG   # the surface grain's contrast guard (round 10)
@@ -1011,7 +1011,7 @@ def main():
             proc.terminate()
             try: proc.wait(timeout=20)
             except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
-            shutil.rmtree(profile, ignore_errors=True)   # each width's Brave profile goes with its browser (they had piled up in /tmp, a tmpfs here)
+            remove_profile(profile)   # each width's Brave profile goes with its browser (they had piled up in /tmp, a tmpfs here)
     head = "atlas audit: %d states, %d boxes, %d finding(s); field renderers seen: %s; tiles placed over the note or the legend for want of a clear place: %d (%s)" % (n_states, n_boxes, len(findings), ", ".join(sorted(fields)), n_relaxed, " ".join(relaxed))
     text = "\n".join([head] + sorted(set(findings))) + "\n"
     if a.out:

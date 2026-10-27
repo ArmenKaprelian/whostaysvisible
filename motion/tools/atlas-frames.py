@@ -12,7 +12,7 @@ Usage: python3 -I motion/tools/atlas-frames.py --url http://127.0.0.1:8765/explo
 """
 import argparse, base64, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from capture import brave_flags, wait_port_file, page_ws_url
+from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
 
 TOKENS = ["stage", "land", "panel", "panel-2", "grid", "graticule", "border", "below", "dim", "muted", "ink", "treated", "accent", "accent-strong", "fall", "rise",
@@ -100,7 +100,7 @@ def main():
         proc.terminate()
         try: proc.wait(timeout=20)
         except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
-        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
+        remove_profile(profile)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 if __name__ == "__main__":
     main()

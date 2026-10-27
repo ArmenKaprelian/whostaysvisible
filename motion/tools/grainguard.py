@@ -55,7 +55,7 @@ def guard(cdp, tol=0.05):
     return out, table
 
 def main():
-    from capture import brave_flags, wait_port_file, page_ws_url
+    from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
     from cdp import CDP
     ap = argparse.ArgumentParser(); ap.add_argument("--url", required=True); ap.add_argument("--theme", default="dark"); a = ap.parse_args()
     profile = tempfile.mkdtemp(prefix="grain-"); proc = subprocess.Popen(brave_flags(profile, 1600, 1000) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -72,7 +72,7 @@ def main():
         proc.terminate()
         try: proc.wait(timeout=20)
         except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
-        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
+        remove_profile(profile)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 if __name__ == "__main__":
     main()

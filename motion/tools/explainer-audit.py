@@ -10,7 +10,7 @@ Usage: python3 -I motion/tools/explainer-audit.py --url http://127.0.0.1:8765/ex
 """
 import argparse, base64, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from capture import brave_flags, wait_port_file, page_ws_url
+from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
 
 def inside(a, b, tol=0.5): return a["x"] >= b["x"] - tol and a["y"] >= b["y"] - tol and a["x1"] <= b["x1"] + tol and a["y1"] <= b["y1"] + tol
@@ -94,7 +94,7 @@ def run(url, w, h, out, findings):
         proc.terminate()
         try: proc.wait(timeout=20)
         except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
-        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
+        remove_profile(profile)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--url", required=True); ap.add_argument("--sizes", default="1600x1000,400x844"); ap.add_argument("--out", default="motion/build/r12-player")

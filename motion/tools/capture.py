@@ -53,6 +53,28 @@ def wait_port_file(profile, proc, timeout=30):
         time.sleep(0.1)
     raise TimeoutError("DevToolsActivePort did not appear")
 
+def remove_profile(path):
+    """Removes a headless browser's profile folder after its browser has exited (27 October 2026). Brave's child processes (the zygotes, the
+    GPU and network processes) name the folder in their command lines and can outlive the main process by a moment, and the network process
+    writes its state as it goes, re-creating the folder: the removal waits until no process names the folder (10 s at most), then repeats
+    until the folder stays gone for a second."""
+    def named():
+        try: args = subprocess.run(["ps", "-eo", "args"], capture_output=True, text=True, timeout=5).stdout
+        except Exception: return False
+        i = args.find(path)
+        while i >= 0:   # the path itself, not a longer one it begins (a parent's folder and its shards')
+            nxt = args[i + len(path):i + len(path) + 1]
+            if not (nxt.isalnum() or nxt in "._-"): return True
+            i = args.find(path, i + 1)
+        return False
+    t0 = time.time()
+    while named() and time.time() - t0 < 10: time.sleep(0.1)
+    for _ in range(8):
+        shutil.rmtree(path, ignore_errors=True)
+        time.sleep(1.0)
+        if not os.path.exists(path): return True
+    return False
+
 def page_ws_url(port):
     for _ in range(50):
         try:
@@ -128,7 +150,7 @@ def main():
             return fallback(a, render_url, profile, log)
         finally:
             if not a.profile:
-                shutil.rmtree(profile, ignore_errors=True)   # the fallback's profile goes too
+                remove_profile(profile)   # the fallback's profile goes too
 
     proc = subprocess.Popen(brave_flags(profile, a.width, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=open(os.path.join(profile, "brave-stderr.log"), "wb"))
     cdp = None
@@ -217,7 +239,7 @@ def main():
             with open(a.log, "w") as fh:
                 json.dump(log, fh, indent=1)
         if not a.profile:
-            shutil.rmtree(profile, ignore_errors=True)
+            remove_profile(profile)
 
 def verify_video(path, n_frames, fps, meta):
     """ffprobe frame count and duration against the request (and __videoMeta for a whole capture)."""
@@ -266,7 +288,7 @@ def run_sharded(a, frames, fps, meta, whole, profile, log):
     finally:
         if not a.profile:   # the shards' profiles were made for this run, beside the parent's own, which main() removes
             for i in range(len(spans)):
-                shutil.rmtree("%s-shard-%d" % (profile.rstrip("/"), i), ignore_errors=True)
+                remove_profile("%s-shard-%d" % (profile.rstrip("/"), i))
     merged = {"url": log["url"], "started_utc": log["started_utc"], "browser": log.get("browser"), "meta": meta, "shards": len(spans),
               "spans": [[s[0], s[-1], len(s)] for s in spans], "shard_logs": [f["log"] for f in shard_files], "frames": [], "problems": [], "exit_codes": rcs}
     for f in shard_files:
