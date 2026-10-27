@@ -65,7 +65,7 @@ NAME_ALLOWED = {"treated.json": {"name", "name_filed", "name_case", "name_shared
 # The video asset of the explainer artifact (the teaser's 720p cut under the 15 MB asset cap; the Moscow and 55 s
 # cuts were retired on 24 October 2026, and the 25 October re-render was byte-identical, so the asset stayed): the
 # published page links it; the local page keeps its build/ files instead.
-VIDEOS = [("Teaser, 46 s", "/_blob/c5240020b128598cd541799c0fb71eb8")]   # the round-13 teaser asset (25 October 2026; 221e92f4… of round 10 before it)
+VIDEOS = [("Teaser, 46 s", "/_blob/21895bd12c78c044b081622745188895")]   # the round-15 teaser asset (27 October 2026: the darker stage and the round's wording; c5240020… of round 13 before it)
 VIDEO_NOTE = '<p class="note">Video at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:47) is larger than the asset cap and travels as a file.</p>'
 
 def convert(name):
