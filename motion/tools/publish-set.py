@@ -12,7 +12,8 @@ the registered-address files as base64 script twins), the Moscow rasters the jou
 Three rules are checked here: no shipped data file carries an identifier key (inn, ogrn); firm names
 (name, name_filed, name_case, name_shared) ship only on the two listed-firm files and the anchor firm's hand-typed
 label (25 October 2026: firms on the five lists are named, firms on no list never; basemap.json's region and window
-names are place names and stay allowed); the neighbour firm (anchors.b) carries no name. The script prints the files by group with their sizes
+names are place names and stay allowed); the neighbour firm (anchors.b) carries no name. Round 16: insights.json must be the file
+tools/insights_build.py checked, with its twin, and passes that tool's text checks again here. The script prints the files by group with their sizes
 so each artifact publish stays under 64 MB, and exits non-zero on a rule breach or a file over the
 artifact's caps (16 MB page or text file, 15 MB binary file).
 
@@ -132,6 +133,13 @@ def check_rules(data_dir):
         names = sorted(k for k in keys if NAME_KEY.match(k) and k not in NAME_ALLOWED.get(name, set()))
         if names:
             bad.append("%s carries a firm-name key outside the listed-firm files: %s" % (name, ", ".join(names)))
+        if name == "insights.json":   # round 16: the profiles' insights as tools/insights_build.py built and checked them; its text checks run again here from the provenance's list
+            sys.path.insert(0, HERE); import insights_build as IB
+            prov = json.load(open(os.path.join(data_dir, "insights.provenance.json"), encoding="utf-8")); prof = json.load(open(os.path.join(data_dir, "profiles.json"), encoding="utf-8"))
+            if IB.sha256(os.path.join(data_dir, name)) != prov["output"]["json_sha256"]: bad.append("insights.json differs from the file insights_build.py checked")
+            if open(os.path.join(data_dir, "insights.js"), encoding="utf-8").read() != IB.js_of(obj): bad.append("insights.js is not the twin of insights.json")
+            for c in IB.text_checks(obj, set(prof["regions"]["region"]), set(prof["windows"]["label"]), prov["off_list"], prov["allow"]):
+                if not c["pass"]: bad.append("insights.json: %s (%s)" % (c["check"], c["detail"][:160]))
         if name in ("treated.json", "treatednational.json"):
             vals = obj.get("name", [])
             if len(vals) != obj.get("n"): bad.append("%s: %d names for %s firms" % (name, len(vals), obj.get("n")))
