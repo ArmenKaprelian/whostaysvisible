@@ -58,7 +58,7 @@ def main():
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": theme}]})   # for pages that still read the browser scheme (round 9 and before); the round-10 page reads the remembered choice below
                 if themeScript is not None: cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": themeScript})
                 themeScript = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', %s); } catch (e) {}" % json.dumps(theme)})["identifier"]   # the page no longer reads the browser scheme (round 10): a light shot is a remembered choice
-                cdp.call("Page.navigate", {"url": a.url + "?v=frames" + str(int(time.time()))}); cdp.wait_event("Page.loadEventFired", timeout=60)
+                cdp.call("Page.navigate", {"url": a.url + ("&" if "?" in a.url else "?") + "v=frames" + str(int(time.time()))}); cdp.wait_event("Page.loadEventFired", timeout=60)
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme)
             js = """(async () => { const A = window.__atlas; A.pulseAt(null); A.mode(%s); if (%s) A.layer(%s); A.preset(%s); A.year(%d); await A.ready(); { const J = %s; if (Array.isArray(J)) { const c0 = A.camera(); await A.jump(J.length >= 3 ? { cx: J[0], cy: J[1], k: J[2] } : { cx: c0.cx, cy: c0.cy, k: J[0] }); } } if (%s == null) A.pulseAt(null); A.redraw(); if (%s) A.legend(true); if (%s) { A.tip('reset'); A.tip(true); } %s
               let hit = null; const H = %s;

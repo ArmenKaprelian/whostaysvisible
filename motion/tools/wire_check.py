@@ -54,8 +54,8 @@ def facts(D, y, band, name):
         if T['red_from'][i] == y and not T['undated'][i]:
             n += 1
             if ri >= 0 and T['reg'][i] == ri: nr += 1
-    out.append(f'{ys}: {fmt_int(n)} firms listed (treated) nationally')
-    if reg: out.append(f'{ys}: {fmt_int(nr)} firms listed (treated) in {reg}')
+    out.append(f'{ys}: {fmt_int(n)} firms added to a list (treated) nationally')
+    if reg: out.append(f'{ys}: {fmt_int(nr)} firms added to a list (treated) in {reg}')
     if y in CY['totals']['year']:
         k = CY['totals']['year'].index(y); E, L, na, nla = CY['totals']['n'][k], CY['totals']['n_located'][k], CY['totals']['n_available'][k], CY['totals']['n_located_available'][k]
         out.append(f'{ys}: {fmt_int(E)} eligible firms, {fmt_int(na)} with a statement ({fmt_pct(CY["totals"]["eligible_share"][k])})')
@@ -72,22 +72,22 @@ def facts(D, y, band, name):
         ir = D['regrow'].get((reg, y))
         if ir is not None:
             out.append(f"{reg}, {ys}: firms on the lists (treated) hold {R['lsh'][ir]}% of the region's revenue")
-            out.append(f'{reg}, {ys}: {fmt_int(R["listed"][ir])} of {fmt_int(R["n"][ir])} firms registered in the region on the five lists (treated)')
+            out.append(f'{reg}, {ys}: {fmt_int(R["listed"][ir])} of {fmt_int(R["n"][ir])} firms registered in the region are on the five lists (treated)')
     b = FM['by_year'].get(str(y))
     if b:
         out.append(f'{ys}: {fmt_int(b["firms"])} firms on no list (comparison group) at {fmt_int(b["addresses"])} coordinate pairs')
-        out.append(f'{ys}: {fmt_int(b["listed"])} located firms on the lists (treated). {fmt_int(b["city_level"])} firms with other geocodes')
-        out.append(f'{ys}: the largest coordinate pair holds {fmt_int(b["max_at_address"])} firms on no list. {fmt_int(b["firms_at_100plus"])} firms at the {fmt_int(b["addresses_100plus"])} pairs shared by 100 or more')
+        out.append(f'{ys}: {fmt_int(b["listed"])} located firms on the lists (treated). {fmt_int(b["city_level"])} firms have other geocodes')
+        out.append(f'{ys}: the largest coordinate pair holds {fmt_int(b["max_at_address"])} firms on no list. {fmt_int(b["firms_at_100plus"])} firms sit at the {fmt_int(b["addresses_100plus"])} pairs shared by 100 or more')
         if y in FM['median_by_year']['year']:
-            k = FM['median_by_year']['year'].index(y); out.append(f'{ys}: the median real-revenue change of firms on no list (comparison group) {fmt_signed(FM["median_by_year"]["med"][k])}% against their 2019 to 2021 average')
-    if y == 2021: out.append(f'2021: {fmt_int(F["largest_location_firms"])} firms at the largest coordinate pair. {fmt_int(F["firms_at_100plus_locations"])} firms at pairs shared by 100 or more, over every located firm')
+            k = FM['median_by_year']['year'].index(y); out.append(f'{ys}: the median real-revenue change of firms on no list (comparison group) is {fmt_signed(FM["median_by_year"]["med"][k])}% against their own 2019 to 2021 average')
+    if y == 2021: out.append(f'2021: {fmt_int(F["largest_location_firms"])} firms share the largest coordinate pair. Across all located firms, {fmt_int(F["firms_at_100plus_locations"])} sit at pairs shared by 100 or more')
     ct = C['change_totals']; sup = sum(1 for v in C['change']['supported'] if v)
-    out.append(f'2024 against 2021: {fmt_int(sup)} supported 100 km cells. {fmt_pct(ct["availability_share_percent"][0])} of located firms with a statement in 2021, {fmt_pct(ct["availability_share_percent"][1])} in 2024')
-    out.append(f'2021: {fmt_int(sum(1 for v in C["lists"]["sanctioned"] if v is not None and v >= 5))} cells with 5 or more sanctions-list members (treated)')
+    out.append(f'2024 against 2021: {fmt_int(sup)} 100 km cells have 50 or more located firms in both years. {fmt_pct(ct["availability_share_percent"][0])} of located firms had a statement in 2021 and {fmt_pct(ct["availability_share_percent"][1])} in 2024')
+    out.append(f'2021: {fmt_int(sum(1 for v in C["lists"]["sanctioned"] if v is not None and v >= 5))} cells hold 5 or more sanctions-list members')
     out.append(f'2021: {fmt_int(F["cohorts"]["revenue_cash"])} located eligible firms in the revenue cohort by cash share')
     red = sum(1 for i in range(T['n']) if T['red_from'][i] <= y)
-    out.append(f'By {ys}: {fmt_int(red)} of {fmt_int(T["n"])} listed firms (treated) red')
-    out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014. {fmt_int(T["inferred_n"])} listing dates are inferred')
+    out.append(f'By {ys}: {fmt_int(red)} of the {fmt_int(T["n"])} firms on the lists (treated) are shown red')
+    out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014. {fmt_int(T["inferred_n"])} dates of addition to a list are inferred')
     return out
 
 def firms(D, y, band, name):
@@ -106,7 +106,7 @@ def firms(D, y, band, name):
     out = []
     for j in picks:
         ch = T['filed'][j][y - 2014]; st = 'available' if ch == '1' else 'absent' if ch == '0' else 'not in the registry'; d = date_of(T['red_date'][j])
-        out.append(f'{T["name"][j]} · {("listed " + d) if d else ("listed in " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}')
+        out.append(f'{T["name"][j]} · {("on a list from " + d) if d else ("on a list from " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}')
     return out
 
 def anniversary(D, iso):
@@ -114,13 +114,13 @@ def anniversary(D, iso):
     on 22 January, else the firms of the national list file listed on that day by a dated, non-inferred designation (one firm by name, several by count and years)."""
     y, m, d = iso.split('-'); md = f'{m}-{d}'; day = f'{int(d)} {MONTHS[int(m) - 1]}'
     A = D['anchors']['a']
-    if A['listed']['date'][5:] == md: return f"{day}: {A['label']} was listed on this day in {A['listed']['date'][:4]}."
+    if A['listed']['date'][5:] == md: return f"{day}: {A['label']} was added to a list on this day in {A['listed']['date'][:4]}."
     if md == '01-22': return f'{day}: the resident list rests on Government Decree No. 35, signed on this day in 2020.'
     T = D['treatednational']; hits = [i for i in range(T['n']) if T['red_date'][i] and T['red_date'][i][5:] == md and not T['inferred'][i] and not T['undated'][i]]
     if not hits: return None
     years = sorted({T['red_date'][i][:4] for i in hits}); yrs = years[0] if len(years) == 1 else ', '.join(years[:-1]) + ' and ' + years[-1]
-    if len(hits) == 1 and T['name'][hits[0]]: return f"{day}: {T['name'][hits[0]]} was listed on this day in {yrs}."
-    return f'{day}: {fmt_int(len(hits))} firms on the lists (treated) were listed on this day in {yrs}.'
+    if len(hits) == 1 and T['name'][hits[0]]: return f"{day}: {T['name'][hits[0]]} was added to a list on this day in {yrs}."
+    return f'{day}: {fmt_int(len(hits))} firms were added to a list (treated) on this day in {yrs}.'
 
 def cycle(D, y, band, name, cycle_index=0, layer='share', today=None):
     """The 50 items as dicts {kind, text}; a tip's text is None (any of the page's tips is accepted); on an anniversary (today, an ISO day) the lead carries the sentence."""
@@ -149,7 +149,7 @@ def cycle(D, y, band, name, cycle_index=0, layer='share', today=None):
             guard += 1; slot += 1
             if slot >= len(cyc): slot = 12
         f = pool[(h + 7 * cycle_index) % len(pool)]
-        cyc[slot] = {'kind': 'cat', 'text': f'{D["offwire"]["prefix"]} {f["text"]}'}
+        cyc[slot] = {'kind': 'cat', 'text': f["text"]}   # the fact alone since round 15 (the author's item 7C: a cat's head in place of the mark before it, no prefix)
     return cyc
 
 if __name__ == '__main__':

@@ -16,6 +16,8 @@ from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
 import wire_check as WC   # the wire's re-derivation (round 10)
 import grainguard as GG   # the surface grain's contrast guard (round 10)
+import agent_guide as AG   # the guide that TEACH YOUR AGENT copies (round 15, item 19 as revised)
+import profile_check as PC   # the profiles' re-derivation (round 15)
 
 def bx(b):
     return json.dumps({k: round(b[k], 1) for k in ("x", "y", "x1", "y1")})
@@ -31,7 +33,7 @@ def audit_boxes(boxes, canvases, min_size, overlap):
     vis = [b for b in boxes if b["eff"] >= 0.05 and b["str"].strip()]
     for b in vis:
         c = canvases.get(b["scene"])
-        if c and b.get("kind") != "ghost" and (b["x"] < -0.5 or b["y"] < -0.5 or b["x1"] > c["w"] + 0.5 or b["y1"] > c["h"] + 0.5):   # a ghost name may be clipped at the map's edge (round 12, part D)
+        if c and b.get("kind") not in ("ghost", "cloud") and (b["x"] < -0.5 or b["y"] < -0.5 or b["x1"] > c["w"] + 0.5 or b["y1"] > c["h"] + 0.5):   # a ghost name may be clipped at the map's edge (round 12, part D)
             out.append(("offcanvas", b["scene"], b["str"]))
         if b["size"] < min_size:
             out.append(("small", b["scene"], "%s (%g px)" % (b["str"], b["size"])))
@@ -39,6 +41,7 @@ def audit_boxes(boxes, canvases, min_size, overlap):
         for j in range(i + 1, len(vis)):
             p, q = vis[i], vis[j]
             if p["scene"] != q["scene"] or (p["para"] is not None and p["para"] == q["para"]): continue
+            if p.get("kind") == "cloud" or q.get("kind") == "cloud": continue   # the cloud pass (round 15, 8F): growing names lie over the data and over one another by design
             gp, gq = p.get("kind") == "ghost", q.get("kind") == "ghost"
             x = inter(p, q)
             if x <= 0: continue
@@ -84,6 +87,14 @@ def audit_dom(dom, mode=None, layer=None):
         if t["x"] < hd["x"] - 0.5 or t["y"] < hd["y"] - 0.5 or t["x1"] > hd["x1"] + 0.5 or t["y1"] > hd["y1"] + 0.5: out.append(("card", cid, "toggle outside the title row %s" % json.dumps({k: round(t[k], 1) for k in ("x", "y", "x1", "y1")})))
         if t["x1"] - t["x"] < 24 or t["y1"] - t["y"] < 24: out.append(("card", cid, "toggle under 24 px: %.1f by %.1f" % (t["x1"] - t["x"], t["y1"] - t["y"])))
         if inter(t, ttl) > 0: out.append(("card", cid, "toggle meets the title"))
+        i = c.get("info")
+        if i is not None:   # the i just left of the toggle (round 15, the author's rule of 26 October 2026)
+            if not i["visible"]: out.append(("card", cid, "i not visible"))
+            else:
+                if i["x"] < hd["x"] - 0.5 or i["y"] < hd["y"] - 0.5 or i["x1"] > hd["x1"] + 0.5 or i["y1"] > hd["y1"] + 0.5: out.append(("card", cid, "i outside the title row"))
+                if i["x1"] > t["x"] + 0.5: out.append(("card", cid, "i not left of the toggle"))
+                if inter(i, ttl) > 0: out.append(("card", cid, "i meets the title"))
+                if i["x1"] - i["x"] < 24 or i["y1"] - i["y"] < 22: out.append(("card", cid, "i under 24 by 22 px: %.1f by %.1f" % (i["x1"] - i["x"], i["y1"] - i["y"])))
         if c["open"]:
             if not bd["visible"]: out.append(("card", cid, "open but the body is hidden"))
         else:
@@ -103,8 +114,18 @@ def audit_dom(dom, mode=None, layer=None):
                 if dom.get(k) and dom[k]["visible"] and inter(th, dom[k]) > 0: out.append(("thumb", "dom", "intersects the %s" % k))
             hv = dom.get("thumbHit")   # the native thumb's rule size; the whole 24 px slider box takes the pointer too
             if hv is None or hv < 24 or y["y1"] - y["y"] < 24: out.append(("thumb", "dom", "hit area %s with a %.1f px slider, expected 24 px or more" % (hv, y["y1"] - y["y"])))
+    if dom.get("note") and dom["note"]["visible"] and dom.get("notetoggle") and dom["notetoggle"]["visible"]:   # the note's toggle at the top right (round 15)
+        nt, nb = dom["notetoggle"], dom["note"]
+        if nb["x1"] - nt["x1"] > 14 or nt["y"] - nb["y"] > 10: out.append(("note", "dom", "the toggle is not at the top right: %s in %s" % (bx(nt), bx(nb))))
+    if dom.get("popout") and dom["popout"]["visible"]:   # the pop-out (round 15, item 5.4, revised 26 October 2026): inside the map, at its lower right, above the scale bar and the zoom box
+        po = dom["popout"]
+        if po["x"] < m["x"] - 0.5 or po["y"] < m["y"] - 0.5 or po["x1"] > m["x1"] + 0.5 or po["y1"] > m["y1"] + 0.5: out.append(("popout", "dom", "outside the map %s" % bx(po)))
+        if dom.get("strip") and dom["strip"]["visible"] and dom.get("stripOpen") and inter(po, dom["strip"]) > 0: out.append(("popout", "dom", "meets the open strip"))
+        if abs((m["x1"] - po["x1"]) - 12) > 1.5: out.append(("popout", "dom", "not at the map's right edge less 12 px: %s" % bx(po)))
+        for n in ("zoom", "scale"):
+            if dom.get(n) and dom[n]["visible"] and inter(po, dom[n]) > 0: out.append(("popout", "dom", "covers the %s: %s against %s" % (n, bx(po), bx(dom[n]))))
     for o in dom.get("overflow") or []: out.append(("text-overflow", "dom", "%s %s runs %+d px past its box, %d px past its own" % (o["sel"], json.dumps(o["text"]), o["right"], o["over"])))   # tracked capitals (round 10)
-    names = [n for n in ("legend", "note", "zoom", "scale", "tip", "strip", "mix") if dom.get(n) and dom[n]["visible"]]
+    names = [n for n in ("legend", "note", "zoom", "scale", "tip", "strip", "mix") if dom.get(n) and dom[n]["visible"]]   # the pop-out is checked apart above: it lies over these while open
     if dom.get("mix") and dom["mix"]["visible"]:   # the revenue mix box (round 9): its toggle inside it
         t, b = dom["mixtoggle"], dom["mix"]
         if t["x"] < b["x"] - 0.5 or t["y"] < b["y"] - 0.5 or t["x1"] > b["x1"] + 0.5 or t["y1"] > b["y1"] + 0.5: out.append(("mix", "dom", "toggle outside the box"))
@@ -371,13 +392,13 @@ def main():
                 x = r["extra"]; bad = []
                 if not x: return [("tile", "colour", "no report")]
                 for th in x["themes"]:
-                    if th["body"] != th["go"]: bad.append(("tile", "colour", "%s theme: the tile's text is %s, expected the GO TO ice %s" % (th["scheme"], th["body"], th["go"])))
+                    if th["body"] != th.get("tile", th["go"]): bad.append(("tile", "colour", "%s theme: the tile's text is %s, expected its own ice %s" % (th["scheme"], th["body"], th.get("tile", th["go"]))))   # round 15 (item 6): the tile has its own token, --tile-ink
                     if th["foot"] not in (th["ctx"], th["ctxLive"]): bad.append(("tile", "colour", "%s theme: the footer is %s, expected the reading green" % (th["scheme"], th["foot"])))
                     cr = contrast(th["treated"], th["panel"])
                     if cr < 3.0: bad.append(("count", "contrast", "%s theme: the red count measures %.2f to 1 on the tile, under 3" % (th["scheme"], cr)))
                     if not th["tc"]: bad.append(("count", "tile", "%s theme: no count" % th["scheme"]))
                 return bad
-            ICE = "const css = () => getComputedStyle(document.documentElement), tok = n => css().getPropertyValue(n).trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; const read = () => ({ scheme: tok('--scheme'), body: getComputedStyle(document.getElementById('tipbody')).color, foot: getComputedStyle(document.getElementById('tipfoot')).color, go: rgb(tok('--go')), ctx: rgb(tok('--context')), ctxLive: rgb(tok('--context-live')), treated: tok('--treated'), panel: tok('--panel'), tc: A.tileCount() }); const themes = []; A.preset('Moscow'); await A.ready(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); window.__extra = { themes }; A.hoverOff();"
+            ICE = "const css = () => getComputedStyle(document.documentElement), tok = n => css().getPropertyValue(n).trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; const read = () => ({ scheme: tok('--scheme'), body: getComputedStyle(document.getElementById('tipbody')).color, foot: getComputedStyle(document.getElementById('tipfoot')).color, go: rgb(tok('--go')), tile: rgb(tok('--tile-ink')), ctx: rgb(tok('--context')), ctxLive: rgb(tok('--context-live')), treated: tok('--treated'), panel: tok('--panel'), tc: A.tileCount() }); const themes = []; A.preset('Moscow'); await A.ready(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); themes.push(read()); document.getElementById('theme').click(); window.__extra = { themes }; A.hoverOff();"
             state("share", 2024, "A.mode('cells'); " + ICE, "tileice", ice_ok)
             # the Cells view's pulse (round 14): at the country in 2022 every 100 km cell holding a firm listed that year pulses once, its rings at the cell's centre, staggered west to east
             # over the cells in view; at Moscow on the industry layer the 1 km squares do; under reduced motion the still highlight
@@ -621,10 +642,12 @@ def main():
                 if b["x"] < c["x"] - 0.5 or b["x1"] > c["x1"] + 0.5: bad.append(("link", "layout", "the button %s leaves the card %s" % (json.dumps(b), json.dumps(c))))
                 return bad
             state("fin", 2022, "A.mode('firms'); await A.jump({ cx: m[0] + 12.3, cy: m[1] - 4.5, k: 7.25 }); await A.ready(); { const rect = e => { const b = e.getBoundingClientRect(); return { x: b.left, x1: b.right }; }; document.getElementById('copylink').click(); await new Promise(q => setTimeout(q, 400)); const f = document.getElementById('linkfield'); window.__extra = { hash: location.hash, vh: A.viewHash(), link: A.viewLink(), status: document.getElementById('linkstatus').textContent, field: f.hidden ? null : f.value, btn: rect(document.getElementById('copylink')), card: rect(document.getElementById('card-goto')) }; f.hidden = true; document.getElementById('linkstatus').textContent = ''; }", "vlink", vlink_ok)
-            # the note's default (round 10, the author's correction of 25 October): collapsed at the national zoom while the strip is open, expanded in a city window or with the strip closed, the viewer's choice winning
+            # the note's default (round 15, the author's general point 5 of 26 October 2026): open, like the legend and the cards, on a map 600 px wide or more, at every
+            # zoom and with the strip open or closed; collapsed on a narrow map; the viewer's choice winning
+            def note_is(open_, label): return lambda r: [] if r["extra"] and r["extra"]["open"] is open_ else [("note", "default", "%s: expected open %s, got %s" % (label, open_, json.dumps(r["extra"])))]
+            if w < 600: state("share", 2024, "A.mode('cells'); A.note(null); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState();", "notenarrow", note_is(False, "narrow map"))
             if w >= 768:
-                def note_is(open_, label): return lambda r: [] if r["extra"] and r["extra"]["open"] is open_ else [("note", "default", "%s: expected open %s, got %s" % (label, open_, json.dumps(r["extra"])))]
-                state("share", 2024, "A.mode('cells'); A.note(null); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState();", "notenat", note_is(False, "national, strip open"))
+                state("share", 2024, "A.mode('cells'); A.note(null); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState();", "notenat", note_is(True, "national, strip open"))
                 state("share", 2024, "A.mode('cells'); A.note(null); A.strip(true); A.preset('Moscow'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState();", "notecity", note_is(True, "city window"))
                 state("share", 2024, "A.mode('cells'); A.note(null); A.strip(false); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.strip(true);", "notestripoff", note_is(True, "national, strip closed"))
                 state("share", 2024, "A.mode('cells'); A.note(true); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.note(null);", "notemem", note_is(True, "national, the viewer's choice"))
@@ -701,7 +724,7 @@ def main():
             state("share", 2021, "A.mode('cells'); A.layer('share'); A.year(2021); A.preset('Moscow'); A.hoverKm(m[0], m[1], { show: true });", "tip")
             # the click ladder, the zoom buttons and the presets (24 October 2026), through the instant API
             SET = "A.mode('cells'); A.layer('share'); A.year(2021); "
-            state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0], m[1]); A.hoverKm(m[0], m[1]);", "clk1", cam_is(P["moscow"], "a click on the Moscow cell from Russia lands on the Moscow preset"))
+            state("share", 2021, SET + "A.preset('Russia'); await A.click(m[0], m[1]); A.hoverKm(m[0], m[1]);", "clk1", cam_is(dict(P["moscow"], k=side / 95), "a click on the Moscow cell from Russia lands on the Moscow city window (95 km)"))
             state("share", 2021, SET + "A.preset('Moscow'); await A.click(m[0], m[1]);", "clk2", cam_k(side / 20, "a click at the Moscow preset lands on the 20 km scale", mx, my))
             state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]);", "clk3", cam_k(min(2.5 * P["cm"]["k"], 200), "a click at Central Moscow steps x2.5"))
             state("share", 2021, SET + "A.preset('Central Moscow (250 m)'); await A.click(m[0], m[1]); await A.click(m[0], m[1], { shift: true });", "clk3b", cam_k(P["cm"]["k"], "a zoom on the clicked cell and a Shift+click out return to the preset's zoom near the subject", mx, my, 2.0))   # the step out is anchored at the cursor: 2.5 times the cell centre's offset, at most 1.8 km for a 1 km cell
@@ -766,7 +789,7 @@ def main():
             state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.redraw(); A.hoverKm(m[0] + 0.2, m[1] + 0.2, { show: true }); " + MIXJS, "mixhov1", mix_ok("1 km square at the cursor"))
             state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverOff(); " + MIXJS, "mixview", mix_ok("100 km cells in view"))
             state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); A.hoverKm(AN.a[0], AN.a[1], { show: true }); " + MIXJS, "mixaddr", mix_ok("coordinate pair at the cursor"))
-            state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
+            state("industry", 2021, "A.mode('firms'); A.mixbox(true); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " % (side / 95) + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
             # a tap at the map's centre (round 14: where the search lands a firm): on a 400 px map the revenue layer's tile at Moscow is about 260 px tall and has no place at
             # a tap's 24 px, so it must take the hover's clearance rather than the last resort over the controls
             state("fin", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true, touch: true }); window.__extra = A.tile();", "tapcentre",
@@ -808,7 +831,7 @@ def main():
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2);", tag + "fclk3", both(cam_k(min(4 * side / 20, 200), "from the 20 km rung a click steps x4 at the click", mx + 3, my - 2, 0.5), rung_is("zoom")))
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk4", both(cam_k(side / 20, "a Shift+click from the x4 step returns to the 20 km rung at the click", mx + 3, my - 2, 0.5), rung_is("fine")))
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk5", both(cam_k(side / 95, "a Shift+click from the 20 km rung returns to the city rung at the click", mx + 3, my - 2, 0.5), rung_is("city")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk6", both(cam_is(P["russia"], "a Shift+click from the city rung returns the Russia camera"), rung_is("fit")))
+                state("share", 2021, F + "A.layer('share'); A.year(2021); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });" % (side / 95), tag + "fclk6", both(cam_is(P["russia"], "a Shift+click from the city rung returns the Russia camera"), rung_is("fit")))
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); { const mu = A.cities.Murmansk; window.__extra = await A.click(mu[0], mu[1] + 400); }", tag + "fclkempty", both(cam_k(4 * P["kfit"], "from the country a click on an empty cell steps x4 at the click"), rung_is("zoom")))
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); window.__extra = await A.click(m[0] + 300, m[1]);", tag + "fclkcell", both(cam_k(side / 500, "from the country a click on a cell without a preset city lands on the 500 km rung at the click", mx + 300, my, 0.5), rung_is("cell")))
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2022); await new Promise(r => setTimeout(r, 250));", tag + "pulse", both(pulsing_is(True, "a forward year change pulses the newly red marks"), field_is(expect, "pulse")))
@@ -828,7 +851,7 @@ def main():
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2022, 8)), tag + "btn", both(pulsed_is(2022, "the button replays the bloom of the firms listed in 2022"), field_is(expect, "button")))
                 # the year row while a pulse runs (round 10, final): the value and the thumb in the live green, the pulse button filled red
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.pulseAt(null); const n = A.pulse(); await new Promise(r => setTimeout(r, 450)); const cs = s => getComputedStyle(document.querySelector(s)), tk = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; window.__extra = { n, live: document.getElementById('yearrow').classList.contains('live'), ok: cs('#yearlabel').color === rgb(tk('--context-live')) && cs('#yearthumb').color === rgb(tk('--context-live')) && cs('#pulse').backgroundColor === rgb(tk('--treated')), got: [cs('#yearlabel').color, cs('#yearthumb').color, cs('#pulse').backgroundColor] }; A.pulseAt(null);", tag + "yearlive", lambda r: [] if r["extra"] and r["extra"]["n"] > 0 and r["extra"]["live"] and r["extra"]["ok"] else [("pulse", "yearrow", "live colours %s" % json.dumps(r["extra"]))])
-                state("share", 2025, F + "A.preset('Moscow'); A.layer('share'); A.year(2025); await A.ready(); await new Promise(r => setTimeout(r, 2000)); window.__extra = { pulsed: A.pulse(), expect: 0 };", tag + "btn0", lambda r: ([] if r["extra"] and r["extra"]["pulsed"] == 0 and r["pulsing"] == 0 else [("pulse", "button", "2025: pulse() %s, pulsing %s" % (r["extra"] and r["extra"]["pulsed"], r["pulsing"]))]) + ([] if r["dom"]["pulse"]["disabled"] and r["dom"]["pulse"]["title"] == "No firm on these lists was listed in 2025" else [("pulse", "button", "2025: disabled %s, title %r" % (r["dom"]["pulse"]["disabled"], r["dom"]["pulse"]["title"]))]))
+                state("share", 2025, F + "A.preset('Moscow'); A.layer('share'); A.year(2025); await A.ready(); await new Promise(r => setTimeout(r, 2000)); window.__extra = { pulsed: A.pulse(), expect: 0 };", tag + "btn0", lambda r: ([] if r["extra"] and r["extra"]["pulsed"] == 0 and r["pulsing"] == 0 else [("pulse", "button", "2025: pulse() %s, pulsing %s" % (r["extra"] and r["extra"]["pulsed"], r["pulsing"]))]) + ([] if r["dom"]["pulse"]["disabled"] and r["dom"]["pulse"]["title"] == "No firm was added to these lists in 2025" else [("pulse", "button", "2025: disabled %s, title %r" % (r["dom"]["pulse"]["disabled"], r["dom"]["pulse"]["title"]))]))
                 state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2020, 6)), tag + "btnback", pulsed_is(2020, "after a move back a year the button pulses the firms listed in the shown year"))
                 state("share", 2016, F + "A.preset('Moscow'); A.layer('share'); A.year(2016); await A.ready(); { const T = MOTION_DATA.treatednational; let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] <= 2016 || T.filed[i][2] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best], T.y[best], { show: true }), d: bd }; }", tag + "rimhov", lambda r: [] if r["extra"] and r["extra"]["hover"].get("listed") and r["extra"]["hover"]["listed"]["rim"] >= 1 and r["extra"]["hover"]["listed"]["rim_from"] > 2016 else [("hover", "rim", "a rimmed firm's hover: %s" % json.dumps(r["extra"] and r["extra"]["hover"] and r["extra"]["hover"].get("listed")))])
                 # a red mark is hovered within the 6 px floor and wins over the address under the cursor (25 October 2026)
@@ -970,15 +993,17 @@ def main():
                     if r["mode"] != mode or r["layer"] != "industry" or r["year"] != "2024" or not same_cam(r["cam"], P["moscow"]): findings.append("%-11s width %d  %s opened %s, expected %s at the Moscow preset on industry 2024" % ("hash", w, frag, json.dumps(r), mode))
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": "light"}]})
                 cdp.call("Page.navigate", {"url": url + qsep + "v=themeA"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
-                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), button: document.getElementById('theme').textContent }))()", await_promise=False)
+                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), stage: getComputedStyle(document.documentElement).getPropertyValue('--stage').trim(), button: document.getElementById('theme').textContent }))()", await_promise=False)
                 n_states += 1
-                if r["scheme"] != "dark" or not near_px(r["px"], (6, 11, 24)) or r["button"] != "Light theme": findings.append("%-11s width %d  a browser preferring light did not open dark: %s" % ("theme", w, json.dumps(r)))
+                st_rgb = tuple(int(r["stage"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) if re.match(r"^#[0-9A-Fa-f]{6}$", r["stage"]) else (-99, -99, -99)   # the page's own dark stage (round 15 made it a step darker)
+                if r["scheme"] != "dark" or not near_px(r["px"], st_rgb) or r["button"] != "Light theme": findings.append("%-11s width %d  a browser preferring light did not open dark: %s" % ("theme", w, json.dumps(r)))
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": "dark"}]})
                 sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', 'light'); } catch (e) {}"})["identifier"]
                 cdp.call("Page.navigate", {"url": url + qsep + "v=themeB"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
-                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), button: document.getElementById('theme').textContent, data: document.documentElement.getAttribute('data-theme') }))()", await_promise=False)
+                r = cdp.evaluate("(() => ({ scheme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), px: Array.from(document.getElementById('map').getContext('2d').getImageData(1, 1, 1, 1).data), button: document.getElementById('theme').textContent, data: document.documentElement.getAttribute('data-theme'), stage: getComputedStyle(document.documentElement).getPropertyValue('--stage').trim() }))()", await_promise=False)
                 n_states += 1
-                if r["scheme"] != "light" or not near_px(r["px"], (255, 255, 255)) or r["button"] != "Dark theme" or r["data"] != "light": findings.append("%-11s width %d  a remembered light choice did not draw the first frame light: %s" % ("theme", w, json.dumps(r)))
+                lt_rgb = tuple(int(r["stage"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) if re.match(r"^#[0-9A-Fa-f]{6}$", r["stage"]) else (-99, -99, -99)   # the page's own light stage (#FBFBF9 since the sea and land swap of 26 October 2026; #EDF1F5 in round 15, white before)
+                if r["scheme"] != "light" or not near_px(r["px"], lt_rgb) or r["button"] != "Dark theme" or r["data"] != "light": findings.append("%-11s width %d  a remembered light choice did not draw the first frame light: %s" % ("theme", w, json.dumps(r)))
                 cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid}); cdp.evaluate("(() => { try { localStorage.removeItem('atlas-theme'); } catch (e) {} return true; })()", await_promise=False)
                 sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-method', 'open'); localStorage.setItem('atlas-method-more', 'open'); } catch (e) {}"})["identifier"]
                 cdp.call("Page.navigate", {"url": url + qsep + "v=method"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
@@ -991,6 +1016,59 @@ def main():
                 r = cdp.evaluate("window.__atlas.cards()", await_promise=False); n_states += 1
                 if r.get("groups") is not False or not all(v for k, v in r.items() if k != "groups"): findings.append("%-11s width %d  a remembered collapsed card did not load collapsed with the others open: %s" % ("card", w, json.dumps(r)))
                 cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid}); cdp.evaluate("(() => { try { localStorage.removeItem('atlas-card-groups'); } catch (e) {} return true; })()", await_promise=False)
+            # ---- round 15 (26 October 2026) ----------------------------------------------------------------------------------------------------------
+            # the reading blocks (the author's i rule): every card's i opened, each block under its title row and inside its card
+            def reads_ok(r):
+                x = r.get("extra") or {}; bad = []
+                for f in x.get("bad", []): bad.append(("reads", "dom", f))
+                return bad
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); if (A.popout) A.popout(null); const ids = ['goto', 'cursor', 'odds', 'national', 'groups']; for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') !== 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') !== 'true') mb.click(); } await A.ready(); const bad = []; for (const id of ids.concat(['layer'])) { const blk = document.getElementById(id === 'layer' ? 'method' : 'cr-' + id), card = document.getElementById('card-' + id), head = document.getElementById('ch-' + id); if (blk.hidden) { bad.push(id + ': the block did not open'); continue; } const b = blk.getBoundingClientRect(), c = card.getBoundingClientRect(), h = head.getBoundingClientRect(); if (b.top < h.bottom - 0.5 || b.left < c.left - 0.5 || b.right > c.right + 0.5) bad.push(id + ': the block is not under the title row inside the card'); if (/;/.test(blk.textContent)) bad.push(id + ': a semicolon in the block'); } window.__extra = { bad }; for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') === 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') === 'true') mb.click(); }", "reads", reads_ok)
+            # the pop-out (item 5.4): each chart enlarged over the map above 900 px, none on the phone layout; inside the map, above the strip, joined to its card
+            for pid in ("odds", "national", "groups"):
+                def pop_ok(r, pid=pid):
+                    d = r["dom"]; want = w > 900
+                    if bool(d.get("popId")) != want or (want and not (d.get("popout") or {}).get("visible")): return [("popout", "dom", "%s: open %s at %d px, expected %s" % (pid, d.get("popId"), w, want))]
+                    return []
+                state("share", 2021, "A.mode('cells'); A.preset('Russia'); A.card('%s', true); A.popout('%s'); await new Promise(r => setTimeout(r, 250));" % (pid, pid), "pop-" + pid, pop_ok)
+            cdp.evaluate("(() => { window.__atlas.popout(null); return true; })()", await_promise=False)
+            # the profiles (item 9): the page's texts against their re-derivation from the data, and every text inside its box at this width
+            prof = cdp.evaluate("JSON.stringify(window.__atlas.profiles())", await_promise=False); fit = cdp.evaluate("JSON.stringify(window.__atlas.profileFit())", await_promise=False); n_states += 1
+            fj = json.loads(fit)
+            if (w < 600) != bool(fj.get("narrow")) or fj.get("shown"): findings.append("%-11s width %d  the tile's profile box on a %s map: %s" % ("profile", w, "narrow" if w < 600 else "wide", fit[:160]))
+            for f in PC.check(json.loads(prof), os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), json.loads(fit)): findings.append("%-11s width %d  %s" % ("profile", w, " | ".join(str(x) for x in f)[:240]))
+            # the wire (item 3): Tomorrow resolved on a wire item, "(treated)" only on the five-list group, and the cat key's item from the pool
+            doc = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]
+            nid = cdp.call("DOM.querySelector", {"nodeId": doc, "selector": "#wiretrack .wi"})["nodeId"]
+            if nid:
+                fams = [f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]]
+                if not any("Tomorrow" in f for f in fams): findings.append("%-11s width %d  a wire item rendered with %s" % ("font", w, fams))
+            wi = cdp.evaluate("(() => window.__atlas.wire().items.map(i => i.text))()", await_promise=False) or []; n_states += 1
+            for t in wi:
+                if t and re.search(r"(sanctions list|strategic list|sanctions-list members|list members)[^.]*\(treated\)", t): findings.append("%-11s width %d  a single list glossed (treated): %s" % ("wire", w, t[:80]))
+            ck = cdp.evaluate("(async () => { const A = window.__atlas; A.mode('cells'); A.strip(true); A.preset('Russia'); await A.ready(); await new Promise(r => setTimeout(r, 400)); const ok = A.catNow(); const el = document.querySelector('#wiretrack .wi.keyed'); const pv = el ? el.previousElementSibling : null, cats = [...document.querySelectorAll('#wiretrack .wi.cat')].map(e => { const q = e.previousElementSibling; return !!(q && q.classList.contains('catsep') && q.querySelector('use') && q.querySelector('use').getAttribute('href') === '#mark-cat'); }); return { ok, keyed: A.extras().keyed, text: el ? el.textContent : null, src: el ? el.dataset.src : null, prevCat: !!(pv && pv.classList.contains('catsep')), catsHeaded: cats.length ? cats.every(Boolean) : null }; })()", await_promise=True, timeout=60); n_states += 1
+            pool = {f["id"]: f["text"] for f in WIRE_DATA["offwire"]["facts"]} if WIRE_DATA.get("offwire") else {}
+            if w == int(a.widths.split(",")[0]) and not a.skip_once:   # once per audit, at the run's first width
+                for f in AG.check(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')): findings.append("%-11s %s" % ("agent-guide", " | ".join(f)[:200]))
+            if not ck.get("ok") or ck.get("keyed") != 1 or not ck.get("src") or int(ck["src"].split(":")[1]) not in pool or pool[int(ck["src"].split(":")[1])] not in (ck.get("text") or "") or not ck.get("prevCat") or ck.get("catsHeaded") is False or "OFF THE WIRE" in (ck.get("text") or "").upper(): findings.append("%-11s width %d  the cat key's item: %s" % ("wire", w, json.dumps(ck)[:200]))
+            # TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the copied text equals the guide built into the page, the notice reads
+            # ">text copied", and no request leaves the page; with the clipboard refused, the guide shows in a read-only field, selected, and Escape closes it
+            cdp.call("Network.enable"); cdp.events.append({"method": "__teach__"})
+            tg = cdp.evaluate("(async () => { const sleep = ms => new Promise(r => setTimeout(r, ms)), b = document.getElementById('teachagent'), out = {}; if (!b) return { missing: true }; const wt = navigator.clipboard.writeText; let got = null; navigator.clipboard.writeText = t => { got = t; return Promise.resolve(); }; b.click(); await sleep(300); const ts = document.getElementById('agenttoast'); out.same = got === window.AGENT_GUIDE && !!window.AGENT_GUIDE; out.toast = !ts.hidden && ts.textContent === '>text copied'; out.mailIcon = !!document.getElementById('copymail'); await sleep(2000); out.toastGone = ts.hidden; navigator.clipboard.writeText = () => Promise.reject(new Error('refused')); b.click(); await sleep(300); const f = document.getElementById('agenttext'); out.field = !document.getElementById('agentbox').hidden && f.readOnly && f.value === window.AGENT_GUIDE && f.selectionStart === 0 && f.selectionEnd === f.value.length; document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); out.closed = document.getElementById('agentbox').hidden; navigator.clipboard.writeText = wt; await sleep(200); return out; })()", await_promise=True, timeout=60); n_states += 1
+            cdp.evaluate("1"); k0 = max(i for i, e in enumerate(cdp.events) if e.get("method") == "__teach__")
+            sent = [e["params"]["request"]["url"] for e in cdp.events[k0:] if e.get("method") == "Network.requestWillBeSent"]
+            cdp.call("Network.disable")
+            if not tg or tg.get("missing") or not all(tg.get(k) for k in ("same", "toast", "mailIcon", "toastGone", "field", "closed")): findings.append("%-11s width %d  TEACH YOUR AGENT: %s" % ("agent", w, json.dumps(tg)[:200]))
+            if sent: findings.append("%-11s width %d  TEACH YOUR AGENT sent %d request(s): %s" % ("agent", w, len(sent), ", ".join(sent)[:200]))
+            # the minimap's four corner marks in the neon green at the country and at a city (round 15, the author's general point 4)
+            if w > 900:
+                cm = cdp.evaluate("(async () => { const A = window.__atlas, col = () => { const p = document.querySelector('#mm-russia path'); return p ? getComputedStyle(p).stroke : null; }, want = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(); A.preset('Russia'); await A.ready(); const atFit = col(); A.preset('Kazan'); await A.ready(); const atCity = col(); A.preset('Russia'); await A.ready(); const hex = c => { const m = /rgba?\\((\\d+), (\\d+), (\\d+)/.exec(c || ''); return m ? '#' + [m[1], m[2], m[3]].map(v => (+v).toString(16).padStart(2, '0')).join('').toUpperCase() : c; }; return { want: want.toUpperCase(), atFit: hex(atFit), atCity: hex(atCity) }; })()", await_promise=True, timeout=60); n_states += 1
+                if not cm or cm.get("atFit") != cm.get("want") or cm.get("atCity") != cm.get("want"): findings.append("%-11s width %d  the minimap's corner marks are not green at every view: %s" % ("minimap", w, json.dumps(cm)))
+            # the extras (item 7): the blink alternates the year shown and returns it, holding the wire; the run steps the years and stops
+            bk = cdp.evaluate("(async () => { const A = window.__atlas, sleep = ms => new Promise(r => setTimeout(r, ms)); A.mode('cells'); A.layer('share'); A.year(2024); await A.ready(); const b0 = A.wire().builds, seen = new Set(); A.blink(true); for (let i = 0; i < 8; i++) { await sleep(400); seen.add(document.getElementById('yearlabel').textContent); } const hold = A.extras().wireHold; A.blink(false); await sleep(200); return { seen: [...seen], hold, back: document.getElementById('yearlabel').textContent, slider: document.getElementById('year').value, builds: A.wire().builds - b0, on: A.extras().blink }; })()", await_promise=True, timeout=60); n_states += 1
+            if sorted(bk.get("seen", [])) != ["2021", "2024"] or not bk.get("hold") or bk.get("back") != "2024" or bk.get("slider") != "2024" or bk.get("builds") != 0 or bk.get("on"): findings.append("%-11s width %d  the blink: %s" % ("extras", w, json.dumps(bk)))
+            rn = cdp.evaluate("(async () => { const A = window.__atlas, sleep = ms => new Promise(r => setTimeout(r, ms)); A.mode('cells'); A.layer('share'); A.year(2016); await A.ready(); document.getElementById('yearrun').click(); await sleep(2600); const mid = +document.getElementById('year').value, hold = A.extras().wireHold; document.getElementById('yearrun').click(); await sleep(100); return { mid, hold, after: A.extras() }; })()", await_promise=True, timeout=60); n_states += 1
+            if not (2017 <= rn.get("mid", 0) <= 2019) or not rn.get("hold") or rn["after"].get("run") or rn["after"].get("wireHold"): findings.append("%-11s width %d  the year run: %s" % ("extras", w, json.dumps(rn)))
+            cdp.evaluate("(() => { const A = window.__atlas; A.year(2024); return true; })()", await_promise=False)
             # the hidden-frame load (round 11, item 7): the page loaded with the root hidden for 500 ms, then shown without a window resize event; every load-time layout
             # must then match the normal load's (the stage, the fitted zoom and the landing camera, the minimap's label boxes, the wire's track, the strip's test, the obstacles)
             hid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "document.addEventListener('DOMContentLoaded', () => { document.documentElement.style.display = 'none'; setTimeout(() => { document.documentElement.style.display = ''; }, 500); });"})["identifier"]

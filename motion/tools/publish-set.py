@@ -18,15 +18,20 @@ artifact's caps (16 MB page or text file, 15 MB binary file).
 
 With --from COMMIT (round 14) the pages, the stylesheet and the scripts are read from that commit instead of the working tree, so an approved commit can be
 published while later work sits uncommitted or in later commits; the data files still come from the working tree, and the set is refused if a tracked data
-file differs from the commit's. The build stamp then names that commit."""
-import json, os, re, shutil, subprocess, sys
+file differs from the commit's. The build stamp then names that commit.
+
+TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's js/agent-guide.js is rebuilt at every publish from the data the set
+ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
+one of the builder's rules, the public-release checks among them. The page itself never fetches it."""
+import datetime, json, os, re, shutil, subprocess, sys, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(MOTION, "publish")
 os.makedirs(OUT, exist_ok=True)
-FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">'
+FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700%s&display=swap">'
+FONT_EXTRA = {"explorer.html": "&family=Tomorrow:wght@400;500"}   # the atlas's data wire in Tomorrow (round 15, the author's final choice of 26 October 2026); the explainer loads Plex alone
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
 def git(*args, text=True):
     return subprocess.run(["git"] + list(args), cwd=MOTION, capture_output=True, text=text, check=True).stdout
@@ -70,7 +75,7 @@ def convert(name):
     body = re.search(r"<body>(.*?)</body>", src, re.S).group(1)
     style = re.search(r"<style>.*?</style>", head, re.S)
     css_link = re.search(r'<link rel="stylesheet" href="css/theme.css">', head)
-    parts = [title, META, BUILD_META, FONT]
+    parts = [title, META, BUILD_META, FONT % FONT_EXTRA.get(name, "")]
     if style:
         parts.append(style.group(0))
     if css_link:
@@ -91,6 +96,20 @@ def copy(sub, name):
     if sub == "js": open(dst, "wb").write(source(sub + "/" + name))   # the scripts follow --from; the data stay the working tree's
     else: shutil.copyfile(src, dst)
     return os.path.getsize(dst)
+
+def agent_guide(problems):   # the guide rebuilt for the set (see the module's note); returns a line for the report, or None when the pages do not load it
+    if "agent-guide.js" not in SCRIPTS: return None
+    if FROM:
+        mod = types.ModuleType("agent_guide_at_commit"); mod.__file__ = os.path.join(HERE, "agent_guide.py")   # its paths resolve here; build() takes the data folder
+        exec(compile(git("show", FROM + ":motion/tools/agent_guide.py"), "agent_guide.py at " + FROM, "exec"), mod.__dict__)
+    else:
+        sys.path.insert(0, HERE); import agent_guide as mod
+    d = datetime.date.today(); when = "%d %s %d" % (d.day, d.strftime("%B"), d.year)
+    text = mod.build(os.path.join(MOTION, "data"), published=when)
+    for f in mod.rules(text): problems.append("agent guide: " + " | ".join(f))
+    same = source("js/agent-guide.js").decode("utf-8") == mod.js_of(mod.build(os.path.join(MOTION, "data")))
+    open(os.path.join(OUT, "js", "agent-guide.js"), "w", encoding="utf-8").write(mod.js_of(text))
+    return "agent guide: rebuilt from the shipped data and dated %s; %s" % (when, "the source's copy matched it" if same else "the source's copy was stale, the set carries the rebuilt guide")
 
 def keys_of(obj, out):
     if isinstance(obj, dict):
@@ -145,6 +164,7 @@ def main():
         for n in sorted(os.listdir(firms)):
             if n.endswith(".js"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the base64 twins; the host serves no raw binaries
     problems = check_rules(data_dir)
+    guide = agent_guide(problems)
     total = 0
     for g, items in groups.items():
         size = sum(b for _, b in items); total += size
@@ -154,6 +174,7 @@ def main():
             if b > cap: problems.append("%s is %.1f MB, over the %d MB cap" % (n, b / 1048576, cap // 1048576))
     print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
     print("build: " + BUILD)
+    if guide: print(guide)
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0
 

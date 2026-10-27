@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""The surface grain's contrast guard (round 10, the author's item 22): on an empty patch of the Under the cursor card and of the legend at 1,600 px, the
-average colour with the grain on and off, and the WCAG contrast of the ink, muted and dim tones against each; every difference must be within 0.05.
+"""The surface grain's contrast guard (round 10, the author's item 22): on an empty patch of the Under the cursor card's body, of its title bar and of
+the legend at 1,600 px, the average colour with the grain on and off, and the WCAG contrast of the ink, muted and dim tones against each, and of the
+green titles on the bar (round 15's title bars, with their own grain on the dark theme); every difference must be within 0.05.
 Imported by atlas-audit.py (guard(cdp) with an open page) and runnable alone: python3 -I motion/tools/grainguard.py --url http://127.0.0.1:8765/explorer.html"""
 import argparse, base64, json, os, shutil, struct, subprocess, sys, tempfile, time, zlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -37,21 +38,25 @@ def lum(rgb):
 def contrast(a, b): x, y = lum(a), lum(b); return (max(x, y) + 0.05) / (min(x, y) + 0.05)
 def hexrgb(h): return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
 
-SETUP = "(() => { const A = window.__atlas; A.mode('cells'); A.layer('industry'); A.year(2024); A.preset('Russia'); A.legend(true); A.strip(true); if (A.hoverOff) A.hoverOff(); const r = document.querySelector('.card:not(.act):not(.go)').getBoundingClientRect(), l = document.getElementById('legend').getBoundingClientRect(), cs = getComputedStyle(document.documentElement); return { card: [r.right - 70, r.top + 10, 50, 14], legend: [l.right - 60, l.bottom - 24, 40, 12], ink: cs.getPropertyValue('--ink').trim(), muted: cs.getPropertyValue('--muted').trim(), dim: cs.getPropertyValue('--dim').trim() }; })()"
+# the card's patches: one in its body under HOVER A CELL, one in its title bar between the title and the i button (round 15)
+# The side column scrolls on its own: the card is brought into it first (it sat at the column's lower edge once round 15's title bars made the cards
+# above it taller), and the column's scroll is put back after, for the audit's later states.
+SETUP = "(() => { const A = window.__atlas; A.mode('cells'); A.layer('industry'); A.year(2024); A.preset('Russia'); A.legend(true); A.strip(true); if (A.hoverOff) A.hoverOff(); const side = document.querySelector('aside.side'), y0 = side ? side.scrollTop : 0, el = document.querySelector('.card:not(.act):not(.go)'); el.scrollIntoView({ block: 'center', inline: 'nearest' }); const r = el.getBoundingClientRect(), l = document.getElementById('legend').getBoundingClientRect(), cs = getComputedStyle(document.documentElement); return { card: [r.right - 130, r.top + 80, 50, 14], bar: [r.right - 130, r.top + 10, 50, 14], legend: [l.right - 60, l.bottom - 24, 40, 12], ink: cs.getPropertyValue('--ink').trim(), muted: cs.getPropertyValue('--muted').trim(), dim: cs.getPropertyValue('--dim').trim(), context: cs.getPropertyValue('--context').trim(), y0 }; })()"
 
 def guard(cdp, tol=0.05):
     """Returns (findings, table) for the open page at its current size."""
     g = cdp.evaluate(SETUP, await_promise=False); time.sleep(0.2); out = []; table = []
-    for patch in ("card", "legend"):
+    for patch in ("card", "bar", "legend"):
         x, y, w, h = g[patch]; avg = {}
         for on in (True, False):
             cdp.evaluate("window.__atlas.grain(%s)" % ("true" if on else "false"), await_promise=False); time.sleep(0.15)
             png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png", "clip": {"x": x, "y": y, "width": w, "height": h, "scale": 1}})["data"]); avg[on] = average(png); avg[("spread", on)] = round(average.spread, 2)
         cdp.evaluate("window.__atlas.grain(true)", await_promise=False)
-        for tone in ("ink", "muted", "dim"):
+        for tone in ("ink", "muted", "dim") + (("context",) if patch == "bar" else ()):
             c_on, c_off = contrast(hexrgb(g[tone]), avg[True]), contrast(hexrgb(g[tone]), avg[False]); table.append((patch, tone, round(c_off, 3), round(c_on, 3), round(c_on - c_off, 3)))
             if abs(c_on - c_off) > tol: out.append(("grain", patch, "%s contrast %.3f with the grain against %.3f without (%.3f)" % (tone, c_on, c_off, c_on - c_off)))
         table.append((patch, "average", [round(v, 1) for v in avg[False]], [round(v, 1) for v in avg[True]], "spread %s -> %s" % (avg[("spread", False)], avg[("spread", True)])))
+    cdp.evaluate("(() => { const side = document.querySelector('aside.side'); if (side) side.scrollTop = %d; })()" % g["y0"], await_promise=False)
     return out, table
 
 def main():
