@@ -1,0 +1,204 @@
+{
+ "date": "2026-10-27",
+ "browser": "the author's Brave through the Claude in Chrome extension",
+ "screen": "the laptop panel, device ratio 1.333",
+ "window_css_px": [
+  2359,
+  1427
+ ],
+ "protocol": "the author's of 27 October 2026: a banner set twice, visibility and focus logged per frame, a lost recording repeated at most twice (none was lost)",
+ "sweep": "tools/wire-sweep.py's zig-zag, 360 pointer moves in 12 s dispatched inside the page, between 3 s rests, after 4 s for the wire to settle",
+ "pages": {
+  "before": "explorer-before.html, the committed (published) wire code, a temporary copy",
+  "after-wsB": "explorer.html (the fix, the first slot waits its turn)",
+  "after-wsA": "explorer.html?opt=wsA (the fix, the first slot switches at once)"
+ },
+ "measures": "a hold is a frame interval of 8 ms or more with the item moving under half of 60 px/s; a jump is more than 3 px off the ideal; restarts are new Web Animations on the track",
+ "recordings": [
+  {
+   "label": "before",
+   "mode": "firms",
+   "sweep": {
+    "frames": 442,
+    "median_frame_ms": 24.2,
+    "holds": 126,
+    "hold_ms_total": 4163.9,
+    "hold_ms_max": 91,
+    "jumps": 20,
+    "steps_back": 0,
+    "region_changes": 59,
+    "animation_restarts": 61
+   },
+   "rest": {
+    "frames": 134,
+    "median_frame_ms": 18.2,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   },
+   "rest after": {
+    "frames": 123,
+    "median_frame_ms": 24.2,
+    "holds": 3,
+    "hold_ms_total": 72.6,
+    "hold_ms_max": 24.2,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 1
+   }
+  },
+  {
+   "label": "before",
+   "mode": "cells",
+   "sweep": {
+    "frames": 423,
+    "median_frame_ms": 24.2,
+    "holds": 117,
+    "hold_ms_total": 4478.1,
+    "hold_ms_max": 97,
+    "jumps": 36,
+    "steps_back": 0,
+    "region_changes": 57,
+    "animation_restarts": 61
+   },
+   "rest": {
+    "frames": 139,
+    "median_frame_ms": 18.2,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   },
+   "rest after": {
+    "frames": 133,
+    "median_frame_ms": 18.2,
+    "holds": 3,
+    "hold_ms_total": 121.1,
+    "hold_ms_max": 84.8,
+    "jumps": 1,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 1
+   }
+  },
+  {
+   "label": "after-wsB",
+   "mode": "firms",
+   "sweep": {
+    "frames": 438,
+    "median_frame_ms": 24.2,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 8,
+    "animation_restarts": 0
+   },
+   "rest": {
+    "frames": 119,
+    "median_frame_ms": 24.2,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   },
+   "rest after": {
+    "frames": 102,
+    "median_frame_ms": 30.3,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 1,
+    "animation_restarts": 0
+   }
+  },
+  {
+   "label": "after-wsB",
+   "mode": "cells",
+   "sweep": {
+    "frames": 394,
+    "median_frame_ms": 24.3,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 7,
+    "animation_restarts": 0
+   },
+   "rest": {
+    "frames": 99,
+    "median_frame_ms": 30.3,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   },
+   "rest after": {
+    "frames": 128,
+    "median_frame_ms": 24.2,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 1,
+    "animation_restarts": 0
+   }
+  },
+  {
+   "label": "after-wsA",
+   "mode": "firms",
+   "sweep": {
+    "frames": 378,
+    "median_frame_ms": 24.3,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 52,
+    "animation_restarts": 0
+   },
+   "rest": {
+    "frames": 85,
+    "median_frame_ms": 36.4,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   },
+   "rest after": {
+    "frames": 101,
+    "median_frame_ms": 30.3,
+    "holds": 0,
+    "hold_ms_total": 0,
+    "hold_ms_max": 0,
+    "jumps": 0,
+    "steps_back": 0,
+    "region_changes": 0,
+    "animation_restarts": 0
+   }
+  }
+ ]
+}
