@@ -134,6 +134,8 @@ def main():
     a = ap.parse_args()
     floors = (int(os.environ.get('LAB_MEMAVAILABLE_MIN_MIB', 5120)), int(os.environ.get('LAB_SWAPFREE_MIN_MIB', 1024)))
     widths = [int(x) for x in a.widths.split(',') if x.strip()]
+    if not os.path.isabs(a.out) and os.path.normpath(a.out).split(os.sep)[0] == 'motion':   # 27 October 2026: --out motion/build/... wrote under motion/motion/
+        sys.exit("audit_five: --out is read relative to motion/, so %r would write under motion/motion/. Give it as build/audit/... or as an absolute path." % a.out)
     out = a.out if os.path.isabs(a.out) else os.path.join(MOTION, a.out); sdir = os.path.dirname(out); os.makedirs(sdir, exist_ok=True)
     statef = os.path.join(sdir, os.path.splitext(os.path.basename(out))[0] + '.state.json')
     run, n = stamp(), 1
