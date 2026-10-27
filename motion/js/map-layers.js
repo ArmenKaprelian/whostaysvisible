@@ -130,12 +130,14 @@
     return paths;
   };
   // Classes listed in `stroke` are outlined (strokePx design pixels, strokeAlpha) instead of filled.
+  M.tileEdge = null;   // set by the atlas's light theme: { colour, alpha, low(fill) } (27 October 2026); the video leaves it unset
   M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null, stroke = null, strokePx = 1, strokeAlpha = 0.3, outline = null } = {}) {   // outline: { colour, alpha, px } strokes every filled tile after its fill (round 10, the city-window hand-over)
     Motion.camTransform(ctx, stage, cam);
     ctx.save(); ctx.globalAlpha *= alpha;
     for (const [c, p] of paths) {
       if (stroke && stroke.has(c)) { ctx.save(); ctx.globalAlpha *= strokeAlpha; ctx.strokeStyle = colorOf(c); ctx.lineWidth = strokePx / cam.k; ctx.stroke(p); ctx.restore(); continue; }
       ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p);
+      const e = M.tileEdge; if (e && e.low(colorOf(c))) { ctx.save(); ctx.globalAlpha *= e.alpha * (alphaOf ? alphaOf(c) : 1); ctx.strokeStyle = e.colour; ctx.lineWidth = 1 / cam.k; M.strokeHair(ctx, p); ctx.restore(); }   // the atlas's light-theme edge on a fill under 3:1 against the land (27 October 2026)
     }
     ctx.restore();
     if (outline && outline.alpha > 0) { ctx.save(); ctx.globalAlpha *= outline.alpha; ctx.strokeStyle = outline.colour; ctx.lineWidth = (outline.px || 1) / cam.k; for (const [c, p] of paths) M.strokeHair(ctx, p); ctx.restore(); }
@@ -296,9 +298,13 @@
   M.flashPeak = r => Math.min(14, Math.max(2.5 * r, 4));   // the flash's extra radius at its peak, px
   // The phase of one firm's bloom t seconds after its own start, into o: on (started), swell (the flash, 0 to 1 and back),
   // release (the pale core's fade to the mark's colour, 0 to 1), grow (the mark's opacity ramp), glowA (the glow's alpha), p (the rings, 0 to 1).
+  // The atlas's reformed pulse (round 15, the author's items 4 and 7B, M.pulseModern 1 there, 0 in the video): no swell, no pale core and no glow; the mark fades
+  // in to its red over 0.35 s and one thin ring expands and fades (pulseRing), so a year's new firms read as a quiet sweep and each frame draws one stroke per firm.
+  M.pulseModern = 0;
   M.pulsePhase = function (t, o, P = M.PULSE) {
     if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
     o.on = true;
+    if (M.pulseModern) { o.swell = 0; o.release = 1; o.glowA = 0; o.grow = Motion.ease.outCubic(Motion.clamp(t / 0.35, 0, 1)); o.p = Motion.clamp((t - P.ringDelay) / P.decay, 0, 1); return o; }
     o.swell = t < P.attack ? Motion.ease.outCubic(t / P.attack) : t < P.attack + P.release ? 1 - Motion.ease.inOutSine((t - P.attack) / P.release) : 0;
     o.release = t < P.attack ? 0 : Motion.clamp((t - P.attack) / P.release, 0, 1);
     o.grow = Motion.ease.outCubic(Motion.clamp(t / (P.attack + P.release), 0, 1));
@@ -321,6 +327,10 @@
   // ring 2 trailing at 0.7 of it in the pale outline colour (the red at half alpha on a light theme); still: the held highlight.
   M.pulseRing = function (ctx, px, py, r, L, p, theme, still) {
     const TAU = Math.PI * 2, light = theme.dark === false; let r1, w1, a1, r2, w2, a2;
+    if (M.pulseModern) {   // one ring in the treated red, about half the bloom's width, eased out to r + 2 + Rmax and gone; still: held at half that reach
+      const w = Math.max(1.25, 0.55 * L.W), rr = still ? 2 + 0.5 * L.Rmax : 2 + L.Rmax * Motion.ease.outCubic(p), a = still ? 0.6 : 0.85 * (1 - p) * (1 - p);
+      if (a <= 0.01) return; ctx.save(); ctx.lineWidth = w; ctx.globalAlpha = light ? 0.8 * a : a; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + rr, 0, TAU); ctx.stroke(); ctx.restore(); return;
+    }
     if (still) { r1 = 2 + 0.6 * L.Rmax; w1 = L.W; a1 = 0.6; r2 = 0.7 * r1; w2 = 0.8 * L.W; a2 = 0.4; }
     else {
       const g = Motion.ease.outCubic(p); r1 = 2 + L.Rmax * g; w1 = L.W * (1 - 0.4 * p); a1 = 0.95 * (1 - p) * (1 - p);

@@ -297,7 +297,7 @@
 
   DEFS.size = { z: 1, draw({ ctx, local: l, theme }) {
     title(ctx, 'Larger firms stay visible, and the gap widened in 2022', l, 0.2, theme);
-    subtitle(ctx, 'Odds of a following-year statement against the smallest asset quintile (Q1), adjusted, outcomes 2020–2024', l, 0.6, theme);
+    subtitle(ctx, 'Adjusted odds ratios of a following-year statement against Q1, the smallest asset quintile, 2020–2024', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
     const cols = { Q2: '#269C96', Q3: '#50B5AA', Q4: '#79CDBF', Q5: theme.accentStrong };   // the cyan ramp's steps 2 to 4 with Q5 in the accent-strong (round 10; three blues before it)
     const ser = ['Q2', 'Q3', 'Q4', 'Q5'].map(q => ({ label: q + ' vs Q1', color: cols[q], points: sizeRows[q], whiskers: q === 'Q5', dot: q === 'Q5' ? 9 : 7, width: q === 'Q5' ? 4 : 3 }));
@@ -306,24 +306,25 @@
     ctx.restore();
     const px = 1400;
     if (l > 6.6) {
-      const t1 = '2022 against 2021, Q5 vs Q1', t4 = `95% interval ${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`;
-      const bw = Math.max(Motion.measure(ctx, t1, 28, 700), Motion.measure(ctx, 'ratio of odds ratios', 24, 400), Motion.measure(ctx, fmt.dec(F.size_q5_2022_ratio, 3), 60, 700), Motion.measure(ctx, t4, 26, 400));
-      MM.resultBox(ctx, px - 24, 300 - 20 - 24, bw + 48, (440 + 6 + 24) - (300 - 20 - 24), theme, step(l, 6.6, 0.5));   // the result box (round 13): 24 px around the four lines, from the title's cap height to the interval's descent
+      const t1 = '2022 against 2021, Q5 vs Q1', t4 = '95% confidence interval', t5 = `${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`;   // the interval's name and its bounds on two lines (round 15: the standard term is wider than the box's room before the frame's edge)
+      const bw = Math.max(Motion.measure(ctx, t1, 28, 700), Motion.measure(ctx, 'ratio of odds ratios', 24, 400), Motion.measure(ctx, fmt.dec(F.size_q5_2022_ratio, 3), 60, 700), Motion.measure(ctx, t4, 26, 400), Motion.measure(ctx, t5, 26, 400));
+      MM.resultBox(ctx, px - 24, 300 - 20 - 24, bw + 48, (472 + 6 + 24) - (300 - 20 - 24), theme, step(l, 6.6, 0.5));   // the result box (round 13): 24 px around the five lines, from the title's cap height to the interval's descent
       Motion.reveal(ctx, t1, px, 300, l, 6.6, { size: 28, weight: 700, color: theme.ink });
       Motion.reveal(ctx, 'ratio of odds ratios', px, 340, l, 7.0, { size: 24, color: theme.muted });
       Motion.reveal(ctx, fmt.dec(F.size_q5_2022_ratio, 3), px, 404, l, 7.0, { size: 60, weight: 700, color: MM.resultColour(theme) });
-      Motion.reveal(ctx, `95% interval ${fmt.dec(F.size_q5_2022_low, 3)} to ${fmt.dec(F.size_q5_2022_high, 3)}`, px, 440, l, 7.3, { size: 26, color: theme.muted });
-      Motion.paragraph(ctx, `Raw shares in 2022: Q1 ${fmt.pct(F.size_raw_q1_2022)}, Q5 ${fmt.pct(F.size_raw_q5_2022)}.`, px, 510, 440, { size: 26, color: theme.ink, alpha: step(l, 8.2, 0.6) });
-      Motion.paragraph(ctx, `Provisional: without wholesale trade the later widening shrinks. Early-era (2014–2018) Q5 ratios: ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 600, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
+      Motion.reveal(ctx, t4, px, 440, l, 7.3, { size: 26, color: theme.muted });
+      Motion.reveal(ctx, t5, px, 472, l, 7.3, { size: 26, color: theme.muted });
+      Motion.paragraph(ctx, `Unadjusted shares in 2022: Q1 ${fmt.pct(F.size_raw_q1_2022)}, Q5 ${fmt.pct(F.size_raw_q5_2022)}.`, px, 542, 440, { size: 26, color: theme.ink, alpha: step(l, 8.2, 0.6) });
+      Motion.paragraph(ctx, `Provisional: the 2023–2024 increase is smaller when wholesale trade is excluded. Q5 vs Q1 odds ratios, 2014–2018: ${fmt.dec(earlyQ5[0], 2)} to ${fmt.dec(earlyQ5[1], 2)}.`, px, 632, 440, { size: 24, color: theme.muted, alpha: step(l, 9.4, 0.6) });
     }
   } };
 
   DEFS.lists = { z: 1, draw({ ctx, local: l, theme }) {
-    title(ctx, 'Firms on the sanctions list: lower odds of a statement by 2024', l, 0.2, theme, 118, 46);
-    subtitle(ctx, 'against firms on no list, with 95% intervals', l, 0.6, theme);
+    title(ctx, 'Sanctioned-only firms: lower odds of a statement by 2024', l, 0.2, theme, 118, 46);
+    subtitle(ctx, 'against firms on no list, with 95% confidence intervals', l, 0.6, theme);
     const u = step(l, 1.2, 4.0, E.inOutSine);
-    const ser = [{ label: 'Sanctions list only', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
-                 { label: 'Government strategic list only', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
+    const ser = [{ label: 'Sanctioned-only firms', color: theme.accent, points: listRows('annual-eligible-membership', 'sanctioned_only'), whiskers: true, dot: 8, width: 4 },
+                 { label: 'Government-strategic-only firms', color: theme.fall, points: listRows('annual-eligible-membership', 'administrative_only'), whiskers: true, dot: 8, width: 4 }];
     ctx.save(); ctx.globalAlpha *= step(l, 0.8, 0.5);
     CH.yearDots(ctx, { x: 170, y: 250, w: 620, h: 620 }, ser, { xDomain: [2019, 2024], yDomain: [0.015, 3], yTicks: [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2], progress: u, theme });
     ctx.restore();
@@ -332,7 +333,7 @@
     const px = 1130, colsX = [1650, 1860];   // round 10: the monospace heads and denominators need the columns 210 px apart and the labels to end before 1,572
     if (l > 6.4) {
       eyebrow(ctx, 'Six-year histories, fixed 2019 cohort', px, 270, theme, step(l, 6.4, 0.5));
-      const groups = [['10000', 'Sanctions list only'], ['00000', 'No list']];
+      const groups = [['10000', 'Sanctioned only'], ['00000', 'No list']];
       const rows = [['all_available', 'all six years available'], ['available_then_absent', 'available, then absent from 2022'], ['all_absent', 'absent all six years'], ['removed', 'removed from the registry']];
       const ha = step(l, 6.8, 0.5);
       groups.forEach(([g, name], gi) => { const d = bin(g, 'all_available'); Motion.text(ctx, name, colsX[gi], 318, { size: 24, weight: 700, color: theme.ink, align: 'right', alpha: ha, group: 'lists-head-' + g }); Motion.text(ctx, `${fmt.int(d.denominator)} firms`, colsX[gi], 346, { size: 22, color: theme.muted, align: 'right', alpha: ha, group: 'lists-head-' + g }); });

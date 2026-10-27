@@ -96,7 +96,8 @@
     const en = s => s.replace('-', '–');
     return [`${en(gap.years_before)}: on average ${word(gap.before)}${Math.abs(gap.before) < 0.5 ? '' : ' the median'} of ${groupLabel}.`, `${en(gap.years_after)}: ${word(gap.after)}${Math.abs(gap.after) < 0.5 ? '' : ' it'}.`];
   };
-  const membersText = g => `${fmt.int(g.members)} ${g.label}, ${fmt.int(Math.min(...g.by_year.n))} to ${fmt.int(Math.max(...g.by_year.n))} with a statement per year`;
+  const groupName = g => (g === CMP.groups.listed2022 ? 'firms on a list from 2022' : g.label);   // the data's own label says "listed", never on screen for list membership (round 15)
+  const membersText = g => `${fmt.int(g.members)} ${groupName(g)}, ${fmt.int(Math.min(...g.by_year.n))} to ${fmt.int(Math.max(...g.by_year.n))} with a statement per year`;
 
   // Cells (M7): one Path2D per grid, year and class; 'below' = 1-19 firms with a statement (faint outline).
   const TILES = {};
@@ -337,7 +338,7 @@
     Motion.reveal(ctx, 'Statements 2014–2025', 120, sy, l, 5.8, { size: 24, color: theme.muted, until });
     const shown = i => (i <= 7 ? Motion.step(l, 6.0 + i * 0.12, 0.4, E.outCubic) : Motion.step(l, des + 2.0 + (i - 8) * 0.3, 0.4, E.outCubic));
     strip(ctx, COL.left.x, sy, COL.left.firm, shown, theme, down); strip(ctx, COL.right.x, sy, COL.right.firm, shown, theme, down);
-    Motion.reveal(ctx, `${listedDate}: listed by the ${jurisdictions}`, 960, 900, l, des + 0.6, { size: 34, weight: 700, color: theme.ink, align: 'center', until });
+    Motion.reveal(ctx, `${listedDate}: sanctioned by the ${jurisdictions}`, 960, 900, l, des + 0.6, { size: 34, weight: 700, color: theme.ink, align: 'center', until });
     Motion.reveal(ctx, 'No 2022 statement in the archive. Back in 2023.', 960, 950, l, des + 2.6, { size: 28, color: theme.muted, align: 'center', until });
     const r22 = sy + 76;
     Motion.reveal(ctx, 'Revenue 2022', 120, r22, l, des + 3.0, { size: 24, color: theme.muted, until });
@@ -363,15 +364,15 @@
     }
     const pa = step(u, 0.5, 0.5, E.inOutSine);   // the panel fades in behind the chart in the second half of the move
     if (pa > 0) { const pb = lerpBox(BIG.panel, SMALL.panel, u); Motion.panel(ctx, pb.x, pb.y, pb.w, pb.h, theme, 0.92 * pa, 'livebox'); }
-    const panels = [['left', CMPB, 'B', 'the private firm', 'firms on no list'], ['right', CMPA, 'A', 'Aeroflot', 'firms listed in 2022']];
+    const panels = [['left', CMPB, 'B', 'the private firm', 'firms on no list'], ['right', CMPA, 'A', 'Aeroflot', 'firms on a list from 2022']];
     panels.forEach(([side, s, key, firmLabel, groupLabel], i) => {
       const box = lerpBox(BIG[side], SMALL[side], u), colour = key === 'A' ? aeroflotColour(theme, inkU) : anchorColour(theme, key);
       const nameA = pa;   // the group names of the live box arrive with its panel
-      if (nameA > 0) Motion.text(ctx, side === 'right' ? 'listed in 2022' : groupLabel, box.x - 40, Motion.lerp(BIG.panel.y, SMALL.panel.y, u) + 30, { size: 22, color: theme.muted, alpha: nameA, group: 'livebox-' + key });   // rides with the box, so it stays inside the interpolated panel
+      if (nameA > 0) Motion.text(ctx, side === 'right' ? 'on a list from 2022' : groupLabel, box.x - 40, Motion.lerp(BIG.panel.y, SMALL.panel.y, u) + 30, { size: 22, color: theme.muted, alpha: nameA, group: 'livebox-' + key });   // rides with the box, so it stays inside the interpolated panel
       ctx.save();
       CH.bandLines(ctx, box, { firm: s.firm, band: s.band }, { yDomain: yDomainCmp, yTicks: yTicksCmp, xTicks: [2014, 2025], xTicksMinor: [2018, 2022], minorAlpha: gone, progress: live ? 1 : progress, theme,
         colors: { firm: colour, median: theme.cmpLine, band: theme.cmpBand, marker: theme.treated }, labels: { firm: firmLabel, median: 'median' }, textAlpha: 1, labelAlpha: gone, ringCurrent: key === 'A' && inkU > 0.5,
-        marker: s.anchor.marker ? { x: s.anchor.marker.year, label: s.anchor.marker.label } : null,
+        marker: s.anchor.marker ? { x: s.anchor.marker.year, label: 'on a list from ' + s.anchor.marker.year } : null,   // not the data's own label, which says "listed" (round 15: never on screen for list membership)
         gapLabel: s.anchor.idx.some(x => x == null) ? { x: 2022, y: 100, text: 'no 2022 statement' } : null,
         current: live ? v : null, compact: u > 0.5 });
       ctx.restore();
@@ -381,7 +382,7 @@
           ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.cmpLine; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(box.x, ky - 6); ctx.lineTo(box.x + 26, ky - 6); ctx.stroke();
           ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.cmpBand; ctx.fillRect(box.x + 36, ky - 14, 26, 16); ctx.restore();
           Motion.paragraph(ctx, 'median and interquartile range of ' + groupLabel, box.x + 72, ky, BIG[side].w - 72, { size: 22, color: theme.muted, alpha: ta, group: 'cmp-key-' + key });   // wrapped at the full-screen column (round 10), so the lines never re-break while the box moves
-          const g = gapText(s.anchor.gap, s.group.label, i === 1 ? 1 : 0), rb = ta * step(l, 5.0, 0.5) * (until ? 1 - step(l, until - 0.4, 0.4) : 1);   // in with the first fact, out with the texts
+          const g = gapText(s.anchor.gap, groupName(s.group), i === 1 ? 1 : 0), rb = ta * step(l, 5.0, 0.5) * (until ? 1 - step(l, until - 0.4, 0.4) : 1);   // in with the first fact, out with the texts
           MM.resultBox(ctx, box.x - 24, ky + 36, BIG[side].w + 48, 150, theme, rb, 'ink'); MM.ringMarker(ctx, box.x + 8, ky + 70, 7, theme.ink, rb);   // the gap facts in an ink box: the anchor's amber is on this screen (round 13); 24 px of padding around the two facts
           Motion.revealParagraph(ctx, g[0], box.x + 28, ky + 78, BIG[side].w - 28, l, 5.0, { size: 24, color: theme.ink, lineHeight: 1.45, until, alpha: ta, group: 'cmp-gap1-' + key });
           Motion.revealParagraph(ctx, g[1], box.x + 28, ky + 156, BIG[side].w - 28, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap2-' + key });
@@ -397,7 +398,7 @@
     if (alpha <= 0) return;
     const [y0, y1, u] = yearPair(v); const yr = u < 0.5 ? y0 : y1; const rc = redCounts[ext][yr];
     MM.infoPanel(ctx, theme, { alpha, loc, year: { a: String(y0), b: y1 === y0 ? null : String(y1), u },
-      lines: [[`${fmt.int(rc.red)} listed, shown red`, theme.treated], [`${fmt.int(rc.ringed)} on a list, ringed`, theme.muted], [`${fmt.int(rc.dark)} without a ${yr} statement`, theme.muted]] });   // three lines (25 October 2026); the panel grows for the third
+      lines: [[`${fmt.int(rc.red)} on a list, shown red`, theme.treated], [`${fmt.int(rc.ringed)} added later, ringed`, theme.muted], [`${fmt.int(rc.dark)} without a ${yr} statement`, theme.muted]] });   // three lines (25 October 2026); the panel grows for the third
   }
   // Bottom-left legend (author's instruction, 23 October, round 3; the three listed rows of 25 October): the bar with its
   // two-line title, one muted line with the mark rule and support at each scale, and three rows for the firms on the five
@@ -416,9 +417,9 @@
     ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 1013, 9, 0, TAU); ctx.fill();
     ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1041, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1041, 8, 0, TAU); ctx.stroke();
     ctx.restore();
-    Motion.text(ctx, 'On one of the five lists, before its listing year', 118, 985, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'Listed, red from its listing year, statement available', 118, 1013, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'Listed, no statement that year', 118, 1041, { size: 22, color: theme.muted, baseline: 'middle', alpha });
+    Motion.text(ctx, 'On one of the five lists, before the year it was added', 118, 985, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Added to a list, red from that year, statement available', 118, 1013, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Added to a list, no statement that year', 118, 1041, { size: 22, color: theme.muted, baseline: 'middle', alpha });
   }
   // The two shared-registration facts of the density pass, once in the downtown run where the sized piles are
   // visible (round 5; same counts, same denominators), with the author's standard explanation of shared
@@ -455,7 +456,7 @@
     let yy = Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
     Motion.paragraph(ctx, line2, x + 28, yy, w - 28, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) });
     Motion.text(ctx, 'ST PETERSBURG, 160 BY 90 KM, 2022 TO 2024', x, yb, { size: 22, weight: 500, color: theme.muted, letterSpacing: 22 * 0.08, alpha: step(l, 1.8, 0.5) });
-    Motion.text(ctx, 'Absence after listing: within 6 points of Moscow', x, yb + 29, { size: 22, color: theme.ink, alpha: step(l, 2.4, 0.5) });   // review/spb-vs-moscow-report.md: the listed firms' absence after listing within 6 points of Moscow's every year
+    Motion.text(ctx, 'Absence once on a list: within 6 points of Moscow', x, yb + 29, { size: 22, color: theme.ink, alpha: step(l, 2.4, 0.5) });   // review/spb-vs-moscow-report.md: the listed firms' absence after listing within 6 points of Moscow's every year
     Motion.text(ctx, 'Usable baseline: 53 to 54%, Moscow 38 to 44%', x, yb + 58, { size: 22, color: theme.ink, alpha: step(l, 3.0, 0.5) });   // the share of firms with a usable revenue baseline, 2022 to 2024
     ctx.restore();
   }

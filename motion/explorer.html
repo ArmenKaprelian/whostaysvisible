@@ -14,7 +14,7 @@
    the cursor layer and green for the context layer, never colour data; the full neon rests and the live variants show while
    something moves or has focus (the author's correction, 25 October 2026). */
 :root {
-  --stage: #060B18; --land: #172A45; --border: #495669; --graticule: #2E333D;
+  --stage: #03060E; --band: var(--stage); --bar: #020307; --land: #172A45; --border: #495669; --graticule: #2E333D;   /* the stage a step darker (round 15, the author's item 2: OKLab L 0.122, #060B18 at 0.152 before); the land, the panels and the data colours as they were */
   --ink: #ECEEF1; --muted: #B4C0D0; --wire-pre: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #79CDBF; --accent-strong: #C7F8E7; --fall: #F39523; --rise: #79CDBF; --below: #3C4852; --highlight: rgba(121,205,191,0.10);   /* the cyan ramp's steps 4 and 6; the diverging pair's classes 2 and 5 (round 10) */
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
@@ -24,18 +24,26 @@
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
   --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 25 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
   --ghost: #1F3350;   /* one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders */
+  --cat: color-mix(in srgb, var(--context) 85%, var(--panel));   /* the cat's head (round 15): the green at 85 percent over the panel, the author's pick of 27 October 2026 (55 blurred under the wire's glow on a 1x screen; 70 shown in the addendum) */
+  --tile-ink: #CFE6FF;   /* the cursor tile's text (round 15, the author's item 6): a near-white ice, the minimap leaders' tone; 14.8:1 on the tile */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22): 2.5 percent on the dark theme */
+  --grain-bar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.010'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the title bars' grain (round 15): the panel tile with white at 0.010, so on #020307 the lift (about 2.5 levels) matches the drop the near-black allows */
+  --grain-band: var(--grain);   /* the header and footer bands keep the panel grain on the dark theme (round 15) */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets in the live cursor colour (W14b) */
   color-scheme: dark;
 }
 :root[data-theme="light"] {
-  --stage: #FFFFFF; --land: #F1F2EF; --border: #C7CFCA; --graticule: #E0E5E3;
-  --ink: #24323D; --muted: #52636D; --wire-pre: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F6F7F6; --panel-2: #ECEFEE;
-  --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #CDD3D0; --highlight: rgba(33,102,172,0.10);
+  --stage: #FBFBF9; --land: #D7DCE0; --border: #C7CFCA; --graticule: #E0E5E3; --band: #E2EEFE; --bar: #EFF2F5;   /* round 15 (the author's light-theme request of 26 October 2026 and the revisions that followed): the sea the near white and Russia the shape, swapped on 26 October; Russia darker on 27 October, OKLab L 0.892, 85 percent of the way from #EDF1F5 (L 0.956) to the second addendum's #D3D8DC (L 0.880), on the map and in the minimap; the header and footer bands a faint cool blue */
+  --tint-act: #FFF5FA; --tint-read: #EAFEF2; --tint-go: var(--stage);   /* the role tints (round 15, the author's fourth light-theme change): the panel's OKLab L 0.979 in the hue of each role, rose where you act (OKLCH C 0.013, the most sRGB holds there), green where you read (0.025); the GO TO card takes the sea since the revision of 26 October 2026, so its minimap is the map in small (a blue at C 0.010, #F4F9FF, before); the dark theme has none, so its cards keep the panel */
+  --ink: #24323D; --muted: #52636D; --wire-pre: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F7F8FA; --panel-2: #ECEFEE;
+  --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #B9BEBB; --highlight: rgba(33,102,172,0.10);
   --ind-1: #936E16; --ind-2: #2550B4; --ind-3: #973001; --ind-4: #1A7F7A; --ind-5: #6D6816; --ind-6: #7B3FD1; --ind-7: #5D4E78; --ind-8: #537A9B; --ind-9: #5B6470;
   --div-1: #854505; --div-2: #9D5E01; --div-3: #B27901; --div-4: #1C989E; --div-5: #0A7E83; --div-6: #196369; --zero: #727C86; --fall: #9D5E01; --rise: #0A7E83;
-  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; --go: #22364D; --go-leader: #22364D; --go-live: #000000; --ghost: #E4E7E4;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.016 0 0.44'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");
+  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; --go: #22364D; --go-leader: #22364D; --go-live: #000000; --ghost: #C3C8CC; --tile-ink: #22364D;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.020 0 0.75'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the light theme's grain, the same tile: black at 0.020 and white at 0.75, about 5 levels up and down on the #F7F8FA panel (round 15; 4 levels before) */
+  --grain-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.021 0 0.28'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the same tile for the #E9EDF2 bands: black at 0.021 and white at 0.28, about 5 levels each way */
+  --cat: color-mix(in srgb, var(--context) 85%, var(--panel));
+  --grain-bar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.020 0 0.37'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the light title bars' grain: the panel tile with white at 0.37, so on #EFF2F5 the lift matches the drop (about 4.8 levels each way in green; the panel's 0.75 lifted the bar's average) */
   --by: "Armen G. Kaprelian"; --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 html, body { height: 100%; }
 body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums;
@@ -118,11 +126,12 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .maplegend .row.p { text-transform: none; letter-spacing: 0; font-weight: 400; padding-left: 0; text-indent: 0; }   /* the legend's sentence lines stay mixed case */
 .lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }   /* the overlays' titles in the neon green (25 October) */
 .lhead .ltitle b { font-weight: 500; }
-.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; color: var(--muted); max-width: 43%; box-sizing: border-box; display: flex; align-items: flex-start; gap: 6px; }   /* 43 percent beside the legend's 53 (round 10: the wider type) */
+.mapnote { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; color: var(--muted); max-width: 43%; box-sizing: border-box; }   /* 43 percent beside the legend's 53 (round 10: the wider type) */
+.mapnote .nhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }   /* the title row with the toggle at the top right, as on every other panel (round 15, the author's rule of 26 October 2026; the toggle had stood at the left) */
 .mapwrap.narrow .mapnote { font-size: 11.5px; line-height: 1.3; max-width: 62%; }   /* a phone-width map: a smaller, wider note that ends above the scale bar (round 10) */
 .mapwrap:not(.narrow) .maplegend { max-width: min(calc(100% - 256px), 53%); }   /* the legend and the note never share the map's width (round 10) */
 .mapwrap.mix-on .maplegend { max-height: calc(100% - 74px - var(--lift)); }   /* with the mix box present the legend ends below its stub and scrolls inside (round 10) */
-.mapnote .nlabel { color: var(--context); align-self: center; }
+.mapnote .nlabel { color: var(--context); }
 .mixbox { position: absolute; left: 12px; top: 12px; z-index: 3; background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 10px 8px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; width: 340px; max-width: calc(100% - 24px); box-sizing: border-box; }   /* the revenue mix (round 9: the industry layer's live breakdown */
 .mixbox .mhead { display: flex; align-items: center; gap: 6px; }
 .mixbox .mhead b { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }
@@ -156,20 +165,30 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap.narrow .t-foot { font-size: 11px; }   /* a phone-width map: the tile leaves room beside it for the zoom box and the scale bar (round 9) */
 .tile .num { font-family: var(--font); font-size: 12px; font-variant-numeric: tabular-nums; }
 .t-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
-.t-foot .firms { flex: 1 0 100%; }   /* the firms in view on their own line under the coordinate and the scale (round 11, item 3) */
+.t-foot .firms { flex: 1 0 100%; }
+/* The profile box at the tile's foot (round 15, the author's item 9): a fixed height, so the tile never jumps as the cursor moves inside a region; 9C holds one sentence
+   on two lines, 9B the whole profile on eight; the region's or the window's name above it in tracked capitals. */
+.t-bio { margin-top: 6px; padding: 5px 7px; border: 1px solid var(--grid); box-sizing: border-box; }
+.t-bio-h { font-size: 10.5px; line-height: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-bio-t { font-size: 12px; line-height: 16px; height: 32px; overflow: hidden; }
+.mapwrap.narrow .t-bio { display: none; }   /* a map under 600 px wide has no profile box in its tile: the box made the tile too tall for the map and the phone's dock (round 15, the audit pass), and the profile shows in the UNDER THE CURSOR card */
+/* The PROFILE block in the UNDER THE CURSOR card (9C): the whole profile of the region, the city window or the listed firm under the cursor. */
+.profile { margin: 8px 0 4px; padding-top: 6px; border-top: 1px solid var(--grid); font-size: 12px; line-height: 1.4; }
+.profile .ph { color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; margin-bottom: 3px; }
+.profile p { margin: 0; }   /* the firms in view on their own line under the coordinate and the scale (round 11, item 3) */
 .mapwrap.cursor-live .t-foot { color: var(--context-live); }
 .tooltip .t-l1 { display: flex; justify-content: space-between; align-items: center; gap: 10px; }   /* the Cells view's first line with the listed count at its right end (round 14) */
 .tooltip .lc { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; color: var(--treated); font: 700 19px/1 var(--font); font-variant-numeric: tabular-nums; }
-.tooltip .lc .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--treated); }   /* the legend's solid red dot */
+.tooltip .lc .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--treated); }   /* the legend's solid red dot, 10 px since round 15 (the author's item 6; 14 px before) */
 .maplegend .lcn { color: var(--treated); font-weight: 700; }
-.lhead .btn.info.linfo { width: 26px; height: 24px; flex: 0 0 auto; font-size: 13px; }   /* the legend's reading side (round 14): the METHOD button's green "i", at the collapse toggle's size */
+.lhead .btn.info.linfo, .mhead .btn.info.linfo, .chead .btn.info.cinfo { width: 26px; height: 24px; flex: 0 0 auto; font-size: 13px; }   /* every i at the toggle's size, just left of it (round 15, the author's rule of 26 October 2026) */   /* the legend's reading side (round 14): the METHOD button's green "i", at the collapse toggle's size */
 .btn.info[aria-pressed="true"] { background: var(--context); color: var(--stage); border-color: var(--context); }
 .maplegend .lg-read { width: 0; min-width: 100%; }   /* the reading side wraps to the key side's width and never widens the box */
 .maplegend:not(.reading) .lg-read { display: none; }
 .maplegend.reading .lg-key { visibility: hidden; height: 0; overflow: hidden; }   /* hidden, the key side still sets the box's width */
 .maplegend .lg-read .row.p { margin: 4px 0; }
 .maplegend .row.h { padding-left: 0; text-indent: 0; margin-top: 6px; color: var(--muted); }   /* a group's header inside the key: the listed marks (round 14) */
-#tipbody { color: var(--go); }
+#tipbody { color: var(--tile-ink); }   /* the tile's text in its own ice (round 15, item 6; round 14 had the GO TO card's) */
 .find { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }   /* the search by name in the GO TO card (round 14): FIND on the input's row like VIEW, METHOD and YEAR, the field in the card's ice with square corners */
 .find .flabel { flex: 0 0 auto; }
 .fbox { position: relative; flex: 1 1 auto; min-width: 0; }
@@ -177,8 +196,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .fbox input::placeholder { color: var(--dim); opacity: 1; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the placeholder is interface text: the card's tracked capitals; typed names keep their case */
 @media (max-width: 399.98px) { .fbox input::placeholder { font-size: 12px; } }   /* a phone's input is too narrow for the placeholder at 13 px: the preset buttons' 12 px (the author's rule; it fits from a 379 px viewport) */
 @media (max-width: 378.98px) { .fbox input::placeholder { font-size: 11px; } }   /* narrower phones (375 and 360 px): 11 px, the page's smallest text, rather than a clipped placeholder */
+.fbox input { height: 28px; padding-top: 0; padding-bottom: 0; }   /* 28 px, the height of the i buttons and the year row's pulse button (round 15, item 5.3B; 33 px before) */
 .fbox input:focus, .linkfield:focus { outline: none; border-color: var(--go-live); }
-.flist { position: absolute; left: 0; right: 0; top: calc(100% - 3px); z-index: 8; background: var(--panel); border: 3px solid var(--go); max-height: 360px; overflow-y: auto; }
+.flist { position: absolute; left: 0; right: 0; top: calc(100% - 3px); z-index: 8; background: var(--tint-go, var(--panel)); border: 3px solid var(--go); max-height: 360px; overflow-y: auto; }
 .flist .fo { display: block; width: 100%; text-align: left; background: transparent; color: var(--ink); border: 0; border-radius: 0; padding: 5px 8px; font: 13px/1.3 var(--font); cursor: pointer; }
 .flist .fo + .fo { border-top: 1px solid var(--grid); }
 .flist .fo.on, .flist .fo:hover { background: var(--control); }
@@ -219,18 +239,27 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctx.narrow .ctxt.rm, .ctx.narrow .ctxt.rm > .lead { height: 48px; font-size: 13px; }   /* the reduced-motion form on a phone-width map: one item at a time over two lines of 13 px (36 characters a line) */
 .ctx.narrow.rm2 { height: 58px; }
 .ctx.narrow .ctxt.rm .t.tip { text-transform: none; letter-spacing: 0; font-weight: 400; }   /* a tip of up to 68 characters fits two lines in sentence case; in capitals it would need three */
-/* The capitals experiment (round 12, part D): every wire item and the lead in tracked capitals; the cat facts keep their colour and sentence form, the firm names stay as filed. */
+/* The wire's capitals (round 12, part D; round 15, the author's decision of 26 October 2026): every wire item and the lead in tracked capitals, firm names included at weight 400;
+   the cat facts keep their colour and sentence form; unit symbols keep their case through .u. */
 .ctxt.caps .wi:not(.cat), .ctxt.caps .t:not(.tip) { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.ctxt.caps .wi.firm .nm { text-transform: none; letter-spacing: 0; font-weight: 400; }
-.ctxt .track { position: absolute; left: 0; top: 0; height: 24px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--context); will-change: transform; transition: opacity 0.3s; }   /* scrolled by one linear Web Animations entry (round 11, item 6): a queue of cycles, continuous across context changes */
+.ctxt.caps .wi .nm { font-weight: 400; }
+.ctxt .track { position: absolute; left: 0; top: 0; height: 24px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--context); will-change: transform; transition: opacity 0.3s; font-family: "Tomorrow", "IBM Plex Mono", sans-serif; font-size: 13.5px; }   /* scrolled by one linear Web Animations entry (round 11, item 6): a queue of cycles, continuous across context changes; the track's items in Tomorrow at 13.5 px (round 15, the author's final choice of 26 October 2026), the line height 24 px as before */
+/* The wire's scanlines and glow (round 15, the author's final choice): each item cut by horizontal lines, a 2 px bar and a 1 px gap with a 1 px offset, sized in whole
+   device pixels by wireStripes() in the script; the glow on the window, which does not move, never animated. The lead slot, the region glyph, the separator marks
+   outside the track and the collapse button keep Plex Mono and no treatment. The light theme drops the glow; a request for more contrast or forced colours drops both. */
+.ctxt .track .wi { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
+.ctxt .trackwin { filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
+:root[data-theme="light"] .ctxt .trackwin { filter: none; }
+@media (prefers-contrast: more), (forced-colors: active) { .ctxt .trackwin { filter: none; } .ctxt .track .wi { -webkit-mask-image: none; mask-image: none; } }
 .ctxt .track.in { opacity: 0; transition: none; }
 .ctxt .track.old { pointer-events: none; }
 .ctxt .track.old.fade { opacity: 0; }
 .wi { display: inline-block; padding: 0 12px; }
 .wi .num { font-variant-numeric: tabular-nums; }
-.wi.tip, .wi.cat .pre { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.wi.cat .pre { color: var(--wire-pre); }   /* the cat prefix in the muted text tone through its own token (Part B item 7, 25 October 2026); the earlier rule named a token the neon-rests correction had removed */
-.wi.cat .cf { color: var(--ink); }
+.wi.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.wi.cat .cf { color: var(--ink); }   /* a cat fact in sentence case at weight 400 in the ink, after a cat's head in place of the mark (round 15, the author's item 7C) */
+.catin { width: 14px; height: 14px; color: var(--cat); vertical-align: -2px; margin-right: 8px; }
+.wsep.catsep { color: var(--cat); }   /* the cat's head (round 15; the author's picks of 27 October 2026): the second drawing, a filled head with eye holes, four long whiskers and a small nose, in the green at 85 percent over the panel, under the wire's own glow (the doubled glow of the second addendum declined) */
 .wsep { width: 14px; height: 14px; color: var(--context); flex: 0 0 auto; }   /* the separator mark at 14 px with 2 px strokes in the full context green (round 11) */
 .ctxt .t { grid-area: 1 / 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
 .ctxt .t.hid { opacity: 0; }
@@ -239,44 +268,94 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctxt .t.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the strip's tips in tracked capitals (round 10) */
 @media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } .slider .thumb path { transition: none !important; transform: none !important; } .yearrow .yr, .slider .thumb, .yearrow .pulse { transition: none !important; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
-.card { background: var(--panel); border-radius: 0; border: 3px solid var(--context); padding: 8px 10px; min-width: 0; }
+.card { background: var(--tint-read, var(--panel)); border-radius: 0; border: 3px solid var(--context); padding: 8px 10px; min-width: 0; }
 .card.act { border-color: var(--cursor); }
 /* The GO TO card (round 10, the author's item 21): travel neither acts on the data nor reads it, so the card and its buttons take the page's neutral, the ink,
    with the pressed city (the preset the camera sits at) in a solid ink fill and the hover in full white; every other panel keeps its role colour. */
-.card.go { border-color: var(--go); }   /* the GO TO card's neutral (item 21, amended 25 October): travel neither acts on the data nor reads it */
+.card.go { border-color: var(--go); position: relative; isolation: isolate; background-color: var(--tint-go, var(--panel)); }
+.card.act { background-color: var(--tint-act, var(--panel)); }   /* the LAYER card's tint on the light theme (round 15) */
+.cardgrat { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; overflow: hidden; }   /* the graticule behind the GO TO card's controls (round 15, item 14A revised): above the card's own background, below everything in it */
+.cardgrat path { fill: none; stroke: var(--graticule); stroke-width: 1; vector-effect: non-scaling-stroke; }   /* the GO TO card's neutral (item 21, amended 25 October): travel neither acts on the data nor reads it */
 .card.go .btn { border-color: var(--go); }
 .card.go .btn:hover { border-color: var(--go-live); }
 .card.go .btn[aria-pressed="true"] { background: var(--go); color: var(--stage); border-color: var(--go); }
+.card.go .btn.info { border-color: var(--context); } .card.go .btn.info:hover { border-color: var(--context-live); }   /* the GO TO card's i in the green of every i (round 15, the author's item 5.3) */
 .card.go .btn[aria-pressed="true"]:hover { background: var(--go-live); border-color: var(--go-live); }
 .card h2 { font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--context); margin: 0; font-weight: 500; }
 /* Collapse toggles on the six cards (the author's addition of 25 October, before step 5): the map overlays' square toggle at the right of the title row, in the neon green with the
    fuchsia focus corners; collapsed, a card shows its title row only; the state remembered per viewer; all open by default on every screen. */
 .chead { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .chead h2 { flex: 1 1 auto; min-width: 0; }
+.chead .ctoggle { margin-left: -2px; }   /* the i and the toggle 6 px apart, as in the legend's title row */
+/* The cards' reading blocks (round 15): under the title row, closed by default and remembered per viewer; the chart's or the panel's caption, how to read it and what the
+   chapter finds there, in the muted tone at 12 px. */
+.cread { color: var(--muted); font-size: 12px; line-height: 1.4; margin: 0 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--grid); }
+.cread p { margin: 0 0 6px; }
+.cread p:last-child { margin-bottom: 0; }
+.cread .h { color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; }
+.mixbox .mread { font-size: 12px; line-height: 1.4; color: var(--muted); }
+.mixbox .mread p { margin: 0 0 6px; }
 .ctoggle { color: var(--context); }
 .card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 25 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 /* The method block (round 10, the author's correction): under VIEW, a green i button toggles the block, collapsed by default and remembered; the block shows two lines
    under a fade with a More toggle (remembered too); the first section follows the view and the layer, the second holds the reading notes. */
-.methodrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.method { display: grid; gap: 6px; margin-top: 6px; margin-bottom: 8px; }
+.method { display: grid; gap: 6px; margin: 0 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--grid); }   /* under the LAYER card's title row since round 15, ruled off like the other cards' reading blocks */
 .method[hidden] { display: none; }   /* the hidden attribute must win over the grid display */
 [hidden] { display: none !important; }   /* as the published host's skeleton rules (round 10): a hidden element never shows through its own display rule, the pulse button in the Cells view included */
 /* The surface grain (round 10, the author's item 22): one 128 px fractal-noise tile (feTurbulence, two octaves, stitched, desaturated) as a second background layer on every
-   chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels on the dark theme, 2.5 percent of the range, and 4 on the light, 1.5 percent), composited normally; never on the map
+   chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels on the dark theme, 2.5 percent of the range, and 5 on the light since round 15, 2 percent; the header and footer bands with their own alphas), composited normally; never on the map
    canvas or in the video; the audit's guard measures the text contrast on a grained patch against the plain surface (within 0.05). The nograin class clears it for that measure. */
-.card, .maplegend, .tooltip, .mixbox, .ctx, .scalebar, .zoombox, .mapnote, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
-.nograin .card, .nograin .maplegend, .nograin .tooltip, .nograin .mixbox, .nograin .ctx, .nograin .scalebar, .nograin .zoombox, .nograin .mapnote, .nograin header, .nograin footer { background-image: none; }
+.card, .maplegend, .tooltip, .mixbox, .ctx, .scalebar, .zoombox, .mapnote, .popout, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
+header, footer { background-color: var(--band); background-image: var(--grain-band); }   /* the bands (round 15): the stage and the panel grain on the dark theme as before; a step under the sea, with the same tile sized to the band, on the light */
+/* The title bars (round 15, the author's revision of 26 October 2026, for every panel): the row with the title, the i and the toggle on a bar halfway from the stage to black
+   (#020307, the sRGB midpoint of #03060E and #000000) on the dark theme and a step under the panel on the light (#EFF2F5: the green title at 4.55:1). The bar spans the panel
+   inside its border, as its top layer: over the GO TO card's graticule, which runs on under it. A collapsed panel is its bar. */
+.card > .chead, .maplegend > .lhead, .mapnote > .nhead, .mixbox > .mhead, .popout > .pohead { background-color: var(--bar); background-image: var(--grain-bar); background-size: 128px 128px; background-repeat: repeat; }
+.card > .chead { margin: -8px -10px 0; padding: 8px 10px; }
+.card.collapsed > .chead { margin-bottom: -8px; }
+.maplegend > .lhead { margin: -8px -10px 0; padding: 6px 10px; }
+.maplegend > .lbody { margin-top: 6px; }
+.maplegend:has(> .lbody[hidden]) > .lhead { margin-bottom: -8px; }
+.mapnote > .nhead { margin: -6px -10px 0; padding: 6px 10px; }
+.mapnote > .lbody { margin-top: 6px; }
+.mapnote:has(> .lbody[hidden]) > .nhead { margin-bottom: -6px; }
+.mixbox > .mhead { margin: -6px -10px 0; padding: 6px 10px; }
+.mixbox > #mixbody { margin-top: 6px; }
+.mixbox.closed > .mhead { margin-bottom: -8px; }
+.popout > .pohead { margin: -8px -10px 0; padding: 8px 10px; }
+.nograin .card, .nograin .maplegend, .nograin .tooltip, .nograin .mixbox, .nograin .ctx, .nograin .scalebar, .nograin .zoombox, .nograin .mapnote, .nograin .popout, .nograin header, .nograin footer, .nograin .card > .chead, .nograin .maplegend > .lhead, .nograin .mapnote > .nhead, .nograin .mixbox > .mhead, .nograin .popout > .pohead { background-image: none; }
 
 .method .mtext p { margin: 0 0 6px; }
 .method .mtext h3 { font-size: 12px; margin: 6px 0 2px; color: var(--muted); }
 .method .mtext.clamped { max-height: calc(2 * 1.35 * 12px); overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%); mask-image: linear-gradient(to bottom, black 45%, transparent 100%); }
-.method .mtext.clamped h3, .method .mtext.clamped #methodread, .method .mtext.clamped #layerprov, .method .mtext.clamped #cellprov { display: none; }   /* the clamp shows the intro's first two lines */
+.method .mtext.clamped h3, .method .mtext.clamped #methodread, .method .mtext.clamped #layerprov { display: none; }   /* the clamp shows the intro's first two lines */
 .controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .controls .btn { font-size: 13px; }
-#modes { margin-bottom: 8px; }
-#modes .modelabel { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.yearrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+#modes { margin-bottom: 8px; display: grid; grid-template-columns: auto 1fr 1fr; align-items: center; gap: 6px 8px; }   /* the view as an equal pair after its label; its label and the layers' group names share one column (round 15, the author's choice of 27 October 2026: C, revised) */
+#layers { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: start; }   /* the layers in three groups, each name at the left of its buttons, the buttons one width, their labels at the left */
+#layers .btn { grid-column: 2; text-align: left; }
+#layers .glabel { grid-column: 1; padding-top: 7px; }   /* level with the first button's text */
+#layers .glabel:not(:first-child), #layers .glabel:not(:first-child) + .btn { margin-top: 4px; }   /* a little air between the groups */
+#modes .modelabel, #layers .glabel { width: calc(10ch + 0.8em); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* one width for VIEW and the three names, the width of STATEMENTS */
+#modes .modelabel { align-self: center; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.yearrow { margin-top: 8px; }
+.yearrow .yline { display: flex; align-items: center; gap: 10px; }
+/* The year row's second line (round 15): the blink comparator at the left (item 7A), and at the right the label that says what the red button shows, the year and the
+   number of firms listed in it, with the button (item 4B). It wraps on a narrow card. */
+.yearrow .yline2 { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px 8px; margin-top: 8px; }   /* the red button, its counter and BLINK on one line (the author's request of 27 October 2026) */
+.yearrow .yline2[hidden] { display: none; }
+.yearrow .plabel { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 12px; line-height: 1.3; color: var(--muted); }   /* the counter beside its button, on two lines where the line is short */
+.yearrow #blink { margin-left: auto; }
+.yearrow .yline2:has(#pulse[hidden]) #blink { margin-left: 0; }   /* alone, BLINK keeps to the left */
+.yearrow .plabel.zero { opacity: 0.55; }   /* no firm added that year: the counter and its sentence dim beside the disabled red button (0.4); text tied to a disabled control */
+.yearrow .plabel b { color: var(--treated); font-weight: 700; }   /* the count in the listed red, as the tile's and the legend's counts */
+.yearrow .ybtn { font-size: 12px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.yearrow .yrun { width: 28px; padding: 0; justify-content: center; }
+.yearrow .yrun svg { width: 12px; height: 12px; display: block; }
+.yearrow .yrun .pause, .yearrow .yrun[aria-pressed="true"] .play { display: none; }
+.yearrow .yrun[aria-pressed="true"] .pause { display: inline; }
+@media (pointer: coarse) { .yearrow .ybtn { height: 36px; } .yearrow .yrun { width: 36px; } }
 /* The year row (round 10, the author's corrections of 25 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Plex Mono 700 in tracked capitals on one
    baseline, the value in tabular figures and unstriped (under the display floor); the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
    neon green, drawn whole as every symbol is; while a pulse runs the value and the thumb step up to the live green and settle back over 0.3 s; the track and its fill stay fuchsia;
@@ -315,17 +394,18 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 /* The minimap (round 10, the author's item 12, in the GO TO card's ice-blue neutral of item 21): the outline and the graticule from the basemap, the 22 preset cities as dots
    with leaders to label boxes in tracked capitals, the mark's four brackets as the Russia frame; shown above 900 px, where the button list keeps only Central Moscow; the
    phone keeps the buttons. Hover and focus take the full white; the city the camera sits at reads as pressed (its box filled). The leaders draw on once at load (0.6 s). */
-.minimap { display: block; width: 100%; height: auto; overflow: visible; margin: 2px 0 8px; color: var(--go); }
+.minimap { display: block; width: 100%; height: auto; overflow: visible; margin: 10px 0; color: var(--go); }   /* 10 px above and below since round 15 (item 5.3B): the trimmed drawing sits centred between the search field and the buttons */
 .minimap .land { fill: var(--land); stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .minimap .grat { fill: none; stroke: var(--graticule); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .minimap .frame { cursor: pointer; outline: none; }
-.minimap .frame path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.minimap .frame path { fill: none; stroke: var(--context); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }   /* the four corner marks in the neon green at every view (round 15, the author's general point 4; they had taken the card's ice except while the RUSSIA view was active) */
+.minimap .frame:hover path, .minimap .frame:focus-visible path { stroke: var(--context-live); }
 .minimap .city { cursor: pointer; outline: none; }
 .minimap .city .dot { fill: currentColor; }
 .minimap .city .ld { fill: none; stroke: var(--go-leader); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 0; }   /* the leaders in the paler ice; the dots and box strokes in the card's blue */
 .minimap.drawn .city .ld { animation: mmdraw 0.6s ease-out backwards; }
 @keyframes mmdraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.minimap .box { fill: var(--panel); stroke: currentColor; stroke-width: 1; }
+.minimap .box { fill: var(--tint-go, var(--panel)); stroke: currentColor; stroke-width: 1; }
 .minimap text { fill: var(--ink); font-family: var(--font); font-size: 9px; font-weight: 500; letter-spacing: 0.08em; dominant-baseline: central; }
 .minimap .city:hover, .minimap .city:focus-visible, .minimap .frame:hover, .minimap .frame:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
 .minimap .city:hover .ld, .minimap .city:focus-visible .ld { stroke: var(--context-live); }
@@ -344,6 +424,17 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .card.go .btn.russia[aria-pressed="true"]:hover { background: var(--context-live); border-color: var(--context-live); color: var(--stage); }
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
+@media (min-width: 901px) { canvas.chart.pop { height: 124px; cursor: zoom-in; } canvas.chart.pop.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 15 (the author's item 5.4): compact in the column, a click enlarges the chart over the map */
+/* The pop-out (round 15): the chart enlarged over the map beside its card, joined to the card by a short line across the gap; a click on it, on its card's chart or
+   Escape puts it back. No dragging. */
+.popout { position: absolute; right: 12px; z-index: 7; box-sizing: border-box; background-color: color-mix(in srgb, var(--panel) 95%, transparent); border: 3px solid color-mix(in srgb, var(--context) 28%, var(--panel)); padding: 8px 10px 6px; cursor: zoom-out; opacity: 1; transition: opacity 0.15s; }   /* the panel at 95 percent, the map faint through it (the author's pick of 27 October 2026, after 80 and 90; opaque before); at rest the border the green at 28 percent over the panel (40 before), the card's green under the pointer */
+.popout:hover { border-color: var(--context); }
+.popout.in { opacity: 0; transition: none; }
+.popout .pohead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.popout .potitle { color: var(--context); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+.popout .pohint { color: var(--dim); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; white-space: nowrap; }
+.mapwrap .popout canvas { position: static; inset: auto; display: block; width: 100%; margin-top: 6px; }   /* in the panel's flow, not stretched over the map as the map's own canvases are */
+@media (prefers-reduced-motion: reduce) { .popout { transition: none; } }
 .muted { color: var(--muted); }
 /* The Under the cursor panel (the author's correction of 25 October): one label per row in tracked capitals, the value at the left and wrapping inside the card; the
    leading division as a swatch, its short name, the code and the share with the class beneath; the ranked mix as swatch rows; each listed firm as a name line with
@@ -373,11 +464,17 @@ footer .byfoot code { font-family: var(--font); color: var(--ink); user-select: 
 footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
+footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the LIGHT THEME button's style beside the email copy */
+.agenttoast { position: fixed; z-index: 30; padding: 6px 12px; background: color-mix(in srgb, var(--panel) 90%, transparent); border: 2px solid var(--context); color: var(--context); font-family: var(--font); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; white-space: nowrap; pointer-events: none; opacity: 1; transition: opacity 0.2s; }   /* the short notice: a semi-transparent box over the page */
+.agenttoast.out { opacity: 0; }
+.agentbox { position: fixed; z-index: 30; box-sizing: border-box; width: min(560px, calc(100vw - 24px)); height: min(320px, calc(100vh - 24px)); padding: 8px; background: var(--panel); border: 3px solid var(--context); }   /* where the clipboard is refused: the guide in a read-only field, selected, at the button */
+.agentbox textarea { box-sizing: border-box; width: 100%; height: 100%; resize: none; background: var(--stage); color: var(--ink); border: 1px solid var(--grid); font-family: var(--font); font-size: 11px; line-height: 1.45; padding: 6px; }
+@media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol><symbol id="mark-wire" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol><symbol id="mark-wire" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol><symbol id="mark-cat" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5 12.5V3.2l4.8 4h4.4l4.8-4v9.3a7 7 0 0 1-14 0ZM9.6 12.6a1.3 1.3 0 1 0 0.01 0ZM14.4 12.6a1.3 1.3 0 1 0 0.01 0Z"/><path d="M5 15.4 0.2 14.6M5.4 17.6 0.8 19M19 15.4l4.8-.8M18.6 17.6l4.6 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M11 15.6h2l-1 1.1Z" style="fill: var(--panel)"/></symbol></defs></svg>
 <header id="hdr">
   <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
   <div class="lockup" id="lockup"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></div>
@@ -390,8 +487,8 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
     <canvas id="marks" aria-hidden="true"></canvas>
     <canvas id="overlay"></canvas>
     <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="btn info linfo" id="legendinfo" type="button" aria-pressed="false" aria-controls="legendbody" aria-label="Show how to read the legend" title="Show how to read the legend" hidden>i</button><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend"></button></div><div class="lbody" id="legendbody"></div></div>
-    <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix"></button></div><div id="mixbody"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div>
-    <div class="mapnote" id="mapnote"><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note"></button><span class="nlabel ui" id="notelabel" hidden>Note</span><span class="lbody" id="notebody"></span></div>
+    <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="btn info linfo" id="mixinfo" type="button" aria-pressed="false" aria-controls="mixread" aria-label="Show how to read the revenue mix" title="SHOW HOW TO READ THE REVENUE MIX">i</button><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix"></button></div><div id="mixbody"><div class="mread" id="mixread" hidden></div><div class="mkey" id="mixkey"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div></div>
+    <div class="mapnote" id="mapnote"><div class="nhead"><span class="nlabel ui" id="notelabel">Note</span><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note"></button></div><div class="lbody" id="notebody"></div></div>
     <div class="scalebar" id="scalebar" aria-hidden="true"><svg class="ruler" id="ruler" width="204" height="34" viewBox="0 0 204 34"></svg></div>
     <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
       <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="ZOOM IN (+)">+</button>
@@ -399,61 +496,68 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
       <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="FIT THE WHOLE COUNTRY (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="zf" id="zoomfactor" aria-hidden="true">×1.0</span></button>
     </div>
     <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><svg class="mk wsep lsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg><div class="trackwin" id="ctxwin"><div class="track" id="wiretrack"></div></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line"></button></div>
-    <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div></div>
+    <div class="popout" id="popout" hidden role="dialog" aria-modal="false" aria-labelledby="potitle"><div class="pohead"><span class="potitle" id="potitle"></span><span class="pohint">Click to put back</span></div><canvas id="pochart" aria-hidden="true"></canvas></div>
+    <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div><div class="t-bio" id="tipbio" hidden><div class="t-bio-h" id="tipbioh"></div><div class="t-bio-t" id="tipbiot"></div></div></div>
   </div>
   <aside class="side">
     <section class="card act" id="card-layer">
-      <div class="chead" id="ch-layer"><h2 id="h2-layer">Layer</h2><button class="toggle ctoggle" id="ct-layer" type="button" aria-expanded="true" aria-controls="cb-layer" aria-label="Collapse the card"></button></div>
+      <div class="chead" id="ch-layer"><h2 id="h2-layer">Layer</h2><button class="btn info cinfo" id="methodbtn" type="button" aria-expanded="false" aria-controls="method" aria-label="Show the method" title="METHOD">i</button><button class="toggle ctoggle" id="ct-layer" type="button" aria-expanded="true" aria-controls="cb-layer" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-layer">
+      <div class="method" id="method" hidden><div class="mtext clamped" id="methodtext"><p class="prov" id="methodintro"></p><p class="prov" id="layerprov"></p><h3 class="ui">Reading the atlas</h3><p class="prov" id="methodread"></p></div><button class="btn more" id="methodmore" type="button" aria-expanded="false">More</button></div>
       <div class="controls" id="modes"></div>
-      <div class="methodrow"><span class="ui">Method</span><button class="btn info" id="methodbtn" type="button" aria-expanded="false" aria-controls="method" aria-label="Show the method" title="METHOD">i</button></div>
-      <div class="method" id="method" hidden><div class="mtext clamped" id="methodtext"><p class="prov" id="methodintro"></p><p class="prov" id="layerprov"></p><p class="prov" id="cellprov">Cell series in the Under the cursor card: located eligible firms with an original statement, by financial year (M5 pass over the foundation registry and payload; cells with 50 or more firms).</p><h3 class="ui">Reading the atlas</h3><p class="prov" id="methodread"></p></div><button class="btn more" id="methodmore" type="button" aria-expanded="false">More</button></div>
       <div class="controls" id="layers"></div>
-      <div class="yearrow" id="yearrow"><span class="ui" id="yearui">Year</span><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms listed in 2021" title="Replay the bloom of the firms listed in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button></div>
+      <div class="yearrow" id="yearrow">
+      <div class="yline"><span class="ui" id="yearui">Year</span><button class="btn ybtn yrun" id="yearrun" type="button" aria-pressed="false" aria-label="Run the years from 2014 to 2025" title="RUN THE YEARS FROM 2014 TO 2025, ONE A SECOND" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="play" d="M4 2.5v11l9-5.5z" fill="currentColor"/><path class="pause" d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span></div>
+      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms added to a list in 2021" title="Replay the bloom of the firms added to a list in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span><button class="btn ybtn" id="blink" type="button" aria-pressed="false" hidden>Blink <span class="by">2021</span></button></div>
+      </div>
       </div>
     </section>
-    <section class="card go" id="card-goto">
-      <div class="chead" id="ch-goto"><h2 id="h2-goto">Go to</h2><button class="toggle ctoggle" id="ct-goto" type="button" aria-expanded="true" aria-controls="cb-goto" aria-label="Collapse the card"></button></div>
+    <section class="card go" id="card-goto"><svg class="cardgrat" id="gotograt" aria-hidden="true" focusable="false"></svg>
+      <div class="chead" id="ch-goto"><h2 id="h2-goto">Go to</h2><button class="btn info cinfo" id="ci-goto" type="button" aria-expanded="false" aria-controls="cr-goto" aria-label="How to move the map" title="HOW TO MOVE THE MAP">i</button><button class="toggle ctoggle" id="ct-goto" type="button" aria-expanded="true" aria-controls="cb-goto" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-goto">
+      <div class="cread" id="cr-goto" hidden></div>
       <div class="find" id="find"><label class="ui flabel" for="findinput" id="findlabel">Find</label><div class="fbox"><input id="findinput" type="text" inputmode="search" enterkeyhint="go" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="List members, Latin | кириллица" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="findlist"><div class="flist" id="findlist" role="listbox" aria-labelledby="findlabel" hidden></div></div></div>
       <svg class="minimap" id="minimap" viewBox="0 0 376 232" role="group" aria-label="Minimap of the preset cities"></svg>
       <div class="presets" id="presets"></div>
-      <div class="linkrow"><button class="btn" id="copylink" type="button" title="Copy a link to this view: the view, the layer, the year and the camera"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.5 9.5l3-3M7.2 4.6l1.1-1.1a2.6 2.6 0 0 1 3.7 3.7l-1.1 1.1M8.8 11.4l-1.1 1.1a2.6 2.6 0 0 1-3.7-3.7l1.1-1.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Link to this view</button><span class="lstatus" id="linkstatus" aria-live="polite"></span></div>
-      <input class="linkfield" id="linkfield" type="text" readonly hidden aria-label="The link to this view">
-      <div class="prov">Scroll or the + and − buttons zoom, drag pans, a click on a cell zooms to it (Shift+click zooms out). On a touch screen: drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom. Region geometry: geoBoundaries gbOpen (CC BY 4.0), OpenStreetMap/Wambacher 2017 (ODbL).</div>
+      <div class="linkrow"><button class="btn" id="copylink" type="button" title="Copy a link to the current view: the view, the layer, the year and the camera"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.5 9.5l3-3M7.2 4.6l1.1-1.1a2.6 2.6 0 0 1 3.7 3.7l-1.1 1.1M8.8 11.4l-1.1 1.1a2.6 2.6 0 0 1-3.7-3.7l1.1-1.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Link to current view</button><span class="lstatus" id="linkstatus" aria-live="polite"></span></div>
+      <input class="linkfield" id="linkfield" type="text" readonly hidden aria-label="The link to the current view">
       </div>
     </section>
     <section class="card" id="card-cursor">
-      <div class="chead" id="ch-cursor"><h2 id="h2-cursor">Under the cursor</h2><button class="toggle ctoggle" id="ct-cursor" type="button" aria-expanded="true" aria-controls="cb-cursor" aria-label="Collapse the card"></button></div>
+      <div class="chead" id="ch-cursor"><h2 id="h2-cursor">Under the cursor</h2><button class="btn info cinfo" id="ci-cursor" type="button" aria-expanded="false" aria-controls="cr-cursor" aria-label="How to read this card" title="HOW TO READ THIS CARD">i</button><button class="toggle ctoggle" id="ct-cursor" type="button" aria-expanded="true" aria-controls="cb-cursor" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-cursor">
+      <div class="cread" id="cr-cursor" hidden></div>
       <div class="kv" id="cellinfo"><span class="muted">Hover a cell</span><b></b></div>
       <canvas class="chart" id="cellchart" aria-label="Share with a statement in the hovered cell, by year"></canvas>
-      </div>
-    </section>
-    <section class="card" id="card-national">
-      <div class="chead" id="ch-national"><h2 id="h2-national">National availability by year</h2><button class="toggle ctoggle" id="ct-national" type="button" aria-expanded="true" aria-controls="cb-national" aria-label="Collapse the card"></button></div>
-      <div class="cbody" id="cb-national">
-      <canvas class="chart" id="natchart" aria-label="Share of firms with a statement by year"></canvas>
-      <div class="prov" id="natprov"></div>
-      </div>
-    </section>
-    <section class="card" id="card-groups">
-      <div class="chead" id="ch-groups"><h2 id="h2-groups">Groups, 2021 to 2024</h2><button class="toggle ctoggle" id="ct-groups" type="button" aria-expanded="true" aria-controls="cb-groups" aria-label="Collapse the card"></button></div>
-      <div class="cbody" id="cb-groups">
-      <canvas class="chart" id="groupchart" aria-label="Share with a statement by ownership and legal form, 2021 and 2024"></canvas>
-      <div class="prov" id="groupprov"></div>
+      <div class="profile" id="cellprofile" hidden></div>
       </div>
     </section>
     <section class="card" id="card-odds">
-      <div class="chead" id="ch-odds"><h2 id="h2-odds">Odds against the comparison group</h2><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card"></button></div>
+      <div class="chead" id="ch-odds"><h2 id="h2-odds">Adjusted odds ratios for statement availability</h2><button class="btn info cinfo" id="ci-odds" type="button" aria-expanded="false" aria-controls="cr-odds" aria-label="How to read this chart" title="HOW TO READ THIS CHART">i</button><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-odds">
-      <canvas class="chart" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles and the sanctions list (treated)"></canvas>
-      <div class="prov" id="oddsprov"></div>
+      <div class="cread" id="cr-odds" hidden></div>
+      <canvas class="chart pop" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles Q5 and Q2 against Q1, and sanctioned-only firms against firms on no list"></canvas>
+      </div>
+    </section>
+    <section class="card" id="card-national">
+      <div class="chead" id="ch-national"><h2 id="h2-national">National availability by year</h2><button class="btn info cinfo" id="ci-national" type="button" aria-expanded="false" aria-controls="cr-national" aria-label="How to read this chart" title="HOW TO READ THIS CHART">i</button><button class="toggle ctoggle" id="ct-national" type="button" aria-expanded="true" aria-controls="cb-national" aria-label="Collapse the card"></button></div>
+      <div class="cbody" id="cb-national">
+      <div class="cread" id="cr-national" hidden></div>
+      <canvas class="chart pop" id="natchart" aria-label="Share of firms with a statement by year"></canvas>
+      </div>
+    </section>
+    <section class="card" id="card-groups">
+      <div class="chead" id="ch-groups"><h2 id="h2-groups">Groups, 2021 to 2024</h2><button class="btn info cinfo" id="ci-groups" type="button" aria-expanded="false" aria-controls="cr-groups" aria-label="How to read this chart" title="HOW TO READ THIS CHART">i</button><button class="toggle ctoggle" id="ct-groups" type="button" aria-expanded="true" aria-controls="cb-groups" aria-label="Collapse the card"></button></div>
+      <div class="cbody" id="cb-groups">
+      <div class="cread" id="cr-groups" hidden></div>
+      <canvas class="chart pop" id="groupchart" aria-label="Share with a statement by ownership and legal form, 2021 and 2024"></canvas>
       </div>
     </section>
   </aside>
 </main>
 <footer id="footer"></footer>
+<div class="agenttoast" id="agenttoast" role="status" aria-live="polite" hidden>&gt;text copied</div>
+<div class="agentbox" id="agentbox" hidden><textarea id="agenttext" readonly aria-label="The guide to this atlas for your AI agent, selected to copy"></textarea></div>
 <script src="data/basemap.js"></script>
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
@@ -464,12 +568,14 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
 <script src="data/regions.js" onerror="this.remove()"></script>
 <script src="data/offwire.js" onerror="this.remove()"></script>   <!-- the wire's cat facts (round 10, item 15) -->
 <script src="data/treatednational.js" onerror="this.remove()"></script>
+<script src="data/profiles.js" onerror="this.remove()"></script>   <!-- the profiles' counts and medians (round 15, item 9, M12) -->
 <script src="data/anchors.js" onerror="this.remove()"></script>   <!-- the two firms of the film (round 12, part D, item 5) -->
 <script src="data/firms.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/pixel-field.js"></script>
+<script src="js/agent-guide.js"></script>   <!-- the guide the footer's TEACH YOUR AGENT copies, built by tools/agent_guide.py (round 15) -->
 <script src="js/explorer-app.js"></script>
 </body>
 </html>
