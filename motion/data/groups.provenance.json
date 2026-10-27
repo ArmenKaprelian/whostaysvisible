@@ -1,0 +1,235 @@
+{
+  "id": "groups",
+  "run_id": "20261027T082556Z-run-M13-groups.R",
+  "mode": "guarded",
+  "time_utc": "2026-10-27T08:25:59Z",
+  "script": {
+    "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M13-groups.R",
+    "sha256": "ba1e7a3c82686bc69ba59ba220c67630130cfe0bc2879e18a8863ee18f8c4eba"
+  },
+  "lab_commit": "3ae3c4f366e2e85f320f36992543f719222d433e",
+  "programming": {
+    "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+    "dirty_files": 20,
+    "pinned_utc": "2026-10-18T19:22:42Z"
+  },
+  "sources": [
+    {
+      "name": "motion.classifier-crosswalk",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/metadata/chapter2-addendum-classifier-crosswalk.csv",
+      "kind": "csv",
+      "generation": null,
+      "size": 77788,
+      "mtime": 1791741703,
+      "sha256": "95bd7c10dc29e5f9155bca3aee902116c123df9ea5944f01cb9c139b91ea6b98",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "registry.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2021/generation-10b9d5d363d92/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d5d363d92",
+      "size": 134403043,
+      "mtime": 1791233185,
+      "sha256": "048f43d8391caf3f87bdcee98e801c58f2fca66675c7c4c0a6362d9ca9fb58e1",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2021",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2021/generation-10b9dba7faf9/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9dba7faf9",
+      "size": 111292791,
+      "mtime": 1791231921,
+      "sha256": "57e337a63d63f00011fb0a77fe20879aa3260b23afb897ce6311c09b42fb3127",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "registry.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/registry/year=2024/generation-10b9d1db9b6af/registry.parquet",
+      "kind": "parquet",
+      "generation": "10b9d1db9b6af",
+      "size": 122521400,
+      "mtime": 1791232284,
+      "sha256": "5969b72b6002f9c425af462033a2c4ef4d6a27289e84f19fc9e0512e0b65b2eb",
+      "sha256_source": "stage-manifest"
+    },
+    {
+      "name": "payload.2024",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/data/derived/task4-foundation-lightning-20261005/foundation/source/year=2024/generation-10b9d48c4d841/raw-payload.parquet",
+      "kind": "parquet",
+      "generation": "10b9d48c4d841",
+      "size": 108317556,
+      "mtime": 1791231503,
+      "sha256": "ef7e745004b05b4caa35e252fe428530a7592513ca555102c89d97920ddc40ae",
+      "sha256_source": "stage-manifest"
+    }
+  ],
+  "sql": null,
+  "rows": 4749,
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "packages": [
+    {
+      "package": "cli",
+      "version": "3.6.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "DBI",
+      "version": "1.3.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "dplyr",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "duckdb",
+      "version": "1.5.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/renv/cache/v5/linux-ubuntu-resolute/R-4.5/x86_64-pc-linux-gnu/duckdb/1.5.6/89d71b0031df94e8f7dc926346a78ada"
+    },
+    {
+      "package": "farver",
+      "version": "2.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "generics",
+      "version": "0.1.4",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "ggplot2",
+      "version": "4.0.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ggrepel",
+      "version": "0.9.8",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "glue",
+      "version": "1.8.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "gtable",
+      "version": "0.3.6",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "jsonlite",
+      "version": "2.0.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "lifecycle",
+      "version": "1.0.5",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "magrittr",
+      "version": "2.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "otel",
+      "version": "0.2.0",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "patchwork",
+      "version": "1.3.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "pillar",
+      "version": "1.11.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "pkgconfig",
+      "version": "2.0.3",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "R6",
+      "version": "2.6.1",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "ragg",
+      "version": "1.5.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "RColorBrewer",
+      "version": "1.1.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "Rcpp",
+      "version": "1.1.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "rlang",
+      "version": "1.3.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "S7",
+      "version": "0.2.2",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "scales",
+      "version": "1.4.0",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    },
+    {
+      "package": "systemfonts",
+      "version": "1.3.2",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "textshaping",
+      "version": "1.0.5",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tibble",
+      "version": "3.3.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "tidyselect",
+      "version": "1.2.1",
+      "library": "/home/armen/R/x86_64-pc-linux-gnu-library/4.5"
+    },
+    {
+      "package": "vctrs",
+      "version": "0.7.3",
+      "library": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/lib"
+    }
+  ],
+  "duckdb": {
+    "LAB_DUCKDB_MEMORY_LIMIT": "4GB",
+    "LAB_DUCKDB_THREADS": "4",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-m3QY4rjA/duckdb",
+    "LAB_DUCKDB_MAX_TEMP": "5GB",
+    "duckdb_version": "1.5.6"
+  },
+  "memory_max": "8G",
+  "extra": [],
+  "output": {
+    "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/groups.json",
+    "json_sha256": "0b8e679550011920572f8930d1364594bc4694c2ac274231a332c0c45f6d3e61",
+    "json_bytes": 192959,
+    "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/groups.js",
+    "js_sha256": "52ce1a95953679a42ab632eb3c2009a22b3f870cd61f2374c987d0047c1b21f1",
+    "names": ["years", "support", "cell_km", "focus", "labels", "regions", "cells100", "support_counts", "basis", "notes", "legal", "ownership", "dimension", "group", "label", "region", "year", "n", "a", "ix", "iy", "regions_clear_both", "cells_with_firms", "cells_clear_both", "firms_2024_in_clear_cells", "firms_2024"]
+  }
+}
