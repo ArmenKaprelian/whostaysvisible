@@ -5,7 +5,7 @@ Each shot is one JSON object on the command line or in a --shots file: {"name", 
 "pulse" (ms into the pulse, frozen through __atlas.pulseAt; without it any automatic pulse a year step started is ended, so the frame is at rest), "hover" ("red": the nearest red listed mark to the
 preset's city in the shown year; "rim": the nearest rimmed one; "city": the preset city's own point; [x, y]: km), "focus" (an element id to show with its
 focus-visible ring), "hoverpseudo" (an element id held in its :hover state through CSS.forcePseudoState; round 10), "jump" ([k] or [cx, cy, km-space k]: an instant camera jump after the preset, the centre kept when only k is given; round 10, the F13 checkpoint), "legend" (true: the legend opened), "tip" (true: the strip shows its first tip; round 10), "js" (a statement run after the setup, such as scrolling the side column), "tap" ([px, py] in CSS px: a touch tap through __atlas.tapAt), "live" (true: hold the cursor layer's moving state through __atlas.live), "swatches" (true: a strip of the page's colour tokens along the bottom), "theme" ("dark" | "light"),
-"dpr", "crop" ([x, y, w, h] in CSS px, scaled by --zoom; or a CSS selector, round 16), "opt" (round 16: the page's ?opt= variants for this shot, as "8Gb,wsA"), "block" (round 16: URL patterns the browser fails at load, as ["*data/insights.js*"], for a frame of the page without a file)}. Nothing on the page is changed beyond the shot's own state.
+"dpr", "crop" ([x, y, w, h] in CSS px, scaled by --zoom; or a CSS selector, round 16), "opt" (round 16: the page's ?opt= variants for this shot, as "8Gb,wsA"), "block" (round 16: URL patterns the browser fails at load, as ["*data/insights.js*"], for a frame of the page without a file), "settle" (round 17: seconds to wait before the capture, 0.25 by default), "wire" (round 17: a scroll offset in px: after 0.8 s for a year's crossfade the wire pauses through its own pointer rule and scrolls to it, so the frame is reproducible)}. Nothing on the page is changed beyond the shot's own state.
 
 Usage: python3 -I motion/tools/atlas-frames.py --url http://127.0.0.1:8765/explorer.html --out DIR [--width 1600 --height 1000]
        [--zoom 3] --shots shots.json | --shot '{...}' ...
@@ -62,6 +62,7 @@ def main():
                 cdp.call("Page.navigate", {"url": a.url + ("&" if "?" in a.url else "?") + "v=frames" + str(int(time.time())) + ("&opt=" + opt if opt else "")}); cdp.wait_event("Page.loadEventFired", timeout=60)
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme, opt, block)
             js = """(async () => { const A = window.__atlas; A.pulseAt(null); A.mode(%s); if (%s) A.layer(%s); A.preset(%s); A.year(%d); await A.ready(); { const J = %s; if (Array.isArray(J)) { const c0 = A.camera(); await A.jump(J.length >= 3 ? { cx: J[0], cy: J[1], k: J[2] } : { cx: c0.cx, cy: c0.cy, k: J[0] }); } } if (%s == null) A.pulseAt(null); A.redraw(); if (%s) A.legend(true); if (%s) { A.tip('reset'); A.tip(true); } %s
+              { const WX = %s; if (WX != null) { await new Promise(q => setTimeout(q, 800)); document.getElementById('ctxstrip').dispatchEvent(new MouseEvent('mouseenter')); A.wireSeek(WX); } }   // round 17: the wire paused at a fixed offset (its pointer rule pauses it under the pointer)
               let hit = null; const H = %s;
               if (H === 'red' || H === 'rim') { const T = MOTION_DATA.treatednational, m = A.cities[%s] || A.camera() && [A.camera().cx, A.camera().cy], yi = %d - 2014; let b = -1, bd = Infinity;
                 for (let i = 0; i < T.n; i++) { const ok = H === 'red' ? (T.red_from[i] <= %d && T.filed[i][yi] !== '-') : (T.red_from[i] > %d && T.filed[i][yi] !== '-'); if (!ok) continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; b = i; } }
@@ -73,7 +74,7 @@ def main():
               if (%s != null) A.pulseAt(%s);
               if (%s && A.live) A.live(true);
               return { kind: hit && hit.kind, pulsing: A.pulsing() }; })()""" % (
-                json.dumps(sh.get("mode", "firms")), "true" if sh.get("layer") else "false", json.dumps(sh.get("layer", "share")), json.dumps(sh.get("preset", "Russia")), sh.get("year", 2021), json.dumps(sh.get("jump")), json.dumps(sh.get("pulse")), "true" if sh.get("legend") else "false", "true" if sh.get("tip") else "false", sh.get("js", ""),
+                json.dumps(sh.get("mode", "firms")), "true" if sh.get("layer") else "false", json.dumps(sh.get("layer", "share")), json.dumps(sh.get("preset", "Russia")), sh.get("year", 2021), json.dumps(sh.get("jump")), json.dumps(sh.get("pulse")), "true" if sh.get("legend") else "false", "true" if sh.get("tip") else "false", sh.get("js", ""), json.dumps(sh.get("wire")),
                 json.dumps(sh.get("hover")), json.dumps(sh.get("city", sh.get("preset", "Moscow").split(" (")[0])), sh.get("year", 2021), sh.get("year", 2021), sh.get("year", 2021),
                 json.dumps(sh.get("city", sh.get("preset", "Moscow").split(" (")[0])), json.dumps(sh.get("tap")), json.dumps(sh.get("pulse")), json.dumps(sh.get("pulse")), "true" if sh.get("live") else "false")
             r = cdp.evaluate(js, await_promise=True, timeout=120)
@@ -86,7 +87,7 @@ def main():
                 hid = cdp.call("DOM.querySelector", {"nodeId": node, "selector": "#" + sh["hoverpseudo"]})["nodeId"]
                 cdp.call("CSS.forcePseudoState", {"nodeId": hid, "forcedPseudoClasses": ["hover"]}); time.sleep(0.2)
             if sh.get("swatches"): cdp.evaluate(SWATCH_JS % json.dumps(sh.get("tokens", TOKENS)), await_promise=False)   # "tokens": a list of token names for the strip (round 10)
-            time.sleep(0.25)
+            time.sleep(sh.get("settle", 0.25))   # round 17: "settle" (seconds) lets transitions the shot set off (the strip's 0.3 to 0.4 s, the cursor's 0.2 s still timer) finish, so a frame is reproducible
             png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png"})["data"])
             path = os.path.join(a.out, sh["name"] + ".png"); open(path, "wb").write(png)
             if sh.get("crop"):

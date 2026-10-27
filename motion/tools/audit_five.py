@@ -66,7 +66,7 @@ def run_widths(widths, a, rundir, tag, jobs, floors):
             ma, sf = meminfo()
             if ma >= floors[0] and sf >= floors[1]:
                 w = queue.pop(0); out = os.path.join(rundir, 'w%d%s.txt' % (w, tag)); log = os.path.join(rundir, 'w%d%s.log' % (w, tag))
-                cmd = [sys.executable, '-I', os.path.join(HERE, 'atlas-audit.py'), '--url', a.url, '--widths', str(w), '--out', out, '--skip-once'] + (['--height', str(a.height)] if a.height else [])
+                cmd = [sys.executable, '-I', os.path.join(HERE, 'atlas-audit.py'), '--url', a.url, '--widths', str(w), '--out', out, '--skip-once'] + (['--height', str(a.height)] if a.height else []) + (['--refs-once'] if w == 1600 else [])   # round 17: the REFERENCES panel's once-per-audit checks run at 1,600 px (with --skip-once on every width they had never run at a gate)
                 fh = open(log, 'w'); running.append({'w': w, 'p': subprocess.Popen(cmd, stdout=fh, stderr=subprocess.STDOUT, cwd=MOTION), 'fh': fh, 'out': out, 'log': log, 'start': time.time()})
                 say('  width %4d%s started, %d running (MemAvailable %d MiB, SwapFree %d MiB)' % (w, tag, len(running), ma, sf)); waiting = None
                 time.sleep(8)   # the next check sees this browser's memory

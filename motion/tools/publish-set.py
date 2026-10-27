@@ -60,7 +60,8 @@ TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
 FONT_LICENCE = {"DejaVuSansMono.ttf": "DejaVuSansMono-LICENSE.txt"}   # a font file and the licence that ships beside it (round 16)
 LINKS = {"https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n", "https://x.com/ArmenKaprelian", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
          "https://doi.org/10.1038/s41597-025-05150-1", "https://doi.org/10.1371/journal.pone.0231866", "https://doi.org/10.5281/zenodo.22257046",
-         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS", "https://www.openstreetmap.org/copyright", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg"}
+         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS", "https://www.openstreetmap.org/copyright", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg",
+         "https://raw.githubusercontent.com/ArmenKaprelian/whostaysvisible/main/motion/publish/agent-guide.md"}   # round 17: TEACH YOUR AGENT's link (tools/agent_guide.py GUIDE_URL)
 LINK_PREFIXES = ("https://x.com/intent/post?text=", "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono", "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/")
 def page_fonts():   # the font files the pages load from fonts/ (round 16), read from the pages themselves so the set follows --from
     names = []
@@ -141,6 +142,9 @@ def agent_guide(problems):   # the guide rebuilt for the set (see the module's n
     for f in mod.rules(text): problems.append("agent guide: " + " | ".join(f))
     same = source("js/agent-guide.js").decode("utf-8") == mod.js_of(mod.build(os.path.join(MOTION, "data")))
     open(os.path.join(OUT, "js", "agent-guide.js"), "w", encoding="utf-8").write(mod.js_of(text))
+    if getattr(mod, "GUIDE_URL", None):   # round 17: the button copies a link to the dated guide, which the publish copy's commit serves from the public repository (not an artifact file)
+        open(os.path.join(OUT, "agent-guide.md"), "w", encoding="utf-8").write(text)
+        return "agent guide: rebuilt and dated %s; the button copies %s, served from publish/agent-guide.md once the publish copy is committed and pushed" % (when, mod.GUIDE_URL)
     return "agent guide: rebuilt from the shipped data and dated %s; %s" % (when, "the source's copy matched it" if same else "the source's copy was stale, the set carries the rebuilt guide")
 
 def keys_of(obj, out):

@@ -21,6 +21,12 @@ from decimal import Decimal, ROUND_HALF_UP
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.join(HERE, '..')
 ARTIFACT = 'https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n'
+# Round 17 (the author's request of 27 October 2026): TEACH YOUR AGENT copies a link that a reader's agent fetches the guide from, in place of the text.
+# The link must serve plain text to an agent without a session. A file inside the claude.ai artifact does not (its viewer loads the page through a token
+# exchange, and the frame host answers 404 to a bare request), so the guide is served as raw text from the public repository: tools/publish-set.py writes
+# the dated guide to publish/agent-guide.md at each publish, and the publish copy's commit puts it at this address. With GUIDE_URL None the page's
+# js/agent-guide.js is as before and the button copies the text.
+GUIDE_URL = 'https://raw.githubusercontent.com/ArmenKaprelian/whostaysvisible/main/motion/publish/agent-guide.md'
 
 def to_fixed(v, d):   # Number.prototype.toFixed: the exact value, ties to the larger magnitude
     r = Decimal(abs(v)).quantize(Decimal(1).scaleb(-d), rounding=ROUND_HALF_UP)
@@ -114,7 +120,8 @@ def rules(text):
 def js_of(text):
     return ('// The guide for a reader\'s AI agent (round 15, the author\'s item 19, TEACH YOUR AGENT), built by tools/agent_guide.py from data/series.json.\n'
             '// A static string: the footer\'s button copies it, nothing is fetched. Do not edit by hand: change tools/agent_guide.py and run it.\n'
-            'window.AGENT_GUIDE = ' + json.dumps(text, ensure_ascii=False) + ';\n')
+            'window.AGENT_GUIDE = ' + json.dumps(text, ensure_ascii=False) + ';\n' +
+            ('window.AGENT_GUIDE_URL = ' + json.dumps(GUIDE_URL) + ';   // round 17: the button copies this link, and the field shown when the clipboard is refused holds it; the text above stays, checked against the data\n' if GUIDE_URL else ''))
 
 def check(motion_dir=MOTION):
     text = build(os.path.join(motion_dir, 'data')); out = rules(text)

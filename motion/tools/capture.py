@@ -67,8 +67,13 @@ def remove_profile(path):
             if not (nxt.isalnum() or nxt in "._-"): return True
             i = args.find(path, i + 1)
         return False
+    try: sock = os.readlink(os.path.join(path, "SingletonSocket"))   # round 17: the browser's singleton folder in /tmp, which the profile links to and Brave leaves behind
+    except OSError: sock = None
     t0 = time.time()
     while named() and time.time() - t0 < 10: time.sleep(0.1)
+    if sock:
+        d = os.path.dirname(sock)
+        if os.path.basename(d).startswith("org.chromium.Chromium.") and os.path.dirname(d) == tempfile.gettempdir(): shutil.rmtree(d, ignore_errors=True)
     for _ in range(8):
         shutil.rmtree(path, ignore_errors=True)
         time.sleep(1.0)
