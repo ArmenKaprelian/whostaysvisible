@@ -41,7 +41,7 @@ def audit_boxes(boxes, canvases, min_size, overlap):
         for j in range(i + 1, len(vis)):
             p, q = vis[i], vis[j]
             if p["scene"] != q["scene"] or (p["para"] is not None and p["para"] == q["para"]): continue
-            if p.get("kind") == "cloud" or q.get("kind") == "cloud": continue   # the cloud pass (round 15, 8F): growing names lie over the data and over one another by design
+            if p.get("kind") == "cloud" or q.get("kind") == "cloud": continue   # the names on the ground (round 16, 8Gb; the kind is round 15's cloud pass): growing names lie over the data by design
             gp, gq = p.get("kind") == "ghost", q.get("kind") == "ghost"
             x = inter(p, q)
             if x <= 0: continue
@@ -233,7 +233,9 @@ def refs_block(cdp, w, a, once, page_src):
     if gloss and o["defs"] != ["%s: %s" % (t["term"], t["text"]) for t in gloss]: F("the DEFINITIONS section differs from glossary.json: %s" % json.dumps(o["defs"][:2])[:200])
     if R["sections"] != want_secs: F("sections %s, expected %s" % (R["sections"], want_secs))
     if [n["t"] for n in o["navs"]] != want_secs: F("shortcuts %s" % [n["t"] for n in o["navs"]])
-    if "Insights" in want_secs and o["insights"] != 104: F("the insights section lists %d units, expected 104" % o["insights"])
+    if "Insights" in want_secs:   # every unit of insights.json, region or city window (103 since the author left Kalmykia out on 27 October 2026)
+        ins = json.load(open(os.path.join(DD, "insights.json"), encoding="utf-8")); n_ins = len(ins["regions"]) + len(ins["cities"])
+        if o["insights"] != n_ins: F("the insights section lists %d units, expected %d" % (o["insights"], n_ins))
     if o["over"]: F("text past its box: %s" % "; ".join(o["over"][:4]))
     for nm, st, wt in [("the title", o["title"], 500)] + [("a section head", h, 700) for h in o["h3"][:3]] + [("a shortcut", n, 500) for n in o["navs"][:3]]:
         if st["tt"] != "uppercase" or int(st["w"]) != wt or abs(st["ls"] - 0.08 * st["fs"]) > 0.06 or "IBM Plex Mono" not in st["fam"]: F("%s set %s" % (nm, json.dumps(st)))
@@ -666,10 +668,7 @@ def main():
                 def queue_ok(r):
                     x = r["extra"]; bad = []
                     if not x: return [("wire", "queue", "no report")]
-                    if x.get("waits"):   # round 16, wsB: the first slot waits its turn, then shows the region once its set plays
-                        if x["leadAtOnce"].startswith("Moscow Oblast"): bad.append(("wire", "queue", "the first slot switched at once although it waits its turn: %r" % x["leadAtOnce"][:60]))
-                        if not (x.get("leadAfterRest") or "").startswith("Moscow Oblast"): bad.append(("wire", "queue", "the first slot did not take the region after the rest: %r" % (x.get("leadAfterRest") or "")[:60]))
-                    elif not x["leadAtOnce"].startswith("Moscow Oblast"): bad.append(("wire", "queue", "the lead slot did not show the hovered region at once: %r" % x["leadAtOnce"][:60]))
+                    if not x["leadAtOnce"].startswith("Moscow Oblast"): bad.append(("wire", "queue", "the lead slot did not show the hovered region at once: %r" % x["leadAtOnce"][:60]))
                     p = x["pending"]
                     if len(p["sets"]) != 2 or p["sets"][1]["status"] != "pending" or p["sets"][0]["items"] > 5: bad.append(("wire", "queue", "after a hover: %s" % json.dumps([(s_["status"], s_["items"]) for s_ in p["sets"]])))
                     c = x["committed"]
@@ -682,7 +681,7 @@ def main():
                     if t["debounce"] or t["commit"] or sum(1 for s_ in x["afterRest"]["sets"] if s_["status"] == "pending") > 0: bad.append(("wire", "queue", "after the rest a timer or a pending set is left: %s" % json.dumps(x["afterRest"]["timers"])))
                     if x["caps"]["on"] is not True or x["caps"]["data"] != "uppercase" or x["caps"]["lead"] != "uppercase" or x["caps"]["offData"] != "none" or x["caps"]["backOn"] is not True: bad.append(("wire", "caps", json.dumps(x["caps"])))
                     return bad
-                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(400); const sp = A.cities['St Petersburg']; A.hoverKm(m[0] + 60, m[1], { show: true }); await wait(40); const leadAtOnce = A.wire().lead.text; await wait(300); const pending = A.wire(); await wait(400); const committed = A.wire(), leadAfterRest = committed.lead.text, waits = !!committed.slotWaits; const h0 = performance.memory ? performance.memory.usedJSHeapSize : null; const pts = [[m[0] + 60, m[1]], [sp[0] + 40, sp[1] - 60], [m[0] + 200, m[1] + 150], [m[0] - 150, m[1] - 100]]; const xs = []; for (let i = 0; i < 50; i++) { const q = pts[i % 4]; A.hoverKm(q[0], q[1], { show: true }); xs.push(A.wire().x - A.wire().slotW); await wait(100); } const after50 = A.wire(); await wait(700); const afterRest = A.wire(); if (A.hoverOff) A.hoverOff(); const caps = { on: A.wireCaps(), data: getComputedStyle(document.querySelector('.wi.data')).textTransform, lead: getComputedStyle(document.getElementById('ctxA')).textTransform }; A.wireCaps(false); caps.offData = getComputedStyle(document.querySelector('.wi.data')).textTransform; A.wireCaps(true); caps.backOn = A.wireCaps(); window.__extra = { leadAtOnce, leadAfterRest, waits, pending, committed, after50, afterRest, monotone: xs.every((v, i) => i === 0 || v >= xs[i - 1]), heapMB: h0 == null ? null : (performance.memory.usedJSHeapSize - h0) / 1048576, caps };", "wirequeue", queue_ok)
+                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); A.year(+document.getElementById('year').value); await A.ready(); const wait = ms => new Promise(r => setTimeout(r, ms)); await wait(400); const sp = A.cities['St Petersburg']; A.hoverKm(m[0] + 60, m[1], { show: true }); await wait(40); const leadAtOnce = A.wire().lead.text; await wait(300); const pending = A.wire(); await wait(400); const committed = A.wire(), leadAfterRest = committed.lead.text; const h0 = performance.memory ? performance.memory.usedJSHeapSize : null; const pts = [[m[0] + 60, m[1]], [sp[0] + 40, sp[1] - 60], [m[0] + 200, m[1] + 150], [m[0] - 150, m[1] - 100]]; const xs = []; for (let i = 0; i < 50; i++) { const q = pts[i % 4]; A.hoverKm(q[0], q[1], { show: true }); xs.push(A.wire().x - A.wire().slotW); await wait(100); } const after50 = A.wire(); await wait(700); const afterRest = A.wire(); if (A.hoverOff) A.hoverOff(); const caps = { on: A.wireCaps(), data: getComputedStyle(document.querySelector('.wi.data')).textTransform, lead: getComputedStyle(document.getElementById('ctxA')).textTransform }; A.wireCaps(false); caps.offData = getComputedStyle(document.querySelector('.wi.data')).textTransform; A.wireCaps(true); caps.backOn = A.wireCaps(); window.__extra = { leadAtOnce, leadAfterRest, pending, committed, after50, afterRest, monotone: xs.every((v, i) => i === 0 || v >= xs[i - 1]), heapMB: h0 == null ? null : (performance.memory.usedJSHeapSize - h0) / 1048576, caps };", "wirequeue", queue_ok)
             # the cards' collapse toggles (the author's addition of 25 October): all six collapsed at 1,600 and 400 px (the DOM rules above check each), then reopened
             if w in (1600, 400):
                 state("share", 2024, "A.mode('cells'); A.preset('Russia'); for (const id of ['layer', 'goto', 'cursor', 'national', 'groups', 'odds']) A.card(id, false); A.redraw(); window.__extra = A.cards();", "cardscollapsed", lambda r: [] if r["extra"] and not any(r["extra"].values()) else [("card", "state", "not all collapsed: %s" % json.dumps(r["extra"]))])
@@ -805,16 +804,12 @@ def main():
                 state("share", 2024, "A.mode('cells'); A.note(true); A.strip(true); A.preset('Russia'); A.redraw(); await new Promise(r => setTimeout(r, 60)); window.__extra = A.noteState(); A.note(null);", "notemem", note_is(True, "national, the viewer's choice"))
             # ghost names, hairline borders, the hovered region's outline and the strip following the cursor (round 10, G13)
             # the ghost names float at a fixed size and opacity at every zoom (round 12, part D): the floors at the country, at least one name at the Moscow and Central Moscow presets in both views, the GO TO token as their colour
-            # round 16 (item 8): the names in the tile's ice from 8F on, the GO TO ice for 8A; the names that grow with the zoom (8F, 8Ga, 8Gb) are gone at the city presets, where they would lie over the dots
+            # round 16 (item 8, the author's pick of 27 October 2026, 8Gb): the names on the ground, in the tile's ice; they grow with the zoom and are gone at the city presets, where they would lie over the dots
             def ghost_ok(floor, label, city=False):
                 def f(r):
                     x = r["extra"]
                     if not x: return [("ghost", "map", "%s no report" % label)]
-                    opt = x.get("opt") or "A"   # a page from before round 16 reports no option: as published
-                    want = x["go"] if opt == "A" else x["tile"]
-                    grows = opt in ("F", "Ga", "Gb")
-                    fl = 0 if (city and grows) else floor
-                    ok = abs(x["alpha"] - 0.3) < 1e-9 and x["drawn"] >= fl and x["colour"].upper() == want.upper() and (not (city and grows) or x["drawn"] == 0)
+                    ok = abs(x["alpha"] - 0.3) < 1e-9 and x["colour"].upper() == x["tile"].upper() and (x["drawn"] == 0 if city else x["drawn"] >= floor)
                     return [] if ok else [("ghost", "map", "%s %s" % (label, json.dumps(x)))]
                 return f
             GO = "window.__extra = Object.assign(A.ghost(), { go: getComputedStyle(document.documentElement).getPropertyValue('--go').trim(), tile: getComputedStyle(document.documentElement).getPropertyValue('--tile-ink').trim() });"
@@ -825,7 +820,7 @@ def main():
             # the dots at the city presets (round 15's cloud check, round 16's names on the ground): no name is drawn over them
             def ground_ok(r):
                 g = (r.get("extra") or {}).get("ghost") or {}
-                return [] if not g.get("drawn") or (g.get("opt") or "A") == "A" else [("ground", "map", "%d name(s) still drawn at the city preset" % g["drawn"])]
+                return [] if not g.get("drawn") else [("ground", "map", "%d name(s) still drawn at the city preset" % g["drawn"])]
             for city in ("Moscow", "St Petersburg"):
                 state("industry", 2024, "A.mode('cells'); A.preset(%r); await A.ready(); A.redraw(); window.__extra = { ghost: A.ghost() };" % city, "ground-" + city[:3], ground_ok)
             # no sideways scroll, in the side column or the page (round 16, the author's report of 27 October 2026: the GO TO card's graticule ran 3 px past the card's border
