@@ -98,7 +98,7 @@ def main():
             "shared-city": dict(common, window_km=90, city_1km=city1km)}
     bad = [c for c in checks if not c["pass"]]
     with open(os.path.join(DATA, "shared.checks.csv"), "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC); w.writerow(["check", "expected", "observed", "tolerance", "pass"])
+        w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n"); w.writerow(["check", "expected", "observed", "tolerance", "pass"])
         for c in checks: w.writerow([c["check"], json.dumps(c["expected"]), json.dumps(c["observed"]), 0, "TRUE" if c["pass"] else "FALSE"])
     if bad: raise SystemExit("shared_pairs: %d of %d checks failed: %s" % (len(bad), len(checks), "; ".join(c["check"] for c in bad)))
     inputs = [os.path.join(DATA, "firms", "firms-%d.bin.gz" % y) for y in YEARS] + [os.path.join(DATA, "firms.json"), os.path.join(DATA, "basemap.json")]
