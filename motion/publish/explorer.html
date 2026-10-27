@@ -1,6 +1,6 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit f9954b01cae5">
+<meta name="build" content="commit 331f7b1d9167">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Tomorrow:wght@400;500&display=swap">
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
@@ -332,6 +332,8 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 #layers { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: start; }   /* the layers in three groups, each name at the left of its buttons, the buttons one width, their labels at the left */
 #layers .btn { grid-column: 2; text-align: left; }
 #layers .glabel { grid-column: 1; padding-top: 7px; }   /* level with the first button's text */
+#layerprov .h { color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; }   /* the new layers' reading texts (round 16) */
+#layerprov .rb { display: block; margin-top: 6px; }   /* one short block per head (round 16) */
 #layers .glabel:not(:first-child), #layers .glabel:not(:first-child) + .btn { margin-top: 4px; }   /* a little air between the groups */
 #modes .modelabel, #layers .glabel { width: calc(10ch + 0.8em); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* one width for VIEW and the three names, the width of STATEMENTS */
 #modes .modelabel { align-self: center; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
@@ -467,12 +469,49 @@ footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH
 .agentbox textarea { box-sizing: border-box; width: 100%; height: 100%; resize: none; background: var(--stage); color: var(--ink); border: 1px solid var(--grid); font-family: var(--font); font-size: 11px; line-height: 1.45; padding: 6px; }
 @media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
+/* The REFERENCES panel (round 16, the author's General 7 of 26 October 2026, as picked on 27 October 2026: raC, rdB revised, refA, rxA, rlA, riA, rtA, rfA, rsA): a fuchsia button
+   beside LIGHT THEME opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Plex Mono, section
+   heads as prompt lines, a still block cursor. The icon at its top left, the green i meshed with a wire globe, carries the wire's 3B treatment, scanlines and the glow. */
+.hright { gap: 10px; }
+@media (min-width: 901px) and (max-width: 1020px) { header { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .hright { margin-left: auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }   /* the fallback: below the width where two buttons and the centred lock-up would meet (about 1,020 px, with DARK THEME), the lock-up takes its own row, as on phones */
+@font-face { font-family: 'Atlas Armenian Mono'; src: url('fonts/DejaVuSansMono.ttf') format('truetype'); unicode-range: U+0530-058F, U+FB13-FB17; font-display: swap; }   /* DejaVu Sans Mono (Bitstream Vera licence, DejaVu's changes in the public domain), for Armenian letters only: Plex Mono has none */
+dialog.refs { position: fixed; inset: auto; margin: 0; padding: 0; box-sizing: border-box; border: 3px solid var(--context); border-radius: 0; color: var(--ink); background-color: color-mix(in srgb, var(--stage) var(--refs-alpha, 94%), transparent); background-image: var(--grain); background-size: 128px 128px; font-size: 13px; line-height: 1.5; max-width: none; max-height: none; overflow: hidden; transform-origin: 50% 50%; }
+dialog.refs[open] { display: flex; flex-direction: column; }
+dialog.refs::backdrop { background: transparent; }
+.refs > .rhead { display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 12px; flex: 0 0 auto; background-color: var(--bar); background-image: var(--grain-bar); background-size: 128px 128px; }
+.refs .rhead b { flex: 1 1 auto; color: var(--context); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; outline: none; }
+.refs .rhead .toggle { color: var(--context); border-color: var(--context); }
+.refs .rhead .toggle svg { width: 14px; height: 14px; display: block; margin: auto; }
+.refs .rnav { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px 4px; flex: 0 0 auto; }
+.refs .rnav .btn { font-size: 11px; padding: 1px 6px; }
+.refs .rbody { overflow-y: auto; padding: 2px 18px 18px; flex: 1 1 auto; }
+.refs h3 { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin: 14px 0 6px; }
+.refs h3::before { content: '> '; color: var(--context); }
+.refs ul { list-style: none; margin: 0; padding: 0; }
+.refs li { padding-left: 2ch; text-indent: -2ch; margin: 0 0 5px; color: var(--muted); }
+.refs li b { color: var(--ink); font-weight: 500; }
+.refs a { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }
+.refs a:hover, .refs a:focus-visible { color: var(--cursor-live); }
+.refs .note { white-space: pre-wrap; margin: 4px 0 0; color: var(--ink); font-size: 14px; font-family: "IBM Plex Mono", 'Atlas Armenian Mono', "DejaVu Sans Mono", monospace; text-transform: none; letter-spacing: 0; }
+.refs .rcursor { display: inline-block; width: 0.6em; height: 1.15em; margin-top: 10px; background: var(--context); }
+.refs .ricon { width: 40px; height: 40px; flex: 0 0 auto; color: var(--context); }
+.refs .rglow { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
+.refs .rlines { display: block; width: 100%; height: 100%; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
+.refs .rlines svg { display: block; width: 100%; height: 100%; overflow: visible; }
+:root[data-theme="light"] .refs .rglow { filter: none; }
+@media (prefers-contrast: more), (forced-colors: active) { .refs .rglow { filter: none; } .refs .rlines { -webkit-mask-image: none; mask-image: none; } }
+.refs .copied { color: var(--context); font-size: 11px; margin-left: 8px; }
+dialog.refs.anim { transition: transform 180ms ease-out, opacity 180ms ease-out; }
+dialog.refs.anim.closing { transition-duration: 140ms; }
+dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { dialog.refs.anim { transition: none; } }
+.nograin dialog.refs, .nograin .refs > .rhead { background-image: none; }
 </style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol><symbol id="mark-wire" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol><symbol id="mark-cat" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5 12.5V3.2l4.8 4h4.4l4.8-4v9.3a7 7 0 0 1-14 0ZM9.6 12.6a1.3 1.3 0 1 0 0.01 0ZM14.4 12.6a1.3 1.3 0 1 0 0.01 0Z"/><path d="M5 15.4 0.2 14.6M5.4 17.6 0.8 19M19 15.4l4.8-.8M18.6 17.6l4.6 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M11 15.6h2l-1 1.1Z" style="fill: var(--panel)"/></symbol></defs></svg>
 <header id="hdr">
   <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
   <div class="lockup" id="lockup"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></div>
-  <div class="hright" id="hright"><button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button></div>
+  <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button><button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button></div>
 </header>
 <main>
   <div class="mapwrap" id="mapwrap" tabindex="0" role="group" aria-label="Map of Russia. Plus and minus zoom, 0 fits the whole country, the arrow keys pan; click a cell to zoom to it.">
@@ -552,6 +591,16 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
 <footer id="footer"></footer>
 <div class="agenttoast" id="agenttoast" role="status" aria-live="polite" hidden>&gt;text copied</div>
 <div class="agentbox" id="agentbox" hidden><textarea id="agenttext" readonly aria-label="The guide to this atlas for your AI agent, selected to copy"></textarea></div>
+<dialog class="refs" id="refs" aria-labelledby="refstitle">
+  <div class="rhead"><span class="ricon" aria-hidden="true"><span class="rglow"><span class="rlines" id="refsicon"></span></span></span><b id="refstitle" tabindex="-1">References</b><button class="toggle" id="refsclose" type="button" aria-label="Close the references" title="CLOSE"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+  <nav class="rnav" id="refsnav" aria-label="Sections"></nav>
+  <div class="rbody" id="refsbody">
+    <section id="refs-superuser" data-name="Superuser"><h3>Superuser</h3>
+<p class="note" id="superusernote"><!-- SUPERUSER NOTE: start -->«Ոմանք արևը միայն խավարման ժամանակ են նկատում:» Նժդեհ<!-- SUPERUSER NOTE: end --></p>
+    </section>
+    <span class="rcursor" aria-hidden="true"></span>
+  </div>
+</dialog>
 <script src="data/basemap.js"></script>
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
@@ -563,6 +612,8 @@ footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer'
 <script src="data/offwire.js" onerror="this.remove()"></script>   <!-- the wire's cat facts (round 10, item 15) -->
 <script src="data/treatednational.js" onerror="this.remove()"></script>
 <script src="data/profiles.js" onerror="this.remove()"></script>   <!-- the profiles' counts and medians (round 15, item 9, M12) -->
+<script src="data/insights.js" onerror="this.remove()"></script>   <!-- the profiles' researched insights (round 16, the author's audit of 27 October 2026) -->
+<script src="data/glossary.js" onerror="this.remove()"></script>   <!-- the REFERENCES panel's DEFINITIONS (round 16, the author's pick of 27 October 2026) -->
 <script src="data/anchors.js" onerror="this.remove()"></script>   <!-- the two firms of the film (round 12, part D, item 5) -->
 <script src="data/firms.js" onerror="this.remove()"></script>
 <script src="js/motion-core.js"></script>
