@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The surface grain's contrast guard (round 10, the author's item 22): on an empty patch of the Under the cursor card's body, of its title bar and of
-the legend at 1,600 px, the average colour with the grain on and off, and the WCAG contrast of the ink, muted and dim tones against each, and of the
+the legend at 1,600 px (and, since round 16, of the REFERENCES panel's body), the average colour with the grain on and off, and the WCAG contrast of the ink, muted and dim tones against each, and of the
 green titles on the bar (round 15's title bars, with their own grain on the dark theme); every difference must be within 0.05.
 Imported by atlas-audit.py (guard(cdp) with an open page) and runnable alone: python3 -I motion/tools/grainguard.py --url http://127.0.0.1:8765/explorer.html"""
 import argparse, base64, json, os, shutil, struct, subprocess, sys, tempfile, time, zlib
@@ -57,6 +57,17 @@ def guard(cdp, tol=0.05):
             if abs(c_on - c_off) > tol: out.append(("grain", patch, "%s contrast %.3f with the grain against %.3f without (%.3f)" % (tone, c_on, c_off, c_on - c_off)))
         table.append((patch, "average", [round(v, 1) for v in avg[False]], [round(v, 1) for v in avg[True]], "spread %s -> %s" % (avg[("spread", False)], avg[("spread", True)])))
     cdp.evaluate("(() => { const side = document.querySelector('aside.side'); if (side) side.scrollTop = %d; })()" % g["y0"], await_promise=False)
+    # the REFERENCES panel (round 16): a patch of its body's left padding, open over the map, where no text lies
+    p = cdp.evaluate("(() => { const A = window.__atlas; if (!A.refs) return null; A.refs(true); const b = document.getElementById('refsbody').getBoundingClientRect(), d = document.getElementById('refs'), cs = getComputedStyle(d); return { patch: [b.left + 3, b.top + 40, 12, 40], ink: cs.getPropertyValue('--ink').trim(), muted: cs.getPropertyValue('--muted').trim() }; })()", await_promise=False)
+    if p:
+        time.sleep(0.4); x, y, w, h = p["patch"]; avg = {}
+        for on in (True, False):
+            cdp.evaluate("window.__atlas.grain(%s)" % ("true" if on else "false"), await_promise=False); time.sleep(0.15)
+            png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png", "clip": {"x": x, "y": y, "width": w, "height": h, "scale": 1}})["data"]); avg[on] = average(png)
+        cdp.evaluate("(() => { window.__atlas.grain(true); window.__atlas.refs(false); return true; })()", await_promise=False); time.sleep(0.3)
+        for tone in ("ink", "muted"):
+            c_on, c_off = contrast(hexrgb(p[tone]), avg[True]), contrast(hexrgb(p[tone]), avg[False]); table.append(("panel", tone, round(c_off, 3), round(c_on, 3), round(c_on - c_off, 3)))
+            if abs(c_on - c_off) > tol: out.append(("grain", "panel", "%s contrast %.3f with the grain against %.3f without (%.3f)" % (tone, c_on, c_off, c_on - c_off)))
     return out, table
 
 def main():

@@ -1,7 +1,7 @@
 {
  "id": "insights",
  "tool": "motion/tools/insights_build.py",
- "run_utc": "2026-10-27T09:40:38Z",
+ "run_utc": "2026-10-27T09:48:57Z",
  "approval": {
   "date": "2026-10-27",
   "time_utc": "09:22",
@@ -9,6 +9,13 @@
   "reading": "each unit's full and short form as the review page showed them; the alternatives shown beside them are not taken",
   "excluded": {
    "Kalmykia": "the purchase of the two wind farms rests on one source, RUSNANO's release, whose publisher and link name a firm on no list (the author's rule of 27 October 2026 on the insights' sources); without it the claim has no source, so the region ships no insight until another source is found"
+  },
+  "fit_edits": {
+   "Jewish Autonomous Oblast": {
+    "short": "First Russia–China rail bridge, Nizhneleninskoye–Tongjiang, opened 2022",
+    "was": "First Russia–China rail bridge, Nizhneleninskoye–Tongjiang, opened Nov 2022",
+    "why": "the tile's box holds two lines of about 42 characters at 304 px and the station pair cannot break, so the approved form ran to a third line by one character; the month dropped (27 October 2026, for the author's confirmation in the round 16 proposal)"
+   }
   }
  },
  "off_list": [
@@ -91,7 +98,7 @@
   },
   {
    "path": "build/insights-drafts/pass2/approval.json",
-   "sha256": "33fd4f458b0c0b07a7fb1a0dfa96efb4e86490e3ea2b172530c7ebfd864677d0"
+   "sha256": "5900733676eb9d4f696e871f37290ca274a1c48bcbcda104155484ec5de5b13f"
   },
   {
    "path": "build/insights-drafts/pass2/BRIEF-2.md",
@@ -4392,8 +4399,8 @@
  ],
  "output": {
   "json": "data/insights.json",
-  "json_sha256": "6bf78600e0de6705228bc6cedca345997ce5b886b0b42cde548ffa5aafe1f5cf",
+  "json_sha256": "e5e64567a6df5e5aa46480bba8f9c555afc3f816ee464e37e8a21993755d4230",
   "js": "data/insights.js",
-  "js_sha256": "1fa2b572a626a3d079058ed41213ea75506dc887bde2a5a981b64e5c179e61b9"
+  "js_sha256": "b18f95c912e3a95a84e3056cf886928779b36bf1acad4dc2b50f761008385c74"
  }
 }

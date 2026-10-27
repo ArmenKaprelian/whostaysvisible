@@ -10,7 +10,7 @@ another, and a shown tooltip must stay inside the map (24 October 2026). (3) The
 and the presets, through the page's instant API. Zero findings is the acceptance rule.
 
 Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,768,1200,1600,2000] [--height 1000]"""
-import re, argparse, math, json, os, shutil, subprocess, sys, tempfile, time
+import re, argparse, base64, math, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
@@ -156,6 +156,149 @@ def audit_dom(dom, mode=None, layer=None):
 
 def same_cam(c, ref, km=1e-6, rel=1e-9):
     return abs(c["cx"] - ref["cx"]) <= km and abs(c["cy"] - ref["cy"]) <= km and abs(c["k"] / ref["k"] - 1) <= rel
+
+# The REFERENCES panel (round 16, the author's General 7): real presses over CDP on the button, the close toggle, a shortcut and the backdrop; Escape with a
+# pop-out open (the panel goes, the pop-out stays); the page's own keys held while it is open; its box (the centred 80 percent of the map's area, the viewport
+# less 16 px on a phone), the text inside its boxes, the capitals, the Armenian face, the links (YOUTUBE last), the SUPERUSER note equal to the page's source
+# block, no request on open but the page's own font file, the contrast of its text over the brightest content behind the translucent ground; once per audit
+# the header at 960 px, the light theme, the contrast and forced-colour settings and reduced motion.
+def click(cdp, x, y):
+    for t in ("mouseMoved", "mousePressed", "mouseReleased"): cdp.call("Input.dispatchMouseEvent", {"type": t, "x": x, "y": y, "button": "left" if t != "mouseMoved" else "none", "buttons": 1 if t == "mousePressed" else 0, "clickCount": 1})
+def key(cdp, k, code, vk, text=None):
+    p = {"key": k, "code": code, "windowsVirtualKeyCode": vk, "nativeVirtualKeyCode": vk}
+    cdp.call("Input.dispatchKeyEvent", dict(p, type="keyDown", **({"text": text} if text else {}))); cdp.call("Input.dispatchKeyEvent", dict(p, type="keyUp"))
+def centre(cdp, sel):
+    r = cdp.evaluate("(() => { const el = document.querySelector(%s); if (!el) return null; el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()" % json.dumps(sel), await_promise=False)
+    return r
+REFS_OPEN_JS = r"""(() => { const d = document.getElementById('refs'), A = window.__atlas, R = A.refs(), cs = el => getComputedStyle(el), out = { R };
+  out.over = []; for (const el of d.querySelectorAll('h3, li, .rnav .btn, .rhead b, .note')) { if (!el.getClientRects().length) continue; const host = el.closest('.rbody') || el.closest('.rnav') || el.closest('.rhead') || d, r = el.getBoundingClientRect(), br = host.getBoundingClientRect();
+    if (el.scrollWidth > el.clientWidth + 1 || r.right > br.right + 0.5 || r.left < br.left - 0.5) out.over.push((el.textContent || '').trim().slice(0, 50)); }
+  const st = el => { const c = cs(el); return { tt: c.textTransform, w: c.fontWeight, ls: c.letterSpacing === 'normal' ? 0 : parseFloat(c.letterSpacing), fs: parseFloat(c.fontSize), fam: c.fontFamily }; };
+  out.navs = [...d.querySelectorAll('.rnav .btn')].map(b => Object.assign(st(b), { t: b.textContent })); out.h3 = [...d.querySelectorAll('h3')].map(st); out.title = st(document.getElementById('refstitle'));
+  const ls = document.getElementById('refs-links'), la = ls ? [...ls.querySelectorAll('a')] : [], all = [...d.querySelectorAll('a')];
+  out.lastLink = la.length ? la[la.length - 1].href : null; out.lastLabel = ls ? ls.querySelector('li:last-child b').textContent : null; out.badRel = all.filter(a => a.target !== '_blank' || !/noopener/.test(a.rel) || !/noreferrer/.test(a.rel)).map(a => a.href).slice(0, 3);
+  out.bg = cs(d).backgroundColor; out.ink = cs(d.querySelector('li b') || d).color; out.muted = cs(d.querySelector('li') || d).color; out.link = all.length ? cs(all[0]).color : null;
+  const ins = document.getElementById('refs-insights'); out.insights = ins ? ins.querySelectorAll('li').length : 0; out.inner = [innerWidth, innerHeight]; out.cursorMark = !!d.querySelector('.rcursor');
+  out.shut = d.classList.contains('shut'); out.opacity = cs(d).opacity; out.transition = cs(d).transitionDuration; out.glow = cs(d.querySelector('.rglow')).filter; out.mask = cs(d.querySelector('.rlines')).maskImage || cs(d.querySelector('.rlines')).webkitMaskImage;
+  return out; })()"""
+def rgb_of(c):
+    m = re.match(r"color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: / ([\d.]+))?\)", c or "")
+    if m: return [float(m.group(i)) * 255 for i in (1, 2, 3)], float(m.group(4) or 1)
+    m = re.match(r"rgba?\((\d+(?:\.\d+)?), (\d+(?:\.\d+)?), (\d+(?:\.\d+)?)(?:, ([\d.]+))?\)", c or "")
+    if m: return [float(m.group(i)) for i in (1, 2, 3)], float(m.group(4) or 1)
+    return None, None
+def refs_block(cdp, w, a, once, page_src):
+    out = []; F = lambda msg: out.append("%-11s width %d  %s" % ("refs", w, msg))
+    src = re.search(r"<!-- SUPERUSER NOTE: start -->(.*?)<!-- SUPERUSER NOTE: end -->", page_src, re.S); want_note = src.group(1).strip("\n") if src else None
+    cdp.evaluate("(async () => { const A = window.__atlas; A.refs(false); A.popout(null); A.mode('cells'); A.layer('industry'); A.year(2024); A.preset('Russia'); await A.ready(); return true; })()", await_promise=True, timeout=60); time.sleep(0.3)
+    def behind(dark):   # the brightest (dark theme) or darkest (light theme) pixel behind the panel's box, the panel closed
+        m = cdp.evaluate("(() => { const m = document.querySelector('.mapwrap').getBoundingClientRect(); return [m.left, m.top, m.width, m.height, innerWidth, innerHeight]; })()", await_promise=False)
+        if w <= 900: x, y, bw, bh = 16, 16, m[4] - 32, m[5] - 32
+        else: k = math.sqrt(0.8); bw, bh = m[2] * k, m[3] * k; x, y = m[0] + (m[2] - bw) / 2, m[1] + (m[3] - bh) / 2
+        png = base64.b64decode(cdp.call("Page.captureScreenshot", {"format": "png", "clip": {"x": x, "y": y, "width": bw, "height": bh, "scale": 0.5}})["data"])
+        W_, H_, bpp, rows = GG.png_rgb(png); best = None
+        for r in rows:
+            for i in range(0, W_ * bpp, bpp):
+                px = (r[i], r[i + 1], r[i + 2]); L = GG.lum(px)
+                if best is None or (L > best[0] if dark else L < best[0]): best = (L, px)
+        return list(best[1])
+    def contrast_ok(o, dark, tag):
+        bg, alpha = rgb_of(o["bg"]); worst = behind(dark)
+        if bg is None: F("%s: the panel's background %r unread" % (tag, o["bg"])); return
+        comp = [alpha * bg[i] + (1 - alpha) * worst[i] for i in range(3)]
+        for name in ("ink", "muted", "link"):
+            c, _ = rgb_of(o[name]); cr = GG.contrast(c, comp) if c else 0
+            if cr < 4.5: F("%s: %s text at contrast %.2f over the composite of the panel (alpha %.2f) and the %s pixel behind it %s" % (tag, name, cr, alpha, "brightest" if dark else "darkest", worst))
+    # open with a press on the button, a pop-out open behind (desktop widths), the requests on open recorded
+    if w > 900: cdp.evaluate("(() => { const A = window.__atlas; A.card('national', true); A.popout('national'); return true; })()", await_promise=False); time.sleep(0.3)
+    worst_dark = None
+    cdp.call("Network.enable"); cdp.events.append({"method": "__refs__"})
+    b = centre(cdp, "#refsbtn"); click(cdp, *b); time.sleep(0.4)
+    o = cdp.evaluate(REFS_OPEN_JS, await_promise=False); cdp.evaluate("1"); k0 = max(i for i, e in enumerate(cdp.events) if e.get("method") == "__refs__")
+    sent = [e["params"]["request"]["url"] for e in cdp.events[k0:] if e.get("method") == "Network.requestWillBeSent"]; cdp.call("Network.disable")
+    other = [u for u in sent if not re.match(r"^http://127\.0\.0\.1:8765/fonts/[A-Za-z-]+\.ttf$", u)]
+    if other: F("the open sent %d request(s) other than the page's own font file: %s" % (len(other), ", ".join(other)[:200]))
+    R = o["R"]
+    if not R["open"]: F("a press on the button did not open the panel"); return out
+    if R["focus"] != "refstitle": F("focus on open is on #%s, expected the title" % R["focus"])
+    if o["shut"] or abs(float(o["opacity"]) - 1) > 1e-3: F("the open animation did not finish: shut %s, opacity %s" % (o["shut"], o["opacity"]))
+    x, y, bw, bh = R["rect"]
+    if w <= 900: ex = [16, 16, o["inner"][0] - 32, o["inner"][1] - 32]
+    else: m = R["map"]; k = math.sqrt(0.8); ex = [m[0] + m[2] * (1 - k) / 2, m[1] + m[3] * (1 - k) / 2, m[2] * k, m[3] * k]
+    if any(abs(u - v) > 1.0 for u, v in zip([x, y, bw, bh], ex)): F("the panel's box %s, expected %s" % ([round(v, 1) for v in (x, y, bw, bh)], [round(v, 1) for v in ex]))
+    want_secs = ["Data", "Methods"] + (["Insights"] if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "insights.json")) else []) + ["The wire’s cat facts", "Type and software", "Corrections", "Links", "Superuser"]
+    if R["sections"] != want_secs: F("sections %s, expected %s" % (R["sections"], want_secs))
+    if [n["t"] for n in o["navs"]] != want_secs: F("shortcuts %s" % [n["t"] for n in o["navs"]])
+    if "Insights" in want_secs and o["insights"] != 104: F("the insights section lists %d units, expected 104" % o["insights"])
+    if o["over"]: F("text past its box: %s" % "; ".join(o["over"][:4]))
+    for nm, st, wt in [("the title", o["title"], 500)] + [("a section head", h, 700) for h in o["h3"][:3]] + [("a shortcut", n, 500) for n in o["navs"][:3]]:
+        if st["tt"] != "uppercase" or int(st["w"]) != wt or abs(st["ls"] - 0.08 * st["fs"]) > 0.06 or "IBM Plex Mono" not in st["fam"]: F("%s set %s" % (nm, json.dumps(st)))
+    if o["lastLink"] != "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or o["lastLabel"] != "YOUTUBE": F("the links' last entry is %r %r" % (o["lastLabel"], o["lastLink"]))
+    if o["badRel"]: F("links without target _blank and rel noopener noreferrer: %s" % o["badRel"])
+    if not o["cursorMark"]: F("the block cursor after the last line is missing")
+    if want_note is None or R["note"] != want_note: F("the SUPERUSER note %r against the source block %r" % (R["note"], want_note))
+    doc = cdp.call("DOM.getDocument", {"depth": 1})["root"]["nodeId"]; nid = cdp.call("DOM.querySelector", {"nodeId": doc, "selector": "#superusernote"})["nodeId"]
+    fams = {f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]}; arm = "Noto Sans Armenian" if R["opts"]["arm"] == "B" else "DejaVu Sans Mono"
+    if arm not in fams or fams - {"IBM Plex Mono", arm}: F("the note rendered with %s, expected IBM Plex Mono and %s only" % (sorted(fams), arm))
+    contrast_ok(o, True, "dark theme, Cells view")
+    # the page's keys stand down while it is open: B (the blink), c-a-t (the cat key)
+    k0 = cdp.evaluate("window.__atlas.extras().keyed", await_promise=False)
+    key(cdp, "b", "KeyB", 66, "b"); time.sleep(0.25)
+    for ch, vk in (("c", 67), ("a", 65), ("t", 84)): key(cdp, ch, "Key" + ch.upper(), vk, ch)
+    time.sleep(0.4); ex_ = cdp.evaluate("window.__atlas.extras()", await_promise=False)
+    if ex_["blink"] or ex_["keyed"] != k0: F("the page's keys acted with the panel open: %s" % json.dumps(ex_))
+    # a shortcut scrolls its section to the top of the body (the one-body form)
+    if not R["opts"]["tabs"]:
+        for sec in ("refs-type", "refs-links"):   # a section scrolls to the body's top, or the body to its end where too little follows it
+            c = centre(cdp, "#refsnav button[data-target='%s']" % sec); click(cdp, *c); time.sleep(0.2)
+            sc = cdp.evaluate("(() => { const b = document.getElementById('refsbody'), s = document.getElementById(%s); return { top: s.getBoundingClientRect().top - b.getBoundingClientRect().top, end: b.scrollTop >= b.scrollHeight - b.clientHeight - 1 }; })()" % json.dumps(sec), await_promise=False)
+            if not (-1 <= sc["top"] <= 6 or (sc["end"] and sc["top"] >= -1)): F("the %s shortcut left its section %.1f px from the body's top" % (sec, sc["top"]))
+    # Escape closes the panel and returns focus; a pop-out open behind it stays
+    key(cdp, "Escape", "Escape", 27); time.sleep(0.35)
+    st = cdp.evaluate("(() => ({ open: document.getElementById('refs').open, focus: document.activeElement && document.activeElement.id, pop: window.__atlas.popout() }))()", await_promise=False)
+    if st["open"] or st["focus"] != "refsbtn": F("after Escape: %s" % json.dumps(st))
+    if w > 900 and st["pop"] != "national": F("Escape with the panel open closed the pop-out as well: %s" % json.dumps(st))
+    cdp.evaluate("(() => { window.__atlas.popout(null); return true; })()", await_promise=False)
+    # a press on the backdrop closes it and does not reach the map; the close toggle closes it
+    cam0 = cdp.evaluate("window.__atlas.camera()", await_promise=False); click(cdp, *centre(cdp, "#refsbtn")); time.sleep(0.4)
+    r = cdp.evaluate("window.__atlas.refs().rect", await_promise=False); px, py = (r[0] - 8, r[1] + r[3] / 2) if r[0] > 12 else (r[0] + r[2] / 2, r[1] + r[3] + 8)
+    if r[0] <= 12 and r[1] + r[3] + 8 >= o["inner"][1]: px, py = (r[0] + r[2] / 2, 6)
+    click(cdp, px, py); time.sleep(0.35)
+    st = cdp.evaluate("(() => ({ open: document.getElementById('refs').open, focus: document.activeElement && document.activeElement.id, cam: window.__atlas.camera() }))()", await_promise=False)
+    if st["open"] or st["focus"] != "refsbtn": F("after a press on the backdrop at (%.0f, %.0f): %s" % (px, py, json.dumps(st)))
+    if not same_cam(st["cam"], cam0): F("the press on the backdrop reached the map: camera %s against %s" % (json.dumps(st["cam"]), json.dumps(cam0)))
+    click(cdp, *centre(cdp, "#refsbtn")); time.sleep(0.4); click(cdp, *centre(cdp, "#refsclose")); time.sleep(0.35)
+    st = cdp.evaluate("(() => ({ open: document.getElementById('refs').open, focus: document.activeElement && document.activeElement.id }))()", await_promise=False)
+    if st["open"] or st["focus"] != "refsbtn": F("after a press on the close toggle: %s" % json.dumps(st))
+    if not once: return out
+    # once per audit: the busiest content behind (the Firms view at Moscow), the light theme, the contrast and forced-colour settings, reduced motion, the header at 960 px
+    cdp.evaluate("(async () => { const A = window.__atlas; A.mode('firms'); A.preset('Moscow'); await A.ready(); return true; })()", await_promise=True, timeout=60); time.sleep(0.4)
+    cdp.evaluate("window.__atlas.refs(true)", await_promise=False); time.sleep(0.4); o2 = cdp.evaluate(REFS_OPEN_JS, await_promise=False); cdp.evaluate("window.__atlas.refs(false)", await_promise=False); time.sleep(0.3)
+    contrast_ok(o2, True, "dark theme, Firms view at Moscow")
+    cdp.evaluate("(() => { document.getElementById('theme').click(); return true; })()", await_promise=False); time.sleep(0.4)
+    cdp.evaluate("window.__atlas.refs(true)", await_promise=False); time.sleep(0.4); o3 = cdp.evaluate(REFS_OPEN_JS, await_promise=False); cdp.evaluate("window.__atlas.refs(false)", await_promise=False); time.sleep(0.3)
+    if o3["glow"] != "none": F("the icon's glow on the light theme: %s" % o3["glow"])
+    contrast_ok(o3, False, "light theme, Firms view at Moscow")
+    cdp.evaluate("(async () => { document.getElementById('theme').click(); const A = window.__atlas; A.mode('cells'); A.preset('Russia'); await A.ready(); return true; })()", await_promise=True, timeout=60); time.sleep(0.3)
+    for feat, val in (("prefers-contrast", "more"), ("forced-colors", "active")):
+        cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": feat, "value": val}]}); time.sleep(0.2)
+        cdp.evaluate("window.__atlas.refs(true)", await_promise=False); time.sleep(0.4); o4 = cdp.evaluate(REFS_OPEN_JS, await_promise=False); cdp.evaluate("window.__atlas.refs(false)", await_promise=False); time.sleep(0.3)
+        cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": feat, "value": ""}]})
+        if o4["glow"] != "none" or (o4["mask"] or "none") != "none": F("under %s: %s the icon keeps its glow %r or scanlines %r" % (feat, val, o4["glow"], o4["mask"]))
+    cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]}); time.sleep(0.2)
+    click(cdp, *centre(cdp, "#refsbtn")); time.sleep(0.05); o5 = cdp.evaluate(REFS_OPEN_JS, await_promise=False)
+    key(cdp, "Escape", "Escape", 27); time.sleep(0.05); gone = not cdp.evaluate("document.getElementById('refs').open", await_promise=False)
+    cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
+    if o5["shut"] or abs(float(o5["opacity"]) - 1) > 1e-3 or not gone: F("under reduced motion the panel animated: shut %s, opacity %s, closed at once %s" % (o5["shut"], o5["opacity"], gone))
+    cdp.call("Emulation.setDeviceMetricsOverride", {"width": 960, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.6)
+    hd = cdp.evaluate("(() => { const r = id => { const b = document.getElementById(id).getBoundingClientRect(); return { x: b.left, y: b.top, x1: b.right, y1: b.bottom }; }, h = document.querySelector('header').getBoundingClientRect(); return { hleft: r('hleft'), lockup: r('lockup'), hright: r('hright'), refsbtn: r('refsbtn'), theme: r('theme'), header: { x: h.left, y: h.top, x1: h.right, y1: h.bottom }, sw: document.documentElement.scrollWidth, iw: innerWidth }; })()", await_promise=False)
+    cdp.call("Emulation.setDeviceMetricsOverride", {"width": w, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.6)
+    cdp.evaluate("(async () => { await window.__atlas.ready(); return true; })()", await_promise=True, timeout=60)
+    for p_, q_ in (("hleft", "hright"), ("hleft", "lockup"), ("lockup", "hright"), ("refsbtn", "theme")):
+        if inter(hd[p_], hd[q_]) > 0: F("at 960 px the header's %s meets its %s: %s against %s" % (p_, q_, bx(hd[p_]), bx(hd[q_])))
+    if hd["lockup"]["y"] < max(hd["hleft"]["y1"], hd["hright"]["y1"]) - 0.5: F("at 960 px the lock-up is not on its own row: %s" % bx(hd["lockup"]))
+    if hd["theme"]["x1"] > hd["header"]["x1"] + 0.5 or hd["sw"] > hd["iw"]: F("at 960 px the header runs past the page: %s, scroll width %d" % (bx(hd["theme"]), hd["sw"]))
+    return out
 
 def main():
     ap = argparse.ArgumentParser()
@@ -1088,6 +1231,9 @@ def main():
             cdp.call("Network.disable")
             if not tg or tg.get("missing") or not all(tg.get(k) for k in ("same", "toast", "mailIcon", "toastGone", "field", "closed")): findings.append("%-11s width %d  TEACH YOUR AGENT: %s" % ("agent", w, json.dumps(tg)[:200]))
             if sent: findings.append("%-11s width %d  TEACH YOUR AGENT sent %d request(s): %s" % ("agent", w, len(sent), ", ".join(sent)[:200]))
+            # the REFERENCES panel (round 16): see refs_block; the once-per-audit part at the run's first width
+            if not a.only or any(t in "refs" for t in a.only.split(",")):
+                findings += refs_block(cdp, w, a, w == int(a.widths.split(",")[0]) and not a.skip_once, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "explorer.html"), encoding="utf-8").read()); n_states += 1
             # the minimap's four corner marks in the neon green at the country and at a city (round 15, the author's general point 4)
             if w > 900:
                 cm = cdp.evaluate("(async () => { const A = window.__atlas, col = () => { const p = document.querySelector('#mm-russia path'); return p ? getComputedStyle(p).stroke : null; }, want = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(); A.preset('Russia'); await A.ready(); const atFit = col(); A.preset('Kazan'); await A.ready(); const atCity = col(); A.preset('Russia'); await A.ready(); const hex = c => { const m = /rgba?\\((\\d+), (\\d+), (\\d+)/.exec(c || ''); return m ? '#' + [m[1], m[2], m[3]].map(v => (+v).toString(16).padStart(2, '0')).join('').toUpperCase() : c; }; return { want: want.toUpperCase(), atFit: hex(atFit), atCity: hex(atCity) }; })()", await_promise=True, timeout=60); n_states += 1

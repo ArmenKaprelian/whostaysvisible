@@ -110,7 +110,9 @@ def main():
                 pub, ty = label(s); k1, k2 = s.get("url"), (pub, ty, s.get("date"))
                 if k1 in seen or k2 in seen: continue
                 seen.update((k1, k2)); srcs.append({"publisher": pub, "type": ty, "date": s.get("date"), "url": s.get("url")})
-            rec = {"full": o["full"], "short": o["short"], "sources": srcs}
+            fe = approval.get("fit_edits", {}).get(u, {})   # an approved text changed to fit its box (approval.json says why)
+            if fe and fe.get("was") != o["short"] and fe.get("was") != o["full"]: raise SystemExit("insights_build: the fit edit for %s no longer matches its text" % u)
+            rec = {"full": fe.get("full", o["full"]), "short": fe.get("short", o["short"]), "sources": srcs}
             (out["regions"] if kind == "region" else out["cities"])[u] = rec; n_src += len(srcs)
             prov_units.append({"unit": u, "kind": kind, "agent": X, "status": o.get("status"), "classification": o.get("classification"), "changes": o.get("changes"),
                                "named_firms": o.get("named_firms"), "sources_lab": [{"publisher": s.get("publisher"), "type": s.get("type"), "title": s.get("title_lab"), "snippet": s.get("snippet_lab"), "bib": s.get("bib"), "url": s.get("url")} for s in o.get("sources") or []]})
