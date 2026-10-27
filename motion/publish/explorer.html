@@ -1,6 +1,6 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit 331f7b1d9167">
+<meta name="build" content="commit 323e379d337a">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Tomorrow:wght@400;500&display=swap">
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
@@ -423,6 +423,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 @media (min-width: 901px) { canvas.chart.pop { height: 124px; cursor: zoom-in; } canvas.chart.pop.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 15 (the author's item 5.4): compact in the column, a click enlarges the chart over the map */
+@media (min-width: 901px) { #cellchart { cursor: zoom-in; } #cellchart.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 17 (the author's request): the Under the cursor chart pops out like the three above, at its own 170 px in the card */
 /* The pop-out (round 15): the chart enlarged over the map beside its card, joined to the card by a short line across the gap; a click on it, on its card's chart or
    Escape puts it back. No dragging. */
 .popout { position: absolute; right: 12px; z-index: 7; box-sizing: border-box; background-color: color-mix(in srgb, var(--panel) 95%, transparent); border: 3px solid color-mix(in srgb, var(--context) 28%, var(--panel)); padding: 8px 10px 6px; cursor: zoom-out; opacity: 1; transition: opacity 0.15s; }   /* the panel at 95 percent, the map faint through it (the author's pick of 27 October 2026, after 80 and 90; opaque before); at rest the border the green at 28 percent over the panel (40 before), the card's green under the pointer */
@@ -463,9 +464,13 @@ footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; pl
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
 footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the LIGHT THEME button's style beside the email copy */
+footer #copymail, footer #teachagent { vertical-align: middle; }   /* round 17: the copy button and TEACH YOUR AGENT sat on the text's baseline, TEACH YOUR AGENT 3.4 px under the copy button; centred on the line, both share the X buttons' centre */
+footer a.btn.sq { box-sizing: border-box; }   /* round 17 (the author's pick of 27 October 2026): the two X links at the 28 px the rule above sets, like the copy button and TEACH YOUR AGENT; an <a> had added its 3 px border outside the box, 34 px */
+footer .lic { margin-left: auto; }   /* round 17 (the author's pick): the data licences stay at the right, on a row of their own where the footer does not fit one line (below about 1,690 px) */
 .agenttoast { position: fixed; z-index: 30; padding: 6px 12px; background: color-mix(in srgb, var(--panel) 90%, transparent); border: 2px solid var(--context); color: var(--context); font-family: var(--font); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; white-space: nowrap; pointer-events: none; opacity: 1; transition: opacity 0.2s; }   /* the short notice: a semi-transparent box over the page */
 .agenttoast.out { opacity: 0; }
 .agentbox { position: fixed; z-index: 30; box-sizing: border-box; width: min(560px, calc(100vw - 24px)); height: min(320px, calc(100vh - 24px)); padding: 8px; background: var(--panel); border: 3px solid var(--context); }   /* where the clipboard is refused: the guide in a read-only field, selected, at the button */
+.agentbox.url { height: auto; } .agentbox.url textarea { height: auto; }   /* round 17: a link in place of the guide, one row of the field */
 .agentbox textarea { box-sizing: border-box; width: 100%; height: 100%; resize: none; background: var(--stage); color: var(--ink); border: 1px solid var(--grid); font-family: var(--font); font-size: 11px; line-height: 1.45; padding: 6px; }
 @media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
