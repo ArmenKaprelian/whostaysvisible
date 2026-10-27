@@ -1,0 +1,68 @@
+# Round 15 close-out and round 16: one timeline
+
+The author's feedback of 26 October 2026 on the round 15 proposal, with every item placed on one timeline. "Approved" with small changes means approved with revisions; "revised" means a more fundamental change (the author's general point 6).
+
+## Stage 1: the round 15 close-out (built now, shown as frames, committed and published after the author's yes)
+
+Status, 26 October 2026, evening: every stage-1 row is built in the working tree and shown in `review/2026-10-26-round-15-close-out.html`. Nothing is committed. The open answers are the three questions in its section 10 ("listing", "sanctioned by", the video's counts) and the yes on the frames and on the guide.
+
+| Item | Decision | Work |
+|---|---|---|
+| 2 The navy | approved, 2C | flags removed |
+| 3 The data wire | approved, 3B, units in lower case | flags removed |
+| 4 The red button | approved, 4B | the pulse reformed to the modern style (shared with 7B), shown as frames |
+| 5 The right column | approved with revisions | every model output keeps a green i whose text says what is shown and how it bears on the research question; the pop-out always at the map's lower right, its border dark green until hovered, the title green; "Click to put back" kept |
+| 5.1 The i rule, the NOTE row, the mix box | approved | |
+| 5.3 GO TO | approved with revisions | the i in neon green; "LINK TO CURRENT VIEW"; the graticule back across the whole GO TO card (14A) |
+| 6 The tile | approved, 6D | flags removed |
+| 7A Blink | approved with revisions | tooltip: "We’re eyeball to eyeball, and I think the other fellow just blinked", no citation |
+| 7B Year run | approved with revisions | the pulse noticeable but restrained and cheap, the same as the red button's, reformed |
+| 7C Cat key | approved with revisions | cat facts keep their own formatting, lose "OFF THE WIRE", and carry a small cat's head in place of the logo |
+| 8 Ghost names | revised | ships as published until the round 16 rework |
+| 9 Profiles | layout approved (9C), text replaced | selection change ships; no profile shows until the round 16 insights; no firm profile; the profile is one researched, sourced insight plus M12's median revenue and total assets against Russia's |
+| 10 Region fill | approved | |
+| 11 The NOTE | approved (11B) | open by default (general point 5) |
+| 12 Wording passes | approved, P-C | P-C in the atlas and the video |
+| 12 "listed" on screen | decided 26 October | every viewer-read "listed" for list membership replaced; inventory, before/after table, frames, checkers; the author approves before any commit |
+| 13 Tips | approved | |
+| 14A Graticule | revised | drawn across the whole GO TO card, matched to the minimap's projection and position |
+| 14B Line at 1 | approved | |
+| Found: city windows' shares | verify thoroughly, apply, document | independent re-derivation; README; the references panel in round 16 |
+| Video | approved | re-rendered after the atlas (stage, wording, P-C, "listed") |
+| General 3: minimap clicks | new | a city click ends about 45 km across the city |
+| General 4: minimap corner marks | confirmed green in the build | an audit check so it does not regress |
+| General 5: the NOTE | new | open by default |
+| 19 TEACH YOUR AGENT (was CONTRIBUTIONS) | revised by the author, 26 October 2026 | a LIGHT THEME-style button beside the footer's email-copy icon, which stays as it is; a click copies a built-in Markdown guide for a reader's AI agent (six numbered sections, under about 1,200 words, from the page's reading texts and the chapter's sentences, no new claims, no semicolons) and shows ">text copied"; if the clipboard is refused, a read-only selectable box at the same place; no download, new window, outbound request, data: or blob: URL, or popup; frames of the footer before and after and of the notice; an audit check that the copied text equals the built-in guide and that no request goes out; the full guide in the review for approval. A GitHub link can replace or join it once the repository is public. |
+| General 1: memo theming | new | review pages: fuchsia for code and links, no left-border-only boxes |
+| The light theme (the author's request, 26 October 2026, evening) | new, three changes only | the sea #EDF1F5 and the land #FBFBF9 (the land the lit shape); the panels #F7F8FA and the grain from about 4 to about 5 levels with the same tile (the bands with their own alphas); the header and footer bands #E9EDF2 in a new token `--band` (the stage on the dark theme); the palette validator on the new land and the grain guard on both themes in the close-out page; in the five-width audit |
+| The light theme's role tints (the author's fourth light-theme change, 26 October 2026, evening) | new | faint fills at each surface's OKLab lightness: rose for LAYER, green for the reading cards, blue for GO TO (with the minimap's label boxes and the FIND list), a faint cool blue for the bands; sRGB holds 2 to 3 percent only for the green at the panel's lightness, so option A (each as far as the gamut allows, in the build) and option B (all at 1 percent) go to the author; the strip, the zoom box and the scale bar shown as options; the legend, the note, the mix box, the tile and the pop-out neutral; in the five-width audit |
+| Close-out, all else | approved (the author, 26 October 2026, night) | Q1 yes ("listing" goes too), Q2 "sanctioned by", Q3 as built, Q4 option A, no optional surfaces |
+| Close-out revision 1: title bars | approved with revisions, built | every panel's title row on a bar: #020307 dark (halfway from the stage to black), #EFF2F5 light (the green title 4.55:1); over the GO TO graticule; a collapsed panel is its bar; each bar's grain balanced; the grain guard measures the bar; frames in the addendum |
+| Close-out revision 2: the pop-out | approved with revisions, built | the panel at 80 percent (opaque before), the border at rest the green at 28 percent (40 before); its grain, cancelled by its own rule, restored; 85 and 70 shown; the author picks |
+| Close-out revision 3: the cat's head | approved with revisions, built | filled, eyes cut out, four whiskers, the green at 70 percent over the panel (55 blurred under the wire's glow on a 1x screen); a second drawing shown; the author picks |
+| Close-out revision 4: TEACH YOUR AGENT updates | new rule, built | rebuilt at every publish by publish-set.py from the shipped data with the builder as of the commit, dated; the public-release checks refuse the set on a breach; no timer (nothing changes between publishes, and nothing publishes without the author's word) |
+| Close-out revision 5: the light sea and land | approved with revisions, built | swapped: sea #FBFBF9, land #EDF1F5, on the map and in the minimap; the page takes the sea; the GO TO card takes the sea (its blue shown as the alternative); ghost #D8DCE0 keeps its step; the share ramp's pale end 1.10:1 on the land; the author picks the GO TO card |
+| Audit tooling (separate task) | approved and committed, 27 October 2026 | 44efad4: audit-five.sh, three widths at a time under the memory floors; 7:37 against 19:34, identical results; parallel-only findings noted once and counting on recurrence; CLAUDE.md with the audit rules |
+| Clean-up of headless-browser profiles | approved and committed, 27 October 2026 | ef0605e: 260 idle folders deleted (about 920 MB of memory); every lab tool removes its own profile (capture.py's shard and fallback profiles were the hidden leak); stale_profiles.py and the warnings in lab-run.sh and audit-five |
+| Second addendum: the LAYER card (new, 27 October) | built (B), the author picks | B one column of full-width buttons, the view an equal pair; C grouped (COUNTS, STATEMENTS, REVENUE); D two columns |
+| Second addendum: the pop-out | approved with revisions, built | the panel at 90 percent, halfway between opaque and the first addendum's 80; the border at rest 28 percent as approved |
+| Second addendum: the cat's head | picked by the author, built | the second drawing, 85 percent, its own copy of the wire's glow (twice the glow) on the dark theme; none on the light theme, under the contrast settings or in the reduced-motion form |
+| Second addendum: the light land | approved with revisions, built | Russia #D3D8DC (L 0.880) on the map and in the minimap; ghost #BFC4C8 and the too-few-firms grey #B4BAB7 keep their steps; the change pair's two lightest under 3:1 (warning), the share ramp's pale end 1.15:1 |
+| Open from the first addendum | waiting for the author's yes | title bars; TEACH YOUR AGENT's update at every publish; the GO TO card's sea on the light theme |
+| Third addendum (27 October): the LAYER card | C revised, built | the group names (and VIEW) in one column at the left, the buttons one width; the red button, its counter and BLINK on one line; at zero the counter dims with the disabled button (the author liked it); 481 px at the author's window |
+| Third addendum: the pop-out | 95 percent, built | otherwise as approved |
+| Third addendum: the cat's head | the wire's own glow, built | the doubled glow declined; the second drawing at 85 percent as approved |
+| Third addendum: the light land | L 0.892, built | #D7DCE0, 85 percent of the way to the second addendum's land; ghost #C3C8CC, too-few-firms grey #B9BEBB; the palest share step #E0EFFC (from #D9E8F5) to stay visible |
+| Third addendum: light-theme contrast (the author's request) | built | an edge in the ink at 60 percent: cells under 3:1 against the land, dots under 1.5:1 (a first try at 3:1 on dots darkened the mid classes); colours unchanged; the dark theme pixel-identical |
+| Settled from the first addendum | approved, 27 October | the title bars; TEACH YOUR AGENT's rebuild at every publish; the GO TO card taking the sea |
+| Third addendum | approved, 27 October 2026 | the round closed the same night |
+| The close | done, 27 October 2026 | the five-width audit on the final build, one run, zero findings; commits 1484da9, 6bc5bb2, f9954b0, 1194ded; the video re-rendered (the full cut and the teaser) and its text audits (22 counted box-over-mark lines, zero for the teaser); published: atlas v36, explainer v29 with the new teaser asset |
+| Records | done, 27 October 2026 | README round 15, principles.md, CLAUDE.md, memory |
+
+## Stage 2: round 16 (plan mode first)
+
+| Item | Work |
+|---|---|
+| General 2 and 9: the insights | research since 26 October: 83 regions and 22 city windows, one sourced sentence each (full and short); all 105 drafts in by the evening (102 rated high, 3 medium); the shared search budget ran out early, so 78 of the 105 are sanctions designations; to settle in the plan: firms designated after the lists were supplied (shown as firms on no list); then the author's audit and a data file |
+| General 7: CITATIONS / REFERENCES | the button, the translucent terminal-style panel, the globe "i" icon with the wire's scanlines and glow, the atlas's references (data, methods, the insights' sources, the city-window correction), the author's links and the inconspicuous one, the SUPERUSER note with its first text, and the .txt instructions in ~/Documents/Linux commands |
+| 8 Ghost names | the rework: 8F's colour and formatting, names that keep their place and scale with the ground ("maintains perspective"), no extrusion |
