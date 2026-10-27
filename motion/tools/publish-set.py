@@ -21,6 +21,11 @@ With --from COMMIT (round 14) the pages, the stylesheet and the scripts are read
 published while later work sits uncommitted or in later commits; the data files still come from the working tree, and the set is refused if a tracked data
 file differs from the commit's. The build stamp then names that commit.
 
+Round 16: the fonts the atlas loads from its own folder (fonts/DejaVuSansMono.ttf, for the Armenian letters of the REFERENCES panel's note) ship in
+fonts/ with their licence beside them, read from the --from commit like the scripts. Every http(s) link in the shipped pages, scripts and data
+twins must be on the expected list: the insights' sources (insights.json), the cat facts' sources (offwire.json), and the page's own links
+below (the footer's, the references', the fonts', the basemap's). A link that is on none of them refuses the set.
+
 TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's js/agent-guide.js is rebuilt at every publish from the data the set
 ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
 one of the builder's rules, the public-release checks among them. The page itself never fetches it."""
@@ -52,6 +57,32 @@ def source(path):   # a page, the stylesheet or a script: from the working tree,
 BUILD = build_id()
 BUILD_META = '<meta name="build" content="%s">' % BUILD
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
+FONT_LICENCE = {"DejaVuSansMono.ttf": "DejaVuSansMono-LICENSE.txt"}   # a font file and the licence that ships beside it (round 16)
+LINKS = {"https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n", "https://x.com/ArmenKaprelian", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+         "https://doi.org/10.1038/s41597-025-05150-1", "https://doi.org/10.1371/journal.pone.0231866", "https://doi.org/10.5281/zenodo.22257046",
+         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS", "https://www.openstreetmap.org/copyright", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg"}
+LINK_PREFIXES = ("https://x.com/intent/post?text=", "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono", "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/")
+def page_fonts():   # the font files the pages load from fonts/ (round 16), read from the pages themselves so the set follows --from
+    names = []
+    for page in ("explainer.html", "explorer.html"):
+        for n in re.findall(r"url\('fonts/([^']+)'\)", source(page).decode("utf-8")):
+            for m in (n, FONT_LICENCE.get(n)):
+                if m and m not in names: names.append(m)
+    return names
+def link_scan(data_dir):   # every http(s) link in the shipped text files against the expected list (round 16)
+    want = set(LINKS); ins = json.load(open(os.path.join(data_dir, "insights.json"), encoding="utf-8"))
+    for grp in ("regions", "cities"):
+        for unit in ins[grp].values(): want.update(s["url"] for s in unit["sources"])
+    want.update(f["ref"] for f in json.load(open(os.path.join(data_dir, "offwire.json"), encoding="utf-8"))["facts"])
+    seen, bad = {}, []
+    for root, _, files in os.walk(OUT):
+        for n in files:
+            if not n.endswith((".html", ".js")): continue
+            for u in re.findall(r"""https?://[^\s"'<>`)\\]+""", open(os.path.join(root, n), encoding="utf-8").read()):
+                seen.setdefault(u.rstrip(".,;"), os.path.relpath(os.path.join(root, n), OUT))
+    for u, f in sorted(seen.items()):
+        if u not in want and not u.startswith(LINK_PREFIXES): bad.append("a link not on the expected list: %s (in %s)" % (u[:120], f))
+    return len(seen), bad
 def page_scripts():   # the scripts the two pages load, read from the pages themselves (round 14: js/pixel-field.js joined the atlas), so the set follows --from too
     names = []
     for page in ("explainer.html", "explorer.html"):
@@ -94,7 +125,7 @@ def convert(name):
 def copy(sub, name):
     src = os.path.join(MOTION, sub, name); dst = os.path.join(OUT, sub, name)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    if sub == "js": open(dst, "wb").write(source(sub + "/" + name))   # the scripts follow --from; the data stay the working tree's
+    if sub in ("js", "fonts"): open(dst, "wb").write(source(sub + "/" + name))   # the scripts and the fonts follow --from; the data stay the working tree's
     else: shutil.copyfile(src, dst)
     return os.path.getsize(dst)
 
@@ -152,11 +183,13 @@ def check_rules(data_dir):
     return bad
 
 def main():
-    groups = {"pages": [], "scripts": [], "data": [], "moscow rasters": [], "national rasters": [], "addresses": []}
+    groups = {"pages": [], "scripts": [], "fonts": [], "data": [], "moscow rasters": [], "national rasters": [], "addresses": []}
     for n in ("explainer.html", "explorer.html"):
         groups["pages"].append((n, convert(n)))
     for n in SCRIPTS:
         groups["scripts"].append(("js/" + n, copy("js", n)))
+    for n in page_fonts():
+        groups["fonts"].append(("fonts/" + n, copy("fonts", n)))
     data_dir = os.path.join(MOTION, "data")
     for n in sorted(os.listdir(data_dir)):
         if n.endswith(".js"):
@@ -173,6 +206,7 @@ def main():
             if n.endswith(".js"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the base64 twins; the host serves no raw binaries
     problems = check_rules(data_dir)
     guide = agent_guide(problems)
+    n_links, bad_links = link_scan(data_dir); problems += bad_links
     total = 0
     for g, items in groups.items():
         size = sum(b for _, b in items); total += size
@@ -183,6 +217,7 @@ def main():
     print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
     print("build: " + BUILD)
     if guide: print(guide)
+    print("links: %d distinct http(s) links in the shipped pages, scripts and data twins, %d not on the expected list" % (n_links, len(bad_links)))
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0
 
