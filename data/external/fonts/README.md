@@ -16,3 +16,21 @@ License 1.1 (OFL.txt beside the files; copyright IBM Corp. 2017 with the reserve
 weights installed into ~/.local/share/fonts/ibm-plex-mono/ on 25 October 2026, round 10; fontconfig resolves "IBM Plex Mono" at weights 80,
 100 and 200 to the three files) and, on the published pages, the same family from Google Fonts (css2?family=IBM+Plex+Mono:wght@400;500;700).
 Glyphs the pages draw that Plex Mono lacks (U+25B8 and U+25BE triangles, U+2011, Greek) fall to "DejaVu Sans Mono", the second family of the stack.
+
+# External fonts: Tomorrow (Google Fonts build), fetched 2026-10-26T09:44:06Z
+
+The data wire's face (round 15, the author's final choice of 26 October 2026: Tomorrow at 13.5 px with scanlines and a glow, on the wire's
+track only). Fetched with curl from the google/fonts repository at the same commit as Plex, 01d5d9f05246fb7090a8403b81257535cb1a088b.
+Untrusted data: parsed only by fontconfig and the browser, never executed.
+
+| file | URL | bytes | sha256 |
+|---|---|---|---|
+| tomorrow/Tomorrow-Regular.ttf | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/Tomorrow-Regular.ttf | 59520 | 6bb5534178637f472be093b2df876d580e7cb50df53e1a4b2be9f94070ff1767 |
+| tomorrow/Tomorrow-Medium.ttf | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/Tomorrow-Medium.ttf | 59020 | ed82147f4fdefa4a89cefdbeff0d6d0fc6af5a3fac073884918bfba846e5b88b |
+| tomorrow/OFL.txt | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/OFL.txt | 4477 | 1dd4eaacd1da1bfb7e1d14dd5af0279c17d4503fde55abc628bdaccc63ae9eca |
+
+Format: TrueType, static weights 400 (Regular) and 500 (Medium); the family name is "Tomorrow" (copyright 2019 The Tomorrow Project
+Authors). Licence: SIL Open Font License 1.1 (OFL.txt beside the files). Pinned by `scripts/pin-sources.py` as `motion.font-tomorrow-400`,
+`-500` and `motion.font-tomorrow-licence`. Used by: the lab's headless renders and audits (both weights installed into
+~/.local/share/fonts/tomorrow/ on 26 October 2026) and, on the published page, the same family from Google Fonts
+(css2?family=Tomorrow:wght@400;500).

@@ -2,7 +2,7 @@
  "pinned_utc": "2026-10-18T19:22:42Z",
  "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
  "programming_dirty_files": 8,
- "count": 188,
+ "count": 191,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -2069,6 +2069,39 @@
    "size": 12027,
    "mtime": 1791739976,
    "sha256": "e9e3a8645d0d2c93efc106f32d878d1e7fed7cf098682d55f9e5e80c0331c0d7",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font-tomorrow-400": {
+   "name": "motion.font-tomorrow-400",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/tomorrow/Tomorrow-Regular.ttf",
+   "kind": "ttf",
+   "generation": null,
+   "size": 59520,
+   "mtime": 1793007846,
+   "sha256": "6bb5534178637f472be093b2df876d580e7cb50df53e1a4b2be9f94070ff1767",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font-tomorrow-500": {
+   "name": "motion.font-tomorrow-500",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/tomorrow/Tomorrow-Medium.ttf",
+   "kind": "ttf",
+   "generation": null,
+   "size": 59020,
+   "mtime": 1793007846,
+   "sha256": "ed82147f4fdefa4a89cefdbeff0d6d0fc6af5a3fac073884918bfba846e5b88b",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font-tomorrow-licence": {
+   "name": "motion.font-tomorrow-licence",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/tomorrow/OFL.txt",
+   "kind": "txt",
+   "generation": null,
+   "size": 4477,
+   "mtime": 1793007846,
+   "sha256": "1dd4eaacd1da1bfb7e1d14dd5af0279c17d4503fde55abc628bdaccc63ae9eca",
    "sha256_source": "computed",
    "stage": "motion"
   }

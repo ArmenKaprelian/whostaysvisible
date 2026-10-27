@@ -174,6 +174,9 @@ add_small("motion.font-plex-mono-400", f"{LAB}/data/external/fonts/ibm-plex-mono
 add_small("motion.font-plex-mono-500", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf", "motion", kind="ttf")
 add_small("motion.font-plex-mono-700", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Bold.ttf", "motion", kind="ttf")
 add_small("motion.font-plex-mono-licence", f"{LAB}/data/external/fonts/ibm-plex-mono/OFL.txt", "motion", kind="txt")
+add_small("motion.font-tomorrow-400", f"{LAB}/data/external/fonts/tomorrow/Tomorrow-Regular.ttf", "motion", kind="ttf")   # the data wire's face (round 15, the author's final choice of 26 October 2026)
+add_small("motion.font-tomorrow-500", f"{LAB}/data/external/fonts/tomorrow/Tomorrow-Medium.ttf", "motion", kind="ttf")
+add_small("motion.font-tomorrow-licence", f"{LAB}/data/external/fonts/tomorrow/OFL.txt", "motion", kind="txt")
 add_small("motion.okopf", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okopf-2012.csv", "motion")
 
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
