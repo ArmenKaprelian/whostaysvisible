@@ -10,7 +10,7 @@ another, and a shown tooltip must stay inside the map (24 October 2026). (3) The
 and the presets, through the page's instant API. Zero findings is the acceptance rule.
 
 Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,768,1200,1600,2000] [--height 1000]"""
-import re, argparse, math, json, os, subprocess, sys, tempfile, time
+import re, argparse, math, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url
 from cdp import CDP
@@ -144,6 +144,7 @@ def main():
     ap.add_argument("--min-size", type=float, default=11)
     ap.add_argument("--overlap", type=float, default=0.15)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--skip-once", action="store_true", help="leave out the checks that belong once to a whole audit (the agent guide's), for tools/audit_five.py, which runs them once itself")
     a = ap.parse_args()
     url = a.url + ("&" if "?" in a.url else "?") + "__audit=1"
     findings = []; n_boxes = 0; n_states = 0; fields = set(); n_relaxed = 0; relaxed = []
@@ -1008,6 +1009,9 @@ def main():
             for b in hb: findings.append("%-11s width %d  %s" % ("hiddenload", w, b))
         finally:
             proc.terminate()
+            try: proc.wait(timeout=20)
+            except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
+            shutil.rmtree(profile, ignore_errors=True)   # each width's Brave profile goes with its browser (they had piled up in /tmp, a tmpfs here)
     head = "atlas audit: %d states, %d boxes, %d finding(s); field renderers seen: %s; tiles placed over the note or the legend for want of a clear place: %d (%s)" % (n_states, n_boxes, len(findings), ", ".join(sorted(fields)), n_relaxed, " ".join(relaxed))
     text = "\n".join([head] + sorted(set(findings))) + "\n"
     if a.out:
