@@ -8,7 +8,7 @@ label and its fallback; writes the frames playing-hidden, paused-shown and chapt
 
 Usage: python3 -I motion/tools/explainer-audit.py --url http://127.0.0.1:8765/explainer.html [--sizes 1600x1000,400x844] [--out DIR]
 """
-import argparse, base64, json, os, subprocess, sys, tempfile, time
+import argparse, base64, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url
 from cdp import CDP
@@ -92,6 +92,9 @@ def run(url, w, h, out, findings):
         if s10["transition"].split(",")[0].strip() not in ("0s",): bad("fade", "under reduced motion the transition is %r" % s10["transition"])
     finally:
         proc.terminate()
+        try: proc.wait(timeout=20)
+        except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
+        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--url", required=True); ap.add_argument("--sizes", default="1600x1000,400x844"); ap.add_argument("--out", default="motion/build/r12-player")

@@ -5,7 +5,8 @@ Each width runs as its own atlas-audit.py process, two or three at a time. Befor
 memory floors, MemAvailable and SwapFree, read from config/lab.env as scripts/lab-run.sh reads them (atlas-audit.py does not
 run under lab-run.sh, so the check is made here). When the floors are not met the next launch waits, so fewer run at once, and
 with nothing running it waits up to --max-wait and then stops without a result; the floors are never bypassed. Each process
-writes its own result and removes its own Brave profile when it finishes. The checks that belong once to a whole audit (the
+writes its own result and removes its own Brave profile when it finishes, and a run opens with a one-line warning when idle
+profiles from earlier runs are left in /tmp (tools/stale_profiles.py; a warning only). The checks that belong once to a whole audit (the
 agent guide's) run once here and appear once, never per width; the states that exist at one width only (the grain guard at
 1,600 px, the phone states inside the 400 px pass) stay with that width, and a width's own notes (the grain guard's figures)
 are copied into this log. A width that ran beside others and has findings is run again alone, and both results are reported:
@@ -142,6 +143,10 @@ def main():
         except FileExistsError: n += 1
     before = profiles()
     t0 = time.time(); say('audit-five %s: widths %s, %d at a time at most; floors MemAvailable %d MiB, SwapFree %d MiB' % (run, ','.join(map(str, widths)), a.jobs, floors[0], floors[1]))
+    try:
+        import stale_profiles as STALE; n, b, parts = STALE.summary(STALE.scan())
+        if n: say('  warning: %d idle headless-browser profile(s) in /tmp hold %.0f MB (%s); motion/tools/stale_profiles.py lists them' % (n, b / 1e6, parts))
+    except Exception: pass   # a warning only: never a reason to stop the audit
     par = run_widths(widths, a, rundir, '', a.jobs, floors)
     bad = {w: r['error'] for w, r in par.items() if 'error' in r}
     if bad: raise SystemExit('audit-five: width(s) %s gave no result, nothing replaced: %s' % (', '.join(map(str, bad)), '; '.join(bad.values())))

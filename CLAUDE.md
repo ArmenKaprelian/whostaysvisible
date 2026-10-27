@@ -16,5 +16,6 @@ Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/e
 - Audits (26 October 2026). While building, audit at 1,600 px only (`motion/tools/atlas-audit.py --widths 1600`). Run the full five-width audit, with `motion/tools/audit-five.sh`, only at two gates: before a review goes to the author, and before a publish.
 - A publish needs a full run on the final build, all five widths in one run of `audit-five.sh`, with zero findings. Targeted re-runs (`--widths`) never count for a publish. A finding that shows only when widths run together, and not in its width's solo re-run, is noted the first time; once its check has shown that way in an earlier run, it counts (`motion/build/audit/parallel-only.json` keeps the record).
 - Changes that arrive while an audit is running wait for the next run. A running audit is never stopped to fold them in.
+- Every tool that makes a temporary browser profile removes it when it finishes (`/tmp` is a tmpfs here), and `scripts/lab-run.sh` and `audit-five.sh` warn about idle ones (`motion/tools/stale_profiles.py`) without deleting them.
 - Build the publish set with `motion/tools/publish-set.py`. It never ships identifiers, and it names only firms on the five lists.
 - Measure speed in the author's own Brave, with the window in front and live.

@@ -32,6 +32,9 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $# -gt 0 ]] || usage
 
+# Idle headless-browser profiles in /tmp (a tmpfs here) hold memory and swap: a one-line warning, never a refusal or a wait (27 October 2026).
+timeout 5 python3 -I "$LAB/motion/tools/stale_profiles.py" --warn >&2 || true
+
 # Pre-flight refusals, in order.
 lab_require_disk_scratch
 if [[ "$(systemctl --user is-active "$CODEX_UNIT" 2>/dev/null)" == "active" ]]; then

@@ -2,7 +2,7 @@
 """The surface grain's contrast guard (round 10, the author's item 22): on an empty patch of the Under the cursor card and of the legend at 1,600 px, the
 average colour with the grain on and off, and the WCAG contrast of the ink, muted and dim tones against each; every difference must be within 0.05.
 Imported by atlas-audit.py (guard(cdp) with an open page) and runnable alone: python3 -I motion/tools/grainguard.py --url http://127.0.0.1:8765/explorer.html"""
-import argparse, base64, json, os, struct, subprocess, sys, tempfile, time, zlib
+import argparse, base64, json, os, shutil, struct, subprocess, sys, tempfile, time, zlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def png_rgb(data):   # a minimal reader for the screenshots: 8-bit RGB or RGBA, non-interlaced
@@ -70,6 +70,9 @@ def main():
         for f in findings: print("  ", f)
     finally:
         proc.terminate()
+        try: proc.wait(timeout=20)
+        except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
+        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 if __name__ == "__main__":
     main()

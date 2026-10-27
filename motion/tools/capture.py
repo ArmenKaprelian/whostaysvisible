@@ -124,7 +124,11 @@ def main():
     log = {"url": render_url, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "frames": [], "problems": []}
 
     if a.fallback:
-        return fallback(a, render_url, profile, log)
+        try:
+            return fallback(a, render_url, profile, log)
+        finally:
+            if not a.profile:
+                shutil.rmtree(profile, ignore_errors=True)   # the fallback's profile goes too
 
     proc = subprocess.Popen(brave_flags(profile, a.width, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=open(os.path.join(profile, "brave-stderr.log"), "wb"))
     cdp = None
@@ -257,7 +261,12 @@ def run_sharded(a, frames, fps, meta, whole, profile, log):
         shard_files.append(files)
         procs.append(subprocess.Popen(cmd))
     print("sharded capture: %d frames in %d spans %s" % (len(frames), len(spans), [[s[0], s[-1]] for s in spans]), file=sys.stderr, flush=True)
-    rcs = [p.wait() for p in procs]
+    try:
+        rcs = [p.wait() for p in procs]
+    finally:
+        if not a.profile:   # the shards' profiles were made for this run, beside the parent's own, which main() removes
+            for i in range(len(spans)):
+                shutil.rmtree("%s-shard-%d" % (profile.rstrip("/"), i), ignore_errors=True)
     merged = {"url": log["url"], "started_utc": log["started_utc"], "browser": log.get("browser"), "meta": meta, "shards": len(spans),
               "spans": [[s[0], s[-1], len(s)] for s in spans], "shard_logs": [f["log"] for f in shard_files], "frames": [], "problems": [], "exit_codes": rcs}
     for f in shard_files:
@@ -329,18 +338,25 @@ def fallback(a, render_url, profile, log):
     frames = [int(x) for x in a.frames.split(",")] if a.frames else list(range(0, int(round((a.seconds or 3) * fps))))
     png_dir = a.png_dir or tempfile.mkdtemp(prefix="motion-shots-")
     os.makedirs(png_dir, exist_ok=True)
-    for i in frames:
-        out = os.path.join(png_dir, "f%05d.png" % i)
-        url = render_url + "&t=%r" % (i / fps)
-        if a.fallback == "brave-shot":
-            cmd = brave_flags(profile, a.width, a.height, port_zero=False) + ["--screenshot=" + out, url]
-        else:
-            cmd = [FIREFOX, "--headless", "--profile", profile, "--window-size=%d,%d" % (a.width, a.height), "--screenshot", out, url]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
-        log["frames"].append([i, None])
-    if a.out:
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(fps), "-pattern_type", "glob", "-i", os.path.join(png_dir, "f*.png"),
-                        "-c:v", "libx264", "-preset", a.preset, "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-movflags", "+faststart", a.out], check=True)
+    try:
+        for i in frames:
+            out = os.path.join(png_dir, "f%05d.png" % i)
+            url = render_url + "&t=%r" % (i / fps)
+            if a.fallback == "brave-shot":
+                cmd = brave_flags(profile, a.width, a.height, port_zero=False) + ["--screenshot=" + out, url]
+            else:
+                cmd = [FIREFOX, "--headless", "--profile", profile, "--window-size=%d,%d" % (a.width, a.height), "--screenshot", out, url]
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
+            log["frames"].append([i, None])
+        if a.out:
+            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(fps), "-pattern_type", "glob", "-i", os.path.join(png_dir, "f*.png"),
+                            "-c:v", "libx264", "-preset", a.preset, "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-movflags", "+faststart", a.out], check=True)
+    except BaseException:
+        if not a.png_dir: shutil.rmtree(png_dir, ignore_errors=True)   # a failed run leaves no frames for anyone to read
+        raise
+    if not a.png_dir:   # no caller reads a folder it did not name (the profile clean-up of 27 October 2026)
+        if a.out: shutil.rmtree(png_dir, ignore_errors=True)
+        else: print("fallback frames kept in %s" % png_dir, file=sys.stderr, flush=True)
     if a.log:
         with open(a.log, "w") as fh:
             json.dump(log, fh, indent=1)

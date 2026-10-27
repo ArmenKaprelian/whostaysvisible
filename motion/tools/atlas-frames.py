@@ -10,7 +10,7 @@ focus-visible ring), "hoverpseudo" (an element id held in its :hover state throu
 Usage: python3 -I motion/tools/atlas-frames.py --url http://127.0.0.1:8765/explorer.html --out DIR [--width 1600 --height 1000]
        [--zoom 3] --shots shots.json | --shot '{...}' ...
 """
-import argparse, base64, json, os, subprocess, sys, tempfile, time
+import argparse, base64, json, os, shutil, subprocess, sys, tempfile, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url
 from cdp import CDP
@@ -98,6 +98,9 @@ def main():
             print(sh["name"], json.dumps(r), os.path.getsize(path), "bytes")
     finally:
         proc.terminate()
+        try: proc.wait(timeout=20)
+        except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=10)
+        shutil.rmtree(profile, ignore_errors=True)   # the profile goes with its browser (they had piled up in /tmp, a tmpfs here)
 
 if __name__ == "__main__":
     main()
