@@ -16,7 +16,8 @@ Usage: agent_guide.py            writes js/agent-guide.js
 As a module: build(data_dir, published=None) returns the guide (dated when published is given), check(motion_dir) the findings.
 """
 import argparse, json, math, os, re, sys
-from decimal import Decimal, ROUND_HALF_UP
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from jsfmt import to_fixed, js_round, pct   # Motion.fmt's rules in one module (round 18)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.join(HERE, '..')
@@ -28,13 +29,7 @@ ARTIFACT = 'https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n'
 # js/agent-guide.js is as before and the button copies the text.
 GUIDE_URL = 'https://raw.githubusercontent.com/ArmenKaprelian/whostaysvisible/main/motion/publish/agent-guide.md'
 
-def to_fixed(v, d):   # Number.prototype.toFixed: the exact value, ties to the larger magnitude
-    r = Decimal(abs(v)).quantize(Decimal(1).scaleb(-d), rounding=ROUND_HALF_UP)
-    s = format(r, 'f')
-    return ('-' + s) if v < 0 and r != 0 else s
-def js_round(v): return math.floor(v + 0.5)
-def pct(v, d=1): return to_fixed(js_round(v * 10 ** d) / 10 ** d, d) + '%'   # Motion.fmt.pct
-def dec(v, d=3): return to_fixed(v, d)                                        # Motion.fmt.dec
+def dec(v, d=3): return to_fixed(v, d)                                        # Motion.fmt.dec, three decimals by default here
 def ci(lo, hi): return '95%% confidence interval %s to %s' % (dec(lo), dec(hi))
 
 def build(data_dir, published=None):
@@ -60,7 +55,7 @@ def build(data_dir, published=None):
     add('')
     add('## 2. How to read the views and layers')
     add('')
-    add('2.1. The Cells view gives each layer per cell: 100 km cells across the country, 25 km cells closer in, and 1 km and 250 m cells inside the 90 by 90 km windows of 22 cities.')
+    add('2.1. The Cells view gives each layer per cell: 100 km cells across the country, 25 km cells closer in, 1 km squares of firms on no list, and 250 m cells in 22 city windows for 2021.')
     add('2.2. The Firms view draws every located eligible firm on no list (comparison group) with a house- or street-level geocode at its registered address, grouped by coordinate pair. Firms on the five lists (treated) are red marks from the year they were added to a list. Other geocodes, coordinates without a verified house or street match, are counted and not drawn.')
     add('2.3. The layers:')
     add('- Firm density, 2021: located eligible firms at registered addresses in 2021, per cell.')
@@ -70,8 +65,8 @@ def build(data_dir, published=None):
     add('- List members, 2021: members of the sanctions list per cell in 2021. The hover also gives the government strategic list.')
     add('- Median revenue change (descriptive): the percent change of each cell’s median real revenue among the revenue-by-cash cohort firms observed in 2024, against the cell’s 2021 median, in cells with 50 or more observed firms. The firms observed change from year to year.')
     add('- Leading industry by year: the division (two-digit OKVED 2 code, identical to NACE Rev. 2) with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value, per cell and year.')
-    add('2.4. Years. The financial years run from 2014 to 2025. The FNS supplies the statements from 2019 and Rosstat before it. 2025* is incomplete, and 2012 and 2013 carry no coordinates.')
-    add('2.5. Disclosure. A share needs 50 firms. List counts under 5 in a cell are not shown. Counts under 10 in the 1 km and 250 m city cells are banded.')
+    add('2.4. Years. The financial years run from 2014 to 2025. The FNS supplies the statements from 2019 and Rosstat before it. 2025* is the flagged latest-year extension, and 2012 and 2013 carry no coordinates.')
+    add('2.5. Disclosure. In the Cells view a share needs 50 firms, list counts under 5 are not shown, and counts under 10 in the 250 m and 5 km cells are banded.')
     add('2.6. Each panel’s i button opens its reading text: what the panel shows, how to read it and its source.')
     add('')
     add('## 3. How to drive it')
@@ -85,7 +80,7 @@ def build(data_dir, published=None):
     add('')
     add('4.1. Nationally, %s of eligible firms have a statement for 2021 and %s for 2024 (Table B.1).' % (pct(e[2021]), pct(e[2024])))
     add('4.2. Between 2021 and 2024 availability falls among state-related firms (%s to %s) and unitary enterprises (%s to %s) and rises among private firms and joint-stock companies. The declines are concentrated in 2024 (Figures 2.2 and 2.3).' % (pct(F['own']['state'][0]), pct(F['own']['state'][1]), pct(F['legal']['unitary'][0]), pct(F['legal']['unitary'][1])))
-    add('4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Table B.4). ' + size)
+    add('4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Tables B.4 and B.5). ' + size)
     add('4.4. Sanctioned-only firms, on the sanctions list and on no other list, have lower availability than firms on no list by 2024: an odds ratio of %s (%s) (Table B.7).' % (dec(F['sanctioned_only_or_2024']), ci(F['sanctioned_only_or_2024_low'], F['sanctioned_only_or_2024_high'])))
     add('4.5. The estimates come from binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Standard errors are two-way clustered by industry and region.')
     add('')

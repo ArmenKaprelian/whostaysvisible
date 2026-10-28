@@ -11,9 +11,8 @@ import json, math, os, sys
 MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 SKIP = ('Russia', 'outside the basemap outline', 'region not recorded')
 
-def fmt_int(v): return f'{int(math.floor(v + 0.5)) if v >= 0 else int(math.ceil(v - 0.5)):,}'
-def fmt_pct(v, d=1): return f'{math.floor(v * 10 ** d + 0.5) / 10 ** d:.{d}f}%'
-def fmt_signed(v, d=1): return ('+' if v > 0 else '−' if v < 0 else '') + f'{abs(v):.{d}f}'
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from jsfmt import fmt_int, pct as fmt_pct, signed as fmt_signed   # Motion.fmt's rules in one module (round 18: this copy rounded exact ties to even and negative halves away from zero)
 def fnv(s):
     h = 2166136261
     for b in s.encode('utf-8'): h ^= b; h = (h * 16777619) & 0xffffffff
@@ -27,10 +26,14 @@ def load(data_dir):
     D = {n: rd(n + '.json') for n in ('treatednational', 'regions', 'cellsyears', 'firms', 'series', 'cells100', 'offwire', 'anchors')}
     dv = D['regions']['divisions']; D['short'] = {int(c): sh for c, sh in zip(dv['code'], dv['short'])}   # column arrays
     R = D['regions']; D['regrow'] = {(R['region'][i], R['year'][i]): i for i in range(len(R['region']))}
+    global LAST; LAST = D['firms']['years'][-1]
     return D
 
 def div_short(D, code): return 'no division code' if code == 0 else D['short'].get(code, f'division {code:02d}')
-def ys_of(y): return f'{y}*' if y == 2025 else str(y)
+LAST = None   # the provisional, latest data year, set by load() from firms.json (round 18, H14)
+def ys_of(y):
+    if LAST is None: raise RuntimeError('wire_check: load() reads the latest year from firms.json before a year is written')
+    return f'{y}*' if y == LAST else str(y)
 
 def lead(D, y, band, name, layer='share'):
     """The band's own fact on the share layer in the Cells view (factFor's full form), as plain text."""
@@ -84,7 +87,7 @@ def facts(D, y, band, name):
     ct = C['change_totals']; sup = sum(1 for v in C['change']['supported'] if v)
     out.append(f'2024 against 2021: {fmt_int(sup)} 100 km cells have 50 or more located firms in both years. {fmt_pct(ct["availability_share_percent"][0])} of located firms had a statement in 2021 and {fmt_pct(ct["availability_share_percent"][1])} in 2024')
     out.append(f'2021: {fmt_int(sum(1 for v in C["lists"]["sanctioned"] if v is not None and v >= 5))} cells hold 5 or more sanctions-list members')
-    out.append(f'2021: {fmt_int(F["cohorts"]["revenue_cash"])} located eligible firms in the revenue cohort by cash share')
+    out.append(f'2021: {fmt_int(F["cohorts"]["revenue_cash"])} eligible firms in the revenue cohort by cash share')
     red = sum(1 for i in range(T['n']) if T['red_from'][i] <= y)
     out.append(f'By {ys}: {fmt_int(red)} of the {fmt_int(T["n"])} firms on the lists (treated) are shown red')
     out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014. {fmt_int(T["inferred_n"])} dates of addition to a list are inferred')
@@ -105,7 +108,7 @@ def firms(D, y, band, name):
         if j not in picks: picks.append(j)
     out = []
     for j in picks:
-        ch = T['filed'][j][y - 2014]; st = 'available' if ch == '1' else 'absent' if ch == '0' else 'not in the registry'; d = date_of(T['red_date'][j])
+        ch = T['filed'][j][y - D['firms']['years'][0]]; st = 'available' if ch == '1' else 'absent' if ch == '0' else 'not in the registry'; d = date_of(T['red_date'][j])
         out.append(f'{T["name"][j]} · {("on a list from " + d) if d else ("on a list from " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}')
     return out
 
@@ -115,7 +118,7 @@ def anniversary(D, iso):
     y, m, d = iso.split('-'); md = f'{m}-{d}'; day = f'{int(d)} {MONTHS[int(m) - 1]}'
     A = D['anchors']['a']
     if A['listed']['date'][5:] == md: return f"{day}: {A['label']} was added to a list on this day in {A['listed']['date'][:4]}."
-    if md == '01-22': return f'{day}: the resident list rests on Government Decree No. 35, signed on this day in 2020.'
+    if md == '01-22': return f'{day}: the 2020 filing-exemption list rests on Government Decree No. 35, signed on this day in 2020.'
     T = D['treatednational']; hits = [i for i in range(T['n']) if T['red_date'][i] and T['red_date'][i][5:] == md and not T['inferred'][i] and not T['undated'][i]]
     if not hits: return None
     years = sorted({T['red_date'][i][:4] for i in hits}); yrs = years[0] if len(years) == 1 else ', '.join(years[:-1]) + ' and ' + years[-1]

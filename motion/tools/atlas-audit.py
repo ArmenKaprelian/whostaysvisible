@@ -10,13 +10,14 @@ another, and a shown tooltip must stay inside the map (24 October 2026). (3) The
 and the presets, through the page's instant API. Zero findings is the acceptance rule.
 
 Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,768,1200,1600,2000] [--height 1000]"""
-import re, argparse, base64, math, json, os, shutil, subprocess, sys, tempfile, time
+import re, argparse, base64, math, json, os, shutil, subprocess, sys, tempfile, time, unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
 from cdp import CDP
 import wire_check as WC   # the wire's re-derivation (round 10)
 import grainguard as GG   # the surface grain's contrast guard (round 10)
 import agent_guide as AG   # the guide that TEACH YOUR AGENT copies (round 15, item 19 as revised)
+import glossary_build as GB   # the REFERENCES panel's definitions, rebuilt in memory once per audit (round 18)
 import profile_check as PC   # the profiles' re-derivation (round 15)
 
 def bx(b):
@@ -52,6 +53,8 @@ def audit_boxes(boxes, canvases, min_size, overlap):
     return out
 
 CUR_W = None   # the width under audit, for the DOM rules that depend on it (round 11)
+CARD_FACTS = []   # the side column's cards as the page lists them (window.__atlas.cardFacts(), round 18): the reading blocks and the charts that pop out
+LAYER_FACTS = {}   # each layer's facts as the page declares them (window.__atlas.layerFacts(), round 18): the years the base loop visits, the red button's and the year row's rules
 PANEL_H, PANEL_H_LISTED = 300, 560   # the Under the cursor panel's rows at most this tall (the industry layer's five swatch rows at 400 px) and with three listed firms named
 CAPS_JS = "(() => { const want = [['header h1', 700, false], ['.byline .who', 500, true], ['.card h2', 500, true], ['#theme', 500, true], ['.yearrow .ui', 700, true], ['#yearlabel', 700, true], ['#modes .modelabel', 500, true], ['#modes .btn', 500, true], ['#layers .btn', 500, true], ['#presets .btn', 500, true], ['#legendtitle', 500, true], ['#legendbody .row:not(.p)', 500, true], ['#mixtitle', 500, true], ['#cellinfo > span', 500, true], ['.wi.tip', 500, true], ['.loc', 500, true]];\n  const bad = [];\n  for (const [sel, wt, tracked] of want) { const els = [...document.querySelectorAll(sel)]; if (!els.length) { bad.push(sel + ': no element'); continue; }\n    for (const el of els.slice(0, 3)) { const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize), ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);\n      if (cs.textTransform !== 'uppercase') bad.push(sel + ': transform ' + cs.textTransform); if (parseInt(cs.fontWeight) !== wt) bad.push(sel + ': weight ' + cs.fontWeight);\n      if (tracked ? Math.abs(ls - 0.08 * fs) > 0.06 : ls !== 0) bad.push(sel + ': spacing ' + cs.letterSpacing + ' at ' + fs + 'px'); if (!/IBM Plex Mono/.test(cs.fontFamily)) bad.push(sel + ': family ' + cs.fontFamily); } }\n  const u = [...document.querySelectorAll('.u')]; if (!u.length) bad.push('.u: no element'); for (const el of u.slice(0, 5)) if (getComputedStyle(el).textTransform !== 'none') bad.push('.u: transform ' + getComputedStyle(el).textTransform);\n  for (const [sel, txt] of [['#zoom-in', 'ZOOM IN (+)'], ['#zoom-out', 'ZOOM OUT (−)'], ['#zoom-fit', 'FIT THE WHOLE COUNTRY (0)']]) if (document.querySelector(sel).title !== txt) bad.push(sel + ': title ' + document.querySelector(sel).title); const by = getComputedStyle(document.documentElement).getPropertyValue('--by').replace(/[^A-Za-z. ]/g, '').trim(); if (by !== 'Armen G. Kaprelian') bad.push('--by: ' + by); const who = document.querySelector('.byline .who'); if (!who || who.textContent.trim() !== 'Armen G. Kaprelian · PhD Candidate, Claremont Graduate University') bad.push('byline: ' + (who && who.textContent));  if (!document.querySelector('meta[name=author]') || document.querySelector('meta[name=author]').content !== 'Armen G. Kaprelian') bad.push('meta author missing'); for (const [sel, min] of [['.card.act', 2.9], ['.card:not(.act)', 2.9], ['#theme', 2.9], ['#modes .btn', 2.9], ['#layers .btn', 2.9], ['#presets .btn', 2.9], ['#zoom-in', 2.9], ['#pulse', 2.9], ['#methodbtn', 2.9], ['.toggle', 2.9], ['#zoombox', 1.9], ['#legend', 1.9], ['#mapnote', 1.9], ['#mixbox', 1.9], ['#tip', 1.9]]) { const el = document.querySelector(sel); if (!el) continue; const cs = getComputedStyle(el); if (parseFloat(cs.borderTopWidth) < min || cs.borderTopLeftRadius !== '0px' || cs.boxShadow !== 'none') bad.push(sel + ': border ' + cs.borderTopWidth + ' radius ' + cs.borderTopLeftRadius + ' shadow ' + cs.boxShadow); } { const hd = document.querySelector('header'), hb = hd.getBoundingClientRect(), bb = document.querySelector('.byline').getBoundingClientRect(); if (innerWidth >= 1200 && hb.height > (innerWidth >= 1600 ? 48 : 92)) bad.push('header taller than its row (one row at 1,600 px and above, two at 1,200): ' + hb.height); if (bb.bottom > hb.bottom + 0.5 || hd.scrollHeight > hd.clientHeight + 1) bad.push('the byline spills out of the header: byline bottom ' + bb.bottom + ' header bottom ' + hb.bottom); const tb = document.querySelector('#theme').getBoundingClientRect(); if (innerWidth > 900 && (tb.left < bb.right + 8 || tb.right < hb.right - 0.5)) bad.push('the theme button is not at the right edge past the byline: button ' + tb.left + '-' + tb.right + ', byline right ' + bb.right + ', header right ' + hb.right); } const tg = document.querySelector('.tagline'); if (!tg || tg.textContent !== 'Where Russian firms file, and where their statements stop appearing.') bad.push('tagline: ' + (tg && tg.textContent)); const lic = document.querySelector('footer .lic'); if (!lic || !lic.textContent.startsWith(__LICENCE__)) bad.push('licence line: ' + (lic && lic.textContent)); { const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(); const col = el => getComputedStyle(el).borderTopColor; const rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; const go = document.querySelector('.card.go'), act = document.querySelector('.card.act'), read = document.querySelector('.card:not(.act):not(.go)'); if (!go || col(go) !== rgb(tok('--go'))) bad.push('GO TO card border ' + (go && col(go)) + ' expected ' + tok('--go')); for (const b of document.querySelectorAll('#presets .btn:not(.russia)')) if (col(b) !== rgb(tok('--go'))) { bad.push('preset border ' + col(b) + ' expected ' + tok('--go')); break; } { const rb = document.querySelector('#presets .btn.russia'); if (!rb || col(rb) !== rgb(tok('--context'))) bad.push('RUSSIA border ' + (rb && col(rb)) + ' expected ' + tok('--context')); } if (!act || col(act) !== rgb(tok('--cursor'))) bad.push('LAYER card border ' + (act && col(act))); if (!read || col(read) !== rgb(tok('--context'))) bad.push('reading card border ' + (read && col(read))); const yu = document.querySelector('.yearrow .ui'), yl = document.querySelector('#yearlabel'), cu = getComputedStyle(yu), cl = getComputedStyle(yl); if (cu.fontSize !== '16px' || cl.fontSize !== '16px' || cu.fontWeight !== cl.fontWeight || Math.abs(yu.getBoundingClientRect().bottom - yl.getBoundingClientRect().bottom) > 0.5) bad.push('year row: ' + cu.fontSize + ' ' + cl.fontSize + ' ' + cu.fontWeight + '/' + cl.fontWeight + ' bottoms ' + yu.getBoundingClientRect().bottom + '/' + yl.getBoundingClientRect().bottom); for (const [sel, el] of [['#yearlabel', yl], ['.lockup .mk', document.querySelector('.lockup .mk')], ['#yearthumb', document.querySelector('#yearthumb')], ['#pulse svg', document.querySelector('#pulse svg')], ['.sw.dot', document.querySelector('.sw.dot')]]) if (!el) { if (sel !== '.sw.dot') bad.push(sel + ': missing'); } else { const cs = getComputedStyle(el); if ((cs.maskImage && cs.maskImage !== 'none') || (cs.webkitMaskImage && cs.webkitMaskImage !== 'none')) bad.push('striped symbol or value: ' + sel); } const st = document.querySelector('header h1 .striped'); if (!st || (getComputedStyle(st).maskImage === 'none' && getComputedStyle(st).webkitMaskImage === 'none')) bad.push('the title is not striped'); for (const sel of ['.card h2', '#legendtitle', '#mixtitle', '#notelabel', '.ctoggle']) { const el = document.querySelector(sel); if (el && getComputedStyle(el).color !== rgb(tok('--context'))) bad.push(sel + ': ' + getComputedStyle(el).color + ' expected the neon green'); } const csq = sel => getComputedStyle(document.querySelector(sel)); if (csq('#yearlabel').color !== rgb(tok('--context'))) bad.push('year value at rest ' + csq('#yearlabel').color + ' expected ' + tok('--context')); if (csq('#yearthumb').color !== rgb(tok('--context'))) bad.push('thumb at rest ' + csq('#yearthumb').color); if (csq('.yearrow .ui').color !== rgb(tok('--ink'))) bad.push('YEAR label ' + csq('.yearrow .ui').color); if (csq('#pulse').borderTopColor !== rgb(tok('--treated')) || csq('#pulse').color !== rgb(tok('--treated'))) bad.push('pulse button ' + csq('#pulse').borderTopColor + ' / ' + csq('#pulse').color + ' expected the listed red'); if (csq('#yearthumb path').strokeWidth !== '3px' || document.querySelector('#yearthumb').getAttribute('viewBox') !== '-2.4 -2.4 28.8 28.8') bad.push('thumb geometry ' + csq('#yearthumb path').strokeWidth + ' ' + document.querySelector('#yearthumb').getAttribute('viewBox')); }\n  return bad; })()"
 
@@ -81,13 +84,17 @@ def audit_dom(dom, mode=None, layer=None):
             if abs(lc - hc) > 1.5: out.append(("header", "dom", "the lock-up is off the header's centre by %.1f px" % (lc - hc)))
     if dom.get("pulse") is not None and mode is not None:
         p = dom["pulse"]
-        if p["visible"] != ((mode == "firms" or layer in ("share", "industry")) and bool(dom.get("yearrow") and dom["yearrow"]["visible"])): out.append(("pulse", "dom", "visible %s in the %s view on the %s layer" % (p["visible"], mode, layer)))
+        if p["visible"] != ((mode == "firms" or bool((LAYER_FACTS.get(layer) or {}).get("pulse"))) and bool(dom.get("yearrow") and dom["yearrow"]["visible"])): out.append(("pulse", "dom", "visible %s in the %s view on the %s layer" % (p["visible"], mode, layer)))
         if p["visible"]:
             yr = dom["yearrow"]
             if p["x"] < yr["x"] - 0.5 or p["y"] < yr["y"] - 0.5 or p["x1"] > yr["x1"] + 0.5 or p["y1"] > yr["y1"] + 0.5: out.append(("pulse", "dom", "outside the year row %s" % json.dumps({k: round(p[k], 1) for k in ("x", "y", "x1", "y1")})))
             for k in ("year", "yearlabel"):
                 if inter(p, dom[k]) > 0: out.append(("pulse", "dom", "intersects the %s" % k))
             if p["x1"] - p["x"] < 24 or p["y1"] - p["y"] < 24: out.append(("pulse", "dom", "smaller than 24 px: %.1f by %.1f" % (p["x1"] - p["x"], p["y1"] - p["y"])))
+    lc = (dom.get("cards") or {}).get("layer")   # round 18: the year row shows in the Firms view and on the layers that follow the slider, as their facts declare, whenever the LAYER card is open
+    if mode is not None and layer in LAYER_FACTS and dom.get("yearrow") is not None and lc and lc.get("open") and lc["body"]["visible"]:
+        want = mode == "firms" or LAYER_FACTS[layer].get("year") is None
+        if bool(dom["yearrow"]["visible"]) != want: out.append(("yearrow", "dom", "the year row is %s in the %s view on the %s layer, whose facts say %s" % ("shown" if dom["yearrow"]["visible"] else "hidden", mode, layer, "shown" if want else "hidden")))
     for cid, c in (dom.get("cards") or {}).items():   # the cards' collapse toggles (the author's addition of 25 October): inside the title row, at least 24 px, clear of the title; a collapsed card shows its title row only
         t, hd, ttl, bd, cd = c["toggle"], c["head"], c["title"], c["body"], c["card"]
         if not t["visible"]: out.append(("card", cid, "toggle not visible")); continue
@@ -207,6 +214,31 @@ CORRECTION_MAX_CHARS = 300
 CORRECTION_MAX_SENTENCES = 2
 CORRECTIONS_JS = "[...document.querySelectorAll('#refs-corrections li')].map(li => ({ text: li.textContent, lead: li.firstChild && li.firstChild.nodeName === 'B' ? li.firstChild.textContent : null }))"
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+def norm_name(s):   # the page's normName (explorer-app.js) in Python (round 18, H9)
+    s = unicodedata.normalize("NFKD", str(s or "")); s = re.sub("[\u0300-\u036f]", "", s).lower()
+    return re.sub(r"[\W_]+", " ", s).strip()
+def find_expected(T, q):   # the listed firms the page's findMatches accepts for q, as a set (its order and its cap of ten aside; round 18, H9)
+    qn = norm_name(q)
+    if len(qn) < 2: return set()
+    toks, out = qn.split(" "), set()
+    for i in range(T["n"]):
+        a = norm_name(T["name"][i]); b = norm_name(T["name_filed"][i]) if T.get("name_filed") else ""
+        if not a: continue
+        k = " " + a + (" | " + b if b and b != a else "") + " "
+        if qn in k or (len(toks) > 1 and all(t in k for t in toks)): out.add(i)
+    return out
+
+def anniversary_days(D, year=2026):   # round 18 (H8): the four days of the anniversary check, read from the data in place of four fixed dates
+    import datetime
+    T = D["treatednational"]; anchor = D["anchors"]["a"]["listed"]["date"][5:]; decree = "01-22"; count = {}   # the decree's day is the decree's own (22 January 2020)
+    for i in range(T["n"]):
+        d = T["red_date"][i]
+        if d and not T["inferred"][i] and not T["undated"][i]: count[d[5:]] = count.get(d[5:], 0) + 1
+    most = max((k for k in count if k not in (anchor, decree)), key=lambda k: (count[k], k))
+    day = datetime.date(year, 1, 1)
+    while day.strftime("%m-%d") in count or day.strftime("%m-%d") in (anchor, decree): day += datetime.timedelta(days=1)
+    return ["%d-%s" % (year, md) for md in (anchor, decree, most)] + [day.isoformat()]
+
 def corrections_check(entries):
     import datetime
     bad, dates = [], []
@@ -356,13 +388,16 @@ def main():
     ap.add_argument("--min-size", type=float, default=11)
     ap.add_argument("--overlap", type=float, default=0.15)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--states-out", default=None, help="round 18: write the width, tag, layer, year and box count of every state run through state() (the fixed checks are counted but not listed) as JSON lines, so a change can account for its boxes state by state")
     ap.add_argument("--only", default=None, help="round 16: comma-separated substrings of state tags; only matching states run (a quick pass while building, never for a review or a publish)")
-    ap.add_argument("--skip-once", action="store_true", help="leave out the checks that belong once to a whole audit (the agent guide's), for tools/audit_five.py, which runs them once itself")
+    ap.add_argument("--skip-once", action="store_true", help="leave out the checks that belong once to a whole audit (the agent guide's and, since round 18, the glossary's), for tools/audit_five.py, which runs them once itself")
     ap.add_argument("--refs-once", action="store_true", help="round 17: run the REFERENCES panel's once-per-audit checks (the light theme, the contrast and forced-colour settings, reduced motion, the header at 960 px) at this run's first width even with --skip-once; tools/audit_five.py sets it for 1,600 px, so the review and publish gates run them")
     a = ap.parse_args()
     url = a.url + ("&" if "?" in a.url else "?") + "__audit=1"
-    findings = []; n_boxes = 0; n_states = 0; fields = set(); n_relaxed = 0; relaxed = []
+    findings = []; n_boxes = 0; n_states = 0; fields = set(); n_relaxed = 0; relaxed = []; per_state = []
     WIRE_DATA = WC.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"))   # the wire's and the anniversaries' re-derivation (rounds 10 and 12)
+    Y0, YL = WIRE_DATA["firms"]["years"][0], WIRE_DATA["firms"]["years"][-1]   # round 18 (H4, H14): the first and the provisional data year, from firms.json
+    ANNIV = anniversary_days(WIRE_DATA); CYC = len(WC.cycle(WIRE_DATA, 2021, "national", "Russia"))   # round 18 (H8, H11): the four days and the wire's cycle length, from the data
     global CUR_W
     for w in [int(x) for x in a.widths.split(",")]:
         CUR_W = w
@@ -385,6 +420,22 @@ def main():
             # the landing (round 10): before any call, the Cells view, the leading-industry layer, 2024, at the national zoom (the camera is compared with the Russia preset below)
             landing = cdp.evaluate("(() => { const A = window.__atlas; const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'), lb = document.querySelector('#layers button[aria-pressed=\"true\"]'); return { mode: mb && mb.dataset.mode, layer: lb && lb.dataset.id, year: document.getElementById('year').value, label: document.getElementById('yearlabel').textContent, cam: A.camera(), theme: getComputedStyle(document.documentElement).getPropertyValue('--scheme').trim(), dataTheme: document.documentElement.getAttribute('data-theme'), button: document.getElementById('theme').textContent, yearrow: !document.getElementById('yearrow').hidden, mix: !document.getElementById('mixbox').hidden, prov: document.getElementById('layerprov').textContent.slice(0, 40) }; })()", await_promise=False)
             layers = cdp.evaluate("window.__atlas.layers", await_promise=False)
+            LAYER_FACTS.clear(); LAYER_FACTS.update({f["id"]: f for f in (cdp.evaluate("window.__atlas.layerFacts ? window.__atlas.layerFacts() : null", await_promise=False) or [])})   # round 18
+            CARD_FACTS[:] = cdp.evaluate("window.__atlas.cardFacts ? window.__atlas.cardFacts() : []", await_promise=False) or []   # round 18
+            dom_cards = cdp.evaluate("(() => [...document.querySelectorAll('[id^=\"card-\"]')].map(k => ({ id: k.id.slice(5), read: !!document.getElementById('cr-' + k.id.slice(5)), charts: [...k.querySelectorAll('canvas')].map(c => c.id) })))()", await_promise=False)
+            if sorted(c["id"] for c in CARD_FACTS) != sorted(d["id"] for d in dom_cards): findings.append("%-11s width %d  the page's cardFacts() lists %s, its DOM holds the cards %s" % ("cards", w, [c["id"] for c in CARD_FACTS], [d["id"] for d in dom_cards]))
+            for c in CARD_FACTS:   # each card's entry against its HTML: a reading block where it says so, its chart's canvas inside the card
+                d = next((x for x in dom_cards if x["id"] == c["id"]), None)
+                if d and (c["read"] != d["read"] or (c["chart"] and c["chart"] not in d["charts"])): findings.append("%-11s width %d  %s: cardFacts() %s against its HTML %s" % ("cards", w, c["id"], json.dumps(c), json.dumps(d)))
+            POPS = cdp.evaluate("[...document.querySelectorAll('canvas[role=\"button\"]')].map(c => c.closest('[id^=\"card-\"]')).filter(Boolean).map(k => k.id.slice(5))", await_promise=False) or []   # the charts that pop out, from the page's DOM
+            DECIDED = {"density": ("Counts", 2021, False, True, False), "share": ("Statements", None, True, True, True), "change": ("Statements", 2024, False, False, False),   # group, year, pulse, squares, national marker:
+                       "cohort": ("Revenue", 2021, False, False, False), "lists": ("Counts", 2021, False, False, False), "fin": ("Revenue", 2024, False, False, False),               # the author's decisions of rounds 10 to 16,
+                       "industry": ("Revenue", None, True, True, True), "shared": ("Counts", None, False, False, False), "gs": ("Statements", 2024, False, False, False)}           # kept apart from the page's table (round 18)
+            for lid, f in LAYER_FACTS.items():
+                got = (f.get("group"), f.get("year"), bool(f.get("pulse")), bool(f.get("micro")), bool(f.get("mark")))
+                if lid in DECIDED and got != DECIDED[lid]: findings.append("%-11s width %d  the page's facts for %s are %s, the decided ones %s" % ("layers", w, lid, got, DECIDED[lid]))
+                elif lid not in DECIDED: print("layers     width %d  a layer the audit has no decided facts for: %s %s" % (w, lid, got), flush=True)   # a new layer is listed, not judged
+            if set(LAYER_FACTS) != set(layers): findings.append("%-11s width %d  the page's layerFacts() names %s for the layers %s" % ("layers", w, sorted(LAYER_FACTS), layers))
             L0 = cdp.evaluate("window.__atlas.layouts()", await_promise=False)   # the layouts of the normal load (round 11, item 7)
             if w == 1600:   # the surface grain's contrast guard (round 10, item 22): the ink, muted and dim figures on a grained patch of a card and of the legend within 0.05 of the plain surface's
                 gf, gt = GG.guard(cdp)
@@ -409,7 +460,7 @@ def main():
                 if a.only and not any(t in tag for t in a.only.split(",")): return   # --only (round 16)
                 nonlocal n_boxes, n_states, n_relaxed
                 r = cdp.evaluate("(async () => { const A = window.__atlas, m = A.cities.Moscow; window.__extra = null; A.layer(%r); A.year(%d); await A.ready(); %s A.layer(%r); A.year(%d); await A.ready(); const r = A.redraw(); const mb = document.querySelector('#modes button[aria-pressed=\"true\"]'); return { boxes: r.boxes, dom: r.dom, cam: A.camera(), canvases: window.__atlasCanvases, field: A.field ? A.field() : null, pulsing: A.pulsing ? A.pulsing() : null, mode: mb ? mb.dataset.mode : 'cells', extra: window.__extra }; })()" % (layer, year, setup, layer, year), await_promise=True, timeout=180)
-                n_boxes += len(r["boxes"]); n_states += 1
+                n_boxes += len(r["boxes"]); n_states += 1; per_state.append({"w": w, "tag": tag, "layer": layer, "year": year, "boxes": len(r["boxes"])})
                 if r["dom"].get("tipRelaxed"): n_relaxed += 1; relaxed.append("%d:%s:%s" % (w, tag, "+".join(r["dom"]["tipRelaxed"])))
                 found = audit_boxes(r["boxes"], r["canvases"], a.min_size, a.overlap) + audit_dom(r["dom"], r.get("mode"), layer)
                 if check: found += check(r)
@@ -426,7 +477,7 @@ def main():
                     return bad
                 return f
             for layer in layers:
-                for year in ([2014, 2021, 2025] if layer in ("share", "industry") else [2021]):
+                for year in ([Y0, 2021, YL] if (LAYER_FACTS.get(layer) or {}).get("year") is None else [2021]):   # round 18: every layer that follows the slider, as its facts declare (the shared layer gains two years)
                     state(layer, year, "A.mode('cells'); A.preset('Russia');", "-")
             # the context strip and the cursor tile (round 9): the strip open and closed, the fact's band at the country, inside a region
             # and at a city window, a forced tip, the tile at the map's corners and centre clear of the panels and of the hovered mark, a tap
@@ -482,8 +533,8 @@ def main():
                 if g["lsepLeft"] is not None and (g["lsepLeft"] < floor - 0.5 or g["lsepRight"] < floor - 0.5): bad.append(("wire", "gap", "the lead separator's margins are %.1f and %.1f px, under 0.6 em" % (g["lsepLeft"], g["lsepRight"])))
                 if not g["fade"]: bad.append(("wire", "gap", "the window's edges carry no fade"))
                 return bad
-            # anniversaries (round 12, part D, item 6): the builder on four fixed days against the re-derivation (the anchor firm's day, the decree's day, a day with 167 listings, a day with none)
-            ANNIV_DAYS = ["2026-05-19", "2026-01-22", "2026-02-24", "2026-01-01"]
+            # anniversaries (round 12, part D, item 6): the builder on four days against the re-derivation (the anchor firm's day, the decree's day, the day with the most dated listings, a day with none; read from the data since round 18)
+            ANNIV_DAYS = ANNIV
             def anniv_ok(r):
                 x = r["extra"]
                 if not x: return [("anniversary", "strip", "no report")]
@@ -615,8 +666,8 @@ def main():
                     return bad
                 return chk
             CP = "await A.ready(); A.redraw(); const n = A.cellPulseAt(600), s = A.cellPulseState(); window.__extra = { n, s, firms: %s, rule: A.listedRule(), visible: !document.getElementById('pulse').hidden }; A.cellPulseAt(null);"
-            state("share", 2022, "A.mode('cells'); A.preset('Russia'); " + CP % (N22C % (2022, 8)), "cpulse", cpulse_ok(100))
-            state("industry", 2022, "A.mode('cells'); A.preset('Moscow'); " + CP % (N22C % (2022, 8)), "cpulse1", cpulse_ok(1))
+            state("share", 2022, "A.mode('cells'); A.preset('Russia'); " + CP % (N22C % (2022, 2022 - Y0)), "cpulse", cpulse_ok(100))
+            state("industry", 2022, "A.mode('cells'); A.preset('Moscow'); " + CP % (N22C % (2022, 2022 - Y0)), "cpulse1", cpulse_ok(1))
             state("density", 2021, "A.mode('cells'); A.preset('Russia'); await A.ready(); window.__extra = { n: A.pulse(), hidden: document.getElementById('pulse').hidden };", "cpulseoff", lambda r: [] if r["extra"] and r["extra"]["n"] == 0 and r["extra"]["hidden"] else [("cpulse", "button", "on the density layer: %s" % json.dumps(r["extra"]))])
             # the legend's two sides (round 14): the key side by default with the "i" shown, the reading side at the key side's width, back again; then the reading side left on for the DOM rules
             def sides_ok(r):
@@ -642,7 +693,7 @@ def main():
                         x = r["extra"]
                         if not x: return [("wire", "items", "no report")]
                         exp = WC.cycle(WIRE_DATA, y, band, name, x["cycle"], today=x.get("today")); bad = gap_ok(x.get("gaps")); tipset = set(x["tips"])
-                        if len(x["items"]) != 50: bad.append(("wire", "items", "%d items, expected 50" % len(x["items"])))
+                        if len(x["items"]) != len(exp): bad.append(("wire", "items", "%d items, expected %d" % (len(x["items"]), len(exp))))
                         for i, (a, e) in enumerate(zip(x["items"], exp)):
                             if a["kind"] != e["kind"]: bad.append(("wire", "items", "%d: kind %s, expected %s (%s)" % (i, a["kind"], e["kind"], a["text"][:60])))
                             elif e["kind"] == "tip":
@@ -673,13 +724,13 @@ def main():
                     bad = []
                     if x["after"]["text"] != x["before"]["text"]: bad.append(("wire", "prune", "the item in view left the track on a region change (%r, then %r)" % (x["before"]["text"], x["after"]["text"])))
                     else:
-                        moved = x["before"]["left"] - x["after"]["left"]; exp = 60 * x["ms"] / 1000
+                        moved = x["before"]["left"] - x["after"]["left"]; exp = 60 * x["ms"] / 1000   # 60 px/s, the page's WIRE_SPEED: a design value no data refresh changes, so it stays pinned (round 18)
                         if abs(moved - exp) > 15: bad.append(("wire", "prune", "the item in view moved %.0f px in %d ms, expected about %.0f (the wire's speed)" % (moved, x["ms"], exp)))
                     if x["after"]["rendered"] < 0: bad.append(("wire", "prune", "the offset went negative: %.0f" % x["after"]["rendered"]))
-                    if not (50 <= x["after"]["dom"] <= 220): bad.append(("wire", "prune", "%d items on the track after the change (%d before)" % (x["after"]["dom"], x["before"]["dom"])))
+                    if not (x["cyc"] <= x["after"]["dom"] <= 4.4 * x["cyc"]): bad.append(("wire", "prune", "%d items on the track after the change (%d before; a cycle is %d)" % (x["after"]["dom"], x["before"]["dom"], x["cyc"])))
                     if x["removed"] <= 0: bad.append(("wire", "prune", "nothing was pruned although the first item had passed (%d items before, %d after)" % (x["before"]["dom"], x["after"]["dom"])))
                     return bad
-                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); await A.ready(); A.redraw(); { const sleep = ms => new Promise(r => setTimeout(r, ms)); await sleep(450); const tr = document.getElementById('wiretrack'), win = document.getElementById('ctxwin'); const first = tr.querySelector('.wi'); const w0 = first.getBoundingClientRect().width; A.wireSeek(w0 + 400); await sleep(100); const wr0 = win.getBoundingClientRect(); const el0 = [...tr.querySelectorAll('.wi')].find(e => e.getBoundingClientRect().left > wr0.left + 120);   /* an item well inside the window: the slot may grow by up to a third of the bar and cover what sat at the edge */ const vis = () => ({ text: el0 && el0.isConnected ? el0.textContent.slice(0, 40) : null, left: el0 && el0.isConnected ? el0.getBoundingClientRect().left : null, dom: tr.querySelectorAll('.wi').length, rendered: A.wire().rendered }); const before = vis(), t0 = performance.now(); A.hoverKm(m[0] + 60, m[1], { show: true }); await sleep(450); const after = vis(); window.__extra = { before, after, ms: Math.round(performance.now() - t0), removed: (before.dom + 50) - after.dom }; A.hoverOff(); }", "wireprune", prune_ok)
+                state("share", 2021, "A.mode('cells'); A.strip(true); A.layer('share'); A.year(2021); if (A.hoverOff) A.hoverOff(); A.preset('Russia'); await A.ready(); A.redraw(); { const sleep = ms => new Promise(r => setTimeout(r, ms)); await sleep(450); const tr = document.getElementById('wiretrack'), win = document.getElementById('ctxwin'); const first = tr.querySelector('.wi'); const w0 = first.getBoundingClientRect().width; A.wireSeek(w0 + 400); await sleep(100); const wr0 = win.getBoundingClientRect(); const el0 = [...tr.querySelectorAll('.wi')].find(e => e.getBoundingClientRect().left > wr0.left + 120);   /* an item well inside the window: the slot may grow by up to a third of the bar and cover what sat at the edge */ const vis = () => ({ text: el0 && el0.isConnected ? el0.textContent.slice(0, 40) : null, left: el0 && el0.isConnected ? el0.getBoundingClientRect().left : null, dom: tr.querySelectorAll('.wi').length, rendered: A.wire().rendered }); const ww = A.wire(), cyc = ww.items.length, speed = ww.width && parseFloat(ww.dur) ? ww.width / parseFloat(ww.dur) : null; const before = vis(), t0 = performance.now(); A.hoverKm(m[0] + 60, m[1], { show: true }); await sleep(450); const after = vis(); window.__extra = { before, after, ms: Math.round(performance.now() - t0), removed: (before.dom + cyc) - after.dom, cyc, speed }; A.hoverOff(); }", "wireprune", prune_ok)
                 # the wire watchdog (the author's request of 25 October 2026): a hidden-then-visible document with a track that stalled while hidden advances again within two seconds
                 def wake_ok(r):
                     x = r["extra"]
@@ -718,7 +769,7 @@ def main():
                     c = x["committed"]
                     if len(c["sets"]) != 1 or c["sets"][0]["status"] != "committed" or "Moscow Oblast" not in c["sets"][0]["key"] or c["commits"] != p["commits"] + 1: bad.append(("wire", "queue", "after a 600 ms rest: %s commits %s" % (json.dumps([(s_["status"], s_["key"][:30]) for s_ in c["sets"]]), c["commits"])))
                     f = x["after50"]
-                    if len(f["sets"]) > 2 or sum(1 for s_ in f["sets"] if s_["status"] == "pending") > 1 or f["dom"] > 115 or f["orphans"] > 8: bad.append(("wire", "queue", "after fifty hovers: %d sets, dom %d, orphans %d" % (len(f["sets"]), f["dom"], f["orphans"])))
+                    if len(f["sets"]) > 2 or sum(1 for s_ in f["sets"] if s_["status"] == "pending") > 1 or f["dom"] > 2.3 * CYC or f["orphans"] > 8: bad.append(("wire", "queue", "after fifty hovers: %d sets, dom %d, orphans %d" % (len(f["sets"]), f["dom"], f["orphans"])))
                     if not x["monotone"]: bad.append(("wire", "queue", "the offset ran backwards during the hovers"))
                     if x["heapMB"] is not None and x["heapMB"] > 24: bad.append(("wire", "queue", "the heap grew by %.1f MB over fifty hovers" % x["heapMB"]))
                     t = x["afterRest"]["timers"]
@@ -780,6 +831,9 @@ def main():
                 x = r["extra"]; bad = []
                 if not x: return [("find", "state", "no report")]
                 if not (1 <= len(x["hits"]) <= 10): bad.append(("find", "hits", "%d hits for %r" % (len(x["hits"]), x["q"])))
+                ex = find_expected(WIRE_DATA["treatednational"], x["q"])   # round 18 (H9): the hits against the names, so a list update that drops a query's firms says so
+                if not ex: bad.append(("find", "hits", "%r matches no firm on the lists: the state needs another query" % x["q"]))
+                elif set(x["hits"]) != ex if len(ex) <= 10 else (len(x["hits"]) != 10 or not set(x["hits"]) <= ex): bad.append(("find", "hits", "%r: the page lists %d firms, the names give %d" % (x["q"], len(x["hits"]), len(ex))))
                 if any(x["qn"] not in k for k in x["keys"]): bad.append(("find", "match", "a hit whose names lack %r: %s" % (x["qn"], json.dumps(x["keys"])[:200])))
                 if not x["listOpen"] or x["expanded"] != "true" or not x["escClosed"]: bad.append(("find", "list", "open %s, expanded %s, closed by Escape %s" % (x["listOpen"], x["expanded"], x["escClosed"])))
                 st = x["st"]
@@ -1013,7 +1067,6 @@ def main():
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); " + MIXJS, "mixoff", lambda r: [] if r["extra"] and not r["extra"]["visible"] else [("mix", "hidden", "the box shows off the industry layer")])
             state("industry", 2021, "A.mode('cells'); A.mixbox(false); A.preset('Russia'); " + MIXJS, "mixclosed", mix_ok("", closed=True))
             state("industry", 2021, "A.mode('cells'); A.mixbox(null); A.preset('Russia'); " + MIXJS, "mixdef", lambda r: [] if r["extra"] and r["extra"]["visible"] and r["extra"]["open"] == (w >= 1200) else [("mix", "default", "open %s at %d px" % (r["extra"] and r["extra"]["open"], w))])   # open by default only where the map is at least 600 px wide and 640 px tall (the side-by-side layout)
-            state("industry", 2021, "A.mode('cells'); A.mixbox(null); A.preset('Russia');", "mixdef2")
             state("industry", 2021, "A.mode('cells'); " + Z3 + " { const c = A.camera(); A.hoverKm(c.cx + 30, c.cy - 20, { show: true }); window.__extra = { tip: document.getElementById('tip').innerText }; }", "ihov25", lambda r: [] if r["extra"] and ("revenue" in r["extra"]["tip"]) else [("industry", "tip25", json.dumps(r["extra"])[:200])])
             state("share", 2021, "A.mode('cells'); " + Z3 + " { const c = A.camera(); A.hoverKm(c.cx + 30, c.cy - 20, { show: true }); }", "z3hov")
             state("lists", 2021, "A.mode('cells'); A.layer('lists'); " + Z4 + " { const c = A.camera(); A.hoverKm(c.cx, c.cy, { show: true }); }", "z4hov")
@@ -1033,22 +1086,23 @@ def main():
             def pulsing_is(expect, label): return lambda r: [] if bool(r["pulsing"]) == expect else [("pulse", "marks", "%s: expected pulsing %s, got %s" % (label, expect, r["pulsing"]))]
             def both(f, g): return lambda r: f(r) + g(r)
             def firms_states(expect, tag):
+                once = tag == "firms"   # round 18: the gzip note, the click ladder and the marks' rule assert no renderer and give the same results on both (checked), so they run in the first pass only
                 for layer, year, preset in [("share", 2021, "Russia"), ("share", 2014, "Moscow"), ("share", 2025, "Central Moscow (250 m)"), ("fin", 2021, "Russia"), ("fin", 2021, "Moscow"), ("fin", 2021, "Central Moscow (250 m)"), ("density", 2021, "Moscow"), ("lists", 2021, "Russia"), ("industry", 2021, "Russia"), ("industry", 2021, "Moscow"), ("industry", 2021, "Central Moscow (250 m)")]:
                     state(layer, year, F + "A.preset(%r);" % preset, tag, field_is(expect, "the firms view draws on " + "/".join(expect)))
                 state("share", 2021, F + "A.preset('Central Moscow (250 m)'); A.hoverKm(m[0] + 1.2, m[1] + 0.4);", tag + "hov", field_is(expect, "hover"))
-                state("share", 2021, F + "A.preset('Moscow'); await A.ready(); window.__extra = { note: A.twinNote(2021) };", tag + "twin", lambda r: [] if r["extra"] and r["extra"]["note"] == "by Armen G. Kaprelian" else [("twin", "gzip", "the 2021 twin's comment reads %r" % (r["extra"] and r["extra"]["note"]))])
+                if once: state("share", 2021, F + "A.preset('Moscow'); await A.ready(); window.__extra = { note: A.twinNote(2021) };", tag + "twin", lambda r: [] if r["extra"] and r["extra"]["note"] == "by Armen G. Kaprelian" else [("twin", "gzip", "the 2021 twin's comment reads %r" % (r["extra"] and r["extra"]["note"]))])
                 state("fin", 2021, F + "A.preset('Moscow'); A.hoverKm(m[0], m[1]);", tag + "hov2", field_is(expect, "hover"))
                 # the Firms view's click ladder (round 10): the Cells rungs by zoom alone, every landing centred on the click, x4 steps where no rung applies, Shift+click back down the rungs
                 rung_is = lambda name: (lambda r: [] if r["extra"] and r["extra"].get("rung") == name else [("camera", "rung", "expected the rung %r, got %s" % (name, json.dumps(r["extra"])[:160]))])
                 state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); window.__extra = await A.click(m[0], m[1]);", tag + "clk", both(both(cam_k(side / 20, "a click at the Moscow preset in the firms view lands on the 20 km rung at the click", mx, my, 0.5), rung_is("fine")), field_is(expect, "click")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); window.__extra = await A.click(m[0], m[1]);", tag + "fclk1", both(cam_k(side / 95, "from the country a click on the Moscow cell lands on the city rung at the click", mx, my, 0.5), rung_is("city")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2);", tag + "fclk2", both(cam_k(side / 20, "from the city rung a click lands on the 20 km rung at the click", mx + 3, my - 2, 0.5), rung_is("fine")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2);", tag + "fclk3", both(cam_k(min(4 * side / 20, 200), "from the 20 km rung a click steps x4 at the click", mx + 3, my - 2, 0.5), rung_is("zoom")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk4", both(cam_k(side / 20, "a Shift+click from the x4 step returns to the 20 km rung at the click", mx + 3, my - 2, 0.5), rung_is("fine")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk5", both(cam_k(side / 95, "a Shift+click from the 20 km rung returns to the city rung at the click", mx + 3, my - 2, 0.5), rung_is("city")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });" % (side / 95), tag + "fclk6", both(cam_is(P["russia"], "a Shift+click from the city rung returns the Russia camera"), rung_is("fit")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); { const mu = A.cities.Murmansk; window.__extra = await A.click(mu[0], mu[1] + 400); }", tag + "fclkempty", both(cam_k(4 * P["kfit"], "from the country a click on an empty cell steps x4 at the click"), rung_is("zoom")))
-                state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); window.__extra = await A.click(m[0] + 300, m[1]);", tag + "fclkcell", both(cam_k(side / 500, "from the country a click on a cell without a preset city lands on the 500 km rung at the click", mx + 300, my, 0.5), rung_is("cell")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); window.__extra = await A.click(m[0], m[1]);", tag + "fclk1", both(cam_k(side / 95, "from the country a click on the Moscow cell lands on the city rung at the click", mx, my, 0.5), rung_is("city")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2);", tag + "fclk2", both(cam_k(side / 20, "from the city rung a click lands on the 20 km rung at the click", mx + 3, my - 2, 0.5), rung_is("fine")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2);", tag + "fclk3", both(cam_k(min(4 * side / 20, 200), "from the 20 km rung a click steps x4 at the click", mx + 3, my - 2, 0.5), rung_is("zoom")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk4", both(cam_k(side / 20, "a Shift+click from the x4 step returns to the 20 km rung at the click", mx + 3, my - 2, 0.5), rung_is("fine")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Moscow'); await A.ready(); await A.click(m[0] + 3, m[1] - 2); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });", tag + "fclk5", both(cam_k(side / 95, "a Shift+click from the 20 km rung returns to the city rung at the click", mx + 3, my - 2, 0.5), rung_is("city")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); window.__extra = await A.click(m[0] + 3, m[1] - 2, { shift: true });" % (side / 95), tag + "fclk6", both(cam_is(P["russia"], "a Shift+click from the city rung returns the Russia camera"), rung_is("fit")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); { const mu = A.cities.Murmansk; window.__extra = await A.click(mu[0], mu[1] + 400); }", tag + "fclkempty", both(cam_k(4 * P["kfit"], "from the country a click on an empty cell steps x4 at the click"), rung_is("zoom")))
+                if once: state("share", 2021, F + "A.layer('share'); A.year(2021); A.preset('Russia'); await A.ready(); window.__extra = await A.click(m[0] + 300, m[1]);", tag + "fclkcell", both(cam_k(side / 500, "from the country a click on a cell without a preset city lands on the 500 km rung at the click", mx + 300, my, 0.5), rung_is("cell")))
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2022); await new Promise(r => setTimeout(r, 250));", tag + "pulse", both(pulsing_is(True, "a forward year change pulses the newly red marks"), field_is(expect, "pulse")))
                 state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready();", tag + "back", pulsing_is(False, "a backward year change does not pulse"))
                 state("share", 2025, "A.mode('cells'); A.preset('Moscow'); A.layer('share'); A.year(2021); await A.ready(); A.year(2025); await A.ready();", tag + "cells", pulsing_is(False, "a forward year change in the cells view does not pulse"))
@@ -1063,17 +1117,17 @@ def main():
                         if r["pulsing"] != exp: bad.append(("pulse", "button", "%s: pulsing %s, expected %s" % (label, r["pulsing"], exp)))
                         return bad
                     return f
-                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2022, 8)), tag + "btn", both(pulsed_is(2022, "the button replays the bloom of the firms listed in 2022"), field_is(expect, "button")))
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2022, 2022 - Y0)), tag + "btn", both(pulsed_is(2022, "the button replays the bloom of the firms listed in 2022"), field_is(expect, "button")))
                 # the year row while a pulse runs (round 10, final): the value and the thumb in the live green, the pulse button filled red
                 state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.pulseAt(null); const n = A.pulse(); await new Promise(r => setTimeout(r, 450)); const cs = s => getComputedStyle(document.querySelector(s)), tk = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim(), rgb = h => 'rgb(' + [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)).join(', ') + ')'; window.__extra = { n, live: document.getElementById('yearrow').classList.contains('live'), ok: cs('#yearlabel').color === rgb(tk('--context-live')) && cs('#yearthumb').color === rgb(tk('--context-live')) && cs('#pulse').backgroundColor === rgb(tk('--treated')), got: [cs('#yearlabel').color, cs('#yearthumb').color, cs('#pulse').backgroundColor] }; A.pulseAt(null);", tag + "yearlive", lambda r: [] if r["extra"] and r["extra"]["n"] > 0 and r["extra"]["live"] and r["extra"]["ok"] else [("pulse", "yearrow", "live colours %s" % json.dumps(r["extra"]))])
-                state("share", 2025, F + "A.preset('Moscow'); A.layer('share'); A.year(2025); await A.ready(); await new Promise(r => setTimeout(r, 2000)); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2025, 11)), tag + "btn0", lambda r: pulsed_is(2025, "the button replays the bloom of the firms added in 2025")(r) if r["extra"] and r["extra"]["expect"] else ([] if r["extra"] and r["extra"]["pulsed"] == 0 and r["pulsing"] == 0 else [("pulse", "button", "2025: pulse() %s, pulsing %s" % (r["extra"] and r["extra"]["pulsed"], r["pulsing"]))]) + ([] if r["dom"]["pulse"]["disabled"] and r["dom"]["pulse"]["title"] == "No firm was added to these lists in 2025" else [("pulse", "button", "2025: disabled %s, title %r" % (r["dom"]["pulse"]["disabled"], r["dom"]["pulse"]["title"]))]))
-                state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2020, 6)), tag + "btnback", pulsed_is(2020, "after a move back a year the button pulses the firms listed in the shown year"))
-                state("share", 2016, F + "A.preset('Moscow'); A.layer('share'); A.year(2016); await A.ready(); { const T = MOTION_DATA.treatednational; let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] <= 2016 || T.filed[i][2] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best], T.y[best], { show: true }), d: bd }; }", tag + "rimhov", lambda r: [] if r["extra"] and r["extra"]["hover"].get("listed") and r["extra"]["hover"]["listed"]["rim"] >= 1 and r["extra"]["hover"]["listed"]["rim_from"] > 2016 else [("hover", "rim", "a rimmed firm's hover: %s" % json.dumps(r["extra"] and r["extra"]["hover"] and r["extra"]["hover"].get("listed")))])
+                state("share", 2025, F + "A.preset('Moscow'); A.layer('share'); A.year(2025); await A.ready(); for (let t = 0; t < 50 && A.pulsing(); t++) await new Promise(r => setTimeout(r, 50)); await new Promise(r => setTimeout(r, 100)); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2025, 2025 - Y0)), tag + "btn0", lambda r: pulsed_is(2025, "the button replays the bloom of the firms added in 2025")(r) if r["extra"] and r["extra"]["expect"] else ([] if r["extra"] and r["extra"]["pulsed"] == 0 and r["pulsing"] == 0 else [("pulse", "button", "2025: pulse() %s, pulsing %s" % (r["extra"] and r["extra"]["pulsed"], r["pulsing"]))]) + ([] if r["dom"]["pulse"]["disabled"] and r["dom"]["pulse"]["title"] == "No firm was added to these lists in 2025" else [("pulse", "button", "2025: disabled %s, title %r" % (r["dom"]["pulse"]["disabled"], r["dom"]["pulse"]["title"]))]))
+                state("share", 2020, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); A.year(2020); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s }; await new Promise(r => setTimeout(r, 250));" % (N22 % (2020, 2020 - Y0)), tag + "btnback", pulsed_is(2020, "after a move back a year the button pulses the firms listed in the shown year"))
+                state("share", 2016, F + "A.preset('Moscow'); A.layer('share'); A.year(2016); await A.ready(); { const T = MOTION_DATA.treatednational; let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] <= 2016 || T.filed[i][2016 - MOTION_DATA.firms.years[0]] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best], T.y[best], { show: true }), d: bd }; }", tag + "rimhov", lambda r: [] if r["extra"] and r["extra"]["hover"].get("listed") and r["extra"]["hover"]["listed"]["rim"] >= 1 and r["extra"]["hover"]["listed"]["rim_from"] > 2016 else [("hover", "rim", "a rimmed firm's hover: %s" % json.dumps(r["extra"] and r["extra"]["hover"] and r["extra"]["hover"].get("listed")))])
                 # a red mark is hovered within the 6 px floor and wins over the address under the cursor (25 October 2026)
-                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); { const T = MOTION_DATA.treatednational, c = A.camera(); let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] > 2022 || T.filed[i][8] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best] + 4.5 / c.k, T.y[best], { show: true }) }; }", tag + "redhov", lambda r: [] if r["extra"] and r["extra"]["hover"]["kind"] == "listed" and (r["extra"]["hover"].get("listed") or {}).get("red", 0) >= 1 else [("hover", "red", "a red mark 4.5 px off the cursor: %s" % json.dumps(r["extra"] and r["extra"]["hover"]))])
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); { const T = MOTION_DATA.treatednational, c = A.camera(); let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] > 2022 || T.filed[i][2022 - MOTION_DATA.firms.years[0]] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } window.__extra = { hover: A.hoverKm(T.x[best] + 4.5 / c.k, T.y[best], { show: true }) }; }", tag + "redhov", lambda r: [] if r["extra"] and r["extra"]["hover"]["kind"] == "listed" and (r["extra"]["hover"].get("listed") or {}).get("red", 0) >= 1 else [("hover", "red", "a red mark 4.5 px off the cursor: %s" % json.dumps(r["extra"] and r["extra"]["hover"]))])
                 # the listed firms' names (25 October 2026): at the nearest red firm to Moscow in 2022 the tooltip carries one to three named short lines, each with a glyph span,
                 # lines and the panel their rows; skipped until the data carry names
-                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); { const T = MOTION_DATA.treatednational; if (T.name) { let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] > 2022 || T.filed[i][8] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } const h = A.hoverKm(T.x[best], T.y[best], { show: true }); const top = (h.listed && h.listed.top) || []; window.__extra = { named: true, kind: h.kind, n: h.listed && h.listed.n, top: top.length, names: top.map(i => T.name[i]), tip: document.getElementById('tip').innerText, glyphs: document.querySelectorAll('#tip .gl').length, blocks: document.querySelectorAll('#cellinfo .lf:not(.more)').length, panelH: document.getElementById('cellinfo').getBoundingClientRect().height }; } else window.__extra = { named: false }; }", tag + "names",
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); { const T = MOTION_DATA.treatednational; if (T.name) { let best = -1, bd = Infinity; for (let i = 0; i < T.n; i++) { if (T.red_from[i] > 2022 || T.filed[i][2022 - MOTION_DATA.firms.years[0]] === '-') continue; const d = Math.hypot(T.x[i] - m[0], T.y[i] - m[1]); if (d < bd) { bd = d; best = i; } } const h = A.hoverKm(T.x[best], T.y[best], { show: true }); const top = (h.listed && h.listed.top) || []; window.__extra = { named: true, kind: h.kind, n: h.listed && h.listed.n, top: top.length, names: top.map(i => T.name[i]), tip: document.getElementById('tip').innerText, glyphs: document.querySelectorAll('#tip .gl').length, blocks: document.querySelectorAll('#cellinfo .lf:not(.more)').length, panelH: document.getElementById('cellinfo').getBoundingClientRect().height }; } else window.__extra = { named: false }; }", tag + "names",
                       lambda r: [] if not r["extra"] or not r["extra"]["named"] or (r["extra"]["kind"] == "listed" and 1 <= r["extra"]["top"] <= 3 and all(r["extra"]["names"]) and r["extra"]["glyphs"] == min(r["extra"]["top"], 1 if w < 600 else 3) and r["extra"]["blocks"] == r["extra"]["top"] and (r["extra"]["n"] <= 3 or " more" in r["extra"]["tip"]) and r["extra"]["panelH"] <= PANEL_H_LISTED) else [("names", "tip", json.dumps({k: r["extra"][k] for k in ("kind", "n", "top", "names", "panelH")}) + " | " + r["extra"]["tip"][-160:])])
                 # the listed rule by zoom: the quiet weight falls with the zoom, the ring reach and width stay within their caps and the cull margin
                 def rules_ok(r):
@@ -1089,13 +1143,13 @@ def main():
                     if x and (abs(x["russia"]["alpha"] - 0.48) > 1e-6 or abs(x["russia"]["floor"] - 0.85 * 0.82) > 1e-6): bad.append(("rule", "quiet", "at the country alpha %.3f floor %.3f, expected 0.48 and 0.697 (round 11's 0.60 and 0.85 with B'')" % (x["russia"]["alpha"], x["russia"]["floor"])))   # the national extra (round 11, item 2) with the cased marks of round 14 (B'')
                     if x and (x["moscow"].get("q2", 0) > 1e-6 or abs(x["moscow"]["alpha"] - (1 - 0.2 * x["moscow"]["q"])) > 1e-6): bad.append(("rule", "quiet", "at the city preset q2 %.3f alpha %.3f (q %.3f): the extra must end at the city zoom" % (x["moscow"].get("q2", 0), x["moscow"]["alpha"], x["moscow"]["q"])))
                     return bad
-                state("share", 2021, F + "{ const out = {}; for (const [k, p] of [['russia', 'Russia'], ['moscow', 'Moscow'], ['central', 'Central Moscow (250 m)']]) { A.preset(p); out[k] = A.listedRule(); } window.__extra = out; A.preset('Moscow'); }", tag + "rules", rules_ok)
+                if once: state("share", 2021, F + "{ const out = {}; for (const [k, p] of [['russia', 'Russia'], ['moscow', 'Moscow'], ['central', 'Central Moscow (250 m)']]) { A.preset(p); out[k] = A.listedRule(); } window.__extra = out; A.preset('Moscow'); }", tag + "rules", rules_ok)
                 def pair_ok(expect):
                     def chk(r):
                         x = r["extra"]
                         if not x or not x["AN"]: return [("pair", "tile", "no report or no anchors")]
                         bad = []; line = "The two firms of the film, %d m apart." % x["AN"]["distance"]
-                        if x["AN"]["distance"] != 57 or x["AN"]["computed"] != 57: bad.append(("pair", "data", "the shipped distance is %s, the coordinates give %s" % (x["AN"]["distance"], x["AN"]["computed"])))
+                        if x["AN"]["distance"] != x["AN"]["computed"]: bad.append(("pair", "data", "the shipped distance is %s, the coordinates give %s" % (x["AN"]["distance"], x["AN"]["computed"])))   # round 18 (H12): the shipped value against the coordinates, not a literal
                         if x["kind"] not in ("firm", "listed"): bad.append(("pair", "hover", "no mark under the cursor: %s" % x["kind"]))
                         if (line in x["text"]) != expect: bad.append(("pair", "tile", "the line is %s: %s" % ("present" if expect is False else "absent", json.dumps(x["text"])[:200])))
                         if x["text"].count("film") > 1 or "Dental" in x["text"] or "dental" in x["text"]: bad.append(("pair", "tile", "more than the one line about the pair, or the neighbour described: %s" % json.dumps(x["text"])[:200]))
@@ -1139,13 +1193,13 @@ def main():
                       lambda r: [] if r["extra"] and r["extra"]["s1"]["on"] and not r["extra"]["s2"]["on"] else [("sweep", "state", "started %s, after a press %s" % (r["extra"] and json.dumps(r["extra"]["s1"]), r["extra"] and json.dumps(r["extra"]["s2"])))])
                 state("share", 2023, F + "A.preset('Russia'); A.layer('share'); A.year(2024); await A.ready(); await new Promise(q => setTimeout(q, 300)); A.year(2023); const d0 = A.dissolve(); await A.ready(); await new Promise(q => setTimeout(q, 700)); window.__extra = { d0, d2: A.dissolve() };", tag + "dissolve",
                       lambda r: [] if r["extra"] and r["extra"]["d0"]["on"] and not r["extra"]["d2"]["on"] else [("dissolve", "state", json.dumps(r["extra"]))])
-                state("share", 2021, F + "A.preset('Russia'); await A.ready(); const T = MOTION_DATA.treatednational; let lp = 0; for (let i = 0; i < T.n; i++) if (T.filed[i][7] !== '-') lp++; const n = A.firmsInView(); A.hoverKm(m[0], m[1], { show: true }); window.__extra = { n, expected: MOTION_DATA.firms.by_year[2021].firms + lp, tile: A.tile().firms, shown: !document.getElementById('tfirmsw').hidden, text: document.getElementById('tfirms').textContent };", tag + "inview",
+                state("share", 2021, F + "A.preset('Russia'); await A.ready(); const T = MOTION_DATA.treatednational; let lp = 0; for (let i = 0; i < T.n; i++) if (T.filed[i][2021 - MOTION_DATA.firms.years[0]] !== '-') lp++; const n = A.firmsInView(); A.hoverKm(m[0], m[1], { show: true }); window.__extra = { n, expected: MOTION_DATA.firms.by_year[2021].firms + lp, tile: A.tile().firms, shown: !document.getElementById('tfirmsw').hidden, text: document.getElementById('tfirms').textContent };", tag + "inview",
                       lambda r: [] if r["extra"] and r["extra"]["n"] == r["extra"]["expected"] == r["extra"]["tile"] and r["extra"]["shown"] and r["extra"]["text"].replace(",", "") == str(r["extra"]["n"]) else [("tile", "firms", json.dumps(r["extra"]))])
                 state("share", 2021, F + "A.preset('Moscow'); await A.ready(); const n = A.firmsInView(); A.mode('cells'); A.hoverKm(m[0], m[1], { show: true }); window.__extra = { n, national: MOTION_DATA.firms.by_year[2021].firms, shownInCells: !document.getElementById('tfirmsw').hidden }; A.mode('firms');", tag + "inviewcity",
                       lambda r: [] if r["extra"] and 0 < r["extra"]["n"] < r["extra"]["national"] and not r["extra"]["shownInCells"] else [("tile", "firms", json.dumps(r["extra"]))])
                 # under prefers-reduced-motion the button highlights without animation: the count is there at once and the frame loop is not used
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]})
-                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2022, 8)), tag + "rmpulse", pulsed_is(2022, "under reduced motion the button still pulses (a still highlight)"))
+                state("share", 2022, F + "A.preset('Moscow'); A.layer('share'); A.year(2022); await A.ready(); window.__extra = { pulsed: A.pulse(), expect: %s };" % (N22 % (2022, 2022 - Y0)), tag + "rmpulse", pulsed_is(2022, "under reduced motion the button still pulses (a still highlight)"))
                 state("share", 2024, F + "A.preset('Russia'); await A.ready(); window.__extra = A.sweep(true);", tag + "rmsweep", lambda r: [] if r["extra"] and not r["extra"]["on"] else [("sweep", "motion", "the sweep ran under reduced motion: %s" % json.dumps(r["extra"]))])
                 state("share", 2022, "A.mode('cells'); A.preset('Russia'); await A.ready(); A.pulse(); window.__extra = A.cellPulseState(); A.cellPulseAt(null);", tag + "rmcpulse", lambda r: [] if r["extra"] and r["extra"]["static"] and r["extra"]["count"] > 0 else [("cpulse", "motion", "under reduced motion the Cells pulse is not the still highlight: %s" % json.dumps(r["extra"])[:160])])
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
@@ -1184,11 +1238,11 @@ def main():
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.6)
             if w in (400, 1600):
                 # an anniversary load (round 12, part D, item 6): with the page's date pinned to the anchor firm's day the wire's lead item ends with the sentence and the lead slot keeps the fact alone
-                sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "window.__today = '2026-05-19';"})["identifier"]
+                sid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "window.__today = '%s';" % ANNIV[0]})["identifier"]   # the anchor firm's day, from the data (round 18)
                 cdp.call("Page.navigate", {"url": url + qsep + "v=anniv"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
                 r = cdp.evaluate("(async () => { const A = window.__atlas; A.strip(true); await A.ready(); await new Promise(r => setTimeout(r, 450)); const wv = A.wire(); return { today: A.today(), lead: wv.items.length ? wv.items[0].text : '', slot: A.context().text, src: wv.items.length ? wv.items[0].src : '' }; })()", await_promise=True, timeout=60)
-                n_states += 1; exp_line = WC.anniversary(WIRE_DATA, "2026-05-19")
-                if r["today"] != "2026-05-19" or not r["lead"].endswith(". " + exp_line) or exp_line in r["slot"] or not r["src"].endswith("+anniversary"): findings.append("%-11s width %d  on the anchor firm's day: %s" % ("anniversary", w, json.dumps(r)[:300]))
+                n_states += 1; exp_line = WC.anniversary(WIRE_DATA, ANNIV[0])
+                if r["today"] != ANNIV[0] or not r["lead"].endswith(". " + exp_line) or exp_line in r["slot"] or not r["src"].endswith("+anniversary"): findings.append("%-11s width %d  on the anchor firm's day: %s" % ("anniversary", w, json.dumps(r)[:300]))
                 cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": sid})
                 VIEW = {"cx": mx + 12.3, "cy": my - 4.5, "k": 7.25}
                 cdp.call("Page.navigate", {"url": url + qsep + "v=view"}); cdp.wait_event("Page.loadEventFired", timeout=60); wait_atlas()
@@ -1237,9 +1291,9 @@ def main():
                 x = r.get("extra") or {}; bad = []
                 for f in x.get("bad", []): bad.append(("reads", "dom", f))
                 return bad
-            state("share", 2021, "A.mode('cells'); A.preset('Russia'); if (A.popout) A.popout(null); const ids = ['goto', 'cursor', 'odds', 'national', 'groups']; for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') !== 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') !== 'true') mb.click(); } await A.ready(); const bad = []; for (const id of ids.concat(['layer'])) { const blk = document.getElementById(id === 'layer' ? 'method' : 'cr-' + id), card = document.getElementById('card-' + id), head = document.getElementById('ch-' + id); if (blk.hidden) { bad.push(id + ': the block did not open'); continue; } const b = blk.getBoundingClientRect(), c = card.getBoundingClientRect(), h = head.getBoundingClientRect(); if (b.top < h.bottom - 0.5 || b.left < c.left - 0.5 || b.right > c.right + 0.5) bad.push(id + ': the block is not under the title row inside the card'); if (/;/.test(blk.textContent)) bad.push(id + ': a semicolon in the block'); } window.__extra = { bad }; for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') === 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') === 'true') mb.click(); }", "reads", reads_ok)
+            state("share", 2021, "A.mode('cells'); A.preset('Russia'); if (A.popout) A.popout(null); const ids = [...document.querySelectorAll('[id^=\"ci-\"]')].map(b => b.id.slice(3)); for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') !== 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') !== 'true') mb.click(); } await A.ready(); const bad = []; for (const id of ids.concat(['layer'])) { const blk = document.getElementById(id === 'layer' ? 'method' : 'cr-' + id), card = document.getElementById('card-' + id), head = document.getElementById('ch-' + id); if (blk.hidden) { bad.push(id + ': the block did not open'); continue; } const b = blk.getBoundingClientRect(), c = card.getBoundingClientRect(), h = head.getBoundingClientRect(); if (b.top < h.bottom - 0.5 || b.left < c.left - 0.5 || b.right > c.right + 0.5) bad.push(id + ': the block is not under the title row inside the card'); if (/;/.test(blk.textContent)) bad.push(id + ': a semicolon in the block'); } window.__extra = { bad }; for (const id of ids) { const b = document.getElementById('ci-' + id); if (b.getAttribute('aria-expanded') === 'true') b.click(); } { const mb = document.getElementById('methodbtn'); if (mb.getAttribute('aria-expanded') === 'true') mb.click(); }", "reads", reads_ok)
             # the pop-out (item 5.4): each chart enlarged over the map above 900 px, none on the phone layout; inside the map, above the strip, joined to its card
-            for pid in ("odds", "national", "groups"):
+            for pid in [p_ for p_ in POPS if p_ != "cursor"]:   # round 18: every chart that pops out, from the page's DOM (the Under the cursor chart has its own state below)
                 def pop_ok(r, pid=pid):
                     d = r["dom"]; want = w > 900
                     if bool(d.get("popId")) != want or (want and not (d.get("popout") or {}).get("visible")): return [("popout", "dom", "%s: open %s at %d px, expected %s" % (pid, d.get("popId"), w, want))]
@@ -1276,6 +1330,9 @@ def main():
             pool = {f["id"]: f["text"] for f in WIRE_DATA["offwire"]["facts"]} if WIRE_DATA.get("offwire") else {}
             if w == int(a.widths.split(",")[0]) and not a.skip_once:   # once per audit, at the run's first width
                 for f in AG.check(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')): findings.append("%-11s %s" % ("agent-guide", " | ".join(f)[:200]))
+                for f in GB.check():   # round 18: the glossary against its rebuild; a stale provenance is a note, shown and not counted
+                    if not f.startswith("note:"): findings.append("%-11s %s" % ("glossary", f[:200]))
+                    else: print("glossary   " + f, flush=True)
             if not ck.get("ok") or ck.get("keyed") != 1 or not ck.get("src") or int(ck["src"].split(":")[1]) not in pool or pool[int(ck["src"].split(":")[1])] not in (ck.get("text") or "") or not ck.get("prevCat") or ck.get("catsHeaded") is False or "OFF THE WIRE" in (ck.get("text") or "").upper(): findings.append("%-11s width %d  the cat key's item: %s" % ("wire", w, json.dumps(ck)[:200]))
             # TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026; round 17: a link in place of the text once tools/agent_guide.py sets one): the copied text equals the guide built into the page, or its link, the notice reads
             # ">text copied", and no request leaves the page; with the clipboard refused, the guide shows in a read-only field, selected, and Escape closes it
@@ -1307,7 +1364,8 @@ def main():
             # must then match the normal load's (the stage, the fitted zoom and the landing camera, the minimap's label boxes, the wire's track, the strip's test, the obstacles)
             hid = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "document.addEventListener('DOMContentLoaded', () => { document.documentElement.style.display = 'none'; setTimeout(() => { document.documentElement.style.display = ''; }, 500); });"})["identifier"]
             cdp.call("Page.navigate", {"url": url + "&v=hidden"}); cdp.wait_event("Page.loadEventFired", timeout=60)
-            cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(2.0)
+            cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60)
+            cdp.evaluate("(async () => { for (let t = 0; t < 80; t++) { const A = window.__atlas; if (A && A.layouts && A.layouts().verified.some(v => v.reason === 'resize')) return true; await new Promise(r => setTimeout(r, 50)); } return false; })()", await_promise=True, timeout=30)   # round 18: polled in place of a fixed 2 s
             L1 = cdp.evaluate("(async () => { await window.__atlas.ready(); await new Promise(r => setTimeout(r, 300)); return window.__atlas.layouts(); })()", await_promise=True, timeout=60)
             cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": hid}); n_states += 1
             hb = []
@@ -1330,6 +1388,8 @@ def main():
     text = "\n".join([head] + sorted(set(findings))) + "\n"
     if a.out:
         with open(a.out, "w") as fh: fh.write(text)
+    if a.states_out:
+        with open(a.states_out, "w") as fh: fh.write("".join(json.dumps(x) + "\n" for x in per_state))
     sys.stdout.write(text)
     return 1 if findings else 0
 

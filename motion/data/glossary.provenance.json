@@ -1,12 +1,12 @@
 {
  "id": "glossary",
  "tool": "motion/tools/glossary_build.py",
- "run_utc": "2026-10-27T11:23:09Z",
+ "run_utc": "2026-10-28T01:10:02Z",
  "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
  "files": [
   {
    "path": "motion/js/explorer-app.js",
-   "sha256": "73e1ba71ce633b5367dfbb2c53058541d095bb94afd32ae80ee6bea73f10c27b"
+   "sha256": "0e444145835ec9fcce77934339b1d01badebbc579a130245f2cd7312d8582069"
   },
   {
    "path": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
@@ -112,13 +112,13 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 205,
+     "line": 184,
      "quote": "with a house- or street-level geocode",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 2551,
+     "line": 2527,
      "quote": "Other geocodes, coordinates without a verified house or street match, are counted and not drawn.",
      "found": true
     }
@@ -135,13 +135,13 @@
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 194,
+     "line": 188,
      "quote": "Treated: a firm on at least one of the five lists",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 194,
+     "line": 188,
      "quote": "The word names the study’s group, not an effect.",
      "found": true
     }
@@ -152,7 +152,7 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 2939,
+     "line": 2908,
      "quote": "Comparison group: firms on none of the five lists.",
      "found": true
     },
@@ -169,14 +169,14 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 190,
+     "line": 184,
      "quote": "Shares are shown only for cells with 50 or more firms.",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 3110,
-     "quote": "Disclosure: a share needs 50 firms",
+     "line": 3041,
+     "quote": "Disclosure: in the Cells view a share needs 50 firms",
      "found": true
     }
    ]
@@ -236,8 +236,8 @@
  "checks": "25 of 25 passed (glossary.checks.csv)",
  "output": {
   "json": "data/glossary.json",
-  "json_sha256": "e207e64325e61f94194c5788b3ae76e7e3239688003f91c13b390bc943b5e9e0",
+  "json_sha256": "440dc73014120504332ea7f60a51eee3430a8d7972a0d6025aed07dd2faeec4a",
   "js": "data/glossary.js",
-  "js_sha256": "5015468820ba0cdac490c38843fa7ae0c162aa7adc9c9ee457562108e4d3d1ed"
+  "js_sha256": "6b6660fd3122f8a76a1b44df0f116249bfd658209555242fb736690c84486598"
  }
 }

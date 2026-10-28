@@ -12,21 +12,11 @@ Usage: profile_check.py --page profiles.json [--fit fit.json] [--data motion/dat
 As a module: check(page, data_dir, fit=None) returns a list of findings (empty when clean).
 """
 import argparse, json, math, os, re, sys
-from decimal import Decimal, ROUND_HALF_UP
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from jsfmt import to_fixed, js_round, fmt_int as f_int, pct as f_pct, dec as f_dec, signed as f_signed   # Motion.fmt's rules in one module (round 18)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# JavaScript's number formatting, as Motion.fmt writes it
-def to_fixed(v, d):   # Number.prototype.toFixed: the exact value, ties to the larger magnitude
-    q = Decimal(1).scaleb(-d)
-    r = Decimal(abs(v)).quantize(q, rounding=ROUND_HALF_UP)
-    s = format(r, 'f')
-    return ('-' + s) if v < 0 and r != 0 else s
-def js_round(v): return math.floor(v + 0.5)
-def f_int(v): return f"{js_round(v):,}"
-def f_pct(v, d=1): return to_fixed(js_round(v * 10 ** d) / 10 ** d, d) + '%'
-def f_dec(v, d=2): return to_fixed(v, d)
-def f_signed(v, d=1): return ('+' if v > 0 else '−' if v < 0 else '') + to_fixed(abs(v), d)
 
 def load(data_dir, name, required=True):
     p = os.path.join(data_dir, name + '.json')
@@ -34,6 +24,8 @@ def load(data_dir, name, required=True):
         if required: raise SystemExit('profile_check: missing ' + p)
         return None
     with open(p, encoding='utf-8') as fh: return json.load(fh)
+
+PROFILE_YEAR = 2024   # the year the page's profiles state (explorer-app.js writes "in 2024"); check() reports a profiles.json whose latest year differs (round 18, H15)
 
 def derive(data_dir):
     PROF, INS = load(data_dir, 'profiles', required=False), load(data_dir, 'insights', required=False)
@@ -43,10 +35,10 @@ def derive(data_dir):
     def size(kind, key, name):
         if not PROF: return None
         R, N = PROF[kind], PROF['regions']
-        def at(T, k, v): return next((i for i in range(len(T[k])) if T[k][i] == v and T['year'][i] == 2024), -1)
+        def at(T, k, v): return next((i for i in range(len(T[k])) if T[k][i] == v and T['year'][i] == PROFILE_YEAR), -1)
         i, n = at(R, key, name), at(N, 'region', 'Russia')
         if i < 0 or n < 0 or R['med_rev_m'][i] is None or R['med_assets_m'][i] is None: return None
-        return 'In constant 2021 rubles, median revenue was %s and median total assets %s in 2024 (Russia %s and %s).' % (rub_m(R['med_rev_m'][i]), rub_m(R['med_assets_m'][i]), rub_m(N['med_rev_m'][n]), rub_m(N['med_assets_m'][n]))
+        return 'In constant 2021 rubles, median revenue was %s and median total assets %s in %d (Russia %s and %s).' % (rub_m(R['med_rev_m'][i]), rub_m(R['med_assets_m'][i]), PROFILE_YEAR, rub_m(N['med_rev_m'][n]), rub_m(N['med_assets_m'][n]))
     out = {'region': {}, 'window': {}}
     if INS:
         for kind, sect, rows, key in (('region', 'regions', 'regions', 'region'), ('window', 'cities', 'windows', 'label')):
@@ -66,6 +58,8 @@ def rules(kind, name, p):
 def check(page, data_dir, fit=None):
     regions, windows, medians, insights = derive(data_dir)
     out = []
+    P = load(data_dir, 'profiles', required=False)
+    if P and P.get('years') and P['years'][-1] != PROFILE_YEAR: out.append(('year', "profiles.json's latest year is %s, and the page and this check write %d" % (P['years'][-1], PROFILE_YEAR)))
     if bool(page.get('medians')) != medians: out.append(('medians', 'the page and the data disagree on whether profiles.json is shipped'))
     if bool(page.get('insights')) != insights: out.append(('insights', 'the page and the data disagree on whether insights.json is shipped'))
     for kind, mine, theirs in (('region', regions, page.get('regions', {})), ('window', windows, page.get('windows', {}))):

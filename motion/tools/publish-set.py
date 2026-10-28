@@ -26,10 +26,14 @@ fonts/ with their licence beside them, read from the --from commit like the scri
 twins must be on the expected list: the insights' sources (insights.json), the cat facts' sources (offwire.json), and the page's own links
 below (the footer's, the references', the fonts', the basemap's). A link that is on none of them refuses the set.
 
+Round 18: every data twin must hold the same data as its JSON file, and every JSON file must match the hash its provenance recorded when the
+pass or builder wrote it, so a refresh that left a stale twin or an edited file is refused without a browser run; twins that neither page loads
+are reported, not dropped (the author decides).
+
 TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's js/agent-guide.js is rebuilt at every publish from the data the set
 ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
 one of the builder's rules, the public-release checks among them. The page itself never fetches it."""
-import datetime, json, os, re, shutil, subprocess, sys, types
+import datetime, hashlib, json, os, re, shutil, subprocess, sys, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
@@ -60,7 +64,7 @@ TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
 FONT_LICENCE = {"DejaVuSansMono.ttf": "DejaVuSansMono-LICENSE.txt"}   # a font file and the licence that ships beside it (round 16)
 LINKS = {"https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n", "https://x.com/ArmenKaprelian", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
          "https://doi.org/10.1038/s41597-025-05150-1", "https://doi.org/10.1371/journal.pone.0231866", "https://doi.org/10.5281/zenodo.22257046",
-         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS", "https://www.openstreetmap.org/copyright", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg",
+         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS.AD", "https://www.openstreetmap.org/copyright", "https://opendatacommons.org/licenses/odbl/1-0/", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg",
          "https://raw.githubusercontent.com/ArmenKaprelian/whostaysvisible/main/motion/publish/agent-guide.md"}   # round 17: TEACH YOUR AGENT's link (tools/agent_guide.py GUIDE_URL)
 LINK_PREFIXES = ("https://x.com/intent/post?text=", "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono", "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/")
 def page_fonts():   # the font files the pages load from fonts/ (round 16), read from the pages themselves so the set follows --from
@@ -133,6 +137,10 @@ def copy(sub, name):
 def agent_guide(problems):   # the guide rebuilt for the set (see the module's note); returns a line for the report, or None when the pages do not load it
     if "agent-guide.js" not in SCRIPTS: return None
     if FROM:
+        try:   # round 18: the builder imports Motion.fmt's port; the commit's own copy is registered first, so the guide formats as it did at that commit
+            jf = types.ModuleType("jsfmt"); jf.__file__ = os.path.join(HERE, "jsfmt.py")
+            exec(compile(git("show", FROM + ":motion/tools/jsfmt.py"), "jsfmt.py at " + FROM, "exec"), jf.__dict__); sys.modules["jsfmt"] = jf
+        except Exception: pass   # a commit before round 18: its builder carries its own formatting
         mod = types.ModuleType("agent_guide_at_commit"); mod.__file__ = os.path.join(HERE, "agent_guide.py")   # its paths resolve here; build() takes the data folder
         exec(compile(git("show", FROM + ":motion/tools/agent_guide.py"), "agent_guide.py at " + FROM, "exec"), mod.__dict__)
     else:
@@ -186,6 +194,37 @@ def check_rules(data_dir):
                 bad.append("anchors.json: the neighbour firm must stay anonymous (label %r)" % b.get("label"))
     return bad
 
+TWIN = re.compile(r'window\.MOTION_DATA(?:\[\s*"([^"]+)"\s*\]|\.([A-Za-z_$][\w$]*))\s*=\s*')   # anywhere on its line: offwire.js assigns after the guard on one line
+def twin_data(path):   # the data a .js twin assigns: window.MOTION_DATA["id"] = {...}; (the passes and builders) or window.MOTION_DATA.id = {...}; (offwire)
+    txt = open(path, encoding="utf-8").read(); m = None
+    for m in TWIN.finditer(txt): pass
+    if m is None: return None
+    body = txt[m.end():].rstrip()
+    return json.loads(body[:-1] if body.endswith(";") else body)
+
+def twin_checks(data_dir):   # round 18: twins against their JSON, JSON against its provenance's hash, and the twins no page loads
+    bad, notes, loads = [], [], ""
+    for page in ("explorer.html", "explainer.html"): loads += source(page).decode("utf-8")
+    for n in SCRIPTS: loads += source("js/" + n).decode("utf-8")
+    hashed = 0
+    for name in sorted(os.listdir(data_dir)):
+        if not name.endswith(".json") or name.endswith(".provenance.json"): continue
+        stem = name[:-5]; js = os.path.join(data_dir, stem + ".js")
+        if os.path.exists(js):
+            try:
+                if twin_data(js) != json.load(open(os.path.join(data_dir, name), encoding="utf-8")): bad.append("data/%s.js does not hold the data of %s" % (stem, name))
+            except ValueError as e: bad.append("data/%s.js cannot be read as a twin: %s" % (stem, e))
+        pv = os.path.join(data_dir, stem + ".provenance.json")
+        if os.path.exists(pv):
+            want = (json.load(open(pv, encoding="utf-8")).get("output") or {}).get("json_sha256")
+            if want:
+                hashed += 1
+                if hashlib.sha256(open(os.path.join(data_dir, name), "rb").read()).hexdigest() != want: bad.append("%s differs from the file its provenance recorded (%s.provenance.json)" % (name, stem))
+    orphans = [n for n in sorted(os.listdir(data_dir)) if n.endswith(".js") and not re.search(r"""["'`]data/%s["'`]""" % re.escape(n), loads)]
+    notes.append("data: every twin checked against its JSON, %d JSON files against their provenance's hash" % hashed)
+    if orphans: notes.append("data: %d twin(s) that neither page loads, still shipped: %s (%.1f MB)" % (len(orphans), ", ".join(orphans), sum(os.path.getsize(os.path.join(data_dir, n)) for n in orphans) / 1048576))
+    return bad, notes
+
 def main():
     groups = {"pages": [], "scripts": [], "fonts": [], "data": [], "moscow rasters": [], "national rasters": [], "addresses": []}
     for n in ("explainer.html", "explorer.html"):
@@ -209,6 +248,7 @@ def main():
         for n in sorted(os.listdir(firms)):
             if n.endswith(".js"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the base64 twins; the host serves no raw binaries
     problems = check_rules(data_dir)
+    twin_bad, twin_notes = twin_checks(data_dir); problems += twin_bad
     guide = agent_guide(problems)
     n_links, bad_links = link_scan(data_dir); problems += bad_links
     total = 0
@@ -221,6 +261,7 @@ def main():
     print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
     print("build: " + BUILD)
     if guide: print(guide)
+    for t in twin_notes: print(t)
     print("links: %d distinct http(s) links in the shipped pages, scripts and data twins, %d not on the expected list" % (n_links, len(bad_links)))
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0

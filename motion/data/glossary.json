@@ -34,7 +34,7 @@
   },
   {
    "term": "The 50-firm support rule",
-   "text": "A share is shown only where 50 or more firms make up its denominator. Cells, squares and regions with fewer are grey."
+   "text": "In the Cells view a share is shown only where 50 or more firms make up its denominator, and cells, squares and regions with fewer are grey. The Firms view shows each coordinate pair’s own share."
   },
   {
    "term": "Revenue cohort",

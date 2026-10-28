@@ -81,7 +81,13 @@ def run_widths(widths, a, rundir, tag, jobs, floors):
 def once_checks():   # the checks that belong once to a whole audit, in atlas-audit.py's line format; None for a build before the agent guide (round 15)
     if not os.path.exists(os.path.join(HERE, 'agent_guide.py')): return None
     import agent_guide as AG
-    return ["%-11s %s" % ("agent-guide", " | ".join(f)[:200]) for f in AG.check(MOTION)]
+    out = ["%-11s %s" % ("agent-guide", " | ".join(f)[:200]) for f in AG.check(MOTION)]
+    if os.path.exists(os.path.join(HERE, 'glossary_build.py')):   # round 18: the glossary rebuilt in memory against the shipped files; its notes are not findings
+        import glossary_build as GB
+        res = GB.check(); out += ["%-11s %s" % ("glossary", f[:200]) for f in res if not f.startswith("note:")]
+        for f in res:
+            if f.startswith("note:"): say("  glossary %s" % f)   # a note is shown, not counted
+    return out
 
 def profiles(): return {d for d in os.listdir('/tmp') if d.startswith('atlas-audit-')}
 def check_key(f): return re.sub(r'\d+(?:\.\d+)?', '#', f)   # the check a finding comes from: its line with the numbers out (the width, the year, the measured values)
@@ -113,7 +119,7 @@ def merged_text(state):
         if e.get('solo'): s = e['solo']; t += '  · solo %s  states %d  boxes %d  findings %d' % (clock(s['wall_s']), s['states'], s['boxes'], s['nfind'])
         lines.append(t)
     once = state['once']['findings']
-    lines.append('once        run %s  %s' % (state['once']['run'], 'no once-per-audit check at this build' if once is None else 'the agent guide\'s check: %d finding(s)' % len(once)))
+    lines.append('once        run %s  %s' % (state['once']['run'], 'no once-per-audit check at this build' if once is None else 'the agent guide\'s and the glossary\'s checks: %d finding(s)' % len(once)))
     runs = sorted({W[str(w)]['run'] for w in widths})
     full = len(runs) == 1 and sorted(widths) == ALL and all(W[str(w)].get('full') for w in widths)
     lines.append(('composition: one full run, %s, all five widths in %s wall clock' % (runs[0], clock(state['runs'][runs[0]]['wall_s']))) if full else

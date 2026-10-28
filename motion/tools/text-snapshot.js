@@ -22,7 +22,7 @@
     if (A.hoverOff) A.hoverOff();
     out.states[[mode, L, y, p].join('/')] = s;
   }
-  for (const id of ['cr-goto', 'cr-cursor', 'cr-odds', 'cr-national', 'cr-groups', 'mixread']) out.fixed[id] = tx($(id));
+  for (const id of [...document.querySelectorAll('[id^="cr-"]')].map(e => e.id).concat('mixread')) out.fixed[id] = tx($(id));   // every card's reading block, read from the page (round 18), and the mix box's
   out.fixed.wire = {}; for (const y of [2014, 2021, 2024, 2025]) for (const r of ['Russia', 'Moscow Oblast', 'Novosibirsk Oblast']) out.fixed.wire[y + '/' + r] = A.wireAt(y, r).map(it => it.kind + ': ' + it.text);
   out.fixed.profiles = A.profiles ? A.profiles() : null;
   out.fixed.tips = A.tipTexts ? A.tipTexts() : null;

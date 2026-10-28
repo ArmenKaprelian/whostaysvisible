@@ -28,7 +28,7 @@ MOTION_NAME_ALLOWED <- list(treated = c("name", "name_filed", "name_case", "name
 # provenance sidecar and <id>.checks.csv. Data frames become column arrays. Stops on a
 # failed check or an identifier-like name anywhere in the object.
 motion_save_json <- function(obj, id, sources = .lab$used_sources, checks = NULL, extra = list(),
-                             rows = NULL, digits = NA) {
+                             rows = NULL, digits = NA, dir = motion_data_dir()) {   # dir (round 18): another folder for a test, motion/data by default
   nm <- motion_names(obj)
   bad <- grep("(^|_)(inn|ogrn)(_|$)", nm, ignore.case = TRUE, value = TRUE)   # whole tokens: "pinned" is not an identifier
   if (length(bad)) stop("Motion data never carry firm identifiers: ", paste(bad, collapse = ", "))
@@ -38,7 +38,6 @@ motion_save_json <- function(obj, id, sources = .lab$used_sources, checks = NULL
   bad_name <- setdiff(intersect(nm, MOTION_NAME_KEYS), allowed)
   if (length(bad_name)) stop("Firm names ship only on the listed-firm files (treated, treatednational) and the anchor's hand-typed label; ", id, " carries: ", paste(bad_name, collapse = ", "))
   obj[["author"]] <- MOTION_AUTHOR   # the authorship mark on every manifest (round 10)
-  dir <- motion_data_dir()
   lab_run_checks(id, checks, dir)
   json <- file.path(dir, paste0(id, ".json"))
   jsonlite::write_json(obj, json, auto_unbox = TRUE, digits = digits, null = "null", na = "null", dataframe = "columns")

@@ -1,0 +1,8 @@
+{
+ "note": "Exceptions to the on-screen text rules (no semicolon, no em-dash, no \"listed\" for list membership) that tools/change-proof.py names apart from the hits a change brings in. status: kept (the author's decision) or pending (waiting on the author). Round 18, 27 October 2026.",
+ "allow": [
+  {"rule": "listed", "pattern": "LISTED \\(TREATED\\)", "status": "kept", "why": "the UNDER THE CURSOR row on the industry layer, kept on the author's word of 27 October 2026 (round 17, question 3)"},
+  {"rule": "semicolon", "pattern": "Activities of head offices; management consultancy activities|Architectural and engineering activities; technical testing and analysis|Manufacture of wood and of products of wood and cork, except furniture; manufacture of articles of straw and plaiting materials|Public administration and defence; compulsory social security|Waste collection, treatment and disposal activities; materials recovery", "status": "pending", "why": "official NACE Rev. 2 division titles (round 17, Needs you 4)"},
+  {"rule": "semicolon", "pattern": "on a list from \\d{4}\\s+[^\\n]*;", "status": "pending", "why": "a firm's name as filed, shown in the Firms view's panel"}
+ ]
+}

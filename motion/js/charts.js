@@ -129,11 +129,13 @@
     return sx;
   };
 
-  // Year-by-year dots joined by lines for several series on a log y axis. series: [{label, color, points: [{x, y, low, high}], whiskers}].
-  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null, thinTicks = false, spreadLabels = false, pad = 40, endGap = 22 } = {}) {   // pad: the plot's inner margins; endGap: the end labels' distance from the last point (the atlas's small panel passes 14 and 10; round 10)
-    const sx = C.scale(xDomain, [box.x + pad, box.x + box.w - pad]), sy = C.logScale(yDomain, [box.y + box.h, box.y]);
+  // Year-by-year dots joined by lines for several series, on a log y axis by default. series: [{label, color, points: [{x, y, low, high}], whiskers}].
+  // Round 18: log: false draws a linear axis; ref is the tick drawn as the reference line (1 for ratios, 0 suits coefficients on a linear axis); yFmt writes the
+  // tick labels (String by default; Motion.fmt.signed writes the minus sign). The defaults draw exactly as before.
+  C.yearDots = function (ctx, box, series, { xDomain, yDomain = [1, 5], progress = 1, theme, yTicks = [1, 1.5, 2, 3, 4, 5], size = 24, highlightX = null, thinTicks = false, spreadLabels = false, pad = 40, endGap = 22, log = true, ref = 1, yFmt = String } = {}) {   // pad: the plot's inner margins; endGap: the end labels' distance from the last point (the atlas's small panel passes 14 and 10; round 10)
+    const sx = C.scale(xDomain, [box.x + pad, box.x + box.w - pad]), sy = (log ? C.logScale : C.scale)(yDomain, [box.y + box.h, box.y]);
     const tickSize = size >= 20 ? size - 2 : size;   // small panels keep their tick labels at the text size
-    for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === 1 ? theme.ink : theme.grid; ctx.lineWidth = t === 1 ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, String(t), box.x - 14, y, { size: tickSize, color: theme.muted, align: 'right', baseline: 'middle' }); }
+    for (const t of yTicks) { const y = sy(t); ctx.strokeStyle = t === ref ? theme.ink : theme.grid; ctx.lineWidth = t === ref ? 1.5 : 1; ctx.beginPath(); ctx.moveTo(box.x, y); ctx.lineTo(box.x + box.w, y); ctx.stroke(); T(ctx, yFmt(t), box.x - 14, y, { size: tickSize, color: theme.muted, align: 'right', baseline: 'middle' }); }
     const years = []; for (let x = xDomain[0]; x <= xDomain[1]; x++) years.push(x);
     // thinTicks: every n-th year counted back from the last, n the smallest step at which the year labels do not touch (the atlas's narrow panels: every other year
     // from about 390 px, every third or only the two ends on a narrower phone, round 14).
