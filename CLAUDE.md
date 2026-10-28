@@ -4,7 +4,7 @@ Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/e
 
 ## Read first
 
-- `motion/README.md`: the record of every round, the data passes, the tools and the publishing history. Round 17 is the latest.
+- `motion/README.md`: the record of every round, the data passes, the tools and the publishing history. Round 18 is the latest.
 - `design/principles.md`: the author's design rules. Read it before any visual work.
 - `motion/review/`: round notes, proposals, measurements and review exports.
 
@@ -12,6 +12,7 @@ Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/e
 
 - Publish only on the author's word.
 - Frames first: any change with a visible or behavioural effect is shown as before/after frames and approved before it is committed.
+- Proof by `motion/tools/change-proof.py` (the author's rule of 27 October 2026, round 18). A refactor whose run against the build before it comes out "identical" needs no frames. A change whose run shows only the strings it names changed, and frames that differ only in the panels that hold them (and in the side-column cards below them, which move with them), never in the map outside its panels, is reviewed from the run's crop sheet and needs no five-width audit at the review gate. Every other change keeps frames first and both gates. The publish gate's full five-width run stays for every publish.
 - Work directly on `main`: no branch, worktree or forked session. Commit at each checkpoint and push after each commit.
 - Audits (26 October 2026). While building, audit at 1,600 px only (`motion/tools/atlas-audit.py --widths 1600`). Run the full five-width audit, with `motion/tools/audit-five.sh`, only at two gates: before a review goes to the author, and before a publish.
 - A publish needs a full run on the final build, all five widths in one run of `audit-five.sh`, with zero findings. Targeted re-runs (`--widths`) never count for a publish. A finding that shows only when widths run together, and not in its width's solo re-run, is noted the first time; once its check has shown that way in an earlier run, it counts (`motion/build/audit/parallel-only.json` keeps the record).

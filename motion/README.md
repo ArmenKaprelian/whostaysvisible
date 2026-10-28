@@ -2018,6 +2018,92 @@ A review of the atlas while the author was away, every change tested as a patch 
 
 **The publish.** That run was on the page files of 1208089, which no commit changed through 323e379, so it counts as the final-build run. Published on the author's word as atlas v38 (version id 1793135586-1356): the page, `js/explorer-app.js` and `js/agent-guide.js`, the other 37 files kept from v37. The host serves both scripts byte for byte as built, and the page, opened on the host in the desktop app's browser pane while signed out, shows round 17's footer. The raw guide address returns `publish/agent-guide.md` byte for byte (7,102 bytes, text/plain), the text v38 carries. No CORRECTIONS entry: the fixes that would need one are the audit's proposals, none applied. The explainer stays at v29. Commits 323e379 (the records) and aaa1298 (the publish copy).
 
+### Round 18 (27 October 2026): cheaper proofs for the usual edits
+
+The author's request of 27 October 2026: with the design settled, make the edits the atlas gets (a text fix, a data refresh, a new layer or card, from any chapter) cheaper to prove, take round 17's page-text fixes as the first use, and add a checked intake for exported tables. The plan is `~/.claude/plans/read-only-please-review-playful-pebble.md`. Thirteen patches were built and proven on a trial copy in `build/round-18/` (the trial on port 8782, HEAD's files on 8783). The author approved them all on 27 October 2026, with every text fix and the review rule (`review/2026-10-27-round-18-pass.md`, its page kept local).
+
+**The proof kit.** `tools/change-proof.py` compares two served builds.
+- **Texts:** the page's texts in 144 states at 1,600 and 400 px (`tools/text-snapshot.js`, which now reads every card's reading block from the page).
+- **Frames:** every layer in both views, the Moscow preset, a hover per layer, a red mark, every card with its reading block, every pop-out, the footer, REFERENCES and the legend's two sides, in both themes, at 1,600 px or with `--full`. Each load starts with three uncompared warm-up shots, because one had left two frames differing in the wire.
+- **Comparison:** every colour channel. It names the panels a differing region touches, where a region inside REFERENCES, the notice, the pop-out or the tile is that panel's alone, and says whether the map changed outside its panels.
+- **Text rules:** it flags any semicolon, em-dash or "listed" the change brings in. `tools/text-rules-allow.json` holds the author's exceptions: "Listed (treated)" is kept, and the NACE titles and filed names are pending.
+- **Output:** one crop sheet. `atlas-frames.py` takes a `boxes` key for it.
+- **Reproducibility:** two runs of one build give "identical" in 440 of 440 frames.
+
+The data checks:
+- `glossary_build.py --check` runs once in every audit, and a stale provenance is a note. The builder writes new files and renames them over the old.
+- The publish set checks every data twin against its JSON and every JSON against its provenance's hash. It names the twins neither page loads (`industry-city.js`).
+- `tools/jsfmt.py` is the one Python port of `Motion.fmt`, for `wire_check.py`, `agent_guide.py` and `profile_check.py`. The wire's copy had rounded exact ties to even.
+
+**The audit and the data.** The audit reads from the data what a refresh can change:
+- the first and latest data years, from `firms.json`;
+- the anniversary days, from the anchors and the listed firms;
+- the anchor pair's distance, from its coordinates;
+- the profile year, from `profiles.json`.
+
+It also checks the search hits against the names, and the wire's 60 px/s stays pinned. `mixdef2` is gone, and ten Firms-view states that gave the same results on both renderers now run once. That saves about 5 s a width: the five-width run took 7 min 46 s against v38's 7 min 58 s. `--states-out` records each state's boxes: the 11 states removed held 420 boxes, and the shared layer's 2 new states (its slider years) hold 102.
+
+**A layer or a card as one entry.**
+- `LAYER_FACTS`, beside `LAYERS`, holds each layer's group, year, pulse, squares and national marker. It feeds `GROUPS`, `layerYear`, `syncYearRow`, `microYear`, `CELL_PULSE_LAYERS`, `MICRO_LAYERS` and the national chart's marker. `__atlas.layerFacts()` gives it to the audit, which holds the nine layers to their decided facts and lists a new layer without judging it.
+- `CARD_LIST` feeds `CARDS`, `READS`, `POP_CHART`, `POP_DRAW` and the redraws. The audit checks `__atlas.cardFacts()` against the page's HTML and takes the reading blocks and the pop-outs from the DOM.
+- `C.yearDots` takes `log`, `ref` and `yFmt`.
+- `R/motion/motion-intake.R` checks an exported table against a schema of general rules before it becomes a data file. Its data-frame entry is for tests, and its pinned-CSV wrapper is for exports.
+
+**The text fixes** (round 17's fact-check, `build/round-17-pass/notes/texts/findings.md`):
+- T01: the GDP deflator is the World Bank's NY.GDP.DEFL.ZS.AD, with its link.
+- T02: the red-count row leaves CHANGE: STATE-RELATED's legend.
+- T03: the disclosure sentence. Counts are banded in the 250 m and 5 km density cells, and the Firms view and the 1 km squares show exact counts.
+- T04: the 50-firm rule's scope, in DEFINITIONS.
+- T05: the METHOD block's grids.
+- T06: the Firms view's industry colour, taken over every firm at the coordinate pair.
+- T07: "2020 filing-exemption" for "resident", the author's wording of 24 October changed on the author's word.
+- T08: "2025* is the flagged latest-year extension".
+- T09: "as the chapter classifies".
+- T10: the tile's counts add up ("1 red, 2 hollow").
+- T11: the tip says the Firms view draws registered addresses.
+- T12: the national chart's second line.
+- T13: "every figure from the data is a checked aggregate", with the insights' sources named.
+- T14: UNDER THE CURSOR's reading for the round 16 layers.
+- T15: the shared layer's rows as "N of M".
+- T16: REFERENCES › METHODS lists only the panels' sources.
+- T17: Python in the software line.
+- T18: guide 4.3's Tables B.4 and B.5.
+- T19: the wire's cohort line, the whole revenue cohort.
+- T20: the glossary rebuilt, with its provenance current.
+- T21: the OpenStreetMap copyright and ODbL 1.0 links.
+- T22: the CORRECTIONS entry for the next publish, dated 28 October 2026 provisionally and re-dated at that publish.
+
+The entry counts these kinds:
+- three source references: T01, T16 and T18;
+- six statements on the method and its disclosure rules: T03 to T06, T12 and T13;
+- three figures or counts: T10, T15 and T19;
+- one legend row: T02;
+- one tip: T11.
+
+The guide's 2.1 and 2.5 are shorter than the page's sentences, so the dated guide a publish ships stays within 1,200 words (1,198).
+
+**The review rule.** The author's rule of 27 October 2026, in the lab's `CLAUDE.md` and the principles:
+- A refactor whose `change-proof.py` run comes out identical needs no frames.
+- A change whose run shows only its own strings changed, and frames that differ only in the panels holding them (and the side-column cards below them), is reviewed from the crop sheet without the review gate's five-width run.
+- The publish gate's full run stays.
+
+**The review and the checks.** An independent reviewer read every patch, and its findings were fixed:
+- the per-channel comparison, the verdict's scope and page errors;
+- the glossary's renamed writes;
+- the decided facts pinned, and the cards checked against the HTML;
+- the wire's speed pinned again;
+- the intake's missing-column rule;
+- the generated files carried in patch 13.
+
+The proofs on the trial:
+- Patches 1 to 12 against v38's files: 440 of 440 frames identical at five widths in both themes, and the texts identical.
+- The text fixes: 66 of 440 frames differ, all inside their panels, with the map outside its panels unchanged, 77 text groups and no new rule hit.
+- The 1,600 px audit: 284 states, 11,773 boxes, 0 findings. The five-width audit: 1,376 states, 57,362 boxes, 0 findings.
+- The publish set refused nothing (215 links).
+- The explainer's chart scenes were identical at six frames, and its audit found nothing.
+
+Applied on `main` as e28d405 on 27 October 2026. The five-width audit on the final build, one run (20261027T211018-0400): 1,376 states, 57,362 boxes, 0 findings in 7 min 55 s, the guide's and the glossary's checks clean. An export brief for chapter 3's planned tables is kept locally, outside git, until the author decides. Nothing was published: the fixes and the CORRECTIONS entry reach readers with the next publish.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
@@ -2030,19 +2116,23 @@ browser (the links need a claude.ai session), so the load on the host is the aut
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
 
-**A data file.** Build it with an R pass that writes through `R/motion/motion-common.R` (the JSON, its `.js` twin, the provenance and the checks) or with a Python builder such as `tools/shared_pairs.py`, and let every check pass. Load it with a `<script>` tag in `explorer.html` (an optional file carries `onerror="this.remove()"`) or, for a file needed only on demand, a branch of `ensureData`. `tools/publish-set.py` ships every `data/*.js` twin.
+**A data file.** Build it with an R pass that writes through `R/motion/motion-common.R` (the JSON, its `.js` twin, the provenance and the checks) or with a Python builder such as `tools/shared_pairs.py`, and let every check pass. Load it with a `<script>` tag in `explorer.html` (an optional file carries `onerror="this.remove()"`) or, for a file needed only on demand, a branch of `ensureData`. `tools/publish-set.py` ships every `data/*.js` twin, refuses a twin that does not hold its JSON's data or a JSON that differs from the hash its provenance recorded, and names the twins neither page loads (round 18).
 
-**A layer.** Add an entry to `LAYERS`; its `id` is also the view link's name, so it carries no `_` or `/` and is not `cells`, `firms` or `fit`. Put the id in `GROUPS`, and give it a branch in `drawMap`, `drawLegend`, `cellAt`, `tipBody` and `drawCellPanel`; where they apply, also in `layerYear` with `syncYearRow`, `CELL_PULSE_LAYERS` and `MICRO_LAYERS`. A wire lead other than the share layer's needs `factFor` and `lead()` in `tools/wire_check.py`. The audit's base loop takes the layers from the page; give the layer its years there if the slider moves it, and a hovered panel state if its panel differs. `tools/agent_guide.py` names a layer only on the author's word. To remove a layer, undo each step; a saved link that names it stops selecting it.
+**A table export.** A table from the programming side (one small CSV per table, its columns and checks in its brief) is pinned in `config/sources.json` with `scripts/pin-sources.py` and read by a short R pass through `motion_intake_pinned()` in `R/motion/motion-intake.R`, with a schema of general rules: the columns and their types, the keys, the allowed values, a year range or an omitted year that depends on another column, a value allowed only under a condition, intervals around their estimates and the support rule. A broken rule stops the pass before anything is written and names every failure. Otherwise the table goes to `data/<id>.json` with its twin, provenance and checks. `motion_intake_table()` takes a data frame, for a test (round 18).
+
+**A layer.** Add an entry to `LAYERS` and its facts to `LAYER_FACTS` beside it: its group on the LAYER card, the year it shows (`null` where it follows the slider, which also shows the year row), whether the Cells view's red button pulses on it (`pulse`), whether the 1 km squares draw it (`micro`) and whether the national chart marks the slider's year (`mark`). Its `id` is also the view link's name, so it carries no `_` or `/` and is not `cells`, `firms` or `fit`. Give it a branch in `drawMap`, `drawLegend`, `cellAt`, `tipBody` and `drawCellPanel`, and a decoder in `ensureData` if its files load on first use. A wire lead other than the share layer's needs `factFor` and `lead()` in `tools/wire_check.py`. The audit reads the layers and their facts from the page (`__atlas.layerFacts()`): it visits a slider layer in the first data year, 2021 and the latest year, and it checks the year row and the red button against the facts, so a new layer needs an audit edit only for a panel that differs. `tools/agent_guide.py` names a layer only on the author's word. To remove a layer, undo each step; a saved link that names it stops selecting it.
+
+**A card.** Add an entry to `CARD_LIST`: its id, `read` if it has a reading block, `chart` (its canvas's id), `pop` (the function that draws its chart into the pop-out) and `redraw` (the function that redraws it in the column). Add its HTML to `explorer.html` in the cards' pattern (`#card-ID` with the title row `#ch-ID`, the title `#h2-ID`, the i `#ci-ID`, the toggle `#ct-ID`, the body `#cb-ID` and the reading block `#cr-ID`), its reading text to `fillReads`, and its draw function. `C.yearDots` in `js/charts.js` draws a coefficient series on a linear axis with `log: false`, the reference line at `ref` (0 for coefficients) and the tick labels through `yFmt` (`Motion.fmt.signed` writes the minus sign). The audit reads the cards from the page (`__atlas.cardFacts()`) for every reading block, every chart that pops out and every collapse state, and `tools/change-proof.py` frames each card and each pop-out.
 
 **A REFERENCES entry.** Edit `refsSections`. A new link also goes into `LINKS` in `tools/publish-set.py`, or the set is refused, and a new or renamed section into `want_secs` in the audit's `refs_block`.
 
-**A glossary term.** Add the term, its text and its quoted sources to `TERMS` in `tools/glossary_build.py` and run it; it stops on a failed check. Run it again after editing a page sentence it quotes, so its provenance names the page as it is.
+**A glossary term.** Add the term, its text and its quoted sources to `TERMS` in `tools/glossary_build.py` and run it; it stops on a failed check. Run it again after editing a page sentence it quotes, so its provenance names the page as it is. `glossary_build.py --check`, which every audit runs once, reports a glossary that differs from its rebuild or a quoted sentence that has gone (round 18).
 
 **An insight.** The approved texts are in `build/insights-drafts/pass2/`, which git ignores; change them only on the author's word, then run `tools/insights_build.py`. Their source links need no list entry.
 
 **A card's text.** Titles are in `explorer.html`, the i texts in `fillReads`, the METHOD block in `#methodintro`, `#methodread` and the layers' `prov` texts, legends and notes in `drawLegend`. Where the agent guide restates a text, edit `tools/agent_guide.py` and run it.
 
-**Checks.** While building: `python3 -I motion/tools/agent_guide.py --check` and the 1,600 px audit. A text-only edit is proved by the text snapshot (`tools/text-snapshot.js` through `tools/page-probe.py`, before and after, with only the edited strings differing) and by frames whose pixel differences stay inside the edited text's box (`tools/atlas-frames.py`, each shot with `"wire"` and `"settle"`, after a first shot that is not compared). At the review and publish gates: `motion/tools/audit-five.sh`, then `python3 -I motion/tools/publish-set.py`, which must refuse nothing. The audit reads the release, the located firms, the cities and the cards from the data and the page, so those change without an audit edit (round 17).
+**Checks.** While building: `python3 -I motion/tools/agent_guide.py --check`, `python3 -I motion/tools/glossary_build.py --check` and the 1,600 px audit (`--states-out` writes each state's box count, to account for a change state by state). Every change is proved with `python3 -I motion/tools/change-proof.py --base URL --trial URL --out DIR` against a copy of the build before it, served beside it (HEAD's files copied under `motion/build/`, with `data/` as links to the lab's files). It compares the page's texts in 144 states at 1,600 and 400 px and lists the strings that changed. It takes frames of every layer in both views, the Moscow preset, a hover per layer, a red mark, every card with its reading block, every pop-out, the footer, the REFERENCES panel and the legend's two sides, in both themes, with three uncompared warm-up shots after each load, and names the regions that differ and the panels they touch. It checks the on-screen texts for a semicolon, an em-dash or "listed" the change brings in (`tools/text-rules-allow.json` holds the author's exceptions), and writes one crop sheet. Run it at 1,600 px while building and with `--full` (the five widths) for a review. `--reuse-base` takes an earlier run's base texts and frames when that run served the same URL under the same label, and `--compare-only` compares the files a run left again. A refactor must come out "identical". At the review and publish gates: `motion/tools/audit-five.sh`, then `python3 -I motion/tools/publish-set.py`, which must refuse nothing. The audit reads from the data and the page what a refresh can change (the release, the located firms, the cities, the cards, the data years, the anniversary days and the search hits), so those change without an audit edit (rounds 17 and 18). The review rule of round 18 (the author's, 27 October 2026): a refactor whose proof comes out identical needs no frames, a change whose proof shows only its own strings changed and frames that differ only in the panels holding them is reviewed from the crop sheet without the review gate's five-width run, and the publish gate's full run stays. The decided facts of the nine layers are pinned in the audit, so a changed fact is reported and a new layer is listed. A builder run inside a proof copy writes through `data/`'s links into the lab's own files unless the files it writes are copied in first: `glossary_build.py` writes new files and renames them over the old (round 18), the other builders do not.
 
 **A correction.** The REFERENCES panel's CORRECTIONS lists fixes only where a published version showed something wrong that a reader could have seen or quoted: a figure, a map mark, a count, a source or a factual claim. Wording changes, records-only fixes and fixes made before a publish get no entry. Each publish that corrects something gets one entry in `refsSections` (the author's decision of 27 October 2026), newest first: its date in bold, then one or two sentences naming what it corrected by kind and count, at most 300 characters in all, with no semicolon, em-dash or "listed". The round's README record holds the detail. The patch that makes a qualifying fix adds it to the entry for the next publish, which is dated when that publish happens. The audit's `refs_block` checks every entry against `CORRECTION_MAX_CHARS` (300) and `CORRECTION_MAX_SENTENCES` (2), that no two entries share a date, and the list against `CORRECTIONS_MAX` (8), constants beside `corrections_check` in `tools/atlas-audit.py`. Every correction stays on the page: a ninth entry fails the audit, and the author decides how to condense.
 
