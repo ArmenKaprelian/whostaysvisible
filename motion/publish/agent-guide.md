@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 27 October 2026.
+Rebuilt from the atlas’s data when the atlas was published on 28 October 2026.
 
 You are helping a reader of the Visibility Atlas. This guide says what the atlas shows, how to read and drive it, what the chapter behind it finds and what it does not support. Cite its numbered sections.
 
@@ -14,7 +14,7 @@ You are helping a reader of the Visibility Atlas. This guide says what the atlas
 
 ## 2. How to read the views and layers
 
-2.1. The Cells view gives each layer per cell: 100 km cells across the country, 25 km cells closer in, and 1 km and 250 m cells inside the 90 by 90 km windows of 22 cities.
+2.1. The Cells view gives each layer per cell: 100 km cells across the country, 25 km cells closer in, 1 km squares of firms on no list, and 250 m cells in 22 city windows for 2021.
 2.2. The Firms view draws every located eligible firm on no list (comparison group) with a house- or street-level geocode at its registered address, grouped by coordinate pair. Firms on the five lists (treated) are red marks from the year they were added to a list. Other geocodes, coordinates without a verified house or street match, are counted and not drawn.
 2.3. The layers:
 - Firm density, 2021: located eligible firms at registered addresses in 2021, per cell.
@@ -24,8 +24,8 @@ You are helping a reader of the Visibility Atlas. This guide says what the atlas
 - List members, 2021: members of the sanctions list per cell in 2021. The hover also gives the government strategic list.
 - Median revenue change (descriptive): the percent change of each cell’s median real revenue among the revenue-by-cash cohort firms observed in 2024, against the cell’s 2021 median, in cells with 50 or more observed firms. The firms observed change from year to year.
 - Leading industry by year: the division (two-digit OKVED 2 code, identical to NACE Rev. 2) with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value, per cell and year.
-2.4. Years. The financial years run from 2014 to 2025. The FNS supplies the statements from 2019 and Rosstat before it. 2025* is incomplete, and 2012 and 2013 carry no coordinates.
-2.5. Disclosure. A share needs 50 firms. List counts under 5 in a cell are not shown. Counts under 10 in the 1 km and 250 m city cells are banded.
+2.4. Years. The financial years run from 2014 to 2025. The FNS supplies the statements from 2019 and Rosstat before it. 2025* is the flagged latest-year extension, and 2012 and 2013 carry no coordinates.
+2.5. Disclosure. In the Cells view a share needs 50 firms, list counts under 5 are not shown, and counts under 10 in the 250 m and 5 km cells are banded.
 2.6. Each panel’s i button opens its reading text: what the panel shows, how to read it and its source.
 
 ## 3. How to drive it
@@ -39,7 +39,7 @@ You are helping a reader of the Visibility Atlas. This guide says what the atlas
 
 4.1. Nationally, 63.4% of eligible firms have a statement for 2021 and 66.3% for 2024 (Table B.1).
 4.2. Between 2021 and 2024 availability falls among state-related firms (69.8% to 61.3%) and unitary enterprises (69.2% to 48.2%) and rises among private firms and joint-stock companies. The declines are concentrated in 2024 (Figures 2.2 and 2.3).
-4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Table B.4). The Q5 vs Q1 odds ratio rises in 2022 against 2021: the ratio of odds ratios is 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (95% confidence interval 1.020 to 1.169), is smaller when wholesale trade is excluded.
+4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Tables B.4 and B.5). The Q5 vs Q1 odds ratio rises in 2022 against 2021: the ratio of odds ratios is 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (95% confidence interval 1.020 to 1.169), is smaller when wholesale trade is excluded.
 4.4. Sanctioned-only firms, on the sanctions list and on no other list, have lower availability than firms on no list by 2024: an odds ratio of 0.570 (95% confidence interval 0.363 to 0.897) (Table B.7).
 4.5. The estimates come from binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Standard errors are two-way clustered by industry and region.
 
