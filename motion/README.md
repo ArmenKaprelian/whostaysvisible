@@ -2032,7 +2032,7 @@ The author's request of 27 October 2026: with the design settled, make the edits
 
 The data checks:
 - `glossary_build.py --check` runs once in every audit, and a stale provenance is a note. The builder writes new files and renames them over the old.
-- The publish set checks every data twin against its JSON and every JSON against its provenance's hash. It names the twins neither page loads (`industry-city.js`).
+- The publish set checks every data twin against its JSON and every JSON against its provenance's hash. It leaves out the twins neither page loads and names them (`industry-city.js`, the author's decision of 27 October 2026).
 - `tools/jsfmt.py` is the one Python port of `Motion.fmt`, for `wire_check.py`, `agent_guide.py` and `profile_check.py`. The wire's copy had rounded exact ties to even.
 
 **The audit and the data.** The audit reads from the data what a refresh can change:
@@ -2104,6 +2104,8 @@ The proofs on the trial:
 
 Applied on `main` as e28d405 on 27 October 2026. The five-width audit on the final build, one run (20261027T211018-0400): 1,376 states, 57,362 boxes, 0 findings in 7 min 55 s, the guide's and the glossary's checks clean. An export brief for chapter 3's planned tables is kept locally, outside git, until the author decides. Nothing was published: the fixes and the CORRECTIONS entry reach readers with the next publish.
 
+**Housekeeping after the round (the author's decisions of 27 October 2026).** `industry-city.js` (4.3 MB), which neither page loads, no longer ships: the publish set leaves out every twin no page loads and names it, and the next publish removes the file from the artifact. The JSON, its twin and M11's output stay in the lab. 3,048 dead browser singleton folders in /tmp were removed, each holding only its stale socket and cookie; the two that live apps use were kept. 112 entries in `motion/build/` (634 MB of rounds 7 to 16's frame folders and old audit logs) went to the desktop Trash: round 17's list of entries no record names, less the two 720p cuts and one file its report now names. Only the capture runs' logs name some of them, as their output folders. The list is in `build/round-18/notes/build-trashed.txt`.
+
 ### Publishing
 
 `tools/publish-set.py` assembles the pages, the six scripts, every `data/*.js`, the 49 Moscow rasters the
@@ -2116,7 +2118,7 @@ browser (the links need a claude.ai session), so the load on the host is the aut
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
 
-**A data file.** Build it with an R pass that writes through `R/motion/motion-common.R` (the JSON, its `.js` twin, the provenance and the checks) or with a Python builder such as `tools/shared_pairs.py`, and let every check pass. Load it with a `<script>` tag in `explorer.html` (an optional file carries `onerror="this.remove()"`) or, for a file needed only on demand, a branch of `ensureData`. `tools/publish-set.py` ships every `data/*.js` twin, refuses a twin that does not hold its JSON's data or a JSON that differs from the hash its provenance recorded, and names the twins neither page loads (round 18).
+**A data file.** Build it with an R pass that writes through `R/motion/motion-common.R` (the JSON, its `.js` twin, the provenance and the checks) or with a Python builder such as `tools/shared_pairs.py`, and let every check pass. Load it with a `<script>` tag in `explorer.html` (an optional file carries `onerror="this.remove()"`) or, for a file needed only on demand, a branch of `ensureData`. `tools/publish-set.py` ships the `data/*.js` twins a page loads (it leaves out and names the others), refuses a twin that does not hold its JSON's data or a JSON that differs from the hash its provenance recorded (round 18).
 
 **A table export.** A table from the programming side (one small CSV per table, its columns and checks in its brief) is pinned in `config/sources.json` with `scripts/pin-sources.py` and read by a short R pass through `motion_intake_pinned()` in `R/motion/motion-intake.R`, with a schema of general rules: the columns and their types, the keys, the allowed values, a year range or an omitted year that depends on another column, a value allowed only under a condition, intervals around their estimates and the support rule. A broken rule stops the pass before anything is written and names every failure. Otherwise the table goes to `data/<id>.json` with its twin, provenance and checks. `motion_intake_table()` takes a data frame, for a test (round 18).
 

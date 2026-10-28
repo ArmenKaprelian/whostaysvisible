@@ -27,8 +27,8 @@ twins must be on the expected list: the insights' sources (insights.json), the c
 below (the footer's, the references', the fonts', the basemap's). A link that is on none of them refuses the set.
 
 Round 18: every data twin must hold the same data as its JSON file, and every JSON file must match the hash its provenance recorded when the
-pass or builder wrote it, so a refresh that left a stale twin or an edited file is refused without a browser run; twins that neither page loads
-are reported, not dropped (the author decides).
+pass or builder wrote it, so a refresh that left a stale twin or an edited file is refused without a browser run. Twins that neither page loads
+are left out of the set and named (the author's decision of 27 October 2026, for industry-city.js, 4.3 MB).
 
 TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's js/agent-guide.js is rebuilt at every publish from the data the set
 ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
@@ -202,10 +202,15 @@ def twin_data(path):   # the data a .js twin assigns: window.MOTION_DATA["id"] =
     body = txt[m.end():].rstrip()
     return json.loads(body[:-1] if body.endswith(";") else body)
 
-def twin_checks(data_dir):   # round 18: twins against their JSON, JSON against its provenance's hash, and the twins no page loads
-    bad, notes, loads = [], [], ""
+def page_loads():   # the text of the two pages and their scripts, which name every data file a page loads as 'data/<file>'
+    loads = ""
     for page in ("explorer.html", "explainer.html"): loads += source(page).decode("utf-8")
     for n in SCRIPTS: loads += source("js/" + n).decode("utf-8")
+    return loads
+def loaded(name, loads): return re.search(r"""["'`]data/%s["'`]""" % re.escape(name), loads) is not None
+
+def twin_checks(data_dir, loads):   # round 18: twins against their JSON, JSON against its provenance's hash, and the twins no page loads
+    bad, notes = [], []
     hashed = 0
     for name in sorted(os.listdir(data_dir)):
         if not name.endswith(".json") or name.endswith(".provenance.json"): continue
@@ -220,9 +225,9 @@ def twin_checks(data_dir):   # round 18: twins against their JSON, JSON against 
             if want:
                 hashed += 1
                 if hashlib.sha256(open(os.path.join(data_dir, name), "rb").read()).hexdigest() != want: bad.append("%s differs from the file its provenance recorded (%s.provenance.json)" % (name, stem))
-    orphans = [n for n in sorted(os.listdir(data_dir)) if n.endswith(".js") and not re.search(r"""["'`]data/%s["'`]""" % re.escape(n), loads)]
+    orphans = [n for n in sorted(os.listdir(data_dir)) if n.endswith(".js") and not loaded(n, loads)]
     notes.append("data: every twin checked against its JSON, %d JSON files against their provenance's hash" % hashed)
-    if orphans: notes.append("data: %d twin(s) that neither page loads, still shipped: %s (%.1f MB)" % (len(orphans), ", ".join(orphans), sum(os.path.getsize(os.path.join(data_dir, n)) for n in orphans) / 1048576))
+    if orphans: notes.append("data: %d twin(s) that neither page loads, left out of the set: %s (%.1f MB)" % (len(orphans), ", ".join(orphans), sum(os.path.getsize(os.path.join(data_dir, n)) for n in orphans) / 1048576))
     return bad, notes
 
 def main():
@@ -233,10 +238,11 @@ def main():
         groups["scripts"].append(("js/" + n, copy("js", n)))
     for n in page_fonts():
         groups["fonts"].append(("fonts/" + n, copy("fonts", n)))
-    data_dir = os.path.join(MOTION, "data")
+    data_dir = os.path.join(MOTION, "data"); loads = page_loads()
     for n in sorted(os.listdir(data_dir)):
-        if n.endswith(".js"):
-            groups["data"].append(("data/" + n, copy("data", n)))
+        if not n.endswith(".js"): continue
+        if loaded(n, loads): groups["data"].append(("data/" + n, copy("data", n)))
+        elif os.path.exists(os.path.join(OUT, "data", n)): os.remove(os.path.join(OUT, "data", n))   # a twin no page loads: no stale copy stays in the set
     years = range(2014, 2026)
     wanted = ["align.png"] + ["%s-%d%s.png" % (ext, y, suf) for y in years for ext, suf in (("city", "-all"), ("downtown", "-all"), ("downtown", ""), ("region", "-all"))]
     for n in wanted:   # the rasters the journey loads: every backdrop, the downtown and national outcome layers
@@ -248,7 +254,7 @@ def main():
         for n in sorted(os.listdir(firms)):
             if n.endswith(".js"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the base64 twins; the host serves no raw binaries
     problems = check_rules(data_dir)
-    twin_bad, twin_notes = twin_checks(data_dir); problems += twin_bad
+    twin_bad, twin_notes = twin_checks(data_dir, loads); problems += twin_bad
     guide = agent_guide(problems)
     n_links, bad_links = link_scan(data_dir); problems += bad_links
     total = 0
