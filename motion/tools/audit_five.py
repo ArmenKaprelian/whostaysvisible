@@ -155,6 +155,12 @@ def main():
         import stale_profiles as STALE; n, b, parts = STALE.summary(STALE.scan())
         if n: say('  warning: %d idle headless-browser profile(s) in /tmp hold %.0f MB (%s); motion/tools/stale_profiles.py lists them' % (n, b / 1e6, parts))
     except Exception: pass   # a warning only: never a reason to stop the audit
+    if os.path.exists(os.path.join(HERE, 'publish-set.py')):   # the publish day's CORRECTIONS check (publish-set.py --dates), shown before the widths run; a note, never a finding
+        try:
+            r = subprocess.run([sys.executable, os.path.join(HERE, 'publish-set.py'), '--dates'], capture_output=True, text=True, timeout=60)
+            for line in (r.stdout + r.stderr).splitlines():
+                if line.strip(): say('  publish date: ' + line.strip())
+        except Exception as e: say('  publish date: not checked (%s)' % e)
     par = run_widths(widths, a, rundir, '', a.jobs, floors)
     bad = {w: r['error'] for w, r in par.items() if 'error' in r}
     if bad: raise SystemExit('audit-five: width(s) %s gave no result, nothing replaced: %s' % (', '.join(map(str, bad)), '; '.join(bad.values())))

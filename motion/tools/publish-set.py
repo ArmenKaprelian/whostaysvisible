@@ -32,14 +32,22 @@ are left out of the set and named (the author's decision of 27 October 2026, for
 
 TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's js/agent-guide.js is rebuilt at every publish from the data the set
 ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
-one of the builder's rules, the public-release checks among them. The page itself never fetches it."""
+one of the builder's rules, the public-release checks among them. The page itself never fetches it.
+
+Publish dates (after v39, 28 October 2026): every date a publish writes is the UTC day of the publish, the guide's and the CORRECTIONS entry's
+alike. The set compares the REFERENCES panel's CORRECTIONS with the last publish's, read from the commit named in the build line of the
+publish copy committed at HEAD: at most one entry new since then, dated the publish day, on a day the last publish's entries do not
+already hold (one entry per date; a second publish with corrections on one UTC day needs the author). --dates runs this check alone and
+copies nothing: run it before the publish gate's five-width audit, so that a date edit lands before that run and needs no second one;
+tools/audit_five.py shows its result as a note at the start of every run."""
 import datetime, hashlib, json, os, re, shutil, subprocess, sys, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
 OUT = os.path.join(MOTION, "publish")
-os.makedirs(OUT, exist_ok=True)
+DATES_ONLY = "--dates" in sys.argv
+if not DATES_ONLY: os.makedirs(OUT, exist_ok=True)
 FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700%s&display=swap">'
 FONT_EXTRA = {"explorer.html": "&family=Tomorrow:wght@400;500"}   # the atlas's data wire in Tomorrow (round 15, the author's final choice of 26 October 2026); the explainer loads Plex alone
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
@@ -145,7 +153,7 @@ def agent_guide(problems):   # the guide rebuilt for the set (see the module's n
         exec(compile(git("show", FROM + ":motion/tools/agent_guide.py"), "agent_guide.py at " + FROM, "exec"), mod.__dict__)
     else:
         sys.path.insert(0, HERE); import agent_guide as mod
-    d = datetime.date.today(); when = "%d %s %d" % (d.day, d.strftime("%B"), d.year)
+    when = long_date(publish_day())
     text = mod.build(os.path.join(MOTION, "data"), published=when)
     for f in mod.rules(text): problems.append("agent guide: " + " | ".join(f))
     same = source("js/agent-guide.js").decode("utf-8") == mod.js_of(mod.build(os.path.join(MOTION, "data")))
@@ -154,6 +162,34 @@ def agent_guide(problems):   # the guide rebuilt for the set (see the module's n
         open(os.path.join(OUT, "agent-guide.md"), "w", encoding="utf-8").write(text)
         return "agent guide: rebuilt and dated %s; the button copies %s, served from publish/agent-guide.md once the publish copy is committed and pushed" % (when, mod.GUIDE_URL)
     return "agent guide: rebuilt from the shipped data and dated %s; %s" % (when, "the source's copy matched it" if same else "the source's copy was stale, the set carries the rebuilt guide")
+
+MONTH_DAY = r"\d{1,2} (?:January|February|March|April|May|June|July|August|September|October|November|December) \d{4}"
+def publish_day(): return datetime.datetime.now(datetime.timezone.utc).date()   # one clock for every date a publish writes: the UTC day
+def long_date(d): return "%d %s %d" % (d.day, d.strftime("%B"), d.year)
+def correction_entries(app_js):   # [(date, text)] of the REFERENCES panel's CORRECTIONS in js/explorer-app.js, newest first
+    m = re.search(r"S\.push\(\['corrections'.*?\]\]\);", app_js, re.S)
+    return re.findall(r"`<b>(%s)</b>: (.*?)`" % MONTH_DAY, m.group(0), re.S) if m else []
+def last_published():   # the source commit of the last publish, from the build line of the publish copy committed at HEAD
+    try: m = re.search(r'<meta name="build" content="commit ([0-9a-f]{7,})', git("show", "HEAD:motion/publish/explorer.html"))
+    except subprocess.CalledProcessError: return None
+    return m.group(1) if m else None
+def corrections_dates(cur, pub, day):
+    """(problems, notes) for the CORRECTIONS entries cur against the last publish's pub, on the publish day day (see the module's note)."""
+    want = long_date(day); new = [e for e in cur if e not in pub]; gone = [e for e in pub if e not in cur]; bad, notes = [], []
+    if gone: notes.append("CORRECTIONS: %d entry(ies) of the last publish changed or left (every correction stays on the page; a condensing is the author's)" % len(gone))
+    if not new: return bad, notes + ["CORRECTIONS: no entry new since the last publish; the publish day is %s (UTC)" % want]
+    if len(new) > 1: bad.append("CORRECTIONS: %d entries new since the last publish, where one publish adds one (the author decides how to combine them)" % len(new))
+    if want in {d for d, _ in pub}: bad.append("CORRECTIONS: a published entry is already dated %s, the publish day (UTC), and dates are one per entry: the author decides (fold the new entry into it, or publish after 00:00 UTC)" % want)
+    else:
+        for d, _ in new:
+            if d != want: bad.append("CORRECTIONS: the new entry is dated %s and the publish day is %s (UTC): date it %s before the gate's five-width run" % (d, want, want))
+    if not bad: notes.append("CORRECTIONS: the new entry carries the publish day, %s (UTC)" % want)
+    return bad, notes
+def dates_check():   # corrections_dates on the shipped script against the last publish's
+    base = last_published()
+    if base is None: return [], ["CORRECTIONS: no publish copy at HEAD names its commit, so the entries were not compared; the publish day is %s (UTC)" % long_date(publish_day())]
+    cur = correction_entries(source("js/explorer-app.js").decode("utf-8")); pub = correction_entries(git("show", base + ":motion/js/explorer-app.js"))
+    return corrections_dates(cur, pub, publish_day())
 
 def keys_of(obj, out):
     if isinstance(obj, dict):
@@ -231,6 +267,11 @@ def twin_checks(data_dir, loads):   # round 18: twins against their JSON, JSON a
     return bad, notes
 
 def main():
+    if DATES_ONLY:
+        bad, notes = dates_check()
+        for t in notes: print(t)
+        for pr in bad: print("REFUSED: " + pr)
+        return 1 if bad else 0
     groups = {"pages": [], "scripts": [], "fonts": [], "data": [], "moscow rasters": [], "national rasters": [], "addresses": []}
     for n in ("explainer.html", "explorer.html"):
         groups["pages"].append((n, convert(n)))
@@ -257,6 +298,7 @@ def main():
     twin_bad, twin_notes = twin_checks(data_dir, loads); problems += twin_bad
     guide = agent_guide(problems)
     n_links, bad_links = link_scan(data_dir); problems += bad_links
+    date_bad, date_notes = dates_check(); problems += date_bad
     total = 0
     for g, items in groups.items():
         size = sum(b for _, b in items); total += size
@@ -267,7 +309,7 @@ def main():
     print("publish set: %.1f MB in %s" % (total / 1048576, OUT))
     print("build: " + BUILD)
     if guide: print(guide)
-    for t in twin_notes: print(t)
+    for t in twin_notes + date_notes: print(t)
     print("links: %d distinct http(s) links in the shipped pages, scripts and data twins, %d not on the expected list" % (n_links, len(bad_links)))
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0
