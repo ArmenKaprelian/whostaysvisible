@@ -11,6 +11,9 @@
 #                                    and a site-only change: the site clean, an atlas change only from this gate's import, the site's check
 #                                    in both engines (site-check.py, about 45 s) with zero findings, then the push. It pushes main only:
 #                                    site work waiting for the author's approval stays on a local branch until it is merged.
+#   motion/tools/publish.sh --audited X   the gate with the five-width audit of commit X in place of a new one, when this build differs from X
+#                                    only in text strings (round 24): tools/audit_carry.py checks the record of X's pass, the strings-only
+#                                    difference and change-proof.py --base X, and the gate stops when it refuses
 #
 # The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab.
 set -euo pipefail
@@ -19,7 +22,9 @@ LAB="$(git -C "$HERE" rev-parse --show-toplevel)"
 SITE="${SITE:-$HOME/Documents/website}"
 say() { printf '%s\n' "publish: $*"; }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
+audited=""
+if [[ "${1:-}" == "--audited" ]]; then audited="${2:?--audited takes the audited commit}"; fi
 
 if [[ "${1:-}" == "--push" ]]; then   # the author's pick B2 (29 October 2026): one push for atlas publishes and site-only changes
   branch="$(git -C "$SITE" rev-parse --abbrev-ref HEAD)"   # the author's pick B5: work waiting for approval stays on a branch, main is what is live
@@ -49,8 +54,13 @@ src="$(git rev-parse --short=7 HEAD)"
 say "1/5 the publish day and the text rules (seconds; a text that breaks a rule stops the gate before the audit)"
 python3 -I motion/tools/publish-set.py --texts
 
-say "2/5 the five-width audit (about 8 minutes)"
-motion/tools/audit-five.sh
+if [[ -n "$audited" ]]; then
+  say "2/5 the five-width audit of $audited carried over, if this build differs from it only in text strings (the proof takes about 5 minutes)"
+  python3 -I motion/tools/audit_carry.py "$audited"
+else
+  say "2/5 the five-width audit (about 8 minutes)"
+  motion/tools/audit-five.sh
+fi
 
 say "3/5 the publish set"
 python3 -I motion/tools/publish-set.py --write

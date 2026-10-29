@@ -2225,6 +2225,15 @@ The author's approval of a side chat's proposal, after round 24's publish gate s
 - `tools/publish.sh` runs it as step 1, so a text that breaks a rule stops the gate before the audit. Run it after any text change.
 - Tested: at c3f8f8e (today's first gate) it refuses the entry (312 characters, 3 sentences) and the guide (1,214 words as published); on the current build it passes. The reading texts the page builds need a browser; the proof's text snapshot covers them.
 
+### A passing audit carried over to a text-only fix (29 October 2026)
+
+The side chat's second proposal; the standing rule in `CLAUDE.md` is the author's approved wording of 29 October 2026.
+- `tools/audit_five.py` records a full five-width run with zero findings in `build/audit/passed.json`, by commit, only when the shipped sources were committed and unchanged from start to end and the served page and scripts were the working tree's.
+- `tools/audit_carry.py X` says whether that audit counts for the current build: X's pass is recorded; X is an ancestor; the shipped sources differ from X only inside string literals (the scripts compared token by token with every string's contents masked, so a changed name, number, regular expression or structure refuses, while a whole string added with its comma passes; the pages with their text and title, aria-label, alt and placeholder values masked; of the data only the glossary's strings); and `change-proof.py --base X` shows no new rule hit, no change in the map, and frame changes only in panels that hold a changed text. `--strings X [Y]` runs the strings check alone, in under a second.
+- `tools/publish.sh --audited X` runs it in place of the audit, after the text rules, and stops when it refuses.
+- The proof shoots 1,600 and 400 px, so visible panel text that rewraps at 768, 1,200 or 2,000 px is not seen; text with no layout of its own (the guide, tooltips, aria-labels) changes no frame.
+- Tested. On the lab's history the strings check accepts today's CORRECTIONS and guide edits (97d5e05 and c3f8f8e to HEAD) and refuses the narrow layout (84319e1 to HEAD, naming the code). On a full five-width pass recorded for 4e65013 (1,376 states, zero findings), in a scratch clone: a reworded tooltip carries over (the proof shows no frame change); a changed number in the chart code is refused at the strings check (`bar = 6` became `bar = 7`); a reworded canvas header is refused at the proof (its frames change in the Groups card and the pop-out, which hold no changed text the snapshot sees).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.

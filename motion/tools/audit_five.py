@@ -28,14 +28,30 @@ named by its start time, with each width's result and log. Nothing earlier is re
 Usage: tools/audit-five.sh [--url URL] [--widths 400,768,...] [--jobs 3] [--out build/audit/audit-five.txt] [--max-wait 1800]
 """
 import argparse, atexit, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__)); MOTION = os.path.normpath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
 ALL = [400, 768, 1200, 1600, 2000]
+PASSED = os.path.join(MOTION, 'build', 'audit', 'passed.json')   # round 24: the commits a full five-width run passed, for tools/audit_carry.py
 LEDGER = os.path.join(MOTION, 'build', 'audit', 'parallel-only.json')   # the parallel-only findings by check, with the runs that showed them
 HEAD = re.compile(r'^atlas audit: (\d+) states, (\d+) boxes, (\d+) finding\(s\); field renderers seen: ([^;]*); tiles placed over the note or the legend for want of a clear place: (\d+) \((.*)\)$')
 
+SHIPPED = ['explorer.html', 'explainer.html', 'js', 'css', 'fonts', 'data']
+def tree_state(url):   # (commit, clean, served): HEAD, whether the shipped sources are committed, whether the served page and script are the working tree's
+    try:
+        g = lambda *a: subprocess.run(['git'] + list(a), cwd=MOTION, capture_output=True, text=True, check=True).stdout.strip()
+        commit, clean = g('rev-parse', 'HEAD'), not g('status', '--porcelain', '--', *SHIPPED)
+        base = url.rsplit('/', 1)[0] + '/'
+        served = all(urllib.request.urlopen(base + f + '?carry=%d' % time.time(), timeout=20).read() == open(os.path.join(MOTION, f), 'rb').read() for f in ('explorer.html', 'js/explorer-app.js', 'js/charts.js', 'js/map-layers.js'))
+        return commit, clean, served
+    except Exception: return None, False, False
+def record_pass(t0_state, url, widths, head, run):   # round 24: a full run with zero findings on a committed, unchanged, served tree is recorded by commit
+    commit, clean, served = t0_state; now = tree_state(url)
+    if not (commit and clean and served and now == t0_state and sorted(widths) == ALL and head and head.group(3) == '0'): return None
+    rec = json.load(open(PASSED, encoding='utf-8')) if os.path.exists(PASSED) else {}
+    rec[commit] = {'utc': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'run': run, 'states': int(head.group(1)), 'widths': ALL}
+    tmp = PASSED + '.new'; open(tmp, 'w', encoding='utf-8').write(json.dumps(rec, indent=1)); os.replace(tmp, PASSED); return commit
 def stamp(t=None): return datetime.fromtimestamp(time.time() if t is None else t).astimezone().strftime('%Y%m%dT%H%M%S%z')   # local time and its offset
 def clock(s): s = int(round(s)); return '%d:%02d:%02d' % (s // 3600, s % 3600 // 60, s % 60)
 def say(msg): print(msg, flush=True)
@@ -168,7 +184,7 @@ def main():
         rundir = os.path.join(sdir, 'runs', run if n == 1 else '%s-%d' % (run, n))
         try: os.makedirs(rundir); run = os.path.basename(rundir); break
         except FileExistsError: n += 1
-    before = profiles()
+    before = profiles(); t0_state = tree_state(a.url)   # round 24: the tree at the start, for the record of a pass
     t0 = time.time(); say('audit-five %s: widths %s, %d at a time at most; floors MemAvailable %d MiB, SwapFree %d MiB' % (run, ','.join(map(str, widths)), a.jobs, floors[0], floors[1]))
     try:
         import stale_profiles as STALE; n, b, parts = STALE.summary(STALE.scan())
@@ -199,6 +215,8 @@ def main():
     os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
     for path, body in ((statef, json.dumps(state, indent=1)), (LEDGER, json.dumps(seen, indent=1)), (out, text)):   # the new result replaces the old only now, complete
         tmp = path + '.new'; open(tmp, 'w', encoding='utf-8').write(body); os.replace(tmp, path)
+    passed = record_pass(t0_state, a.url, widths, HEAD.match(text.splitlines()[0]), run)
+    if passed: say('  recorded: %s passed the five-width audit (build/audit/passed.json; tools/audit_carry.py reads it)' % passed[:7])
     left = sorted(profiles() - before)   # this run's own; older ones are not counted
     say('audit-five %s done in %s wall clock; %s; %s' % (run, clock(wall), text.splitlines()[0][:120], ('%d Brave profile(s) of this run left in /tmp: %s' % (len(left), ' '.join(left))) if left else 'no Brave profile of this run left in /tmp'))
     return 1 if HEAD.match(text.splitlines()[0]).group(3) != '0' else 0
