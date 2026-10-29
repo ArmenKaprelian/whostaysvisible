@@ -38,7 +38,7 @@ You are helping a reader of the Visibility Atlas. This guide says what the atlas
 ## 4. Key results
 
 4.1. Nationally, 63.4% of eligible firms have a statement for 2021 and 66.3% for 2024 (Table B.1).
-4.2. Between 2021 and 2024 availability falls among state-related firms (69.8% to 61.3%) and unitary enterprises (69.2% to 48.2%) and rises among private firms and joint-stock companies. The declines are concentrated in 2024 (Figures 2.2 and 2.3).
+4.2. From 2021 to 2024 availability rises for private and joint-stock firms and falls for state-related firms (69.8% to 61.3%), all in their state-run half, mostly municipal unitary enterprises (70.1% to 48.8%), and mostly in 2024 (Figures 2.2 and 2.3).
 4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Tables B.4 and B.5). The Q5 vs Q1 odds ratio rises in 2022 against 2021: the ratio of odds ratios is 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (95% confidence interval 1.020 to 1.169), is smaller when wholesale trade is excluded.
 4.4. Sanctioned-only firms, on the sanctions list and on no other list, have lower availability than firms on no list by 2024: an odds ratio of 0.570 (95% confidence interval 0.363 to 0.897) (Table B.7).
 4.5. The estimates come from binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Standard errors are two-way clustered by industry and region.

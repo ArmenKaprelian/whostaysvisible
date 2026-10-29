@@ -1,6 +1,6 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit 44afcf9690a6">
+<meta name="build" content="commit b16968abce93">
 <style>
 /* The atlas's IBM Plex Mono and Tomorrow, served from its own fonts/ folder (round 20, the author's decision of 29 October 2026): Google Fonts'
    @font-face rules for the faces the page loads, copied with their unicode-range lines so a browser fetches the same subsets it fetched from
@@ -728,7 +728,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
       <div class="controls" id="layers"></div>
       <div class="yearrow" id="yearrow">
       <div class="yline"><span class="ui" id="yearui">Year</span><button class="btn ybtn yrun" id="yearrun" type="button" aria-pressed="false" aria-label="Run the years from 2014 to 2025" title="RUN THE YEARS FROM 2014 TO 2025, ONE A SECOND" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="play" d="M4 2.5v11l9-5.5z" fill="currentColor"/><path class="pause" d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span></div>
-      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay the bloom of the firms added to a list in 2021" title="Replay the bloom of the firms added to a list in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span><button class="btn ybtn" id="blink" type="button" aria-pressed="false" hidden>Blink <span class="by">2021</span></button></div>
+      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay sweep of firms added to a list in 2021. Lines join them by distance only." title="Replay sweep of firms added to a list in 2021. Lines join them by distance only."><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span><button class="btn ybtn" id="blink" type="button" aria-pressed="false" hidden>Blink <span class="by">2021</span></button></div>
       </div>
       </div>
     </section>
@@ -792,6 +792,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <script src="data/cells100.js"></script>
 <script src="data/density.js"></script>
 <script src="data/series.js"></script>
+<script src="data/statesplit.js"></script>   <!-- the Groups card's state-run row (round 24, M14) -->
 <script src="data/cellsyears.js"></script>
 <script src="data/cells25.js" onerror="this.remove()"></script>
 <script src="data/industry.js" onerror="this.remove()"></script>
