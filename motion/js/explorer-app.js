@@ -370,16 +370,15 @@
   // ---- firms view: loader, renderer, hover ------------------------------------------------------------
   const firmYears = new Map(), firmPending = new Map(); let firmOrder = [], firmStatus = null;
   const lowerBound = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo; };
-  // The artifact host serves only listed file types, so a year's gzipped bytes travel as base64 inside a
-  // script (data/firms/firms-YYYY.js, the lab's pattern for binary arrays), injected on demand.
+  // Data loaded on first use come as script twins injected on demand. A year's addresses come as the gzipped file itself
+  // (data/firms/firms-YYYY.bin.gz), fetched and inflated here: the author's pick C of 29 October 2026, since the atlas left the
+  // artifact host, which served only listed file types (until then the bytes travelled as base64 in a script twin).
   const loadScript = src => new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = () => { el.remove(); ok(); }; el.onerror = () => { el.remove(); fail(new Error('could not load ' + src)); }; document.head.appendChild(el); });   // round 17: the element goes once it has run (a revisited year loads again under the three-year cache, and each load had left its element and two handlers in the head)
-  const twinNotes = {};   // the comment field of each twin's gzip header (round 10, the authorship mark; the bytes inside are unchanged)
+  const twinNotes = {};   // the comment field of each address file's gzip header (round 10, the authorship mark; the bytes inside are unchanged)
   function gzipComment(u8) { const flg = u8[3]; let p = 10; if (flg & 4) p += 2 + (u8[p] | (u8[p + 1] << 8)); if (flg & 8) { while (u8[p]) p++; p++; } if (!(flg & 16)) return ''; let s = ''; while (u8[p]) s += String.fromCharCode(u8[p++]); return s; }
   async function loadYear(y) {
-    const store = (D.firmsYear = D.firmsYear || {});
-    if (!store[y]) await loadScript('data/' + FM.files[y].replace(/\.bin\.gz$/, '.js'));
-    const b64 = store[y]; if (!b64) throw new Error('no data in the script'); delete store[y];
-    const bin = atob(b64); let buf = new ArrayBuffer(bin.length); { const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); }
+    const res = await fetch('data/' + FM.files[y]); if (!res.ok) throw new Error('could not load data/' + FM.files[y] + ' (' + res.status + ')');
+    let buf = await res.arrayBuffer();   // a server that inflates the file on the way hands over the raw bytes, which the header check below lets through
     const head = new Uint8Array(buf, 0, 2);
     if (head[0] === 0x1f && head[1] === 0x8b) { twinNotes[y] = gzipComment(new Uint8Array(buf)); buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }
     const dv = new DataView(buf), magic = String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));

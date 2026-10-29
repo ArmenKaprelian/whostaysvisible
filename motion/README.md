@@ -2147,6 +2147,15 @@ Checks. (1) `build/site-pass-2026-10-29/proof-fonts`: change-proof with the site
 
 **Published** 29 October 2026 (UTC) on the author's site with the site pass, approved by the author: publish copy b7195d8 (from 4035835); site commits a2227bb (the site pass) and d2c23ad (the import), pushed by the author with `tools/publish.sh --push` (5c01ed1..d2c23ad); `site-check.py` on the final site, zero findings.
 
+### Round 21 (29 October 2026): the address files fetched as gzipped binaries
+
+The author's pick C of 29 October 2026, from the plan after the site pass; the raw measurements are in `review/2026-10-29-round-21.md`.
+- **The loader:** the atlas fetches a year's addresses as `data/firms/firms-YYYY.bin.gz` and inflates it, in place of injecting the base64 script twin, decoding it and copying it byte by byte. The twins' bytes were the `.bin.gz` files exactly, gzip header and authorship comment included, so the decoded arrays and `twinNote` are unchanged. The M9 pass still writes the twins in the lab; nothing loads them.
+- **The publish set:** `publish-set.py` ships the twelve `.bin.gz` files (79.6 MB, against 106.1 MB of twins) and removes the old twins from `publish/`.
+- **Measured first:** GitHub Pages gzips the `.js` to within 0.5 percent of the `.bin.gz`, so the download is the same. A year switch in the author's Brave took 303 ms with the twin and 203 ms with fetch (localhost, medians of five, laptop screen), and the twin's path allocated about 29 MB at its peak against 6 MB. The gain is speed and memory, not download size.
+
+Proof: `build/round-21/proof-address-files` against HEAD, identical (no string, frame or rule hit differs; 260 s). The Firms view requests only `.bin.gz` files, with no script errors.
+
 ### Publishing
 
 Publish dates are UTC days: run `tools/publish-set.py --dates` before the publish gate's five-width audit (round 18, after v39).

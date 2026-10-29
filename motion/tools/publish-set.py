@@ -7,7 +7,7 @@ fallback (IBM Plex Mono (Google Fonts, the same build as the installed family) i
 viewport-fit meta the page contract asks for. Beside them: the six shared scripts, every data file
 (the aggregates and, since the author's rule change of 23 October 2026, the firm-level files: the
 Moscow and national manifests, the listed firms, the anchors, the Moscow cells and comparison groups,
-the registered-address files as base64 script twins), the Moscow rasters the journey loads and the national rasters.
+the registered-address files, gzipped binaries the atlas fetches since round 20), the Moscow rasters the journey loads and the national rasters.
 
 Three rules are checked here: no shipped data file carries an identifier key (inn, ogrn); firm names
 (name, name_filed, name_case, name_shared) ship only on the two listed-firm files and the anchor firm's hand-typed
@@ -304,7 +304,8 @@ def main():
     firms = os.path.join(data_dir, "firms")
     if os.path.isdir(firms):
         for n in sorted(os.listdir(firms)):
-            if n.endswith(".js"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the base64 twins; the host serves no raw binaries
+            if n.endswith(".bin.gz"): groups["addresses"].append(("data/firms/" + n, copy("data/firms", n)))   # the gzipped files the atlas fetches (round 20, the author's pick C)
+            elif n.endswith(".js") and os.path.exists(os.path.join(OUT, "data", "firms", n)): os.remove(os.path.join(OUT, "data", "firms", n))   # the old base64 twins leave the set
     problems = check_rules(data_dir)
     twin_bad, twin_notes = twin_checks(data_dir, loads); problems += twin_bad
     guide = agent_guide(problems)
