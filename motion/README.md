@@ -2200,7 +2200,9 @@ Proof: `build/proof-r23` against HEAD (`7a606f2`): no text differs; the two REFE
 
 Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings.
 
-**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry), the five-width audit with zero findings (1,376 states, 7 min 49 s), the publish set (141.1 MB), the publish copy 6db6a40 and the site's import ea4c93b. The site's push is the author's (`publish.sh --push`).
+**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry), the five-width audit with zero findings (1,376 states, 7 min 49 s), the publish set (141.1 MB), the publish copy 6db6a40 and the site's import ea4c93b.
+
+**Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed the site's import (4e1b27a..ea4c93b).
 
 ## How to add or change content
 
