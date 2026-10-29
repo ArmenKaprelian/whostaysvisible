@@ -2218,6 +2218,8 @@ Proof: `build/round-24/proof-final` against HEAD (`82f1db8`): the approved wordi
 
 **Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads, 40 s), and it pushed the site's import (ea4c93b..c6b160a).
 
+**Guide 4.2, variant V** (the author's choice after the publish, 29 October 2026): the first publish under the text-only rule, `publish.sh --audited 4e65013`. The text rules passed; `audit_carry.py` found 4e65013's recorded five-width pass, one changed string (`js/agent-guide.js`) and a proof with no frame or rule change; publish copy 1a7f9ff (from 3d2d68d), site import ed192ec. The site's push is the author's.
+
 ### The text rules first (29 October 2026)
 
 The author's approval of a side chat's proposal, after round 24's publish gate stopped twice on text rules checked late: the CORRECTIONS entry's limits only inside the eight-minute audit, the agent guide's 1,200 words with its dated line only at the publish set, after the audit.
