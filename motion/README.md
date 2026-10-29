@@ -2125,6 +2125,14 @@ Proof: `build/round-19/proof/round-19-webkit` (base 1f8ed66, 267 s): 6 text grou
 
 **Published** 29 October 2026 (UTC) on the author's site, https://armenkaprelian.github.io/atlas/: the publish gate's five-width run on a2926f6 had zero findings (7 min 52 s); publish copy c486ac3; site commits 5acc2b3 and 0226ed8, pushed by the author (the permission check refuses Claude's pushes that make something public). All twelve checked addresses answer 200 with their types. The claude.ai atlas's v40 (29 October 2026) is a pointer to the site, `pointer/atlas-moved.html`: a link's view anchor carries over to the site's atlas.
 
+### The site's check in both engines (29 October 2026)
+
+The author's request after the site's home page broke on phones in landscape and on tablets (found on 29 October, fixed in site commit c67c8f9). `tools/site-check.py` loads every page of the site in headless Brave and in WebKitGTK 2.52 (Safari's engine family, scripted from Python, off screen, with no profile) at seven sizes: a phone and a tablet each upright and in landscape, 1280 by 800, 1440 by 900 and 1920 by 1080 (the home page at all seven, the film, research, writing and contact pages and the atlas at the phone and 1440). It reports script errors and failed loads, sideways scroll, the font, and on the home page the photo's line with the index, page height, the bio's clearance and the index rows' heights; screenshots and `report.txt` go to `build/site-check/<UTC time>/`; exit 1 on findings. One command, about 45 s:
+
+    python3 -I motion/tools/site-check.py
+
+First run on c67c8f9: 34 page loads, zero findings. Run on the version before the fix (5eb06f5), it reported the bug in both engines (20 findings), and WebKit alone also reported the tablet's sideways scroll. WebKitGTK is not iOS: touch, the toolbars and the notch still need a short check on a real iPhone. The atlas's five-width audit stays its full check; here the atlas is loaded for errors and overflow only.
+
 ### Publishing
 
 Publish dates are UTC days: run `tools/publish-set.py --dates` before the publish gate's five-width audit (round 18, after v39).
