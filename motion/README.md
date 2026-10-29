@@ -2184,7 +2184,9 @@ The author's requests and picks of 29 October 2026, made from sandbox previews i
 
 Proof: `build/proof-r22-final` against HEAD (`f895dcd`): no text differs; 30 of 88 frames differ, the 28 hover frames at 1,600 px (the crosshair gone) and the open REFERENCES panel on both themes (97 percent). The pulse is not among the proof's still states; its frames from the build match the approved previews pixel for pixel (the map area of the Firms view's swell and of the Cells view's cased dot on both themes).
 
-Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings (the first run, before REFERENCES and the casing, also zero). Not published: the publish gate's five-width run comes with the author's word.
+Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings (the first run, before REFERENCES and the casing, also zero).
+
+**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry: round 22 corrects nothing), the five-width audit with zero findings (1,376 states, 7 min 55 s), the publish set (141.1 MB), the publish copy fa93e9b and the site's import 4e1b27a. The site's push is the author's (`publish.sh --push`).
 
 ## How to add or change content
 
