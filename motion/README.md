@@ -2133,6 +2133,8 @@ The author's request after the site's home page broke on phones in landscape and
 
 First run on c67c8f9: 34 page loads, zero findings. Run on the version before the fix (5eb06f5), it reported the bug in both engines (20 findings), and WebKit alone also reported the tablet's sideways scroll. WebKitGTK is not iOS: touch, the toolbars and the notch still need a short check on a real iPhone. The atlas's five-width audit stays its full check; here the atlas is loaded for errors and overflow only.
 
+The site's proof (the author's pick B3, 29 October 2026): `site-check.py --base COMMIT [--trial COMMIT]` serves that commit and the working tree (or a second commit), both without `atlas/`, and shoots 33 frames of each in headless Brave with the page clock fixed: the home page at three split sizes at rest, with two previews, the slogan's card and keyboard focus, the pointer under the last row, the stacked layouts; the subpages, a hover, HOME, a chapter, the 404 page. It names each differing region by the smallest page element holding it and writes `proof.html` and `summary.json` to `build/site-proof/<UTC time>/` (about 90 s; `tools/site_proof.py`). Tested: HEAD against itself identical twice; against 5c01ed1 it named the site pass's changes (the rule under CONTACT, the slogan card, the bio's and the film text's line breaks, the link rows, the new 404 page) and nothing else.
+
 ### Round 20 (29 October 2026): the atlas's fonts from its own folder
 
 The author's decision of 29 October 2026, made in a pass over the site; the detail is in `review/2026-10-29-round-20.md`.

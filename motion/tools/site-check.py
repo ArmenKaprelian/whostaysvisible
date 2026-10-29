@@ -16,7 +16,9 @@ context, which writes none. WebKitGTK is not iOS: no touch, no iOS toolbars or n
 check on a real iPhone covers those. The atlas's own audit (atlas-audit.py, audit-five.sh) stays its full check; here it is loaded
 for errors and overflow only. About a minute and a half, the two engines in parallel.
 
-Usage: python3 -I motion/tools/site-check.py [--site ~/Documents/website] [--engines brave,webkit] [--only home,film] [--out DIR]"""
+Usage: python3 -I motion/tools/site-check.py [--site ~/Documents/website] [--engines brave,webkit] [--only home,film] [--out DIR]
+The site's proof (the author's pick B3, 29 October 2026): --base COMMIT [--trial COMMIT] compares that commit with the working tree (or the second
+commit) frame by frame in fixed states and names the elements that changed (tools/site_proof.py); it runs in place of the check."""
 import argparse, base64, functools, http.server, json, os, re, subprocess, sys, tempfile, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -218,10 +220,15 @@ def main():
     ap.add_argument("--engines", default="brave,webkit", help="brave, webkit or both (default)")
     ap.add_argument("--only", default="", help="pages to check, from home, film, research, writing, contact, atlas (default all)")
     ap.add_argument("--out", default=None, help="the folder for the screenshots and report (default motion/build/site-check/<UTC time>)")
+    ap.add_argument("--base", default=None, help="the site's proof: the commit to compare with (tools/site_proof.py); runs in place of the check")
+    ap.add_argument("--trial", default=None, help="with --base: the commit to compare (default the working tree)")
     ap.add_argument("--webkit-worker", default=None, help=argparse.SUPPRESS)
     a = ap.parse_args()
     if a.webkit_worker:
         return webkit_worker(a.webkit_worker)
+    if a.base:
+        sys.path.insert(0, HERE); import site_proof
+        return site_proof.run(a.site, a.base, a.trial, a.out)
 
     out = a.out or os.path.join(LAB, "motion", "build", "site-check", time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()))
     os.makedirs(out, exist_ok=True)
