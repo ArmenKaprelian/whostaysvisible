@@ -2216,6 +2216,8 @@ Proof: `build/round-24/proof-final` against HEAD (`82f1db8`): the approved wordi
 
 **Ready to publish** on the author's word (29 October 2026, UTC), at the third run of `publish.sh`: the date check (the CORRECTIONS entry of 29 October, in the author's wording), the five-width audit with zero findings (1,376 states, 8 min 25 s), the publish set (141.1 MB), the publish copy aea6113 (from b16968a) and the site's import c6b160a. The first run stopped at the audit (the first CORRECTIONS entry ran 3 sentences and 312 characters, over the rule's 2 and 300); the second at the publish set (the published guide, with its dated line, at 1,214 words over 1,200; 4.2 shortened). In the site's copy the Groups card, the pulse and its tooltip and the entry load with no script errors.
 
+**Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads, 40 s), and it pushed the site's import (ea4c93b..c6b160a).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
