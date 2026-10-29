@@ -2275,8 +2275,10 @@ void main() {
   wrap.addEventListener('pointerup', endPointer);
   wrap.addEventListener('pointercancel', endPointer);
   wrap.addEventListener('pointerleave', ev => { if (ev.pointerType !== 'touch' && !press && !pinch) { lastPointer = lastPointer ? { x: lastPointer.x, y: lastPointer.y, inside: false } : null; hideHover(); } });
+  let gestureOn = false, gestureScale = 1;   // Safari's own pinch events (round 19, below)
   wrap.addEventListener('wheel', ev => {
     if (overControl(ev, '.zoombox')) return;
+    if (gestureOn && ev.ctrlKey) { ev.preventDefault(); return; }   // a pinch Safari also reports as a wheel is zoomed once, by the gesture
     ev.preventDefault(); cancelFlight();
     // A trackpad pinch arrives as a wheel with the Ctrl flag and small deltas (the phone's pinch is a touch gesture,
     // handled apart); it takes PINCH_RATE against the wheel's WHEEL_RATE. Line- and page-based wheels are scaled to pixels.
@@ -2288,6 +2290,24 @@ void main() {
     state.cam = { cx: t.cx, cy: t.cy, k: t.k };
     requestDraw(afterWheelStep, true);
   }, { passive: false });
+  // Safari's trackpad pinch (round 19, WebKit): Safari on a Mac sends a pinch as gesturestart, gesturechange and gestureend with a running scale, not as the
+  // Ctrl-flagged wheel the other browsers send, and zooms the whole page unless they are cancelled. The map zooms by each change in scale about the pointer,
+  // as the wheel's pinch does. On a touch screen the same events come with the fingers' pointers, which the pinch above already follows: there they are only
+  // cancelled. Other browsers send none of these events.
+  wrap.addEventListener('gesturestart', ev => { ev.preventDefault(); gestureOn = true; gestureScale = 1; }, { passive: false });
+  wrap.addEventListener('gesturechange', ev => {
+    ev.preventDefault();
+    const f = ev.scale / gestureScale; gestureScale = ev.scale;
+    if (pointers.size || !(f > 0) || f === 1 || overControl(ev, '.zoombox')) return;
+    cancelFlight();
+    const km = Number.isFinite(ev.clientX) ? kmAt(ev) : null, t = zoomStep(f, km);
+    if (km) lastPointer = { x: km.px, y: km.py, inside: true };
+    hideHover({ keepRegion: true });
+    if (atFloor(t.k)) { flyTo(t, { duration: 300 }); return; }
+    state.cam = { cx: t.cx, cy: t.cy, k: t.k };
+    requestDraw(afterWheelStep, true);
+  }, { passive: false });
+  wrap.addEventListener('gestureend', ev => { ev.preventDefault(); gestureOn = false; }, { passive: false });
   // Keys, when the map has focus: + and − zoom one step, 0 fits the country, the arrows pan (Shift: a small step).
   wrap.addEventListener('keydown', ev => {
     if (ev.target !== wrap) return;

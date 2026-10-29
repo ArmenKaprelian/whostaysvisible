@@ -21,8 +21,11 @@ once, and each removes its profile (capture.remove_profile, inside the tools cal
 
 Usage: python3 -I motion/tools/change-proof.py --base http://127.0.0.1:8783/explorer.html --trial http://127.0.0.1:8782/explorer.html
          --out motion/build/round-18/proof/NAME [--full | --widths 1600,400] [--themes dark,light] [--jobs 3] [--title TEXT]
-         [--labels base,trial] [--reuse-base DIR] [--skip-text] [--skip-frames]"""
-import argparse, difflib, html, json, os, re, shutil, subprocess, sys, threading, time
+         [--labels base,trial] [--reuse-base DIR] [--skip-text] [--skip-frames]
+Round 19 (the author's decision of 28 October 2026): --base and --trial also take a git commit (HEAD, a hash) or "worktree" in place of an address.
+A commit's page, scripts, stylesheet and fonts are copied under build/proof-base/COMMIT with data/ linked to the lab's own, and each build is served
+by tools/serve.py (base on 8783 and trial on 8782 when free) and stopped at exit. The defaults, --base HEAD --trial worktree, prove the uncommitted work."""
+import argparse, atexit, difflib, html, json, os, re, shutil, socket, subprocess, sys, threading, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -242,16 +245,48 @@ def write_sheet(path, title, summary, frames_dir, labels):
     pg.section("frames", "Frames", *parts)
     return pg.write(path)
 
+# ---- builds served here (round 19) ------------------------------------------------------------------------------------------------
+def free_port(want):
+    for port in (want, 0):
+        s = socket.socket()
+        try: s.bind(("127.0.0.1", port)); return s.getsockname()[1]
+        except OSError: continue
+        finally: s.close()
+
+def serve_build(spec, want_port):   # an address is used as given; a commit or "worktree" is set up, served, and stopped at exit
+    if spec.startswith("http"): return spec
+    lab = subprocess.run(["git", "-C", HERE, "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
+    motion = os.path.join(lab, "motion")
+    if spec == "worktree": root = motion
+    else:
+        sha = subprocess.run(["git", "-C", lab, "rev-parse", "--short=12", spec + "^{commit}"], capture_output=True, text=True, check=True).stdout.strip()
+        root = os.path.join(motion, "build", "proof-base", sha)
+        if not os.path.exists(os.path.join(root, "explorer.html")):
+            os.makedirs(root, exist_ok=True)
+            arch = subprocess.run(["git", "-C", lab, "archive", sha, "motion/explorer.html", "motion/js", "motion/css", "motion/fonts"], capture_output=True, check=True).stdout
+            subprocess.run(["tar", "-x", "-C", root, "--strip-components=1"], input=arch, check=True)
+            os.symlink(os.path.join(motion, "data"), os.path.join(root, "data"))   # the lab's own data, as round 18's proofs used them
+    port = free_port(want_port)
+    p = subprocess.Popen([sys.executable, "-I", os.path.join(HERE, "serve.py"), "--port", str(port), "--dir", root], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    atexit.register(lambda: (p.terminate(), p.wait(10)))
+    url = "http://127.0.0.1:%d/explorer.html" % port
+    for _ in range(50):
+        time.sleep(0.1)
+        try: urllib.request.urlopen(url, timeout=2).close(); print("change-proof: %s served at %s" % (spec, url), flush=True); return url
+        except Exception: pass
+    raise SystemExit("change-proof: could not serve %s" % spec)
+
 # ---- main -------------------------------------------------------------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--base", required=True); ap.add_argument("--trial", required=True); ap.add_argument("--out", required=True)
+    ap.add_argument("--base", default="HEAD", help="an address, a git commit or worktree (default HEAD)"); ap.add_argument("--trial", default="worktree", help="an address, a git commit or worktree (default worktree)"); ap.add_argument("--out", required=True)
     ap.add_argument("--full", action="store_true"); ap.add_argument("--widths", default=None); ap.add_argument("--themes", default="dark,light")
     ap.add_argument("--jobs", type=int, default=3); ap.add_argument("--title", default="Change proof"); ap.add_argument("--labels", default="base,trial")
     ap.add_argument("--reuse-base", default=None, help="an earlier run's --out: its base texts and frames are reused when its shots match")
     ap.add_argument("--skip-text", action="store_true"); ap.add_argument("--skip-frames", action="store_true")
     ap.add_argument("--compare-only", action="store_true", help="take nothing: compare the texts and frames an earlier run left in --out again")
     a = ap.parse_args()
+    if not a.compare_only: a.base, a.trial = serve_build(a.base, 8783), serve_build(a.trial, 8782)
     labels = a.labels.split(","); urls = dict(zip(labels, [a.base, a.trial]))
     widths = FULL if a.full else [int(w) for w in (a.widths or "1600").split(",")]
     out = os.path.abspath(a.out); os.makedirs(out, exist_ok=True); logs = os.path.join(out, "logs"); os.makedirs(logs, exist_ok=True)

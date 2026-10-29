@@ -39,14 +39,21 @@ alike. The set compares the REFERENCES panel's CORRECTIONS with the last publish
 publish copy committed at HEAD: at most one entry new since then, dated the publish day, on a day the last publish's entries do not
 already hold (one entry per date; a second publish with corrections on one UTC day needs the author). --dates runs this check alone and
 copies nothing: run it before the publish gate's five-width audit, so that a date edit lands before that run and needs no second one;
-tools/audit_five.py shows its result as a note at the start of every run."""
-import datetime, hashlib, json, os, re, shutil, subprocess, sys, types
+tools/audit_five.py shows its result as a note at the start of every run.
+
+Round 19 (the author's decision of 28 October 2026): only --write builds into publish/. Without it the set is built and checked in a scratch
+folder under build/, compared with publish/ (files added and changed) and removed, so a trial run never touches the publish copy. -h or
+--help prints this note and builds nothing."""
+import datetime, filecmp, hashlib, json, os, re, shutil, subprocess, sys, tempfile, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
-OUT = os.path.join(MOTION, "publish")
+if "-h" in sys.argv or "--help" in sys.argv: print(__doc__); sys.exit(0)
 DATES_ONLY = "--dates" in sys.argv
+WRITE = "--write" in sys.argv   # round 19: the publish copy is written only on request; a run without it builds in scratch and reports
+PUBLISH = os.path.join(MOTION, "publish")
+OUT = PUBLISH if WRITE or DATES_ONLY else tempfile.mkdtemp(prefix="publish-dry-", dir=os.path.join(MOTION, "build"))
 if not DATES_ONLY: os.makedirs(OUT, exist_ok=True)
 FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700%s&display=swap">'
 FONT_EXTRA = {"explorer.html": "&family=Tomorrow:wght@400;500"}   # the atlas's data wire in Tomorrow (round 15, the author's final choice of 26 October 2026); the explainer loads Plex alone
@@ -314,5 +321,16 @@ def main():
     for pr in problems: print("REFUSED: " + pr)
     return 1 if problems else 0
 
+def dry_report():   # round 19: what --write would change in publish/; the scratch set is removed after
+    def files(root): return {os.path.relpath(os.path.join(r, n), root) for r, _, fs in os.walk(root) for n in fs}
+    new, old = files(OUT), files(PUBLISH) if os.path.isdir(PUBLISH) else set()
+    changed = sorted(p for p in new & old if not filecmp.cmp(os.path.join(OUT, p), os.path.join(PUBLISH, p), shallow=False))
+    print("dry run, publish/ untouched: %d files would be added and %d changed; --write builds into publish/" % (len(new - old), len(changed)))
+    for p in (sorted(new - old) + changed)[:12]: print("  " + p)
+
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    if not WRITE and not DATES_ONLY:
+        try: dry_report()
+        finally: shutil.rmtree(OUT, ignore_errors=True)
+    sys.exit(code)

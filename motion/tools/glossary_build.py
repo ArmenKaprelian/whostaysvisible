@@ -3,13 +3,15 @@
 subsamples): data/glossary.json and its twin, provenance and checks.
 
 Each definition takes the chapter's wording where the term is shared with it (the read-only dissertation, chapters/02-opacity, as config/sources.json
-pins it), else the atlas's own verified texts (js/explorer-app.js). The provenance records, for every definition, the source files, the lines and
-the quoted sentences, with each file's SHA-256; nothing of that reaches the screen. Checks: every quoted sentence is in its file as quoted; every
-definition is one or two sentences of at most 260 characters, with no semicolon, dash or "listed"; the terms are unique.
-Run: python3 -I motion/tools/glossary_build.py
+pins it), else the atlas's own verified texts (js/explorer-app.js). The provenance records, for every definition, its source files and the quoted
+sentences; nothing of that reaches the screen. Checks: every quoted sentence is in its file as quoted; every definition is one or two sentences of
+at most 260 characters, with no semicolon, dash or "listed"; the terms are unique.
+Write: python3 -I motion/tools/glossary_build.py --write (round 19: without --write it checks and reports, and writes nothing; -h prints this note)
 Check: python3 -I motion/tools/glossary_build.py --check (round 18) rebuilds the glossary in memory, writes nothing, and reports where data/glossary.json
-or its twin differs from the rebuild, a quoted sentence is no longer in its file, or a definition breaks a rule; a provenance recorded before a quoted
-file last changed is noted, not counted (re-run the builder). tools/audit_five.py and atlas-audit.py run check() once per audit."""
+or its twin differs from the rebuild, a quoted sentence is no longer in its file, or a definition breaks a rule; a provenance that records other
+quotes than the builder's terms is noted, not counted (re-run with --write). tools/audit_five.py and atlas-audit.py run check() once per audit.
+Round 19 (the author's decision of 28 October 2026): the provenance no longer records line numbers or file hashes, so an edit elsewhere in a quoted
+file leaves it as it is; only a change to the quoted sentences themselves calls for a rebuild."""
 import csv, datetime, hashlib, io, json, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__)); MOTION = os.path.normpath(os.path.join(HERE, "..")); DATA = os.path.join(MOTION, "data")
@@ -74,8 +76,7 @@ def build():   # the rebuild in memory: the checks, the provenance's terms, the 
         found = []
         for path, quote in srcs:
             body = open(path, encoding="utf-8").read(); i = body.find(quote)
-            found.append({"file": relp(path),
-                          "line": body.count("\n", 0, i) + 1 if i >= 0 else None, "quote": quote, "found": i >= 0})
+            found.append({"file": relp(path), "quote": quote, "found": i >= 0})   # round 19: no line number, so edits elsewhere in the file leave the record as it is
         prov.append({"term": term, "sources": found}); texts[term] = text
         missing = [f["file"] + ": " + f["quote"][:60] for f in found if not f["found"]]
         check("%s: every quoted source sentence is in its file" % term, not missing, "; ".join(missing))
@@ -102,19 +103,20 @@ def check():   # round 18: the rebuild against the shipped files, nothing writte
     except OSError: twin = None
     if have is not None and twin != js_of(json.loads(have)): out.append("data/glossary.js is not the twin of data/glossary.json")
     try:
-        pv = json.load(open(os.path.join(DATA, "glossary.provenance.json"), encoding="utf-8")); rec = {f["path"]: f["sha256"] for f in pv.get("files", [])}
-        files = sorted({s for _, _, srcs in TERMS for s, _ in srcs})
-        stale = [relp(p) for p in files if rec.get(relp(p)) != sha256(p)]
-        if stale: out.append("note: the provenance predates the current %s; re-run motion/tools/glossary_build.py to record the lines as they are" % ", ".join(stale))
+        pv = json.load(open(os.path.join(DATA, "glossary.provenance.json"), encoding="utf-8"))
+        quotes = lambda terms: [(t["term"], [(s["file"], s["quote"]) for s in t["sources"]]) for t in terms]
+        if quotes(pv.get("terms", [])) != quotes(prov): out.append("note: the provenance records other quotes than the builder's terms; re-run motion/tools/glossary_build.py --write")
     except (OSError, ValueError): out.append("data/glossary.provenance.json is missing or unreadable")
     return out
 
 def main():
     import sys
-    if "--check" in sys.argv:
+    if "-h" in sys.argv or "--help" in sys.argv: print(__doc__); return
+    if "--check" in sys.argv or "--write" not in sys.argv:   # round 19: a run without --write checks and reports, and writes nothing
         out = check(); bad = [f for f in out if not f.startswith("note:")]
         for f in out: print("glossary:", f)
-        print("glossary check: %d finding(s), %d note(s)" % (len(bad), len(out) - len(bad))); raise SystemExit(1 if bad else 0)
+        print("glossary check: %d finding(s), %d note(s)%s" % (len(bad), len(out) - len(bad), "" if "--check" in sys.argv else "; nothing written, --write builds"))
+        raise SystemExit(1 if bad else 0)
     checks, prov, obj = build()
     buf = io.StringIO(); w = csv.writer(buf, quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n"); w.writerow(["check", "pass", "detail"])
     for c in checks: w.writerow([c["check"], "TRUE" if c["pass"] else "FALSE", c["detail"]])
@@ -126,7 +128,7 @@ def main():
     files = sorted({s for _, _, srcs in TERMS for s, _ in srcs})
     out = {"id": "glossary", "tool": "motion/tools/glossary_build.py", "run_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
            "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
-           "files": [{"path": relp(p), "sha256": sha256(p)} for p in files],
+           "files": [relp(p) for p in files],   # round 19: the paths only; the quotes below are what the record pins
            "terms": prov, "checks": "%d of %d passed (glossary.checks.csv)" % (len(checks), len(checks)),
            "output": {"json": "data/glossary.json", "json_sha256": sha256(jp), "js": "data/glossary.js", "js_sha256": sha256(jsp)}}
     write_new(os.path.join(DATA, "glossary.provenance.json"), json.dumps(out, ensure_ascii=False, indent=1))

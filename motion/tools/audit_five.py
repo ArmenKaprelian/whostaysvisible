@@ -15,6 +15,10 @@ first time it shows. Every one is recorded in build/audit/parallel-only.json, ke
 finding from a check that showed parallel-only in an earlier run counts: a check that is sensitive to the machine's load
 cannot pass twice (the author's choice of 26 October 2026, the usual handling of intermittent failures in test systems).
 
+Round 19 (the author's decisions of 28 October 2026): a finding from the same check at every width that ran is not load-dependent, so it gets no solo
+re-run unless its check is already on the parallel-only record; a run whose only findings are of that kind costs one pass, not two. And when nothing
+answers at a local --url, the run serves motion/ there itself with tools/serve.py and stops the server when it ends.
+
 The merged result keeps atlas-audit.py's head line unchanged (the review pages read only that line), then one line per width
 (the run it came from, its time, states, boxes and findings), the once-per-audit line, a composition line, and the findings.
 --widths re-runs only the widths named: their results replace those widths' lines, the other widths keep theirs, and each line
@@ -23,7 +27,7 @@ named by its start time, with each width's result and log. Nothing earlier is re
 
 Usage: tools/audit-five.sh [--url URL] [--widths 400,768,...] [--jobs 3] [--out build/audit/audit-five.txt] [--max-wait 1800]
 """
-import argparse, json, os, re, subprocess, sys, time
+import argparse, atexit, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__)); MOTION = os.path.normpath(os.path.join(HERE, '..'))
@@ -92,6 +96,20 @@ def once_checks():   # the checks that belong once to a whole audit, in atlas-au
 def profiles(): return {d for d in os.listdir('/tmp') if d.startswith('atlas-audit-')}
 def check_key(f): return re.sub(r'\d+(?:\.\d+)?', '#', f)   # the check a finding comes from: its line with the numbers out (the width, the year, the measured values)
 
+def serve_if_needed(url):   # round 19: when nothing answers at a local --url, motion/ is served there for this run (tools/serve.py), and stopped at exit
+    try: urllib.request.urlopen(url, timeout=3).close(); return None
+    except urllib.error.HTTPError as e: raise SystemExit('audit-five: %s answers with HTTP %d; give the page\'s address with --url' % (url, e.code))
+    except Exception: pass
+    u = urllib.parse.urlparse(url)
+    if u.hostname not in ('127.0.0.1', 'localhost') or not u.port: raise SystemExit('audit-five: nothing answers at %s' % url)
+    p = subprocess.Popen([sys.executable, '-I', os.path.join(HERE, 'serve.py'), '--port', str(u.port), '--dir', MOTION], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    atexit.register(lambda: (p.terminate(), p.wait(10)))
+    for _ in range(50):
+        time.sleep(0.1)
+        try: urllib.request.urlopen(url, timeout=2).close(); say('  served motion/ on port %d for this run (nothing answered there)' % u.port); return p
+        except Exception: pass
+    raise SystemExit('audit-five: could not serve motion/ at %s' % url)
+
 def fold(prev, widths, par, solo, run, wall, jobs, once, seen):
     """The new state: a run of all five widths starts afresh; a targeted run replaces only its own widths and keeps the rest. seen is the
     record of parallel-only findings before this run: a parallel-only finding whose check is in it is marked recurring, and counts."""
@@ -138,7 +156,8 @@ def main():
     ap.add_argument('--height', type=int, default=None)
     ap.add_argument('--max-wait', type=int, default=1800, help='seconds to wait for the floors with nothing running before stopping')
     a = ap.parse_args()
-    floors = (int(os.environ.get('LAB_MEMAVAILABLE_MIN_MIB', 5120)), int(os.environ.get('LAB_SWAPFREE_MIN_MIB', 1024)))
+    serve_if_needed(a.url)
+    floors =(int(os.environ.get('LAB_MEMAVAILABLE_MIN_MIB', 5120)), int(os.environ.get('LAB_SWAPFREE_MIN_MIB', 1024)))
     widths = [int(x) for x in a.widths.split(',') if x.strip()]
     if not os.path.isabs(a.out) and os.path.normpath(a.out).split(os.sep)[0] == 'motion':   # 27 October 2026: --out motion/build/... wrote under motion/motion/
         sys.exit("audit_five: --out is read relative to motion/, so %r would write under motion/motion/. Give it as build/audit/... or as an absolute path." % a.out)
@@ -164,11 +183,15 @@ def main():
     par = run_widths(widths, a, rundir, '', a.jobs, floors)
     bad = {w: r['error'] for w, r in par.items() if 'error' in r}
     if bad: raise SystemExit('audit-five: width(s) %s gave no result, nothing replaced: %s' % (', '.join(map(str, bad)), '; '.join(bad.values())))
-    redo = [w for w in widths if par[w]['nfind']] if len(widths) > 1 and a.jobs > 1 else []   # only a width that ran beside others
+    seen = json.load(open(LEDGER, encoding='utf-8')) if os.path.exists(LEDGER) else {}
+    everywhere = set.intersection(*[{check_key(f) for f in par[w]['findings']} for w in widths]) if len(widths) > 1 else set()   # round 19: one check at every width is not load-dependent
+    needs_solo = lambda w: any(check_key(f) not in everywhere or check_key(f) in seen for f in par[w]['findings'])
+    redo = [w for w in widths if par[w]['nfind'] and needs_solo(w)] if len(widths) > 1 and a.jobs > 1 else []   # only a width that ran beside others
+    if len(widths) > 1 and a.jobs > 1 and any(par[w]['nfind'] and w not in redo for w in widths):
+        say('  no solo re-run for findings from a check that failed at every width: %s' % '; '.join(sorted(everywhere))[:300])
     solo = run_widths(redo, a, rundir, '.solo', 1, floors) if redo else {}
     if any('error' in r for r in solo.values()): raise SystemExit('audit-five: a solo re-run gave no result, nothing replaced')
     once = once_checks(); wall = time.time() - t0
-    seen = json.load(open(LEDGER, encoding='utf-8')) if os.path.exists(LEDGER) else {}
     state = fold(json.load(open(statef, encoding='utf-8')) if os.path.exists(statef) else None, widths, par, solo, run, wall, a.jobs, once, seen)
     text = merged_text(state)
     for w in widths:

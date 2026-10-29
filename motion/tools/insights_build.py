@@ -94,6 +94,7 @@ def text_checks(obj, regions_ok, windows_ok, off_list, allow):   # [(check, pass
 def js_of(obj): return 'window.MOTION_DATA = window.MOTION_DATA || {};\nwindow.MOTION_DATA["insights"] = ' + json.dumps(obj, ensure_ascii=False) + ";\n"
 
 def main():
+    if "-h" in sys.argv or "--help" in sys.argv: print(__doc__); return   # round 19: help only
     sys.path.insert(0, P2)
     from check import OFF_LIST   # the one list of firms on no list met in the research (pass2/check.py), copied into the provenance
     approval = json.load(open(os.path.join(P2, "approval.json"), encoding="utf-8"))
@@ -128,6 +129,9 @@ def main():
     obj = dict(out, approved="27 October 2026", notes=["One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
                                                         "Each source is cited by publisher, document type and date, with its link."], author="by Armen G. Kaprelian")
     failed = [c for c in checks if not c["pass"]]
+    if "--write" not in sys.argv:   # round 19 (the author's decision of 28 October 2026): without --write the checks run and nothing is written
+        print("insights: %d of %d checks passed%s; nothing written, --write builds" % (len(checks) - len(failed), len(checks), (", failed: " + "; ".join(c["check"] for c in failed))[:300] if failed else ""))
+        raise SystemExit(1 if failed else 0)
     with open(os.path.join(DATA, "insights.checks.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n"); w.writerow(["check", "pass", "detail"])
         for c in checks: w.writerow([c["check"], "TRUE" if c["pass"] else "FALSE", c["detail"]])

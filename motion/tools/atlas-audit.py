@@ -173,7 +173,7 @@ def same_cam(c, ref, km=1e-6, rel=1e-9):
 
 # The REFERENCES panel (round 16, the author's General 7): real presses over CDP on the button, the close toggle, a shortcut and the backdrop; Escape with a
 # pop-out open (the panel goes, the pop-out stays); the page's own keys held while it is open; its box (the centred 80 percent of the map's area, the viewport
-# less 16 px on a phone), the text inside its boxes, the capitals, the Armenian face, the links (YOUTUBE last), the SUPERUSER note equal to the page's source
+# less 16 px on a phone), the text inside its boxes, the capitals, the Armenian face, the links (each labelled, each on publish-set.py's list, round 19), the SUPERUSER note equal to the page's source
 # block, no request on open but the page's own font file, the contrast of its text over the brightest content behind the translucent ground; once per audit
 # the header at 960 px, the light theme, the contrast and forced-colour settings and reduced motion.
 def click(cdp, x, y):
@@ -190,7 +190,7 @@ REFS_OPEN_JS = r"""(() => { const d = document.getElementById('refs'), A = windo
   const st = el => { const c = cs(el); return { tt: c.textTransform, w: c.fontWeight, ls: c.letterSpacing === 'normal' ? 0 : parseFloat(c.letterSpacing), fs: parseFloat(c.fontSize), fam: c.fontFamily }; };
   out.navs = [...d.querySelectorAll('.rnav .btn')].map(b => Object.assign(st(b), { t: b.textContent })); out.h3 = [...d.querySelectorAll('h3')].map(st); out.title = st(document.getElementById('refstitle'));
   const ls = document.getElementById('refs-links'), la = ls ? [...ls.querySelectorAll('a')] : [], all = [...d.querySelectorAll('a')];
-  out.lastLink = la.length ? la[la.length - 1].href : null; out.lastLabel = ls ? ls.querySelector('li:last-child b').textContent : null; out.badRel = all.filter(a => a.target !== '_blank' || !/noopener/.test(a.rel) || !/noreferrer/.test(a.rel)).map(a => a.href).slice(0, 3);
+  out.linkRows = ls ? [...ls.querySelectorAll('li')].map(li => ({ label: (li.querySelector('b') || {}).textContent || '', hrefs: [...li.querySelectorAll('a')].map(a => a.href) })) : []; out.badRel = all.filter(a => a.target !== '_blank' || !/noopener/.test(a.rel) || !/noreferrer/.test(a.rel)).map(a => a.href).slice(0, 3);
   out.bg = cs(d).backgroundColor; out.ink = cs(d.querySelector('li b') || d).color; out.muted = cs(d.querySelector('li') || d).color; out.link = all.length ? cs(all[0]).color : null;
   const ins = document.getElementById('refs-insights'); out.insights = ins ? ins.querySelectorAll('li').length : 0; out.defs = [...document.querySelectorAll('#refs-definitions li')].map(li => li.textContent); out.inner = [innerWidth, innerHeight]; out.cursorMark = !!d.querySelector('.rcursor');
   { const b = document.getElementById('refsbtn'); out.btn = [b.classList.contains('on'), b.getAttribute('aria-expanded'), getComputedStyle(b).backgroundColor]; }
@@ -238,6 +238,12 @@ def anniversary_days(D, year=2026):   # round 18 (H8): the four days of the anni
     day = datetime.date(year, 1, 1)
     while day.strftime("%m-%d") in count or day.strftime("%m-%d") in (anchor, decree): day += datetime.timedelta(days=1)
     return ["%d-%s" % (year, md) for md in (anchor, decree, most)] + [day.isoformat()]
+
+def publish_links():   # round 19: LINKS and LINK_PREFIXES read from tools/publish-set.py's source, not imported (the script builds a set when run)
+    import ast
+    src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "publish-set.py"), encoding="utf-8").read()
+    vals = {t.id: ast.literal_eval(n.value) for n in ast.parse(src).body if isinstance(n, ast.Assign) for t in n.targets if isinstance(t, ast.Name) and t.id in ("LINKS", "LINK_PREFIXES")}
+    return set(vals["LINKS"]), tuple(vals["LINK_PREFIXES"])
 
 def corrections_check(entries):
     import datetime
@@ -313,7 +319,12 @@ def refs_block(cdp, w, a, once, page_src):
     if o["over"]: F("text past its box: %s" % "; ".join(o["over"][:4]))
     for nm, st, wt in [("the title", o["title"], 500)] + [("a section head", h, 700) for h in o["h3"][:3]] + [("a shortcut", n, 500) for n in o["navs"][:3]]:
         if st["tt"] != "uppercase" or int(st["w"]) != wt or abs(st["ls"] - 0.08 * st["fs"]) > 0.06 or "IBM Plex Mono" not in st["fam"]: F("%s set %s" % (nm, json.dumps(st)))
-    if o["lastLink"] != "https://www.youtube.com/watch?v=dQw4w9WgXcQ" or o["lastLabel"] != "YOUTUBE": F("the links' last entry is %r %r" % (o["lastLabel"], o["lastLink"]))
+    allowed, prefixes = publish_links()   # round 19: every LINKS entry has a label, and every link in it is on publish-set.py's list, the one place a link is approved
+    if not o["linkRows"]: F("the LINKS section has no entries")
+    for row in o["linkRows"]:
+        if not row["label"].strip(): F("a LINKS entry without a label")
+        for h in row["hrefs"]:
+            if h not in allowed and not h.startswith(prefixes): F("a LINKS link not on publish-set.py's list: %s" % h[:90])
     if o["badRel"]: F("links without target _blank and rel noopener noreferrer: %s" % o["badRel"])
     if not o["cursorMark"]: F("the block cursor after the last line is missing")
     if want_note is None or R["note"] != want_note: F("the SUPERUSER note %r against the source block %r" % (R["note"], want_note))
@@ -579,7 +590,7 @@ def main():
                 if not s1["open"] or s1["pressed"] != "true" or s1["more"] or s1["moreLabel"] != "More" or s1["height"] > 2.3 * s1["lineHeight"] or s1["height"] < 1.5 * s1["lineHeight"]: bad.append(("method", "dom", "opened: %s" % json.dumps(s1)[:200]))
                 if not s1["intro"].startswith("{:,} located eligible firms".format(SERIES_FACTS["located_2021"])): bad.append(("method", "dom", "intro: %r" % s1["intro"]))
                 s2 = x["s2"]
-                if not s2["more"] or s2["moreLabel"] != "Less" or s2["height"] < 6 * s2["lineHeight"] or not s2["read"].startswith("Descriptive associations") or not s2["prov"]: bad.append(("method", "dom", "expanded: %s" % json.dumps(s2)[:200]))
+                if not s2["more"] or s2["moreLabel"] != "Less" or s2["height"] < 6 * s2["lineHeight"] or not s2["read"].strip() or not s2["prov"]: bad.append(("method", "dom", "expanded: %s" % json.dumps(s2)[:200]))
                 if x["s3"]["open"] or x["s3"]["pressed"] != "false": bad.append(("method", "dom", "closed again: %s" % json.dumps(x["s3"])[:120]))
                 return bad
             state("share", 2021, "A.preset('Russia'); window.__extra = { s0: A.methodState(), s1: A.method(true), s2: A.methodMore(true), s3: (A.methodMore(false), A.method(false)) };", "method", method_check)

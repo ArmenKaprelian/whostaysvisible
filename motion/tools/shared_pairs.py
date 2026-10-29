@@ -46,6 +46,7 @@ def level(cells):   # {(ix, iy): [n, a, n100, a100, p100]} -> dense ix, iy, n, a
             "shared": len(hit), "k": b64("i", hit), "n100": b64("i", [rows[i][2] for i in hit]), "a100": b64("i", [rows[i][3] for i in hit]), "p100": b64("i", [rows[i][4] for i in hit])}
 
 def main():
+    if "-h" in sys.argv or "--help" in sys.argv: print(__doc__); return   # round 19: help only
     manifest = json.load(open(os.path.join(DATA, "firms.json"), encoding="utf-8"))
     basemap = json.load(open(os.path.join(DATA, "basemap.json"), encoding="utf-8"))
     cities = basemap["cities"]
@@ -97,6 +98,9 @@ def main():
     outs = {"shared": dict(common, grids_km=[100, 25], national={k: [r[k] for r in national] for k in national[0]}, cells100=cells100, cells25=cells25),
             "shared-city": dict(common, window_km=90, city_1km=city1km)}
     bad = [c for c in checks if not c["pass"]]
+    if "--write" not in sys.argv:   # round 19 (the author's decision of 28 October 2026): without --write the checks run and nothing is written
+        print("shared: %d of %d checks passed%s; nothing written, --write builds" % (len(checks) - len(bad), len(checks), (", failed: " + "; ".join(c["check"] for c in bad))[:300] if bad else ""))
+        raise SystemExit(1 if bad else 0)
     with open(os.path.join(DATA, "shared.checks.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n"); w.writerow(["check", "expected", "observed", "tolerance", "pass"])
         for c in checks: w.writerow([c["check"], json.dumps(c["expected"]), json.dumps(c["observed"]), 0, "TRUE" if c["pass"] else "FALSE"])

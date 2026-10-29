@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# The atlas's publish to the author's site in one command (round 19, the author's decision of 28 October 2026). It stops at the first failure.
+#
+#   motion/tools/publish.sh          the gate and the copies; nothing goes public:
+#     1. publish-set.py --dates      the publish day (UTC) and the CORRECTIONS entry
+#     2. audit-five.sh               the full five-width audit of the working tree, served for the run; zero findings, or it stops
+#     3. publish-set.py --write      the publish set in motion/publish/, its checks passed
+#     4. the publish copy committed and pushed to the lab's repository (the lab's rule: commit at each checkpoint, push after each commit)
+#     5. the site's tools/import_atlas.py copies the set into the site's atlas/, and the site commits it
+#   motion/tools/publish.sh --push   pushes the site, which GitHub Pages publishes. Run it only on the author's word, after a run without it.
+#
+# The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab.
+set -euo pipefail
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+LAB="$(git -C "$HERE" rev-parse --show-toplevel)"
+SITE="${SITE:-$HOME/Documents/website}"
+say() { printf '%s\n' "publish: $*"; }
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
+
+if [[ "${1:-}" == "--push" ]]; then
+  last="$(git -C "$SITE" log -1 --format=%s 2>/dev/null || true)"
+  [[ "$last" == Atlas:* ]] || { say "the site's last commit is not an atlas import ('$last'); run publish.sh without --push first"; exit 1; }
+  [[ -z "$(git -C "$SITE" status --porcelain)" ]] || { say "the site has uncommitted changes; commit or discard them first"; exit 1; }
+  git -C "$SITE" push origin HEAD
+  say "pushed: $last"
+  exit 0
+fi
+
+cd "$LAB"
+[[ -z "$(git status --porcelain -- motion/explorer.html motion/js motion/css motion/fonts motion/data motion/tools)" ]] \
+  || { say "the atlas has uncommitted changes; commit them (approved) before publishing"; exit 1; }
+round="$(grep -oE '^### Round [0-9]+' motion/README.md | tail -1 | grep -oE '[0-9]+')"
+src="$(git rev-parse --short=7 HEAD)"
+
+say "1/5 the publish day"
+python3 -I motion/tools/publish-set.py --dates
+
+say "2/5 the five-width audit (about 8 minutes)"
+motion/tools/audit-five.sh
+
+say "3/5 the publish set"
+python3 -I motion/tools/publish-set.py --write
+day="$(date -u '+%-d %B %Y')"
+
+say "4/5 the publish copy, committed and pushed"
+git add -A motion/publish
+if git diff --cached --quiet; then say "the publish copy is unchanged"; else
+  git commit -q -m "Publish copy: round $round (from $src), $day (UTC)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+  git push -q origin HEAD
+fi
+
+say "5/5 the site's atlas"
+python3 -I "$SITE/tools/import_atlas.py" "$LAB/motion/publish"
+git -C "$SITE" add -A
+if git -C "$SITE" diff --cached --quiet; then say "the site's atlas is unchanged"; else
+  git -C "$SITE" commit -q -m "Atlas: round $round publish copy (lab $(git rev-parse --short=7 HEAD)), $day (UTC)"
+fi
+say "ready. Nothing is public yet: on the author's word, run motion/tools/publish.sh --push"

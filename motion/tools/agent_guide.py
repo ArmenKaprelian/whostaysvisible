@@ -99,7 +99,7 @@ def build(data_dir, published=None):
     add('Contact the author through the email address shown in the atlas’s footer.')
     return '\n'.join(L) + '\n'
 
-PUBLIC = [('email address', r'[\w.+-]+@[\w-]+\.\w'), ('link other than the atlas', r'https?://(?!armenkaprelian\.github\.io/atlas/(?:\s|$))\S+'),
+PUBLIC = [('email address', r'[\w.+-]+@[\w-]+\.\w'), ('link other than the atlas', r'https?://(?!%s(?:\s|$))\S+' % re.escape(ATLAS.split('://', 1)[1])),   # round 19: from ATLAS, so a move of the atlas is one edit
           ('file path', r'(?:~/|/home/|/tmp/|\b[A-Za-z]:\\)'), ('nine or more digits', r'\d{9,}'), ('working note', r'\b(?:TODO|FIXME|XXX)\b')]
 
 def rules(text):

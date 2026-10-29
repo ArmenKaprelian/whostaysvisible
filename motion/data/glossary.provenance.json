@@ -1,25 +1,13 @@
 {
  "id": "glossary",
  "tool": "motion/tools/glossary_build.py",
- "run_utc": "2026-10-29T01:40:20Z",
+ "run_utc": "2026-10-29T02:19:33Z",
  "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
  "files": [
-  {
-   "path": "motion/js/explorer-app.js",
-   "sha256": "ef502044d31fa3ae321eb7f3ccafe17ff9c025d6ac97605cd9da2e7f2fb42d64"
-  },
-  {
-   "path": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-   "sha256": "88a83f6d50e92fc8c9487c2dda94377403b465b57a9b5b62e09cf9779f7c7ead"
-  },
-  {
-   "path": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-   "sha256": "ff8479159c32448f22e6cfb97bb6ad9d5e97f9200fc1585fa42c7a08345c4575"
-  },
-  {
-   "path": "kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
-   "sha256": "8dd76b17695e89dc6a231252fd252e71841947c08600a32001ee9e0859aa3ffe"
-  }
+  "motion/js/explorer-app.js",
+  "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
+  "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
+  "kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex"
  ],
  "terms": [
   {
@@ -27,13 +15,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 11,
      "quote": "The population analysis retains every record with \\texttt{eligible=1}, including firms without financial statements.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 11,
      "quote": "Eligibility is the provider's operational classification, not an independently verified legal filing duty for every firm-year.",
      "found": true
     }
@@ -44,13 +30,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 29,
      "quote": "Annual registered population & Eligible and registered at each year-end.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 7,
      "quote": "while the share among eligible firms registered at year-end changes from 71.7\\% to 71.2\\%",
      "found": true
     }
@@ -61,13 +45,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 7,
      "quote": "A statement is available when the release holds the firm's own filing for that year, marked \\texttt{filed=1} and \\texttt{imputed=0}.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 9,
      "quote": "An availability share is the fraction of eligible records in a group and year with",
      "found": true
     }
@@ -78,13 +60,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 124,
      "quote": "In 2021 there are 3,277,638 located eligible firms at 727,190 distinct coordinate pairs",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 124,
      "quote": "The 79,471 unlocated firms remain in population accounting.",
      "found": true
     }
@@ -95,13 +75,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 124,
      "quote": "located eligible firms at 727,190 distinct coordinate pairs",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 131,
      "quote": "Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises.",
      "found": true
     }
@@ -112,13 +90,11 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 184,
      "quote": "with a house- or street-level geocode",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 2527,
      "quote": "Other geocodes, coordinates without a verified house or street match, are counted and not drawn.",
      "found": true
     }
@@ -129,19 +105,16 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 59,
      "quote": "The five lists are the sanctions list, decree list, 2020 filing-exemption list, government strategic list, and presidential strategic list.",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 188,
      "quote": "Treated: a firm on at least one of the five lists",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 188,
      "quote": "The word names the study’s group, not an effect.",
      "found": true
     }
@@ -152,13 +125,11 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 2909,
      "quote": "Comparison group: firms on none of the five lists.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 59,
      "quote": "Unknown membership remains separate from the comparison group.",
      "found": true
     }
@@ -169,13 +140,11 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 184,
      "quote": "Shares are shown only for cells with 50 or more firms.",
      "found": true
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 3045,
      "quote": "Disclosure: in the Cells view a share needs 50 firms",
      "found": true
     }
@@ -186,19 +155,16 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
-     "line": 4,
      "quote": "Cohort entry requires usable 2021 statements with the outcome, baseline resource, and controls.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
-     "line": 8,
      "quote": "Membership requires usable baseline accounts, outcomes, resources, and controls, without conditions on later survival, eligibility, statement availability, or list membership.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/07-financial-sample-implications.tex",
-     "line": 10,
      "quote": "the revenue cohort by cash share contains 1,503,198",
      "found": true
     }
@@ -209,13 +175,11 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 53,
      "quote": "State-related ownership groups the registry's codes for state or municipal ownership, mixed ownership with state participation, and state-corporation ownership.",
      "found": true
     },
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
-     "line": 53,
      "quote": "These codes do not establish operational control or disclosure protection.",
      "found": true
     }
@@ -226,7 +190,6 @@
    "sources": [
     {
      "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "line": 32,
      "quote": "Unitary enterprises are state entities, so this is the ownership finding seen through a second classification of largely the same firms rather than an independent confirmation.",
      "found": true
     }
