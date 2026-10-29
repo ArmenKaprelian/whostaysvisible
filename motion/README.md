@@ -2256,6 +2256,8 @@ Proof:
 - **`change-proof.py --base 37c5520`.** Identical: no string, no frame and no rule hit differs. The shared helpers' new options are the film's only.
 - **The site.** It takes the 244 s file (720p from the 1080p render in `build/`, a keyframe at every chapter start), the new chapter times and "4 min 4 s". `site-check.py` reports zero findings (34 page loads). The site's commit is 15e0cc5, and its push is the author's.
 
+**Published** 29 October 2026 (UTC) on the author's site. The author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed 6c3c0bf..15e0cc5. armenkaprelian.com/film serves the 244 s file (26,030,333 bytes), the new chapter times and "4 min 4 s".
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
