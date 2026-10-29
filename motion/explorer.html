@@ -69,6 +69,8 @@ header h1 { font-size: 28px; line-height: 28px; margin: 0; font-weight: 700; tex
 .lockup { justify-self: center; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .lockup .mk { width: 32px; height: 32px; margin: 0; flex: 0 0 auto; }
 /* The byline and the about line (round 10, the author's item 16; in the lock-up since round 11): the name and affiliation in tracked small capitals, the dissertation title beneath in the muted tone, nothing larger. */
+a.lockup { color: inherit; text-decoration: none; position: relative; }   /* the way home (28 October 2026): the lock-up links to the author's site, the name in the live fuchsia under the pointer */
+a.lockup:hover .who { color: var(--cursor-live); }
 .byline { text-align: left; min-width: 0; }
 .byline .who { font-size: 12px; line-height: 16px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); white-space: nowrap; }
 .byline .what { font-size: 11px; line-height: 16px; color: var(--muted); white-space: nowrap; }   /* 11 px (round 11): the lock-up's widest line, 561 px, leaves the outer columns room for the tagline at 1,600 px */
@@ -93,8 +95,8 @@ button, select { font: inherit; }
 .btn.info[aria-expanded="true"] { background: var(--context); color: var(--stage); border-color: var(--context); }
 .btn.more { border-color: var(--context); color: var(--muted); font-size: 11px; padding: 2px 8px; justify-self: start; }
 .btn.more:hover { border-color: var(--context-live); color: var(--ink); }
-.btn:focus-visible, .toggle:focus-visible, .mapwrap:focus-visible { outline: none; }
-.btn:focus-visible::after, .toggle:focus-visible::after, .mapwrap:focus-visible::after { content: ""; position: absolute; inset: -6px; pointer-events: none; z-index: 6; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
+.btn:focus-visible, .toggle:focus-visible, .mapwrap:focus-visible, a.lockup:focus-visible { outline: none; }
+.btn:focus-visible::after, .toggle:focus-visible::after, .mapwrap:focus-visible::after, a.lockup:focus-visible::after { content: ""; position: absolute; inset: -6px; pointer-events: none; z-index: 6; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
 .mapwrap:focus-visible::after { inset: 2px; }
 main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(400px, 20vw, 520px); gap: 12px; }   /* the side column: 400 px up to 2,000 px wide, then a fifth of the viewport to 520 px (the author's screen of 25 October, about 2,500 px wide, had the minimap and the cards at 400 px) */
 /* Below 900 px the page scrolls: the map is a fixed-height block and the panels stack under it (the earlier
@@ -464,6 +466,8 @@ canvas.chart { width: 100%; height: 170px; display: block; }
 footer { color: var(--dim); font-size: 12px; line-height: 1.4; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 16px; }   /* one line (round 10): the author line at the left, the data licences at the right */
 footer .byfoot { color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 footer .byfoot code { font-family: var(--font); color: var(--ink); user-select: all; }
+footer .byfoot a.site { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }   /* the author's site (28 October 2026), styled as the REFERENCES links */
+footer .byfoot a.site:hover, footer .byfoot a.site:focus-visible { color: var(--cursor-live); outline: none; }
 footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
@@ -521,7 +525,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol><symbol id="mark-wire" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol><symbol id="mark-cat" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5 12.5V3.2l4.8 4h4.4l4.8-4v9.3a7 7 0 0 1-14 0ZM9.6 12.6a1.3 1.3 0 1 0 0.01 0ZM14.4 12.6a1.3 1.3 0 1 0 0.01 0Z"/><path d="M5 15.4 0.2 14.6M5.4 17.6 0.8 19M19 15.4l4.8-.8M18.6 17.6l4.6 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M11 15.6h2l-1 1.1Z" style="fill: var(--panel)"/></symbol></defs></svg>
 <header id="hdr">
   <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
-  <div class="lockup" id="lockup"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></div>
+  <a class="lockup" id="lockup" href="https://armenkaprelian.github.io/" target="_blank" rel="noopener" title="HOME"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></a>
   <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button><button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button></div>
 </header>
 <main>

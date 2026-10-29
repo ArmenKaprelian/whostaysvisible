@@ -1,12 +1,12 @@
 {
  "id": "glossary",
  "tool": "motion/tools/glossary_build.py",
- "run_utc": "2026-10-28T01:10:02Z",
+ "run_utc": "2026-10-29T01:40:20Z",
  "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
  "files": [
   {
    "path": "motion/js/explorer-app.js",
-   "sha256": "0e444145835ec9fcce77934339b1d01badebbc579a130245f2cd7312d8582069"
+   "sha256": "ef502044d31fa3ae321eb7f3ccafe17ff9c025d6ac97605cd9da2e7f2fb42d64"
   },
   {
    "path": "kaprelian_dissertation/chapters/02-opacity/02-data-and-samples.tex",
@@ -152,7 +152,7 @@
    "sources": [
     {
      "file": "motion/js/explorer-app.js",
-     "line": 2908,
+     "line": 2909,
      "quote": "Comparison group: firms on none of the five lists.",
      "found": true
     },
@@ -175,7 +175,7 @@
     },
     {
      "file": "motion/js/explorer-app.js",
-     "line": 3041,
+     "line": 3045,
      "quote": "Disclosure: in the Cells view a share needs 50 firms",
      "found": true
     }

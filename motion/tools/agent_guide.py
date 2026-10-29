@@ -21,13 +21,13 @@ from jsfmt import to_fixed, js_round, pct   # Motion.fmt's rules in one module (
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MOTION = os.path.join(HERE, '..')
-ARTIFACT = 'https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n'
+ATLAS = 'https://armenkaprelian.github.io/atlas/'   # the atlas on the author's site (28 October 2026; the claude.ai artifact's address before)
 # Round 17 (the author's request of 27 October 2026): TEACH YOUR AGENT copies a link that a reader's agent fetches the guide from, in place of the text.
 # The link must serve plain text to an agent without a session. A file inside the claude.ai artifact does not (its viewer loads the page through a token
-# exchange, and the frame host answers 404 to a bare request), so the guide is served as raw text from the public repository: tools/publish-set.py writes
-# the dated guide to publish/agent-guide.md at each publish, and the publish copy's commit puts it at this address. With GUIDE_URL None the page's
-# js/agent-guide.js is as before and the button copies the text.
-GUIDE_URL = 'https://raw.githubusercontent.com/ArmenKaprelian/whostaysvisible/main/motion/publish/agent-guide.md'
+# exchange, and the frame host answers 404 to a bare request). Since 28 October 2026 the guide is served beside the atlas on the author's site:
+# tools/publish-set.py writes the dated guide to publish/agent-guide.md at each publish, the site's tools/import_atlas.py copies it to atlas/, and the site
+# serves files as they are (it carries .nojekyll). With GUIDE_URL None the page's js/agent-guide.js is as before and the button copies the text.
+GUIDE_URL = ATLAS + 'agent-guide.md'
 
 def dec(v, d=3): return to_fixed(v, d)                                        # Motion.fmt.dec, three decimals by default here
 def ci(lo, hi): return '95%% confidence interval %s to %s' % (dec(lo), dec(hi))
@@ -94,12 +94,12 @@ def build(data_dir, published=None):
     add('')
     add('## 6. How to cite')
     add('')
-    add('Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. %s' % ARTIFACT)
+    add('Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. %s' % ATLAS)
     add('')
     add('Contact the author through the email address shown in the atlas’s footer.')
     return '\n'.join(L) + '\n'
 
-PUBLIC = [('email address', r'[\w.+-]+@[\w-]+\.\w'), ('link other than the atlas', r'https?://(?!claude\.ai/artifact/19DNAFozq23ng4qaD18m7n\b)\S+'),
+PUBLIC = [('email address', r'[\w.+-]+@[\w-]+\.\w'), ('link other than the atlas', r'https?://(?!armenkaprelian\.github\.io/atlas/(?:\s|$))\S+'),
           ('file path', r'(?:~/|/home/|/tmp/|\b[A-Za-z]:\\)'), ('nine or more digits', r'\d{9,}'), ('working note', r'\b(?:TODO|FIXME|XXX)\b')]
 
 def rules(text):

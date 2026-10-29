@@ -2127,7 +2127,7 @@ The proof, `build/round-19/proof/site-links` (269 s): 6 text groups, the three e
 - Every other change that still needs a review-gate audit runs it only at the widths it can affect, 1,600 and 400 px at least, with `audit-five.sh --widths`.
 - The publish gate is unchanged: one full five-width run of `audit-five.sh` on the final build with zero findings, and targeted runs never count for a publish.
 
-This round's changes stay in the header, the footer and REFERENCES (the last under round 18's rule for strings in their own panel), so they go to the author with no review-gate audit. Two earlier five-width runs had failed at their first state because no server answered on the audit's default port; the audit reads a served page (`tools/serve.py`, or `--url`).
+This round's changes stay in the header, the footer and REFERENCES (the last under round 18's rule for strings in their own panel), so they went to the author with no review-gate audit. The author approved them on 28 October 2026. Two earlier five-width runs had failed at their first state because no server answered on the audit's default port; the audit reads a served page (`tools/serve.py`, or `--url`).
 
 ### Publishing
 
