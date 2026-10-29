@@ -346,7 +346,7 @@
   // 0.9 s, with no ring, no glow and no pale core; on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
   // before it read as an explosion, and painting 1,480 of them (2024) dropped about a third of the frames; the swell draws one disc per firm.
   M.SWELL = 0.9;   // seconds
-  M.swellPeak = r => Math.min(6, Math.max(2.5, 1.2 * r));   // the extra radius at the peak, px
+  M.swellPeak = r => Math.min(12, Math.max(5, 2.4 * r));   // the extra radius at the peak, px: twice round 22's (the author's pick of 29 October 2026, round 23; 2.5 to 6 px read too quiet)
   M.swellPhase = function (t, o) {   // into the bloom phase's fields: on, grow (the red's fade-in over 0.2 s), swell (0 to 1 and back), p (0 to 1)
     if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
     const u = Motion.clamp(t / M.SWELL, 0, 1);

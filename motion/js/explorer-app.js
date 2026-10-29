@@ -2911,14 +2911,14 @@ void main() {
   // the site's atlas/ folder, whose home is one level up.
   if (/\/atlas\/(index\.html)?$/.test(location.pathname)) for (const a of [$('lockup'), $('sitelink')]) { a.href = '../'; a.removeAttribute('target'); }
   // ---- the REFERENCES panel (round 16, the author's General 7 of 26 October 2026; the picks of 27 October: refA, rxA, raC, rlA, riA, rtA, rfA, rsA, rdB revised) ----
-  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 97 percent (94 until round 22, the author's pick of 29 October 2026; the sea
+  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
   // at the same alpha on the light theme), with short entries under prompt-line heads in one scrolling body and a row of shortcuts. DEFINITIONS is the atlas's
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
   // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
   // page behind is inert. Escape, the close toggle or a press outside close it, focus returns to the button, and the page's own keys stand down while it is open.
   // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance;
   // the blink's quotation is uncited by the author's choice.
-  const REFS_ALPHA = 97, GLOSS = D.glossary || null;
+  const REFS_ALPHA = 98, GLOSS = D.glossary || null;
   const refsIsOpen = () => { const d = $('refs'); return !!(d && d.open); };
   const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text || url)}</a>`;
   const longDate = d => { const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(d || ''); if (!m) return d || ''; return [m[3] ? String(+m[3]) : '', m[2] ? MONTHS[+m[2] - 1] : '', m[1]].filter(Boolean).join(' '); };   // 2024-06-12 as 12 June 2024
