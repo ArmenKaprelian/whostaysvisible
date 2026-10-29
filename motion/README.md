@@ -2158,7 +2158,7 @@ Proof: `build/round-21/proof-address-files` against HEAD, identical (no string, 
 
 ### The claude.ai pointers (29 October 2026)
 
-The author's pick A2: the claude.ai explainer's last version is a pointer to the film on the author's site (`pointer/explainer-moved.html`), set as the atlas's pointer (`pointer/atlas-moved.html`, v40), with no anchor script since the explainer reads none. Both pointers load IBM Plex Mono's three Latin files from the artifact's own `fonts/` (Google's Latin rules, the woff2 files Google serves, the OFL text) in place of Google Fonts. Frames (`build/pointer-stage/frames`): the atlas pointer pixel-identical before and after at 1,440 px and on a phone, with no request to Google; the explainer pointer approved by the author from its frames. Published on the author's word as explainer v30 and atlas v41.
+The author's pick A2: the claude.ai explainer's last version is a pointer to the film on the author's site (`pointer/explainer-moved.html`), set as the atlas's pointer (`pointer/atlas-moved.html`, v40), with no anchor script since the explainer reads none. Both pointers carry IBM Plex Mono's three Latin files inside the page as data URIs (Google's Latin rules and the woff2 files Google serves, about 64 KB a page), in place of Google Fonts, since the artifact host's policy admits fonts only from Google or the page itself; the OFL text travels beside each page. Frames (`build/pointer-stage/frames`): the atlas pointer pixel-identical before and after at 1,440 px and on a phone, with no request to Google; the explainer pointer approved by the author from its frames. Published on the author's word as explainer v30 and atlas v41.
 
 ### Publishing
 
