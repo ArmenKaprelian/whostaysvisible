@@ -2141,7 +2141,7 @@ The author's decision of 29 October 2026, made in a pass over the site; the deta
 
 Checks. (1) `build/site-pass-2026-10-29/proof-fonts`: change-proof with the site's live atlas (Google Fonts) as the base and the import of the new set as the trial, since the lab's page itself does not change: identical, no string, frame or rule hit differs (88 of 88 frames, 260 s). (2) `publish-set.py` without `--write` refuses nothing; the import differs from the live atlas only in the font block, the build line, the 19 font files and the 2 licences. (3) `site-check.py` on the site pass with the new atlas imported: 34 loads in both engines, zero findings (42 s). (4) In the trial atlas, 20 faces, none in error, and no request to fonts.googleapis.com or fonts.gstatic.com (the live copy makes one).
 
-**Ready to publish** (approved by the author on 29 October 2026 with the site pass): publish copy b7195d8 (from 4035835); site commits a2227bb (the site pass) and d2c23ad (the import); `site-check.py` on the final site, zero findings. The push is the author's (`tools/publish.sh --push`).
+**Published** 29 October 2026 (UTC) on the author's site with the site pass, approved by the author: publish copy b7195d8 (from 4035835); site commits a2227bb (the site pass) and d2c23ad (the import), pushed by the author with `tools/publish.sh --push` (5c01ed1..d2c23ad); `site-check.py` on the final site, zero findings.
 
 ### Publishing
 
