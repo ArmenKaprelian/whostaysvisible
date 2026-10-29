@@ -2133,6 +2133,16 @@ The author's request after the site's home page broke on phones in landscape and
 
 First run on c67c8f9: 34 page loads, zero findings. Run on the version before the fix (5eb06f5), it reported the bug in both engines (20 findings), and WebKit alone also reported the tablet's sideways scroll. WebKitGTK is not iOS: touch, the toolbars and the notch still need a short check on a real iPhone. The atlas's five-width audit stays its full check; here the atlas is loaded for errors and overflow only.
 
+### Round 20 (29 October 2026): the atlas's fonts from its own folder
+
+The author's decision of 29 October 2026, made in a pass over the site; the detail is in `review/2026-10-29-round-20.md`.
+- **Fonts:** the published atlas loads IBM Plex Mono (400, 500, 700) and Tomorrow (400, 500) from its own `fonts/` folder, not from Google Fonts. The 19 woff2 files are the ones Google serves (every subset its stylesheet lists), renamed. Google's `@font-face` rules, with their unicode-range lines, are in `fonts/web-fonts.css`, which `tools/publish-set.py` inlines into the page in place of the Google Fonts link. The OFL texts from the google/fonts repository sit beside the files. The lab's page keeps the installed family, the explainer keeps the link, and DejaVu Sans Mono is unchanged. REFERENCES still says the fonts are "from Google Fonts", which stays true of the files.
+- **A one-time exception to the publish gate** (the author's, for this publish only, which carries no other atlas change): no five-width audit, and `publish.sh`'s other steps (the date check, `publish-set.py --write`, the publish copy, the site's import) run by hand. The standing rule and `publish.sh` are unchanged. Four checks replace the audit for this publish.
+
+Checks. (1) `build/site-pass-2026-10-29/proof-fonts`: change-proof with the site's live atlas (Google Fonts) as the base and the import of the new set as the trial, since the lab's page itself does not change: identical, no string, frame or rule hit differs (88 of 88 frames, 260 s). (2) `publish-set.py` without `--write` refuses nothing; the import differs from the live atlas only in the font block, the build line, the 19 font files and the 2 licences. (3) `site-check.py`: see the review note. (4) In the trial atlas, 20 faces, none in error, and no request to fonts.googleapis.com or fonts.gstatic.com (the live copy makes one).
+
+**Published:** waiting for the author's approval, together with the site pass.
+
 ### Publishing
 
 Publish dates are UTC days: run `tools/publish-set.py --dates` before the publish gate's five-width audit (round 18, after v39).
