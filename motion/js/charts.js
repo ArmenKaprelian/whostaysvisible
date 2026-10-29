@@ -92,28 +92,30 @@
   // labels apart when two values in a column lay closer than a line of text, which moved them off their dots, and its two series in each colour met at
   // one dot in 2021 with unnamed ends in 2024. The common zero line lets the changes be compared by length (the author's request of 29 October 2026).
   // The zero line is a range frame, from the first bar's top edge to the last bar's bottom edge, drawn over the bars; bars and line sit on whole device
-  // pixels (k, the canvas's scale) so their edges stay sharp at 125 percent and on a phone. An item with sub: true is a part of the row above it: the
-  // names keep one left edge and a hairline bracket in their gutter joins the two rows (the author's pick A of 29 October 2026). pitch caps the row spacing; the rows sit in the middle of the box with the column headers just above them.
+  // pixels (k, the canvas's scale) so their edges stay sharp at 125 percent and on a phone. Every name keeps one left edge (the author's picks of
+  // 29 October 2026; the bracket that joined state-run to state-related was removed on the author's word). On a narrow card each name takes its own
+  // line above its figures. pitch caps the row spacing; the rows sit in the middle of the box with the column headers just above them.
   C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6 } = {}) {
     const k = ctx.getTransform().a || 1, dev = v => Math.round(v * k) / k;
-    const gut = items.some(it => it.sub) ? 8 : 0; box = { x: box.x + gut, y: box.y, w: box.w - gut, h: box.h };   // the bracket's gutter, the same for every row
     const vw = Motion.measure(ctx, '00.0%', size, 500), dw = Math.max(...items.map(it => Motion.measure(ctx, dfmt(it.b - it.a), size, 500)));
     const nw = Math.max(...items.map(it => Motion.measure(ctx, it.label, size, 500)));
-    const xa = box.x + nw + 12 + vw, xb = xa + 12 + vw, xd = box.x + box.w, s0 = xb + 18, s1 = xd - dw - 14;   // the right edges of the three columns, the strip
+    let xa = box.x + nw + 12 + vw, xb = xa + 12 + vw; const xd = box.x + box.w, s1 = xd - dw - 14;   // the right edges of the three columns, the strip's right end
+    // A narrow card (a phone under about 400 px, where the strip would keep under 56 px; round 24's review gate at 360 px): each name on its own line above
+    // its figures, so the headers stay apart and the bars keep their room.
+    const two = s1 - (xb + 18) < 56; if (two) { xa = box.x + vw; xb = xa + 12 + vw; }
+    const s0 = xb + 18;
     const d = items.map(it => it.b - it.a), lo = Math.min(0, ...d), hi = Math.max(0, ...d), sx = C.scale([lo, hi], [s0, s1]), x0 = dev(sx(0));
-    const p = Math.min(pitch, box.h / items.length), y0 = box.y + (box.h - p * items.length) / 2, top = i => dev(y0 + p * (i + 0.5) - bar / 2), hb = dev(bar);
+    const p = Math.min(pitch, box.h / items.length), y0 = box.y + (box.h - p * items.length) / 2, hb = dev(bar);
+    const yName = i => y0 + p * (i + (two ? 0.3 : 0.5)), yRow = i => y0 + p * (i + (two ? 0.72 : 0.5)), top = i => dev(yRow(i) - bar / 2);   // two lines: the name, then the figures
     [[heads[0], xa], [heads[1], xb], [heads[2], xd]].forEach(([h, x]) => T(ctx, h, x, y0 - 4, { size, color: theme.muted, align: 'right' }));
     items.forEach((it, i) => {
-      const y = y0 + p * (i + 0.5), x1 = dev(sx(d[i]));
+      const y = yRow(i), x1 = dev(sx(d[i]));
       ctx.fillStyle = it.color; ctx.fillRect(Math.min(x0, x1), top(i), Math.abs(x1 - x0), hb);
-      T(ctx, it.label, box.x, y, { size, color: theme.muted, baseline: 'middle' });
+      T(ctx, it.label, box.x, yName(i), { size, color: theme.muted, baseline: 'middle' });
       T(ctx, fmt(it.a), xa, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
       T(ctx, fmt(it.b), xb, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
       T(ctx, dfmt(d[i]), xd, y, { size, color: it.color, align: 'right', baseline: 'middle', weight: 500 });
     });
-    items.forEach((it, i) => { if (!it.sub || !i) return;   // the part and its whole joined by a hairline bracket in the gutter
-      const ya = dev(y0 + p * (i - 0.5)), yb = dev(y0 + p * (i + 0.5)), xl = dev(box.x - gut - 1), t = Math.max(1, Math.round(k)) / k; ctx.fillStyle = theme.muted;
-      ctx.fillRect(xl, ya, t, yb - ya + t); ctx.fillRect(xl, ya, 4, t); ctx.fillRect(xl, yb, 4, t); });
     const n = Math.max(1, Math.round(k)); ctx.fillStyle = theme.muted; ctx.fillRect(x0 - Math.floor(n / 2) / k, top(0), n / k, top(items.length - 1) + hb - top(0));   // the zero line, over the bars: about 1 px, whole device pixels
   };
 

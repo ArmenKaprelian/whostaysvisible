@@ -2526,7 +2526,7 @@ void main() {
     const SU = D.statesplit.state_unitary, col = it => Object.assign(it, { color: it.b >= it.a ? theme.accent : theme.fall });
     const top = [{ label: 'joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1] }, { label: 'state-related', a: F.own.state[0], b: F.own.state[1] }, { label: 'private', a: F.own.private[0], b: F.own.private[1] }]
       .map(col).sort((p, q) => (q.b - q.a) - (p.b - p.a));
-    const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: 'state-run', a: SU.share[0], b: SU.share[1], sub: true })] : [it]);
+    const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: 'state-run', a: SU.share[0], b: SU.share[1] })] : [it]);
     CH.changes(ctx, { x: 8, y: big ? 34 : 26, w: w - 16, h: hh - (big ? 44 : 32) }, items, { theme, size: sz, bar: big ? 8 : 6 });
     if (!big && pop.id === 'groups') drawGroups('pochart');
   }
