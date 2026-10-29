@@ -2236,6 +2236,26 @@ The side chat's second proposal; the standing rule in `CLAUDE.md` is the author'
 - The proof shoots 1,600 and 400 px, so visible panel text that rewraps at 768, 1,200 or 2,000 px is not seen; text with no layout of its own (the guide, tooltips, aria-labels) changes no frame.
 - Tested. On the lab's history the strings check accepts today's CORRECTIONS and guide edits (97d5e05 and c3f8f8e to HEAD) and refuses the narrow layout (84319e1 to HEAD, naming the code). On a full five-width pass recorded for 4e65013 (1,376 states, zero findings), in a scratch clone: a reworded tooltip carries over (the proof shows no frame change); a changed number in the chart code is refused at the strings check (`bar = 6` became `bar = 7`); a reworded canvas header is refused at the proof (its frames change in the Groups card and the pop-out, which hold no changed text the snapshot sees).
 
+### The film, cut B2 (29 October 2026)
+
+The author asked, while away, for a conservative cut and a bolder one of the film, built in a scratchpad copy. The author picked the bolder one (B), asked for a spacing pass over it (B2), and approved B2 from before/after frames of its 12 changed scenes and its 720p cut. Detail is in `review/2026-10-29-film-b2.md`.
+- **Wording, to match the atlas.** The Groups scene is the atlas's round-24 table with state-run (`data/statesplit.json`). Plain labels replace "Q5 vs Q1" (now "largest fifth"), "fixed 2019 cohort" and the 2021 cohorts; the atlas keeps "Q5 vs Q1" until the author takes the theme up. "Provisional:" left the size note.
+- **Motion.** The atlas's swell replaces round 9's bloom. The national run holds 2024 for the atlas's sweep and tree, captioned in the atlas's words. The city and region runs became one pass of the years with an S-curve pull-out.
+- **Pacing.** The film is 244 s (287 before): the beats run to their reading time, the two-firm sequence is 100 s, and the chart slides fade in 0.35 s.
+- **Spacing (B2).**
+  - The 1 km legend on a panel.
+  - The comparison's facts on 780 px columns under one shared key.
+  - The years column as short lines.
+  - The event labels on leaders (`MotionCharts.lines` `eventLeaders`).
+  - More room in the archive, ticker, legend, size, lists, transitions and next scenes.
+- **The atlas's ending.** The credits end with the atlas's address.
+
+Proof:
+- **Text audit (step 6).** Zero findings. Only 13 counted `box-over-mark` lines remain (22 before).
+- **Load checks.** They pass, and the teaser builds.
+- **`change-proof.py --base 37c5520`.** Identical: no string, no frame and no rule hit differs. The shared helpers' new options are the film's only.
+- **The site.** It takes the 244 s file (720p from the 1080p render in `build/`, a keyframe at every chapter start), the new chapter times and "4 min 4 s". `site-check.py` reports zero findings (34 page loads). The site's commit is 15e0cc5, and its push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.

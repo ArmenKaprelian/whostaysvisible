@@ -33,7 +33,9 @@
   };
 
   // Line chart of yearly series with era shading and dotted event ticks. series: [{label, color, points: [{x, y}], width}].
-  C.lines = function (ctx, box, series, { xDomain, yDomain, progress = 1, theme, eras = [], events = [], yTicks = [], yFmt = v => v + '%', labelFmt = v => Motion.fmt.pct(v, 1), xTicks = [], xFmt = v => String(v), endLabels = true, labelSize = 24, lineWidth = 3.5, dots = true, axisSize = 22, axisDy = 34, spreadLabels = false } = {}) {
+  // eventLeaders (the film, 29 October 2026): each event's dotted line runs from the top of the plot down to its own label, which hangs at the line's
+  // foot, and the rows sit eventRowGap apart, so with the rows ordered (an event's label below every label its line would pass) no line crosses text.
+  C.lines = function (ctx, box, series, { xDomain, yDomain, progress = 1, theme, eras = [], events = [], yTicks = [], yFmt = v => v + '%', labelFmt = v => Motion.fmt.pct(v, 1), xTicks = [], xFmt = v => String(v), endLabels = true, labelSize = 24, lineWidth = 3.5, dots = true, axisSize = 22, axisDy = 34, spreadLabels = false, eventLeaders = false, eventRowGap = 28 } = {}) {
     const sx = C.scale(xDomain, [box.x, box.x + box.w]), sy = C.scale(yDomain, [box.y + box.h, box.y]);
     const xReveal = xDomain[0] + (xDomain[1] - xDomain[0]) * progress;
     // Era bands and event ticks.
@@ -43,8 +45,9 @@
     for (const ev of events) {
       if (ev.x > xReveal) continue;
       const evAlpha = Motion.clamp((xReveal - ev.x) / 0.6, 0, 1);   // over 0.6 years of the reveal
-      const x = sx(ev.x); ctx.save(); ctx.globalAlpha *= evAlpha; ctx.setLineDash([3, 7]); ctx.strokeStyle = theme.tick; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); ctx.restore();
-      if (ev.label) T(ctx, ev.label, x + 8, ev.labelY != null ? ev.labelY : box.y + box.h - 14 - (ev.row || 0) * 28, { size: labelSize - 2, color: theme.muted, alpha: evAlpha });
+      const ly = ev.labelY != null ? ev.labelY : box.y + box.h - (eventLeaders ? 16 : 14) - (ev.row || 0) * eventRowGap, foot = eventLeaders && ev.label ? ly - 7 : box.y + box.h;   // the foot at the label's mid-height
+      const x = sx(ev.x); ctx.save(); ctx.globalAlpha *= evAlpha; ctx.setLineDash([3, 7]); ctx.strokeStyle = theme.tick; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, foot); ctx.stroke(); ctx.restore();
+      if (ev.label) T(ctx, ev.label, x + (eventLeaders ? 12 : 8), ly, { size: labelSize - 2, color: theme.muted, alpha: evAlpha });
     }
     // Lines, revealed left to right with linear interpolation of the last visible segment (presentation only).
     const ends = [];
@@ -95,34 +98,36 @@
   // pixels (k, the canvas's scale) so their edges stay sharp at 125 percent and on a phone. Every name keeps one left edge (the author's picks of
   // 29 October 2026; the bracket that joined state-run to state-related was removed on the author's word). On a narrow card each name takes its own
   // line above its figures. pitch caps the row spacing; the rows sit in the middle of the box with the column headers just above them.
-  C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6 } = {}) {
-    const k = ctx.getTransform().a || 1, dev = v => Math.round(v * k) / k;
+  // progress (the film, 29 October 2026): the bars grow from the zero line and the 2024 figures and changes fade in over its last 40 percent; at 1, the
+  // default, the drawing is the atlas card's. The column gaps scale with the type above 14 px, so the card's 12 and 14 px keep their 12 px.
+  C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6, progress = 1 } = {}) {
+    const k = ctx.getTransform().a || 1, dev = v => Math.round(v * k) / k, g = 12 * Math.max(1, size / 14);
     const vw = Motion.measure(ctx, '00.0%', size, 500), dw = Math.max(...items.map(it => Motion.measure(ctx, dfmt(it.b - it.a), size, 500)));
     const nw = Math.max(...items.map(it => Motion.measure(ctx, it.label, size, 500)));
-    let xa = box.x + nw + 12 + vw, xb = xa + 12 + vw; const xd = box.x + box.w, s1 = xd - dw - 14;   // the right edges of the three columns, the strip's right end
+    let xa = box.x + nw + g + vw, xb = xa + g + vw; const xd = box.x + box.w, s1 = xd - dw - 14 * g / 12;   // the right edges of the three columns, the strip's right end
     // A narrow card (a phone under about 400 px, where the strip would keep under 56 px; round 24's review gate at 360 px): each name on its own line above
     // its figures, so the headers stay apart and the bars keep their room.
-    const two = s1 - (xb + 18) < 56; if (two) { xa = box.x + vw; xb = xa + 12 + vw; }
-    const s0 = xb + 18;
+    const two = s1 - (xb + 18) < 56; if (two) { xa = box.x + vw; xb = xa + g + vw; }
+    const s0 = xb + 18 * g / 12, late = progress >= 1 ? 1 : Motion.clamp((progress - 0.6) / 0.4, 0, 1);
     const d = items.map(it => it.b - it.a), lo = Math.min(0, ...d), hi = Math.max(0, ...d), sx = C.scale([lo, hi], [s0, s1]), x0 = dev(sx(0));
     const p = Math.min(pitch, box.h / items.length), y0 = box.y + (box.h - p * items.length) / 2, hb = dev(bar);
     const yName = i => y0 + p * (i + (two ? 0.3 : 0.5)), yRow = i => y0 + p * (i + (two ? 0.72 : 0.5)), top = i => dev(yRow(i) - bar / 2);   // two lines: the name, then the figures
     [[heads[0], xa], [heads[1], xb], [heads[2], xd]].forEach(([h, x]) => T(ctx, h, x, y0 - 4, { size, color: theme.muted, align: 'right' }));
     items.forEach((it, i) => {
-      const y = yRow(i), x1 = dev(sx(d[i]));
+      const y = yRow(i), x1 = progress >= 1 ? dev(sx(d[i])) : dev(sx(d[i] * Motion.clamp(progress, 0, 1)));
       ctx.fillStyle = it.color; ctx.fillRect(Math.min(x0, x1), top(i), Math.abs(x1 - x0), hb);
       T(ctx, it.label, box.x, yName(i), { size, color: theme.muted, baseline: 'middle' });
       T(ctx, fmt(it.a), xa, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
-      T(ctx, fmt(it.b), xb, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
-      T(ctx, dfmt(d[i]), xd, y, { size, color: it.color, align: 'right', baseline: 'middle', weight: 500 });
+      if (late > 0) T(ctx, fmt(it.b), xb, y, { size, color: theme.ink, align: 'right', baseline: 'middle', alpha: late });
+      if (late > 0) T(ctx, dfmt(d[i]), xd, y, { size, color: it.color, align: 'right', baseline: 'middle', weight: 500, alpha: late });
     });
     const n = Math.max(1, Math.round(k)); ctx.fillStyle = theme.muted; ctx.fillRect(x0 - Math.floor(n / 2) / k, top(0), n / k, top(items.length - 1) + hb - top(0));   // the zero line, over the bars: about 1 px, whole device pixels
   };
 
   // 100% stacked horizontal bars. groups: [{label, sub, total, parts: [{label, value, color}]}].
-  C.stackedBars = function (ctx, box, groups, { progress = 1, theme, size = 26, barH = 64, gap = 60, minLabelFrac = 0.06, legend = true } = {}) {
+  C.stackedBars = function (ctx, box, groups, { progress = 1, theme, size = 26, barH = 64, gap = 60, minLabelFrac = 0.06, legend = true, legendGap = 70 } = {}) {
     if (legend && groups.length) {   // one legend row above the bars; segment labels under bars collide when segments are narrow
-      let lx = box.x; const y0 = box.y - 70;
+      let lx = box.x; const y0 = box.y - legendGap;
       for (const p of groups[0].parts) { ctx.fillStyle = p.color; ctx.fillRect(lx, y0 - 14, 22, 22); T(ctx, p.label, lx + 32, y0, { size: size - 2, color: theme.muted, baseline: 'middle' }); lx += 32 + Motion.measure(ctx, p.label, size - 2) + 44; }
     }
     groups.forEach((g, gi) => {

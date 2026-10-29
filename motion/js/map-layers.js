@@ -229,15 +229,16 @@
   // Shared by the explainer's Moscow beats and the treated cut's ticker: the location (split-flap)
   // with its window line, a large year (two strings crossfading during a dissolve) and up to three
   // right-aligned count lines. Everything sits inside one 440 px wide panel at (1420, 70): 210 px tall
-  // with up to two lines (at y 244 and 272), 230 px with three (at 240, 266 and 292; 25 October 2026).
+  // with up to two lines (at y 244 and 272), 230 px with three (at 240, 266 and 292; 25 October 2026). The spacing pass of 29 October 2026: the lines
+  // 30 px apart (two, at 248 and 278, in a 230 px panel) or 28 (three, at 246, 274 and 302, in a 250 px panel), so the counts no longer touch.
   M.infoLines = function (ctx, theme, lines, alpha) {
     if (alpha <= 0) return;
-    const three = lines.length > 2, y0 = three ? 240 : 244, dy = three ? 26 : 28;
+    const three = lines.length > 2, y0 = three ? 246 : 248, dy = three ? 28 : 30;
     lines.forEach(([s, color], i) => Motion.text(ctx, s, 1836, y0 + dy * i, { size: i === 0 ? 24 : 22, color: color || (i === 0 ? theme.ink : theme.muted), align: 'right', alpha, group: 'counters-' + i }));
   };
   M.infoPanel = function (ctx, theme, { alpha = 1, loc = null, year = null, lines = [], w = 440 } = {}) {   // w: wider where a line needs it (round 10)
     if (alpha <= 0) return;
-    Motion.panel(ctx, 1860 - w, 70, w, lines.length > 2 ? 230 : 210, theme, 0.92 * alpha);
+    Motion.panel(ctx, 1860 - w, 70, w, lines.length > 2 ? 250 : 230, theme, 0.92 * alpha);
     if (loc) {
       Motion.flipText(ctx, loc.from.name.toUpperCase(), loc.to.name.toUpperCase(), loc.u, { x: 1836, y: 108, size: 24, weight: 500, color: theme.muted, align: 'right', letterSpacing: 24 * 0.08, group: 'location', alpha });   // the place name in tracked capitals; the size line below stays mixed (round 10)
       Motion.flipText(ctx, loc.from.size, loc.to.size, loc.u, { x: 1836, y: 138, size: 22, weight: 400, color: theme.dim, align: 'right', letterSpacing: 1, group: 'location-size', alpha });

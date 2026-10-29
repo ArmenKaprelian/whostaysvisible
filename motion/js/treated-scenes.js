@@ -176,7 +176,8 @@
   // The year runs' schedule (section-relative start of the first year's hold, the hold, the transition), shared by the
   // keyframes and the pulse's ring decay: tStart(Y, ext) is when the transition into year Y begins.
   let RUNS = null;   // filled beside SEC below, once the section's times exist
-  const tStart = (Y, ext) => { const [t0, hold, trans] = RUNS[ext]; return t0 + (Y - Y0) * (hold + trans) - trans; };
+  // A run may hold one year longer (the bold cut's national run holds 2024 for the sweep): [t0, hold, trans, longYear, longHold].
+  const tStart = (Y, ext) => { const [t0, hold, trans, ly, lh] = RUNS[ext]; return t0 + (Y - Y0) * (hold + trans) - trans + (ly != null && Y > ly ? lh - hold : 0); };
   // rewind: while the year runs backwards (the pull-backs), a listing is a plain crossfade, not a bloom.
   function drawTreated(ctx, cam, v, alpha, theme, rewind = false, l = null) {   // l: the section clock, for the ring decay (null: the bloom's own clock)
     alpha *= 1 - ramp(cam.k, 110, 150);
@@ -194,12 +195,64 @@
   const SPREAD = { downtown: 0.06, city: 0.08, region: 0.10, national: 0.10 };   // s: the stagger across the extent, west to east
   const PH = { on: false, swell: 0, release: 0, grow: 0, glowA: 0, p: 0 };   // the bloom phase of the mark being drawn, reused
   const stagger = (ext, x) => { const e = P.extents[ext]; return SPREAD[ext] * Motion.clamp((x - e.xmin) / (e.xmax - e.xmin), 0, 1); };
+  // The atlas's pulse in the film (the bold cut of 29 October 2026): each newly red mark swells (MM.swellPhase, MM.swellPeak) and settles back over 0.9 s,
+  // with no glow, pale core or rings (all three retired in the atlas, rounds 15 and 22); the west-to-east stagger stays. At the national run's 2024 hold,
+  // the year the most firms were added to a list, the atlas's round-24 sweep: a front crosses the country west to east by longitude in 1.5 s, each firm
+  // swells as it passes, and the year's minimum spanning tree by distance traces behind it, each edge held 0.3 s and gone over 0.6 s (explorer-app.js).
+  const SWELL = true;
+  const SWEEP = { year: 2024, pass: 1.5, hold: 0.3, fade: 0.6 };
+  const sweepIn = i => TRN.red_from[i] === SWEEP.year && !TRN.undated[i] && TRN.filed[i][SWEEP.year - Y0] !== '-';   // the atlas's mask: added in the year, present that year
+  const SW = (() => {   // the sweep's firms, each one's delay (s) by longitude, and the tree; built once
+    const R = 6371, sp = Math.sin(Math.PI / 3), cp = Math.cos(Math.PI / 3), idx = [], lon = [];   // the km plane is spherical LAEA about 60 N, 100 E (map-layers.js)
+    for (let i = 0; i < TRN.n; i++) { if (!sweepIn(i)) continue; const x = TRN.x[i], y = TRN.y[i], rho = Math.hypot(x, y), cc = 2 * Math.asin(Math.min(1, rho / (2 * R)));
+      idx.push(i); lon.push(rho < 1e-9 ? 100 : 100 + Math.atan2(x * Math.sin(cc), rho * cp * Math.cos(cc) - y * sp * Math.sin(cc)) * 180 / Math.PI); }
+    const l0 = Math.min(...lon), l1 = Math.max(...lon), delay = new Float32Array(TRN.n).fill(-1);
+    idx.forEach((i, j) => { delay[i] = l1 > l0 ? SWEEP.pass * (lon[j] - l0) / (l1 - l0) : 0; });
+    // Prim's minimum spanning tree by km distance, each edge kept west end first so it traces with the front (the atlas's treeOf)
+    const m = idx.length, X = idx.map(i => TRN.x[i]), Y = idx.map(i => TRN.y[i]), best = new Float64Array(m).fill(Infinity), from = new Int32Array(m), used = new Uint8Array(m), a = [], b = [];
+    let cur = 0; if (m) used[0] = 1;
+    for (let it = 1; it < m; it++) {
+      let bi = -1, bd = Infinity;
+      for (let j = 0; j < m; j++) { if (used[j]) continue; const dx = X[j] - X[cur], dy = Y[j] - Y[cur], d = dx * dx + dy * dy; if (d < best[j]) { best[j] = d; from[j] = cur; } if (best[j] < bd) { bd = best[j]; bi = j; } }
+      used[bi] = 1; const p = idx[from[bi]], q = idx[bi]; if (delay[p] <= delay[q]) { a.push(p); b.push(q); } else { a.push(q); b.push(p); } cur = bi;
+    }
+    return { count: m, delay, a, b };
+  })();
+  const sweepDelay = (ext, MARKS, i) => (SWELL && ext === 'national' && MARKS === TRN && SW.delay[i] >= 0 ? SW.delay[i] : stagger(ext, MARKS.x[i]));
+  // The trail under the marks: each edge traces from its west end as the front passes, holds, then fades in four steps, on a casing in the stage colour.
+  function drawTrail(ctx, cam, l, alpha, theme, LR) {
+    const t = l - tStart(SWEEP.year, 'national'); if (t <= 0 || t > SWEEP.pass + SWEEP.hold + SWEEP.fade + 0.1 || alpha <= 0) return;
+    const rr = LR.floor + MM.swellPeak(LR.floor), min2 = Math.max(36, rr * rr);
+    const live = new Path2D(), steps = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], A = [1, 0.75, 0.5, 0.25];
+    for (let e = 0; e < SW.a.length; e++) {
+      const i = SW.a[e], j = SW.b[e], [ax, ay] = Motion.project(cam, TRN.x[i], TRN.y[i]), [bx, by] = Motion.project(cam, TRN.x[j], TRN.y[j]), dx = bx - ax, dy = by - ay;
+      if (dx * dx + dy * dy < min2) continue;
+      const da = SW.delay[i], db = SW.delay[j]; if (t < da) continue;
+      const f = db > da ? Math.min(1, (t - da) / (db - da)) : 1;
+      if (f < 1) { live.moveTo(ax, ay); live.lineTo(ax + dx * f, ay + dy * f); continue; }
+      const age = t - db - SWEEP.hold; if (age >= SWEEP.fade) continue;
+      const q = age <= 0 ? 0 : Math.min(3, Math.floor(age / SWEEP.fade * 4)); steps[q].moveTo(ax, ay); steps[q].lineTo(bx, by);
+    }
+    ctx.save(); ctx.lineCap = 'round';
+    for (let q = 3; q >= 0; q--) { ctx.strokeStyle = theme.stage; ctx.globalAlpha = alpha * 0.6 * A[q]; ctx.lineWidth = 4.5; ctx.stroke(steps[q]); ctx.strokeStyle = theme.treated; ctx.globalAlpha = alpha * 0.85 * A[q]; ctx.lineWidth = 2; ctx.stroke(steps[q]); }
+    ctx.strokeStyle = theme.stage; ctx.globalAlpha = alpha * 0.6; ctx.lineWidth = 5.5; ctx.stroke(live); ctx.strokeStyle = theme.treated; ctx.globalAlpha = alpha; ctx.lineWidth = 3; ctx.stroke(live);
+    ctx.restore();
+  }
+  // The sweep's caption, in the atlas's words (the red button's label and the pulse's tooltip), for the length of the 2024 hold.
+  function sweepCaption(ctx, theme, l, mul) {
+    const t0 = tStart(SWEEP.year, 'national'), t1 = t0 + RUNS.national[2] + RUNS.national[4], a = mul * Motion.plateau(l, t0, t1 + 0.3, 0.3, 0.4); if (a <= 0) return;
+    const s1 = `${fmt.int(SW.count)} FIRMS ADDED TO A LIST IN ${SWEEP.year}`, s2 = 'Lines join them by distance only.', w = Math.max(measure(s1, 24, 500) + 23 * 24 * 0.08, measure(s2, 22, 400));
+    Motion.panel(ctx, 60, 92, w + 48, 104, theme, 0.92 * a);
+    Motion.text(ctx, s1, 84, 132, { size: 24, weight: 500, color: theme.ink, letterSpacing: 24 * 0.08, alpha: a, group: 'sweep-caption' });
+    Motion.text(ctx, s2, 84, 170, { size: 22, color: theme.muted, alpha: a, group: 'sweep-caption-2' });
+  }
   function drawMarkSet(ctx, cam, v, alpha, theme, MARKS, rewind, l = null) {
     const [y0, y1, u] = yearPair(v); const vy = y0 + (y1 - y0) * u;   // the year value of the pair (equal to v without a kept-year list)
     const ext = extentOf(cam.k), LR = listedRuleAt(ext, cam.k), VPX = VP[ext]; const hw = (960 + MM.PULSE.cull) / cam.k + 1, hh = (540 + MM.PULSE.cull) / cam.k + 1;   // 80 px beyond the frame: the largest flash and ring stay inside
     const clock = l != null && !rewind;   // the section clock drives each firm's bloom from its own start; without it (kept-year cuts) the year value does
     const inView = i => { const x = MARKS.x[i], y = MARKS.y[i]; return !(x < cam.cx - hw || x > cam.cx + hw || y < cam.cy - hh || y > cam.cy + hh); };
-    if (clock) for (let i = 0; i < MARKS.n; i++) {   // pass 0: the pale glows of the blooming marks under everything
+    if (SWELL && clock && ext === 'national' && MARKS === TRN) drawTrail(ctx, cam, l, alpha, theme, LR);
+    if (clock && !SWELL) for (let i = 0; i < MARKS.n; i++) {   // pass 0: the pale glows of the blooming marks under everything
       if (MARKS.red_from[i] <= Y0 || MARKS.undated[i] || !inView(i)) continue;
       const s0 = MARKS.state[i][y0 - Y0], s1 = MARKS.state[i][y1 - Y0]; const present = Motion.lerp(s0 === '-' ? 0 : 1, s1 === '-' ? 0 : 1, u); if (present <= 0) continue;
       MM.pulsePhase(l - tStart(MARKS.red_from[i], ext) - stagger(ext, MARKS.x[i]), PH, VPX);
@@ -215,9 +268,9 @@
       const [px, py] = Motion.project(cam, x, y); const r = MM.listedRadius(LR, MARKS.pile[i]);   // the listed rule's floor and cap by zoom
       const bloom = Motion.clamp(vy - (yl - 1), 0, 1);
       const dated = yl > Y0 && !MARKS.undated[i];
-      let t = 0; if (clock && dated) { t = l - tStart(yl, ext) - stagger(ext, x); MM.pulsePhase(t, PH, VPX); }
+      let t = 0; if (clock && dated) { t = l - tStart(yl, ext) - sweepDelay(ext, MARKS, i); if (SWELL) MM.swellPhase(t, PH); else MM.pulsePhase(t, PH, VPX); }
       const own = clock && dated;   // this firm's bloom runs on its own clock
-      const started = own ? PH.on : bloom > 0, done = own ? (PH.on && PH.grow >= 1 && PH.swell <= 0) : bloom >= 1;
+      const started = own ? PH.on : bloom > 0, done = own ? (SWELL ? PH.on && PH.p >= 1 : PH.on && PH.grow >= 1 && PH.swell <= 0) : bloom >= 1;
       const grow = own ? PH.grow : (rewind ? bloom : E.outCubic(bloom));
       if (!done) {
         const c0 = stateColour(s0), c1 = stateColour(s1);
@@ -228,12 +281,12 @@
       }
       if (started) {
         const f0 = MARKS.filed[i][y0 - Y0] === '1' ? 1 : 0, f1 = MARKS.filed[i][y1 - Y0] === '1' ? 1 : 0; const fill = Motion.lerp(f0, f1, E.inOutSine(u));
-        const swell = own ? PH.swell : (rewind ? 0 : Math.sin(Math.PI * bloom)), rr = r + (own ? MM.flashPeak(r) : Math.max(1.2 * r, 2.5)) * swell;
-        const core = own && PH.release < 1 && theme.coreRed ? MM.coreAt(fill >= 0.5 ? theme.coreRed : theme.coreLand, PH.release) : null;
-        const settle = own ? Motion.clamp(t / (VPX.ringDelay + VPX.decay), 0, 1) : bloom;
+        const swell = own ? PH.swell : (rewind ? 0 : Math.sin(Math.PI * bloom)), rr = r + (own ? (SWELL ? MM.swellPeak(r) : MM.flashPeak(r)) : Math.max(1.2 * r, 2.5)) * swell;
+        const core = own && !SWELL && PH.release < 1 && theme.coreRed ? MM.coreAt(fill >= 0.5 ? theme.coreRed : theme.coreLand, PH.release) : null;
+        const settle = own ? (SWELL ? PH.p : Motion.clamp(t / (VPX.ringDelay + VPX.decay), 0, 1)) : bloom;
         if (Motion.audit.on && alpha * present * grow >= 0.05) Motion.audit.marks.push({ x: px, y: py, r: r + LR.halo });   // the resting radius: the flash is transient
         MM.listedMark(ctx, px, py, rr, fill, alpha * present * grow * (1 - (1 - LR.alpha) * settle), theme, LR.halo, core);
-        if (!rewind) {   // the rings on the section clock (this firm's start), else on the bloom's own clock
+        if (!rewind && !SWELL) {   // the rings on the section clock (this firm's start), else on the bloom's own clock
           const p = own ? PH.p : (dated ? bloom : 1);
           if (p > 0 && p < 1) { ctx.globalAlpha = alpha * present; MM.pulseRing(ctx, px, py, r, LR, p, theme, false); }
         }
@@ -350,7 +403,13 @@
   // current year in the box (years beyond it in place at reduced opacity, a dot on each line).
   // The panel rectangles enclose their boxes with the tick-label margins at both ends, so every
   // interpolated panel encloses the interpolated boxes and their labels.
-  const BIG = { panel: { x: 84, y: 352, w: 1626, h: 410 }, left: { x: 140, y: 400, w: 630, h: 290 }, right: { x: 1050, y: 400, w: 630, h: 290 } };   // 290 tall since round 13: the facts under the plots take the room (the author, 25 October 2026)
+  // The spacing pass of 29 October 2026 (the author: the text under the charts was too squished): the plots 256 px tall at y 392, one key line shared by
+  // both, and each side's facts and counts on a 780 px column (the plot's 630 px before), with more leading.
+  const BIG = { panel: { x: 84, y: 344, w: 1626, h: 372 }, left: { x: 140, y: 392, w: 630, h: 256 }, right: { x: 1050, y: 392, w: 630, h: 256 } };
+  const TW = 780;   // the text column under each plot
+  let CMP_LINES = null;   // the facts' line counts at that width, the longer side's (measured once, at the first draw, with the loaded face)
+  const cmpLines = () => CMP_LINES || (CMP_LINES = (() => { const n = s => lineCount(s, 24, 400, TW - 56), gs = [gapText(CMPB.anchor.gap, groupName(CMPB.group), 0), gapText(CMPA.anchor.gap, groupName(CMPA.group), 1)];
+    return { n1: Math.max(...gs.map(g => n(g[0]))), n2: Math.max(...gs.map(g => n(g[1]))) }; })());
   const SMALL = { panel: { x: 1320, y: 340, w: 540, h: 290 }, left: { x: 1376, y: 388, w: 150, h: 170 }, right: { x: 1650, y: 388, w: 150, h: 170 } };   // 540 wide since round 10 (the monospace group labels)
   const lerpBox = (a, b, u) => ({ x: Motion.lerp(a.x, b.x, u), y: Motion.lerp(a.y, b.y, u), w: Motion.lerp(a.w, b.w, u), h: Motion.lerp(a.h, b.h, u) });
   function comparisonView(ctx, theme, { u, alpha, progress = 1, textAlpha = 1, v = null, l = 0, until = 12, explain2025 = true, inkU = 0 }) {
@@ -376,21 +435,26 @@
         gapLabel: s.anchor.idx.some(x => x == null) ? { x: 2022, y: 100, text: 'no 2022 statement' } : null,
         current: live ? v : null, compact: u > 0.5 });
       ctx.restore();
-      if (big) {   // the key, the two gap facts and the counts of the first showing, fading with the move
-        const ky = box.y + box.h + 58, ta = textAlpha * gone;
+      if (big) {   // the two gap facts and the counts of the first showing, fading with the move (the key is shared, below)
+        const top = box.y + box.h + 112, ta = textAlpha * gone, LH = 24 * 1.45;
         if (ta > 0) {
-          ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.cmpLine; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(box.x, ky - 6); ctx.lineTo(box.x + 26, ky - 6); ctx.stroke();
-          ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.cmpBand; ctx.fillRect(box.x + 36, ky - 14, 26, 16); ctx.restore();
-          Motion.paragraph(ctx, 'median and interquartile range of ' + groupLabel, box.x + 72, ky, BIG[side].w - 72, { size: 22, color: theme.muted, alpha: ta, group: 'cmp-key-' + key });   // wrapped at the full-screen column (round 10), so the lines never re-break while the box moves
           const g = gapText(s.anchor.gap, groupName(s.group), i === 1 ? 1 : 0), rb = ta * step(l, 5.0, 0.5) * (until ? 1 - step(l, until - 0.4, 0.4) : 1);   // in with the first fact, out with the texts
-          MM.resultBox(ctx, box.x - 24, ky + 36, BIG[side].w + 48, 150, theme, rb, 'ink'); MM.ringMarker(ctx, box.x + 8, ky + 70, 7, theme.ink, rb);   // the gap facts in an ink box: the anchor's amber is on this screen (round 13); 24 px of padding around the two facts
-          Motion.revealParagraph(ctx, g[0], box.x + 28, ky + 78, BIG[side].w - 28, l, 5.0, { size: 24, color: theme.ink, lineHeight: 1.45, until, alpha: ta, group: 'cmp-gap1-' + key });
-          Motion.revealParagraph(ctx, g[1], box.x + 28, ky + 156, BIG[side].w - 28, l, 5.6, { size: 24, color: theme.ink, until, alpha: ta, group: 'cmp-gap2-' + key });
-          Motion.revealParagraph(ctx, membersText(s.group), box.x, ky + 224, BIG[side].w, l, 6.2, { size: 22, color: theme.muted, until, alpha: ta, group: 'cmp-members-' + key });
+          const CL = cmpLines(), b1 = top + 44, b2 = b1 + (CL.n1 - 1) * LH + LH + 10, bottom = b2 + (CL.n2 - 1) * LH + 28;   // both sides' boxes as tall as the longer facts
+          MM.resultBox(ctx, box.x - 24, top, TW + 48, bottom - top, theme, rb, 'ink'); MM.ringMarker(ctx, box.x + 8, b1 - 8, 7, theme.ink, rb);   // the gap facts in an ink box: the anchor's amber is on this screen (round 13)
+          Motion.revealParagraph(ctx, g[0], box.x + 28, b1, TW - 56, l, 5.0, { size: 24, color: theme.ink, lineHeight: 1.45, until, alpha: ta, group: 'cmp-gap1-' + key });
+          Motion.revealParagraph(ctx, g[1], box.x + 28, b2, TW - 56, l, 5.6, { size: 24, color: theme.ink, lineHeight: 1.45, until, alpha: ta, group: 'cmp-gap2-' + key });
+          Motion.revealParagraph(ctx, membersText(s.group), box.x, bottom + 42, TW, l, 6.2, { size: 22, color: theme.muted, lineHeight: 1.45, until, alpha: ta, group: 'cmp-members-' + key });
         }
       }
     });
-    if (big && explain2025 && textAlpha * gone > 0) Motion.reveal(ctx, '2025* is a flagged latest-year extension', 960, 964, l, 6.8, { size: 22, color: theme.muted, align: 'center', until, alpha: textAlpha * gone });
+    if (big && textAlpha * gone > 0) {   // one key for both plots, centred under them
+      const ta = textAlpha * gone, ky = Motion.lerp(BIG.left.y, SMALL.left.y, u) + Motion.lerp(BIG.left.h, SMALL.left.h, u) + 76, s = 'median and interquartile range of each comparison group';
+      const kw = 26 + 10 + 26 + 14 + measure(s, 22, 400), kx = 960 - kw / 2;
+      ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.cmpLine; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(kx, ky - 6); ctx.lineTo(kx + 26, ky - 6); ctx.stroke();
+      ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.cmpBand; ctx.fillRect(kx + 36, ky - 14, 26, 16); ctx.restore();
+      Motion.text(ctx, s, kx + 76, ky, { size: 22, color: theme.muted, alpha: ta, group: 'cmp-key' });
+    }
+    if (big && explain2025 && textAlpha * gone > 0) Motion.reveal(ctx, '2025* is a flagged latest-year extension', 960, 1050, l, 6.8, { size: 22, color: theme.muted, align: 'center', until, alpha: textAlpha * gone });
     ctx.restore();
   }
   // Top-right panel: the location (split-flap), its window size, the year, the listed-firm counters.
@@ -406,20 +470,21 @@
   function legend(ctx, theme, { alpha, k }) {
     if (alpha <= 0) return;
     const ea = extentAlpha(k);
-    Motion.panel(ctx, 60, 802, 900, 266, theme, 0.92 * alpha);   // 900 wide since round 10
-    Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 834, { size: 22, color: theme.ink, alpha });
-    Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 862, { size: 22, color: theme.muted, alpha });
-    MM.legendBar(ctx, 84, 878, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
+    // The spacing pass (29 October 2026): the panel 18 px taller, the bar's ticks and the rule line apart, the three rows 30 px apart (28 before).
+    Motion.panel(ctx, 60, 784, 900, 284, theme, 0.92 * alpha);   // 900 wide since round 10
+    Motion.text(ctx, (P.legend_title || 'Firms on no list, real revenue against own 2019-2021 average,').replace('2019-2021', '2019–2021'), 84, 818, { size: 22, color: theme.ink, alpha });
+    Motion.text(ctx, P.legend_subtitle || 'relative to the year’s median of firms on no list', 84, 848, { size: 22, color: theme.muted, alpha });
+    MM.legendBar(ctx, 84, 864, 460, P.class_colours, breakLabels, theme, { height: 20, size: 22, alpha });
     const rule = [['Each mark is one coordinate pair. Larger marks hold more firms.', ea.downtown], ['1 km cells, 20 or more firms with a statement', ea.city], ['5 km cells, 20 or more firms with a statement', ea.region], ['6 km pixels, median class of firms with a statement', ea.national]];
-    for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 950, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
+    for (const [s, w] of rule) if (w > 0) Motion.text(ctx, s, 84, 946, { size: 22, color: theme.muted, alpha: alpha * w, group: 'legend-rule' });
     ctx.save(); ctx.globalAlpha *= alpha;
-    ctx.fillStyle = P.class_colours[2]; ctx.beginPath(); ctx.arc(95, 985, 9, 0, TAU); ctx.fill(); ctx.globalAlpha *= 0.8; ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 985, 10, 0, TAU); ctx.stroke(); ctx.globalAlpha /= 0.8;
-    ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 1013, 9, 0, TAU); ctx.fill();
-    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1041, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1041, 8, 0, TAU); ctx.stroke();
+    ctx.fillStyle = P.class_colours[2]; ctx.beginPath(); ctx.arc(95, 982, 9, 0, TAU); ctx.fill(); ctx.globalAlpha *= 0.8; ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 982, 10, 0, TAU); ctx.stroke(); ctx.globalAlpha /= 0.8;
+    ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(95, 1012, 9, 0, TAU); ctx.fill();
+    ctx.fillStyle = theme.land; ctx.beginPath(); ctx.arc(95, 1042, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = theme.treated; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(95, 1042, 8, 0, TAU); ctx.stroke();
     ctx.restore();
-    Motion.text(ctx, 'On one of the five lists, before the year it was added', 118, 985, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'Added to a list, red from that year, statement available', 118, 1013, { size: 22, color: theme.ink, baseline: 'middle', alpha });
-    Motion.text(ctx, 'Added to a list, no statement that year', 118, 1041, { size: 22, color: theme.muted, baseline: 'middle', alpha });
+    Motion.text(ctx, 'On one of the five lists, before the year it was added', 118, 982, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Added to a list, red from that year, statement available', 118, 1012, { size: 22, color: theme.ink, baseline: 'middle', alpha });
+    Motion.text(ctx, 'Added to a list, no statement that year', 118, 1042, { size: 22, color: theme.muted, baseline: 'middle', alpha });
   }
   // The two shared-registration facts of the density pass, once in the downtown run where the sized piles are
   // visible (round 5; same counts, same denominators), with the author's standard explanation of shared
@@ -429,17 +494,17 @@
     if (alpha <= 0) return;
     const facts = `Across Russia in 2021: ${fmt.int(SF.largest_location_firms)} firms at the most shared coordinate pair, ${fmt.int(SF.firms_at_100plus_locations)} at coordinate pairs shared by 100 or more firms.`;
     const why = 'Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address.';
-    const W = 1160, h1 = lineCount(facts, 24, 400, W) * 24 * 1.35, h2 = brief ? 0 : 8 + lineCount(why, 22, 400, W) * 22 * 1.35;
-    Motion.panel(ctx, 60, 100, W + 48, h1 + h2 + 40, theme, 0.92 * alpha);
-    const y = Motion.paragraph(ctx, facts, 84, 136, W, { size: 24, color: theme.ink, alpha });
-    if (!brief) Motion.paragraph(ctx, why, 84, y + 8, W, { size: 22, color: theme.muted, alpha });
+    const W = 1160, h1 = lineCount(facts, 24, 400, W) * 24 * 1.45, h2 = brief ? 0 : 14 + lineCount(why, 22, 400, W) * 22 * 1.45;   // 1.45 leading and 14 px between the two (1.35 and 8 before; the spacing pass of 29 October 2026)
+    Motion.panel(ctx, 60, 100, W + 48, h1 + h2 + 36, theme, 0.92 * alpha);
+    const y = Motion.paragraph(ctx, facts, 84, 136, W, { size: 24, color: theme.ink, lineHeight: 1.45, alpha });
+    if (!brief) Motion.paragraph(ctx, why, 84, y + 14, W, { size: 22, color: theme.muted, lineHeight: 1.45, alpha });
   }
   // One disclosure where the blue scale first appears: the scale covers firms with a statement that year.
   function disclosure(ctx, theme, alpha) {
     if (alpha <= 0) return;
     const s = 'The scale covers firms on no list with a statement that year.', w = measure(s, 22, 400);
-    Motion.panel(ctx, 60, 748, w + 48, 44, theme, 0.92 * alpha);
-    Motion.text(ctx, s, 84, 777, { size: 22, color: theme.muted, alpha });
+    Motion.panel(ctx, 60, 724, w + 48, 44, theme, 0.92 * alpha);   // 16 px above the legend's taller panel
+    Motion.text(ctx, s, 84, 753, { size: 22, color: theme.muted, alpha });
   }
   // The close: the count line, the caveats, the St Petersburg sentence (round 4; the two numbers checked
   // against motion/review/spb-vs-moscow-report.md, 160 by 90 km, 2022-2025 and 2022-2024) and the
@@ -449,15 +514,15 @@
     ctx.save(); ctx.globalAlpha *= mul;
     const cr = counts('region', Y1), x = 1204, w = 632;
     const y = 466; const line1 = `${fmt.int(cr.red)} firms on at least one of the five lists red by ${Y1} within 160 by 90 km of ${CITY.name}`, line2 = `${fmt.int(cr.red_nonfilers)} of them without a ${Y1} statement`;
-    const yEnd = Motion.paragraph(ctx, line2, x + 28, Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, lineHeight: 1.3, alpha: 0.001 }) + 8, w - 28, { size: 24, lineHeight: 1.3, alpha: 0.001 });   // the lines' extent, drawn all but invisible (a zero alpha returns early; the audit ignores boxes under 0.05)
-    const yb = yEnd + 4 + 24 + 17;   // the St Petersburg note 24 px under the box (the author, 25 October 2026, evening: kept, shorter and scannable): an eyebrow and two figure lines, baselines 29 px apart
-    Motion.panel(ctx, 1180, y - 28 - 16, 680, (yb + 58 + 6 + 16) - (y - 28 - 16), theme, 0.6 * step(l, 0.3, 0.5));   // 16 px around the box and the note; dims the map under it rather than covering it
+    const yEnd = Motion.paragraph(ctx, line2, x + 28, Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, lineHeight: 1.38, alpha: 0.001 }) + 10, w - 28, { size: 24, lineHeight: 1.38, alpha: 0.001 });   // the lines' extent, drawn all but invisible (a zero alpha returns early; the audit ignores boxes under 0.05)
+    const yb = yEnd + 4 + 24 + 21;   // the St Petersburg note 28 px under the box (the author, 25 October 2026, evening: kept, shorter and scannable): an eyebrow and two figure lines, baselines 34 px apart (29 before the spacing pass of 29 October 2026)
+    Motion.panel(ctx, 1180, y - 28 - 16, 680, (yb + 68 + 6 + 18) - (y - 28 - 16), theme, 0.6 * step(l, 0.3, 0.5));   // 16 px around the box and the note; dims the map under it rather than covering it
     const rb = step(l, 0.5, 0.5); MM.resultBox(ctx, x - 8, y - 28, w + 16, yEnd - y + 32, theme, rb, 'ink'); MM.ringMarker(ctx, x + 8, y - 9, 7, theme.ink, rb);   // the count lines in an ink box: the revenue classes around are amber (round 13)
-    let yy = Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.5, 0.5) }) + 8;
-    Motion.paragraph(ctx, line2, x + 28, yy, w - 28, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.3, alpha: step(l, 0.9, 0.5) });
+    let yy = Motion.paragraph(ctx, line1, x + 28, y, w - 28, { size: 26, weight: 700, color: theme.ink, lineHeight: 1.38, alpha: step(l, 0.5, 0.5) }) + 10;
+    Motion.paragraph(ctx, line2, x + 28, yy, w - 28, { size: 24, weight: 700, color: theme.ink, lineHeight: 1.38, alpha: step(l, 0.9, 0.5) });
     Motion.text(ctx, 'ST PETERSBURG, 160 BY 90 KM, 2022 TO 2024', x, yb, { size: 22, weight: 500, color: theme.muted, letterSpacing: 22 * 0.08, alpha: step(l, 1.8, 0.5) });
-    Motion.text(ctx, 'Absence once on a list: within 6 points of Moscow', x, yb + 29, { size: 22, color: theme.ink, alpha: step(l, 2.4, 0.5) });   // review/spb-vs-moscow-report.md: the listed firms' absence after listing within 6 points of Moscow's every year
-    Motion.text(ctx, 'Usable baseline: 53 to 54%, Moscow 38 to 44%', x, yb + 58, { size: 22, color: theme.ink, alpha: step(l, 3.0, 0.5) });   // the share of firms with a usable revenue baseline, 2022 to 2024
+    Motion.text(ctx, 'Absence once on a list: within 6 points of Moscow', x, yb + 34, { size: 22, color: theme.ink, alpha: step(l, 2.4, 0.5) });   // review/spb-vs-moscow-report.md: the listed firms' absence after listing within 6 points of Moscow's every year
+    Motion.text(ctx, 'Usable baseline: 53 to 54%, Moscow 38 to 44%', x, yb + 68, { size: 22, color: theme.ink, alpha: step(l, 3.0, 0.5) });   // the share of firms with a usable revenue baseline, 2022 to 2024
     ctx.restore();
   }
   const locationAt = (entries, l) => MM.locationAt(entries.map(e => Object.assign({ start: e.start }, WINDOW[e.ext])), l);
@@ -465,15 +530,30 @@
   // The camera's rest on the Moscow point and the year runs (holds and 0.5 s transitions; the ring change and the
   // dissolves share the clock). The standalone Moscow cut that once lived here was retired by the author on 24 October 2026.
   const REST = { cx: MX, cy: MY, ox: 960, oy: 540 };
-  function runYears(kf, t0, k, hold, trans, base = REST, list = null) { let t = t0; const ys = list || YEARS; ys.forEach((y, i) => { const v = list ? i : y; kf.push(Object.assign({ t, k, v, easing: E.inOutSine }, base)); kf.push(Object.assign({ t: t + hold, k, v }, base)); t += hold + (i < ys.length - 1 ? trans : 0); }); return t; }
+  // holdOf (the bold cut): a year's own hold, for the national run's long 2024 hold. kOf (the bold cut): the zoom at a time, for the merged city and region
+  // run, whose camera pulls out continuously (log-linear, both channels linear between keyframes) while the years step.
+  function runYears(kf, t0, k, hold, trans, base = REST, list = null, holdOf = null, kOf = null) { let t = t0; const ys = list || YEARS; ys.forEach((y, i) => { const v = list ? i : y, h = holdOf ? holdOf(y, hold) : hold; kf.push(Object.assign({ t, k: kOf ? kOf(t) : k, v, easing: kOf ? E.linear : E.inOutSine }, base)); kf.push(Object.assign({ t: t + h, k: kOf ? kOf(t + h) : k, v }, base, kOf ? { easing: E.linear } : {})); t += h + (i < ys.length - 1 ? trans : 0); }); return t; }
 
   // ---- the journey section (108 s inside the full cut; every time section-relative) ------------
   // street 0-12 (k 12 to 1200 on the pair's midpoint), profiles 12-28, designation 28-36, comparison
   // 36-50, the map returns 50-58 (k 1200 to 90 while the comparison chart shrinks into its box),
   // downtown 58-72, city 72-84, region 84-96, close 96-103, out 103-108 (the camera leaves for the
   // country; the explainer's keyframes continue from the last one here).
-  const SEC = { street: 0, profiles: 12, designation: 28, comparison: 36, back: 50, downtown: 58, city: 72, region: 84, national: 96, close: 108, out: 115, end: 120 };
-  RUNS = { downtown: [SEC.downtown + 0.8, 0.75, 0.3], city: [SEC.city + 2.5, 0.55, 0.25], region: [SEC.region + 2.5, 0.5, 0.25], national: [SEC.national + 2.5, 0.5, 0.25] };   // the year runs: start of the first hold, hold, transition
+  // The bold cut of 29 October 2026 (100 s, from 120): the street zoom 11 s, the profiles 12 s, the comparison 13 s, the return 6 s; the city and region
+  // runs merged into one run of the years while the camera pulls out from the city to the region (the ticker's place changes where the grid does, at
+  // k 20); the national run holds 2024 for 2.6 s for the sweep; the pull-out to the country 3 s.
+  const SEC = { street: 0, profiles: 11, designation: 23, comparison: 31, back: 44, downtown: 50, city: 64, national: 76.5, close: 90, out: 97, end: 100 };
+  RUNS = { downtown: [SEC.downtown + 0.8, 0.75, 0.3], city: [SEC.city + 2.5, 0.55, 0.25], national: [SEC.national + 2.5, 0.5, 0.25, SWEEP.year, 2.6] };   // the year runs: start of the first hold, hold, transition (and a long hold)
+  RUNS.region = RUNS.city;
+  // The pull-out follows an S-curve in log k (a logistic of steepness 12 over the run, normalized): the camera stays near the city scale for the early
+  // years and near the region scale for the late ones, so the 1 km and 5 km grids crossfade in under 2 s (a log-linear pull-out mixed them for 4 s).
+  const MERGED = (() => { const [t0, h, tr] = RUNS.city, T = (YEARS.length - 1) * (h + tr) + h, sg = x => 1 / (1 + Math.exp(-12 * (x - 0.5))), g = f => (sg(f) - sg(0)) / (sg(1) - sg(0));
+    const kOf = t => Math.exp(Math.log(K.city) + (Math.log(K.region) - Math.log(K.city)) * g(Motion.clamp((t - t0) / T, 0, 1)));
+    const target = Math.log(20 / K.city) / Math.log(K.region / K.city); let lo = 0, hi = 1; for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (g(m) < target) lo = m; else hi = m; }
+    return { t0, T, kOf, switchAt: t0 + T * lo }; })();   // switchAt: where k crosses 20, the city scale's floor (extentOf)
+  SEC.region = MERGED.switchAt;   // the chapter and the ticker's place only: there is no region rewind
+  const CMPW = SEC.back - SEC.comparison;   // the comparison's length: its texts leave and the chart shrinks into the live box at its end
+  const PROF = { des: SEC.designation - SEC.profiles + 0.6, until: SEC.comparison - SEC.profiles };   // the cards' clock: the designation line and the cards' exit
   const MID = { cx: (AX + BX) / 2, cy: (AY + BY) / 2, ox: 960, oy: 540 };
   function journeyKeyframes(S, YL = null) {
     // With a kept-year list the v channel carries list positions (a year not in the list takes the nearest kept year's position).
@@ -481,11 +561,10 @@
     const kf = []; const at = (t, k, v, base, easing) => kf.push(Object.assign({ t: S + t, k, v: pv(v) }, base || REST, easing ? { easing } : {}));
     at(SEC.street, K.region, 2021); at(SEC.profiles, 1200, 2021, MID); at(SEC.back, 1200, 2021, MID); at(SEC.back + 5, K.downtown, 2021); at(SEC.downtown, K.downtown, 2021);
     runYears(kf, S + RUNS.downtown[0], K.downtown, RUNS.downtown[1], RUNS.downtown[2], REST, YL); at(SEC.city, K.downtown, Y1);
-    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + RUNS.city[0], K.city, RUNS.city[1], RUNS.city[2], REST, YL); at(SEC.region, K.city, Y1);
-    at(SEC.region + 2.5, K.region, Y0); runYears(kf, S + RUNS.region[0], K.region, RUNS.region[1], RUNS.region[2], REST, YL); at(SEC.national, K.region, Y1);
+    at(SEC.city + 2.5, K.city, Y0); runYears(kf, S + RUNS.city[0], K.city, RUNS.city[1], RUNS.city[2], REST, YL, null, t => MERGED.kOf(t - S)); at(SEC.national, K.region, Y1);
     // Two segments so Moscow stays on screen: zoom out in place to k 1 (the region raster leaves, the national
     // raster arrives, both centred on Moscow), then slide to the left framing while the zoom completes.
-    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + RUNS.national[0], K.national, RUNS.national[1], RUNS.national[2], NATBASE, YL); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
+    at(SEC.national + 1.5, 1.0, 2019, REST, E.inSine); at(SEC.national + 2.5, K.national, Y0, NATBASE, E.outSine); runYears(kf, S + RUNS.national[0], K.national, RUNS.national[1], RUNS.national[2], NATBASE, YL, (y, h) => (y === SWEEP.year ? RUNS.national[4] : h)); at(SEC.close, K.national, Y1, NATBASE); at(SEC.out, K.national, Y1, NATBASE);
     return kf;
   }
   // The anchors between their projected positions and the card headers; the dot grows from the mark's
@@ -513,7 +592,7 @@
       const backAlpha = (BACK_ALPHA + (0.7 - BACK_ALPHA) * (1 - layerReveal)) * (l < SEC.downtown ? ramp(k, 60, 80) : 1) * marksOut;
       drawField(ctx, cam, v, backAlpha, layerReveal);
       drawCells(ctx, stage, cam, v, layerReveal);
-      const rewind = [[SEC.downtown, SEC.downtown + 0.8], [SEC.city, SEC.city + 2.5], [SEC.region, SEC.region + 2.5], [SEC.national, SEC.national + 2.5]].some(([a, b]) => l >= a && l < b);
+      const rewind = [[SEC.downtown, SEC.downtown + 0.8], [SEC.city, SEC.city + 2.5], [SEC.national, SEC.national + 2.5]].some(([a, b]) => l >= a && l < b);
       drawTreated(ctx, cam, v, layerReveal, theme, rewind, YL ? null : l);   // the section clock drives the ring decay (not for a kept-year cut)
       // The two anchors: vector dots from k 60, the red listing ring at the designation, gliding to
       // the card headers and back, then the fixed-size markers once the field is drawn.
@@ -537,11 +616,12 @@
       ticker(ctx, theme, { v, ext: extentOf(k), alpha: step(l, SEC.downtown + 1, 0.6) * outA, loc: locationAt(LOCJ, l) });
       legend(ctx, theme, { alpha: step(l, SEC.downtown + 1.2, 0.6) * outA, k });
       disclosure(ctx, theme, Motion.plateau(l, SEC.downtown + 1.6, SEC.downtown + 8, 0.5, 0.5));
-      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, 14, 2), inkU: layerReveal, alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: 14.4, v: vy, explain2025: false }); }
+      if (l >= SEC.comparison) { const lc = l - SEC.comparison; comparisonView(ctx, theme, { u: step(lc, CMPW, 2), inkU: layerReveal, alpha: step(lc, 0.4, 0.5, E.outCubic) * outA * (1 - step(l, SEC.national, 1.0)), progress: step(lc, 1.0, 3.5, E.inOutSine), textAlpha: 1, l: lc, until: CMPW + 0.4, v: vy, explain2025: false }); }
+      if (SWELL && !YL) sweepCaption(ctx, theme, l, outA);
       if (l >= SEC.close - 0.5) closeText(ctx, theme, l - SEC.close, outA);
       YL_ACTIVE = null;
     } };
-    const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local, theme }) { profiles(ctx, theme, local, { des: 16.6, until: 24 }); } };
+    const cards = { id: 'cards', title: 'Profiles', start: S + SEC.profiles, end: S + SEC.comparison + 0.5, z: 2, fadeIn: 0.5, fadeOut: 0.5, draw({ ctx, local, theme }) { profiles(ctx, theme, local, PROF); } };
     const chapters = [['street', 0, SEC.designation, 'Two firms'], ['designation', SEC.designation, SEC.comparison, 'Designation'], ['comparison', SEC.comparison, SEC.back, 'Revenue against comparison group'],
                       ['downtown', SEC.back, SEC.city, `Central ${CITY.name}, ${Y0}–${Y1}`], ['city', SEC.city, SEC.region, CITY.name], ['region', SEC.region, SEC.national, `${CITY.name} and surroundings`], ['national', SEC.national, SEC.close, `Russia, ${Y0}–${Y1}`], ['close', SEC.close, SEC.end, 'Close']];
     const timeline = {}; chapters.forEach(([id, a, b, title]) => timeline[id] = { id, start: S + a, end: S + b, title });
