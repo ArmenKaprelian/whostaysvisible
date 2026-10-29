@@ -2271,7 +2271,9 @@ Proof: `build/round-25/proof` against 4cef203. 574 text groups changed at 1,600 
 
 **Approved** by the author from the review page (29 October 2026), who asked for the publish gate.
 
-**Ready to publish** (29 October 2026, UTC), at the first run of `publish.sh`. The text rules passed; there is no CORRECTIONS entry, since nothing published was wrong. The five-width audit had zero findings (1,376 states, 7 min 49 s), recorded for eefec2c. The publish set is 141.2 MB, the publish copy dbf4fa9 (from eefec2c) and the site's import 43c39d6. The import also carries the film's changes to the shared `js/charts.js` and `js/map-layers.js` (58b7587), which that commit's proof showed leave the atlas identical. The site's push is the author's.
+**Ready to publish** (29 October 2026, UTC), at the first run of `publish.sh`. The text rules passed; there is no CORRECTIONS entry, since nothing published was wrong. The five-width audit had zero findings (1,376 states, 7 min 49 s), recorded for eefec2c. The publish set is 141.2 MB, the publish copy dbf4fa9 (from eefec2c) and the site's import 43c39d6. The import also carries the film's changes to the shared `js/charts.js` and `js/map-layers.js` (58b7587), which that commit's proof showed leave the atlas identical.
+
+**Published** 29 October 2026 (UTC) on the author's site. The author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads, 38 s), and it pushed b52844b..43c39d6. armenkaprelian.com/atlas/ serves build eefec2c, its `js/explorer-app.js` the lab's byte for byte.
 
 ## How to add or change content
 
