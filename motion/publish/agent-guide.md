@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 28 October 2026.
+Rebuilt from the atlas’s data when the atlas was published on 29 October 2026.
 
 You are helping a reader of the Visibility Atlas. This guide says what the atlas shows, how to read and drive it, what the chapter behind it finds and what it does not support. Cite its numbered sections.
 
@@ -53,6 +53,6 @@ You are helping a reader of the Visibility Atlas. This guide says what the atlas
 
 ## 6. How to cite
 
-Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n
+Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. https://armenkaprelian.github.io/atlas/
 
 Contact the author through the email address shown in the atlas’s footer.
