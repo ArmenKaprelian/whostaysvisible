@@ -18,8 +18,12 @@ for errors and overflow only. About a minute and a half, the two engines in para
 
 Usage: python3 -I motion/tools/site-check.py [--site ~/Documents/website] [--engines brave,webkit] [--only home,film] [--out DIR]
 The site's proof (the author's pick B3, 29 October 2026): --base COMMIT [--trial COMMIT] compares that commit with the working tree (or the second
-commit) frame by frame in fixed states and names the elements that changed (tools/site_proof.py); it runs in place of the check."""
-import argparse, base64, functools, http.server, json, os, re, subprocess, sys, tempfile, threading, time
+commit) frame by frame in fixed states and names the elements that changed (tools/site_proof.py); it runs in place of the check.
+A full check (both engines, every page) with zero findings records the site's content as git would commit it (its tree, with any
+uncommitted changes) and this tool's own hash in motion/build/site-check/passed.json. --if-new skips a check of content and tool
+already recorded (the author's request of 29 October 2026): publish.sh --push uses it, so a build checked before its commit is not
+checked again at the push. Any change to the site's files or to this tool runs the full check."""
+import argparse, base64, functools, hashlib, http.server, json, os, re, shutil, subprocess, sys, tempfile, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.dirname(os.path.dirname(HERE))
@@ -214,6 +218,30 @@ def webkit_worker(spec):
     Gtk.main()
 
 
+PASSED = os.path.join(LAB, "motion", "build", "site-check", "passed.json")
+
+
+def content_key(site):
+    """The site's files as git would commit them (the tree of HEAD's index plus every change in the folder, .gitignore respected) and
+    this tool's hash; None when the folder is not a git work tree. A copy of the index takes the changes, so the real one is untouched."""
+    git = lambda *a, **k: subprocess.run(["git", "-C", site] + list(a), capture_output=True, text=True, **k)
+    if git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true":
+        return None
+    index = os.path.join(site, git("rev-parse", "--git-path", "index").stdout.strip())
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(os.environ, GIT_INDEX_FILE=os.path.join(tmp, "index"))
+        if os.path.exists(index): shutil.copy(index, env["GIT_INDEX_FILE"])
+        if git("add", "-A", env=env).returncode: return None
+        tree = git("write-tree", env=env).stdout.strip()
+    tool = hashlib.sha256(open(os.path.abspath(__file__), "rb").read()).hexdigest()[:16]
+    return tree and "%s %s" % (tree, tool)
+
+
+def passed_record():
+    try: return json.load(open(PASSED))
+    except (OSError, ValueError): return {}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--site", default=os.path.expanduser("~/Documents/website"), help="the site's folder (default ~/Documents/website)")
@@ -222,6 +250,7 @@ def main():
     ap.add_argument("--out", default=None, help="the folder for the screenshots and report (default motion/build/site-check/<UTC time>)")
     ap.add_argument("--base", default=None, help="the site's proof: the commit to compare with (tools/site_proof.py); runs in place of the check")
     ap.add_argument("--trial", default=None, help="with --base: the commit to compare (default the working tree)")
+    ap.add_argument("--if-new", action="store_true", help="skip the check when this content and this tool already passed a full check (motion/build/site-check/passed.json)")
     ap.add_argument("--webkit-worker", default=None, help=argparse.SUPPRESS)
     a = ap.parse_args()
     if a.webkit_worker:
@@ -230,6 +259,12 @@ def main():
         sys.path.insert(0, HERE); import site_proof
         return site_proof.run(a.site, a.base, a.trial, a.out)
 
+    key = content_key(a.site)
+    full = set(a.engines.split(",")) == {"brave", "webkit"} and not a.only
+    if a.if_new and key and key in passed_record():
+        r = passed_record()[key]
+        print("this content (tree %s) passed the full check at %s with this tool; not run again. Report: %s" % (key.split()[0][:7], r["utc"], r["out"]))
+        return 0
     out = a.out or os.path.join(LAB, "motion", "build", "site-check", time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()))
     os.makedirs(out, exist_ok=True)
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Handler, directory=os.path.abspath(a.site)))
@@ -255,6 +290,10 @@ def main():
     report = "\n".join(lines + [summary, "screenshots and this report: " + out])
     open(os.path.join(out, "report.txt"), "w").write(report + "\n")
     print(report)
+    if full and key and not lines:   # only a full check with zero findings is recorded
+        rec = passed_record(); rec[key] = {"utc": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), "out": out}
+        os.makedirs(os.path.dirname(PASSED), exist_ok=True)
+        json.dump(dict(list(rec.items())[-50:]), open(PASSED, "w"), indent=1)
     return 1 if lines else 0
 
 

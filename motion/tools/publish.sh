@@ -9,7 +9,7 @@
 #     5. the site's tools/import_atlas.py copies the set into the site's atlas/, and the site commits it
 #   motion/tools/publish.sh --push   pushes the site, which GitHub Pages publishes; only on the author's word. One command for an atlas publish
 #                                    and a site-only change: the site clean, an atlas change only from this gate's import, the site's check
-#                                    in both engines (site-check.py, about 45 s) with zero findings, then the push. It pushes main only:
+#                                    in both engines (site-check.py, about 45 s; skipped when this content already passed it) with zero findings, then the push. It pushes main only:
 #                                    site work waiting for the author's approval stays on a local branch until it is merged.
 #   motion/tools/publish.sh --audited X   the gate with the five-width audit of commit X in place of a new one, when this build differs from X
 #                                    only in text strings (round 24): tools/audit_carry.py checks the record of X's pass, the strings-only
@@ -36,8 +36,8 @@ if [[ "${1:-}" == "--push" ]]; then   # the author's pick B2 (29 October 2026): 
   [[ -n "$ahead" ]] || { say "nothing to push: the site's commits are all on GitHub"; exit 0; }
   atlas="$(git -C "$SITE" log -1 --format=%s "$up..HEAD" -- atlas)"   # the last commit to push that touches atlas/
   [[ -z "$atlas" || "$atlas" == Atlas:* ]] || { say "atlas/ changed in '$atlas', not in an import by this tool's gate; run publish.sh without --push first"; exit 1; }
-  say "the site's check in both engines (about 45 s)"
-  if ! out="$(python3 -I "$HERE/site-check.py" --site "$SITE" 2>&1)"; then printf '%s\n' "$out" | tail -25; say "the site's check has findings; nothing was pushed"; exit 1; fi
+  say "the site's check in both engines (about 45 s, or none when this content already passed it)"
+  if ! out="$(python3 -I "$HERE/site-check.py" --site "$SITE" --if-new 2>&1)"; then printf '%s\n' "$out" | tail -25; say "the site's check has findings; nothing was pushed"; exit 1; fi
   printf '%s\n' "$out" | tail -2
   git -C "$SITE" push origin main
   say "pushed:"; printf '%s\n' "$ahead" | sed 's/^/  /'
