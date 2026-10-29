@@ -9,7 +9,7 @@
   const $ = id => document.getElementById(id);
   // Round 16, the author's two items of 27 October 2026, as picked the same day: the coordinate pairs shared by 100 or more firms (a ring sized by the pair's
   // firms in the Firms view, spB, and a layer in the Cells view) and the change in the statement share among state-related firms by region (one layer: the
-  // author's revision dropped the unitary-enterprise layer, whose firms are largely the same). Their data load on first use.
+  // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
   let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
   const grpLayer = () => state.layer === 'gs';
   const blinkState = { on: false, timer: 0, base: 0, alt: 0, held: false }, runState = { on: false, timer: 0 }, catKey = { buf: '', next: 0 };   // the extras' state (round 15, item 7)
@@ -205,7 +205,7 @@
     ['What it shows', 'The change in the share of eligible state-related firms with a statement, 2024 against 2021, by region, as the chapter classifies the registry’s ownership codes. Each year compares that year’s state-related firms, not the same firms.'],
     ['How to read it', 'Amber regions lost availability among state-related firms and cyan regions gained it, in classes of 10 percentage points. The tile and Under the cursor give both years’ shares with their counts of firms.'],
     ['Support', 'A region is classed only where 50 or more state-related firms are registered in both years, otherwise grey. Firms are counted in the region where they are registered, located or not.'],
-    ['The question', `Availability falls among state-related firms (${fmt.pct(F.own.state[0])} to ${fmt.pct(F.own.state[1])}) from 2021 to 2024, among the chapter’s clearest findings on the sanctions period. Unitary enterprises are state entities, so their decline (${fmt.pct(F.legal.unitary[0])} to ${fmt.pct(F.legal.unitary[1])}) is the ownership finding seen through a second classification, by legal form, of largely the same firms rather than an independent confirmation. The map shows where in the country the declines sit. The ownership codes do not establish operational control or disclosure protection.`]];
+    ['The question', `Availability falls among state-related firms (${fmt.pct(F.own.state[0])} to ${fmt.pct(F.own.state[1])}) from 2021 to 2024, among the chapter’s clearest findings on the sanctions period. The state-run firms are about half of the state-related firms and carry the whole decline (${fmt.pct(D.statesplit.state_unitary.share[0])} to ${fmt.pct(D.statesplit.state_unitary.share[1])}). The other state-related firms rise (${fmt.pct(D.statesplit.state_other.share[0])} to ${fmt.pct(D.statesplit.state_other.share[1])}). The map shows where in the country the declines sit. The ownership codes do not establish operational control or disclosure protection.`]];
   LAYERS.push({ id: 'gs', label: 'Change: state-related', prov: '', read: GL_READ });
   // Each layer's facts in one place (round 18): its group on the LAYER card, the year it shows (a fixed year, or null where it follows the slider and the year row
   // shows), whether the Cells view's red button pulses on it, whether the 1 km squares draw it, and whether the national chart marks the slider's year. The
@@ -799,20 +799,70 @@ void main() {
   // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
   // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
   // and never rimmed or pulsed. The marks' size, halo, opacity and rim follow MM.listedRule by zoom (25 October 2026):
-  // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red bloom
-  // once as in the video: over 1.2 s the mark swells by at least 2.5 px and back while two rings expand from it, the red one
-  // to r + 2 + Rmax(k) with an eased decay and a pale trailing one at 0.7 of its radius; backward changes and the cells view
-  // show nothing. The pulse button beside the year slider replays the bloom for the firms
-  // listed in the shown year; under prefers-reduced-motion a pulse is a still highlight held for the same 1.8 s.
-  const PULSE_MS = 1800, DECAY_MS = 1600;   // a bloom lasts 1.8 s: each firm's 1.6 s decay plus the largest stagger (round 9; 1.2 s in round 8, 0.9 s before)
+  // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red pulse
+  // once (round 24, the author's pick E of 29 October 2026): a sweep crosses the view west to east by longitude in 1.5 s, each
+  // firm swells (MM.swellPeak) as it passes, and the year's minimum spanning tree by distance traces behind it, each edge held
+  // 0.3 s once drawn and gone over 0.6 s, so a line lasts exactly as long as the swell at its east end. Backward changes show
+  // nothing, and the Cells view keeps its dot. The pulse button beside the year slider replays the pulse for the firms added
+  // to a list in the shown year; under prefers-reduced-motion a pulse is a still highlight (the swell held at 0.6 and the whole
+  // tree drawn) for the same 2.4 s.
+  const PASS_MS = 1500, TRAIL_HOLD = 300, TRAIL_FADE = 600, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
   let pulse = null, pulseRaf = 0, pulseTimer = 0;
-  const pulseDelay = new Float32Array(TRN.n);   // each firm's start delay in the running pulse (ms), filled once per pulse: the west-to-east stagger (round 9)
-  function makePulse(mask) {   // delays 0 to spreadMs from the westernmost to the easternmost pulsing mark inside the view and its margin
-    const c = cam(), k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN, yi = state.year - 2014;
-    let x0 = Infinity, x1 = -Infinity;
-    for (let i = 0; i < TRN.n; i++) { if (!mask[i] || TRN.filed[i][yi] === '-') continue; const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue; if (TRN.x[i] < x0) x0 = TRN.x[i]; if (TRN.x[i] > x1) x1 = TRN.x[i]; }
-    const span = x1 > x0 ? x1 - x0 : 0;
-    for (let i = 0; i < TRN.n; i++) pulseDelay[i] = mask[i] && span ? LR.spreadMs * Motion.clamp((TRN.x[i] - x0) / span, 0, 1) : 0;
+  const pulseDelay = new Float32Array(TRN.n);   // each firm's start delay in the running pulse (ms), filled once per pulse: the west-to-east sweep
+  // The sweep goes by longitude. The km plane is spherical LAEA about 60 N, 100 E (map-layers.js), so a firm's longitude is the inverse projection, computed once.
+  let LON = null;
+  const lonOf = () => {
+    if (!LON) { LON = new Float32Array(TRN.n); const R = 6371, sp = Math.sin(Math.PI / 3), cp = Math.cos(Math.PI / 3);
+      for (let i = 0; i < TRN.n; i++) { const x = TRN.x[i], y = TRN.y[i], rho = Math.hypot(x, y), cc = 2 * Math.asin(Math.min(1, rho / (2 * R))); LON[i] = rho < 1e-9 ? 100 : 100 + Math.atan2(x * Math.sin(cc), rho * cp * Math.cos(cc) - y * sp * Math.sin(cc)) * 180 / Math.PI; } }
+    return LON;
+  };
+  function makePulse(mask) {   // delays 0 to PASS_MS by longitude, from the westernmost to the easternmost pulsing mark inside the view and its margin
+    const c = cam(), k = c.k, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN, yi = state.year - 2014, L = lonOf();
+    let l0 = Infinity, l1 = -Infinity;
+    for (let i = 0; i < TRN.n; i++) { if (!mask[i] || TRN.filed[i][yi] === '-') continue; const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue; if (L[i] < l0) l0 = L[i]; if (L[i] > l1) l1 = L[i]; }
+    const span = l1 > l0 ? l1 - l0 : 0;
+    for (let i = 0; i < TRN.n; i++) pulseDelay[i] = mask[i] && span ? PASS_MS * Motion.clamp((L[i] - l0) / span, 0, 1) : 0;
+  }
+  // The trail's tree: Prim's minimum spanning tree over a mask's firms by km distance, O(n^2) on typed arrays (5 to 10 ms for 2024's 1,480), each edge
+  // kept west end first so it traces with the sweep. One per mask: a year's mask is manualMask's, so one per year, built in idle time (warmTree) for the
+  // shown year and the next, so a pulse never waits for one.
+  const trees = new WeakMap();
+  function treeOf(mask) {
+    let T = trees.get(mask); if (T) return T;
+    const L = lonOf(), idx = []; for (let i = 0; i < TRN.n; i++) if (mask[i]) idx.push(i);
+    const m = idx.length, X = new Float64Array(m), Y = new Float64Array(m), best = new Float64Array(m).fill(Infinity), from = new Int32Array(m), used = new Uint8Array(m);
+    for (let j = 0; j < m; j++) { X[j] = TRN.x[idx[j]]; Y[j] = TRN.y[idx[j]]; }
+    const a = new Int32Array(Math.max(0, m - 1)), b = new Int32Array(Math.max(0, m - 1)); let n = 0, cur = 0; if (m) used[0] = 1;
+    for (let it = 1; it < m; it++) {
+      const cx = X[cur], cy = Y[cur]; let bi = -1, bd = Infinity;
+      for (let j = 0; j < m; j++) { if (used[j]) continue; const dx = X[j] - cx, dy = Y[j] - cy, d = dx * dx + dy * dy; if (d < best[j]) { best[j] = d; from[j] = cur; } if (best[j] < bd) { bd = best[j]; bi = j; } }
+      used[bi] = 1; const p = idx[from[bi]], q = idx[bi]; if (L[p] <= L[q]) { a[n] = p; b[n] = q; } else { a[n] = q; b[n] = p; } n++; cur = bi;
+    }
+    T = { a, b, n }; trees.set(mask, T); return T;
+  }
+  function warmTree(y) { if (!TRN || y < 2015 || y > 2025) return; const m = manualMask(y); if (m.count && !trees.has(m.mask)) onIdle(() => treeOf(m.mask)); }
+  // The trail, under the marks: each edge traces from its west end as the sweep passes, then holds and fades, so the lines follow the front and leave
+  // nothing behind. Edges shorter than a swelling disc's radius are skipped (they lie inside the swells), and edges off the view; the traced ones go in
+  // four opacity steps and the tracing ones in one, each batch stroked once on a casing in the stage colour, as the Cells view's dot has.
+  function drawTrail(c, t, st) {
+    const T = treeOf(pulse.mask), k = c.k, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width, H = stage.height;
+    const LR = MM.listedRule(markRule(k), k, kFit()), rr = LR.rMin + MM.swellPeak(LR.rMin), min2 = Math.max(36, rr * rr);
+    const live = new Path2D(), steps = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], A = [1, 0.75, 0.5, 0.25];
+    for (let e = 0; e < T.n; e++) {
+      const i = T.a[e], j = T.b[e], ax = ox + TRN.x[i] * k, ay = oy - TRN.y[i] * k, bx = ox + TRN.x[j] * k, by = oy - TRN.y[j] * k, dx = bx - ax, dy = by - ay;
+      if (dx * dx + dy * dy < min2) continue;
+      if ((ax < 0 && bx < 0) || (ax > W && bx > W) || (ay < 0 && by < 0) || (ay > H && by > H)) continue;
+      if (st) { steps[1].moveTo(ax, ay); steps[1].lineTo(bx, by); continue; }   // reduced motion: the whole tree, still
+      const da = pulseDelay[i], db = pulseDelay[j]; if (t < da) continue;
+      const f = db > da ? Math.min(1, (t - da) / (db - da)) : 1;
+      if (f < 1) { live.moveTo(ax, ay); live.lineTo(ax + dx * f, ay + dy * f); continue; }
+      const age = t - db - TRAIL_HOLD; if (age >= TRAIL_FADE) continue;
+      const q = age <= 0 ? 0 : Math.min(3, Math.floor(age / TRAIL_FADE * 4)); steps[q].moveTo(ax, ay); steps[q].lineTo(bx, by);
+    }
+    kctx.save(); kctx.lineCap = 'round';
+    for (let q = 3; q >= 0; q--) { kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6 * A[q]; kctx.lineWidth = 3.5; kctx.stroke(steps[q]); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 0.85 * A[q]; kctx.lineWidth = 1.5; kctx.stroke(steps[q]); }
+    kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6; kctx.lineWidth = 4.5; kctx.stroke(live); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 1; kctx.lineWidth = 2.5; kctx.stroke(live);
+    kctx.restore();
   }
   const setLive = on => $('yearrow').classList.toggle('live', !!on);   // the context layer's live marker while a pulse runs (round 9)
   function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; setLive(false); }
@@ -828,7 +878,8 @@ void main() {
     if (!TRN || yNew < yPrev) return;
     const mask = new Uint8Array(TRN.n), yi = yNew - 2014; let any = 0;
     for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] > yPrev && TRN.red_from[i] <= yNew && TRN.filed[i][yi] !== '-') { mask[i] = 1; any++; }
-    if (any) beginPulse(mask, any);
+    warmTree(yNew + 1);
+    if (any) beginPulse(yNew - yPrev === 1 && yNew > 2014 ? manualMask(yNew).mask : mask, any);   // a one-year step is the year's own set (undated firms date from 2014): its cached mask, so its tree is reused
   }
   function pulseTick() { pulseRaf = 0; if (!pulse) return; if (performance.now() - pulse.t0 >= PULSE_MS) pulse = null; if (state.mode === 'firms') drawMarks(cam()); if (pulse) pulseRaf = requestAnimationFrame(pulseTick); }
   const manualMasks = new Map();   // per year: the dated firms listed that year and present in it (undated firms never pulse)
@@ -840,8 +891,9 @@ void main() {
   function syncPulseButton() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
+    if (state.mode === 'firms' && FIRMS_OK) warmTree(y);   // the shown year's trail tree, in idle time (round 24)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay the bloom of the firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}. Lines join them by distance only.` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
     const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
@@ -918,11 +970,11 @@ void main() {
     for (const q of cells) { const px = ox + q.x * k, py = oy - q.y * k; if (px < -MARK_MARGIN || px > stage.width + MARK_MARGIN || py < -MARK_MARGIN || py > stage.height + MARK_MARGIN) continue; if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; }
     const span = x1 > x0 ? x1 - x0 : 0; for (const q of cells) q.delay = span ? LR.spreadMs * Motion.clamp((q.x - x0) / span, 0, 1) : 0;
     cellPulse = { t0: performance.now(), cells, count: cells.length, static: reduceMotion(), at: null }; setLive(true);
-    if (cellPulse.static) cellPulseTimer = setTimeout(() => { cellPulseTimer = 0; cellPulse = null; setLive(false); if (state.mode !== 'firms') drawCellsMarks(cam()); }, PULSE_MS);
+    if (cellPulse.static) cellPulseTimer = setTimeout(() => { cellPulseTimer = 0; cellPulse = null; setLive(false); if (state.mode !== 'firms') drawCellsMarks(cam()); }, BLOOM_MS);
     else cellPulseRaf = requestAnimationFrame(cellPulseTick);
     drawCellsMarks(c); return cells.length;
   }
-  function cellPulseTick() { cellPulseRaf = 0; if (!cellPulse) return; if (performance.now() - cellPulse.t0 >= PULSE_MS) { cellPulse = null; setLive(false); } if (state.mode !== 'firms') drawCellsMarks(cam()); if (cellPulse) cellPulseRaf = requestAnimationFrame(cellPulseTick); }
+  function cellPulseTick() { cellPulseRaf = 0; if (!cellPulse) return; if (performance.now() - cellPulse.t0 >= BLOOM_MS) { cellPulse = null; setLive(false); } if (state.mode !== 'firms') drawCellsMarks(cam()); if (cellPulse) cellPulseRaf = requestAnimationFrame(cellPulseTick); }
   function cellPulseDots(c) {
     const P = cellPulse, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), r = MM.listedRadius(LR, 1), t = P.at != null ? P.at : performance.now() - P.t0, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k;
     for (const q of P.cells) {
@@ -941,6 +993,7 @@ void main() {
     const st = !!(pulse && pulse.static), tNow = pulse ? (pulse.at != null ? pulse.at : now - pulse.t0) : 0;
     const ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN;
     if (markShared) sharedRings(c);   // round 16: the shared pairs, under the listed marks
+    if (pulse) drawTrail(c, tNow, st);   // round 24: the pulse's trail, under the listed marks
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
       const pulsing = !!(pulse && pulse.mask[i]);
@@ -2467,9 +2520,14 @@ void main() {
   function drawGroups(target) {
     const id = target || 'groupchart', big = !!target; if (!big && !cardOpen('groups')) return;
     const { ctx, w } = chartCtx(id); const hh = $(id).getBoundingClientRect().height, sz = big ? 14 : 12;
-    const items = [{ label: 'Joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1], color: theme.accent }, { label: 'State-related', a: F.own.state[0], b: F.own.state[1], color: theme.fall }, { label: 'Private', a: F.own.private[0], b: F.own.private[1], color: theme.accent }, { label: 'Unitary', a: F.legal.unitary[0], b: F.legal.unitary[1], color: theme.fall }];
-    const vm = Motion.measure(ctx, '00.0%', sz, 500), lm = 16 + vm + 14 + Math.max(...items.map(it => Motion.measure(ctx, it.label, sz, 500))) + 6, rm = 16 + vm + 12;   // measured margins (round 10: the monospace widened the labels)
-    CH.slopes(ctx, { x: 8, y: big ? 34 : 30, w: w - 16, h: hh - (big ? 56 : 48) }, items, { yDomain: [44, 82], theme, size: sz, leftMargin: lm, rightMargin: rm, spread: true });
+    // One row per group, the largest rise first, state-run under state-related as a part of it (round 24): the slope chart's labels slid off their dots,
+    // and State-related and Unitary began at one dot. State-run is the state-related unitary enterprises (data/statesplit.json), not the legal-form row;
+    // the names in lower case, as the column's other series labels (the author's sanity check of 29 October 2026).
+    const SU = D.statesplit.state_unitary, col = it => Object.assign(it, { color: it.b >= it.a ? theme.accent : theme.fall });
+    const top = [{ label: 'joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1] }, { label: 'state-related', a: F.own.state[0], b: F.own.state[1] }, { label: 'private', a: F.own.private[0], b: F.own.private[1] }]
+      .map(col).sort((p, q) => (q.b - q.a) - (p.b - p.a));
+    const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: 'state-run', a: SU.share[0], b: SU.share[1], sub: true })] : [it]);
+    CH.changes(ctx, { x: 8, y: big ? 34 : 26, w: w - 16, h: hh - (big ? 44 : 32) }, items, { theme, size: sz, bar: big ? 8 : 6 });
     if (!big && pop.id === 'groups') drawGroups('pochart');
   }
   function drawOdds(target) {
@@ -2875,7 +2933,7 @@ void main() {
   }
   const redrawMarksNow = () => (state.mode === 'firms' ? drawMarks(cam()) : drawCellsMarks(cam()));
   function endFound() { if (foundRaf) cancelAnimationFrame(foundRaf); foundRaf = 0; if (foundTimer) clearTimeout(foundTimer); foundTimer = 0; if (found) { found = null; redrawMarksNow(); } }
-  function foundTick() { foundRaf = 0; if (!found) return; if (performance.now() - found.t0 >= PULSE_MS) found = null; redrawMarksNow(); if (found) foundRaf = requestAnimationFrame(foundTick); }
+  function foundTick() { foundRaf = 0; if (!found) return; if (performance.now() - found.t0 >= BLOOM_MS) found = null; redrawMarksNow(); if (found) foundRaf = requestAnimationFrame(foundTick); }
   function foundRings(ctx, c) {   // the found firm's two rings at its mark, after the pulse's rings on the marks canvas
     const i = found.i, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), px = c.ox + (TRN.x[i] - c.cx) * k, py = c.oy - (TRN.y[i] - c.cy) * k, r = MM.listedRadius(LR, TRN.pile[i]);
     if (found.static) { MM.pulseRing(ctx, px, py, r, LR, 1, theme, true); return; }
@@ -2897,7 +2955,7 @@ void main() {
     const c = cam(), px = c.ox + (TRN.x[i] - c.cx) * c.k, py = c.oy - (TRN.y[i] - c.cy) * c.k;
     findPin = i; lastPointer = { x: px, y: py, inside: true }; showHoverAt(px, py, { touch: true });
     found = { i, t0: performance.now(), static: reduceMotion() };
-    if (found.static) { redrawMarksNow(); foundTimer = setTimeout(() => { foundTimer = 0; found = null; redrawMarksNow(); }, PULSE_MS); }
+    if (found.static) { redrawMarksNow(); foundTimer = setTimeout(() => { foundTimer = 0; found = null; redrawMarksNow(); }, BLOOM_MS); }
     else foundRaf = requestAnimationFrame(foundTick);
   }
   $('methodintro').textContent = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021, 100 km and 25 km cells by year, 1 km squares from the address files by year, and 250 m cells in 22 city windows for 2021. Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records for the financial years ${F.years}. Boundaries: geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every figure from the data is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). The insights cite their sources under References.`;   // the method block's first lines (round 10): the counts from the former description and the records line from the former footer
@@ -3047,8 +3105,10 @@ void main() {
       H('Findings') + `${pct1(e21)} of eligible firms have a statement for 2021 and ${pct1(e24)} for 2024. The shaded years are the FNS era, from 2019, and the years before it Rosstat’s. 2011 has no statements, and 2025* is the flagged latest-year extension.`,
       H('The question') + 'The chapter asks whether sanctions increase the value of withholding financial information, and it measures withholding through statement availability. This series is the national level against which the group, size and list comparisons are read. A missing statement is absent from the RFSD release, which does not recover the public archive as it stood in each year.',
       'Source: ' + esc(S.sources.avail) + '.');
-    $('cr-groups').innerHTML = P(H('What it shows') + 'The share of eligible firms with a statement in 2021 and in 2024, by ownership and by legal form. Each year’s population is compared, not the same firms.',
-      H('Findings') + `Availability falls among state-related firms (${pct1(F.own.state[0])} to ${pct1(F.own.state[1])}) and unitary enterprises (${pct1(F.legal.unitary[0])} to ${pct1(F.legal.unitary[1])}) and rises among private firms and joint-stock companies. The declines are concentrated in 2024.`,
+    const SS = D.statesplit;   // the state-run row's figures (round 24, M14)
+    $('cr-groups').innerHTML = P(H('What it shows') + 'The share of eligible firms with a statement in 2021 and in 2024, by ownership and by legal form. Each year’s population is compared, not the same firms.'
+      + ` State-run: state and municipal unitary enterprises, which a federal, regional or municipal body owns outright and which issue no shares. In 2024, ${Math.round(SS.municipal_share[1])} percent of them were municipal.`,
+      H('Findings') + `Availability falls among state-related firms (${pct1(F.own.state[0])} to ${pct1(F.own.state[1])}) and rises among private firms and joint-stock companies. The state-run firms are about half of the state-related firms and carry the whole decline (${pct1(SS.state_unitary.share[0])} to ${pct1(SS.state_unitary.share[1])}). The other state-related firms rise (${pct1(SS.state_other.share[0])} to ${pct1(SS.state_other.share[1])}). The declines are concentrated in 2024.`,
       H('The question') + 'These population comparisons carry the chapter’s clearest findings on the sanctions period. Its opacity model organizes them without predicting them, and the ownership codes do not establish operational control or disclosure protection.',
       'Source: the data behind Figures 2.2 and 2.3.');
     const later = (() => { const sc = S.size_changes; for (let i = 0; i < sc.id.length; i++) if (sc.quintile[i] === 'Q5' && /^2023/.test(sc.window[i])) return { r: sc.ratio[i], lo: sc.low[i], hi: sc.high[i] }; return null; })();

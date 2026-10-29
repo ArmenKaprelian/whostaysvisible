@@ -69,11 +69,9 @@
   };
 
   // Slope chart between two columns. items: [{label, a, b, color}]. progress draws the lines from a to b.
-  C.slopes = function (ctx, box, items, { yDomain, progress = 1, theme, leftLabel = '2021', rightLabel = '2024', fmt = v => v.toFixed(1) + '%', size = 26, leftMargin = 330, rightMargin = 130, spread = false } = {}) {
+  C.slopes = function (ctx, box, items, { yDomain, progress = 1, theme, leftLabel = '2021', rightLabel = '2024', fmt = v => v.toFixed(1) + '%', size = 26, leftMargin = 330, rightMargin = 130 } = {}) {
     const sy = C.scale(yDomain, [box.y + box.h, box.y]);
-    // spread: the labels of each column pushed apart (the atlas's narrow panels); the dots stay on their values.
-    const la = spread ? C.spread(items.map(it => sy(it.a)), size + 2, box.y, box.y + box.h) : items.map(it => sy(it.a));
-    const lb = spread ? C.spread(items.map(it => sy(it.b)), size + 2, box.y, box.y + box.h) : items.map(it => sy(it.b));
+    const la = items.map(it => sy(it.a)), lb = items.map(it => sy(it.b));
     const x0 = box.x + leftMargin, x1 = box.x + box.w - rightMargin;
     ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; [x0, x1].forEach(x => { ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); });
     const hy = box.y - (size >= 20 ? 18 : size + 4);   // the column headers sit closer to a small chart's box
@@ -87,6 +85,36 @@
       if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); }
       if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, lb[i], { size, color: it.color, align: 'left', baseline: 'middle', weight: 500, alpha: tail(u) });
     });
+  };
+
+  // A table with its change drawn (the atlas's Groups card, round 24): one row per item in the order given, the name, the two values, a bar from one
+  // vertical zero line shared by every row to the change b - a, and the change signed in the item's colour. The slope chart it replaces there pushed its
+  // labels apart when two values in a column lay closer than a line of text, which moved them off their dots, and its two series in each colour met at
+  // one dot in 2021 with unnamed ends in 2024. The common zero line lets the changes be compared by length (the author's request of 29 October 2026).
+  // The zero line is a range frame, from the first bar's top edge to the last bar's bottom edge, drawn over the bars; bars and line sit on whole device
+  // pixels (k, the canvas's scale) so their edges stay sharp at 125 percent and on a phone. An item with sub: true is a part of the row above it: the
+  // names keep one left edge and a hairline bracket in their gutter joins the two rows (the author's pick A of 29 October 2026). pitch caps the row spacing; the rows sit in the middle of the box with the column headers just above them.
+  C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6 } = {}) {
+    const k = ctx.getTransform().a || 1, dev = v => Math.round(v * k) / k;
+    const gut = items.some(it => it.sub) ? 8 : 0; box = { x: box.x + gut, y: box.y, w: box.w - gut, h: box.h };   // the bracket's gutter, the same for every row
+    const vw = Motion.measure(ctx, '00.0%', size, 500), dw = Math.max(...items.map(it => Motion.measure(ctx, dfmt(it.b - it.a), size, 500)));
+    const nw = Math.max(...items.map(it => Motion.measure(ctx, it.label, size, 500)));
+    const xa = box.x + nw + 12 + vw, xb = xa + 12 + vw, xd = box.x + box.w, s0 = xb + 18, s1 = xd - dw - 14;   // the right edges of the three columns, the strip
+    const d = items.map(it => it.b - it.a), lo = Math.min(0, ...d), hi = Math.max(0, ...d), sx = C.scale([lo, hi], [s0, s1]), x0 = dev(sx(0));
+    const p = Math.min(pitch, box.h / items.length), y0 = box.y + (box.h - p * items.length) / 2, top = i => dev(y0 + p * (i + 0.5) - bar / 2), hb = dev(bar);
+    [[heads[0], xa], [heads[1], xb], [heads[2], xd]].forEach(([h, x]) => T(ctx, h, x, y0 - 4, { size, color: theme.muted, align: 'right' }));
+    items.forEach((it, i) => {
+      const y = y0 + p * (i + 0.5), x1 = dev(sx(d[i]));
+      ctx.fillStyle = it.color; ctx.fillRect(Math.min(x0, x1), top(i), Math.abs(x1 - x0), hb);
+      T(ctx, it.label, box.x, y, { size, color: theme.muted, baseline: 'middle' });
+      T(ctx, fmt(it.a), xa, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
+      T(ctx, fmt(it.b), xb, y, { size, color: theme.ink, align: 'right', baseline: 'middle' });
+      T(ctx, dfmt(d[i]), xd, y, { size, color: it.color, align: 'right', baseline: 'middle', weight: 500 });
+    });
+    items.forEach((it, i) => { if (!it.sub || !i) return;   // the part and its whole joined by a hairline bracket in the gutter
+      const ya = dev(y0 + p * (i - 0.5)), yb = dev(y0 + p * (i + 0.5)), xl = dev(box.x - gut - 1), t = Math.max(1, Math.round(k)) / k; ctx.fillStyle = theme.muted;
+      ctx.fillRect(xl, ya, t, yb - ya + t); ctx.fillRect(xl, ya, 4, t); ctx.fillRect(xl, yb, 4, t); });
+    const n = Math.max(1, Math.round(k)); ctx.fillStyle = theme.muted; ctx.fillRect(x0 - Math.floor(n / 2) / k, top(0), n / k, top(items.length - 1) + hb - top(0));   // the zero line, over the bars: about 1 px, whole device pixels
   };
 
   // 100% stacked horizontal bars. groups: [{label, sub, total, parts: [{label, value, color}]}].

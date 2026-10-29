@@ -34,6 +34,7 @@ def ci(lo, hi): return '95%% confidence interval %s to %s' % (dec(lo), dec(hi))
 
 def build(data_dir, published=None):
     S = json.load(open(os.path.join(data_dir, 'series.json'), encoding='utf-8')); F = S['facts']; A = S['avail']
+    SS = json.load(open(os.path.join(data_dir, 'statesplit.json'), encoding='utf-8'))   # the state-run firms (round 24, M14)
     e = dict(zip(A['year'], A['eligible_share']))
     sc = S['size_changes']; later = next(((sc['ratio'][i], sc['low'][i], sc['high'][i]) for i in range(len(sc['id'])) if sc['quintile'][i] == 'Q5' and sc['window'][i].startswith('2023')), None)
     size = 'The Q5 vs Q1 odds ratio rises in 2022 against 2021: the ratio of odds ratios is %s (%s).' % (dec(F['size_q5_2022_ratio']), ci(F['size_q5_2022_low'], F['size_q5_2022_high']))
@@ -79,7 +80,8 @@ def build(data_dir, published=None):
     add('## 4. Key results')
     add('')
     add('4.1. Nationally, %s of eligible firms have a statement for 2021 and %s for 2024 (Table B.1).' % (pct(e[2021]), pct(e[2024])))
-    add('4.2. Between 2021 and 2024 availability falls among state-related firms (%s to %s) and unitary enterprises (%s to %s) and rises among private firms and joint-stock companies. The declines are concentrated in 2024 (Figures 2.2 and 2.3).' % (pct(F['own']['state'][0]), pct(F['own']['state'][1]), pct(F['legal']['unitary'][0]), pct(F['legal']['unitary'][1])))
+    add('4.2. Between 2021 and 2024 availability rises among private firms and joint-stock companies and falls among state-related firms (%s to %s). The fall sits in their state-run half, unitary enterprises, mostly municipal (%s to %s). The rest rise (%s to %s). The declines are concentrated in 2024 (Figures 2.2 and 2.3).'
+        % (pct(F['own']['state'][0]), pct(F['own']['state'][1]), pct(SS['state_unitary']['share'][0]), pct(SS['state_unitary']['share'][1]), pct(SS['state_other']['share'][0]), pct(SS['state_other']['share'][1])))
     add('4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Tables B.4 and B.5). ' + size)
     add('4.4. Sanctioned-only firms, on the sanctions list and on no other list, have lower availability than firms on no list by 2024: an odds ratio of %s (%s) (Table B.7).' % (dec(F['sanctioned_only_or_2024']), ci(F['sanctioned_only_or_2024_low'], F['sanctioned_only_or_2024_high'])))
     add('4.5. The estimates come from binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Standard errors are two-way clustered by industry and region.')

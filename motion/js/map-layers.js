@@ -343,10 +343,10 @@
     ctx.restore();
   };
   // The atlas's listed pulse since round 22 (the author's pick A of 29 October 2026): each new red mark swells to r + swellPeak(r) and settles back over
-  // 0.9 s, with no ring, no glow and no pale core; on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
+  // 0.9 s, with no ring, no glow and no pale core (since round 24 the marks start as a west-to-east sweep passes them, with the tree's trail: explorer-app.js); on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
   // before it read as an explosion, and painting 1,480 of them (2024) dropped about a third of the frames; the swell draws one disc per firm.
   M.SWELL = 0.9;   // seconds
-  M.swellPeak = r => Math.min(12, Math.max(5, 2.4 * r));   // the extra radius at the peak, px: twice round 22's (the author's pick of 29 October 2026, round 23; 2.5 to 6 px read too quiet)
+  M.swellPeak = r => Math.min(18, Math.max(7.5, 3.6 * r));   // the extra radius at the peak, px: three times round 22's (the author's requests of 29 October 2026: 2.5 to 6 px read too quiet, round 23's 5 to 12 px too; round 24 doubled that, then took 25 percent off it with the trail)
   M.swellPhase = function (t, o) {   // into the bloom phase's fields: on, grow (the red's fade-in over 0.2 s), swell (0 to 1 and back), p (0 to 1)
     if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
     const u = Motion.clamp(t / M.SWELL, 0, 1);

@@ -53,8 +53,13 @@ TERMS = [   # term, definition (on screen), sources [(file, quoted sentence)]
     ("State-related firms", "Firms whose registry ownership code is state or municipal ownership, mixed ownership with state participation, or state-corporation ownership. The codes do not establish operational control or disclosure protection.",
      [(CH("02-data-and-samples.tex"), "State-related ownership groups the registry's codes for state or municipal ownership, mixed ownership with state participation, and state-corporation ownership."),
       (CH("02-data-and-samples.tex"), "These codes do not establish operational control or disclosure protection.")]),
-    ("Unitary enterprises", "Firms with the unitary-enterprise legal form, which the chapter describes as state entities. They largely overlap with the state-related firms.",
-     [(CH("05-results.tex"), "Unitary enterprises are state entities, so this is the ownership finding seen through a second classification of largely the same firms rather than an independent confirmation.")]),
+    # Round 24 (the author's approval of 29 October 2026): the Groups card's state-run firms in place of the chapter's unitary enterprises, which the
+    # cross-tab (R/motion/M14-statesplit.R) found to be about half of the state-related firms, not largely the same firms; the definition and the
+    # figures come from the atlas's own texts, which read data/statesplit.json.
+    ("State-run firms", "State-related firms with the unitary-enterprise legal form, which a federal, regional or municipal body owns outright and which issue no shares. They are about half of the state-related firms, and most are municipal.",
+     [(APP, "State-run: state and municipal unitary enterprises, which a federal, regional or municipal body owns outright and which issue no shares."),
+      (APP, "The state-run firms are about half of the state-related firms and carry the whole decline"),
+      (APP, "percent of them were municipal.")]),
 ]
 
 def relp(path):   # a source path as the provenance records it, the same from the lab or a trial copy of motion/ (round 18)

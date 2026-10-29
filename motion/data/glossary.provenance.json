@@ -1,7 +1,7 @@
 {
  "id": "glossary",
  "tool": "motion/tools/glossary_build.py",
- "run_utc": "2026-10-29T02:19:33Z",
+ "run_utc": "2026-10-29T17:05:54Z",
  "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
  "files": [
   "motion/js/explorer-app.js",
@@ -186,11 +186,21 @@
    ]
   },
   {
-   "term": "Unitary enterprises",
+   "term": "State-run firms",
    "sources": [
     {
-     "file": "kaprelian_dissertation/chapters/02-opacity/05-results.tex",
-     "quote": "Unitary enterprises are state entities, so this is the ownership finding seen through a second classification of largely the same firms rather than an independent confirmation.",
+     "file": "motion/js/explorer-app.js",
+     "quote": "State-run: state and municipal unitary enterprises, which a federal, regional or municipal body owns outright and which issue no shares.",
+     "found": true
+    },
+    {
+     "file": "motion/js/explorer-app.js",
+     "quote": "The state-run firms are about half of the state-related firms and carry the whole decline",
+     "found": true
+    },
+    {
+     "file": "motion/js/explorer-app.js",
+     "quote": "percent of them were municipal.",
      "found": true
     }
    ]
@@ -199,8 +209,8 @@
  "checks": "25 of 25 passed (glossary.checks.csv)",
  "output": {
   "json": "data/glossary.json",
-  "json_sha256": "440dc73014120504332ea7f60a51eee3430a8d7972a0d6025aed07dd2faeec4a",
+  "json_sha256": "369c43ec2b175edf5a34883435a0db10cbf2aea17af8cb889a290309cc5741d6",
   "js": "data/glossary.js",
-  "js_sha256": "6b6660fd3122f8a76a1b44df0f116249bfd658209555242fb736690c84486598"
+  "js_sha256": "c36582ec0ed1c74ea7cb05f06a88841fe8459bd9f3e022c7654f449aecf2ae7e"
  }
 }

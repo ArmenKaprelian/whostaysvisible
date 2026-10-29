@@ -1,0 +1,13 @@
+"check","expected","observed","tolerance","pass"
+"2021: every series.json group present in the margins, and no other",0,0,0,TRUE
+"2021: margins' firms equal series.json's (max abs diff)",0,0,0,TRUE
+"2021: margins' statements equal series.json's (max abs diff)",0,0,0,TRUE
+"2021: the levels sum to the state-related unitary firms",12755,12755,0,TRUE
+"2021: the levels' statements sum to theirs",8938,8938,0,TRUE
+"2024: every series.json group present in the margins, and no other",0,0,0,TRUE
+"2024: margins' firms equal series.json's (max abs diff)",0,0,0,TRUE
+"2024: margins' statements equal series.json's (max abs diff)",0,0,0,TRUE
+"2024: the levels sum to the state-related unitary firms",10257,10257,0,TRUE
+"2024: the levels' statements sum to theirs",5001,5001,0,TRUE
+"the split's firms sum to series.json's state-related group (max abs diff)",0,0,0,TRUE
+"the split's statements sum to series.json's (max abs diff)",0,0,0,TRUE
