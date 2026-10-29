@@ -24,6 +24,7 @@ if [[ "${1:-}" == "--push" ]]; then
   [[ -z "$(git -C "$SITE" status --porcelain)" ]] || { say "the site has uncommitted changes; commit or discard them first"; exit 1; }
   git -C "$SITE" push origin HEAD
   say "pushed: $last"
+  say "GitHub Pages publishes it in about a minute. Check it with a hard reload (Ctrl+Shift+R): browsers keep a script or a stylesheet for 10 minutes."   # the author's pick B1 (29 October 2026)
   exit 0
 fi
 
