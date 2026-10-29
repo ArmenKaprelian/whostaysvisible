@@ -1,6 +1,6 @@
 # Dataviz lab
 
-Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/explorer.html`, published on the author's site at https://armenkaprelian.github.io/atlas/ since 29 October 2026; the claude.ai artifact https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n holds v39) and the explainer (`motion/explainer.html`). Sessions on the atlas or the explainer start here.
+Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/explorer.html`, published on the author's site at https://armenkaprelian.github.io/atlas/ since 29 October 2026; the claude.ai artifact https://claude.ai/artifact/19DNAFozq23ng4qaD18m7n points there since its v40, `motion/pointer/atlas-moved.html`) and the explainer (`motion/explainer.html`). Sessions on the atlas or the explainer start here.
 
 ## Read first
 

@@ -2123,7 +2123,7 @@ The author's requests of 28 October 2026; the detail is in `review/2026-10-28-ro
 
 Proof: `build/round-19/proof/round-19-webkit` (base 1f8ed66, 267 s): 6 text groups, the three link edits at 1,600 and 400 px; 88 of 88 frames differ, in the footer only; the map outside its panels unchanged; no new rule hits. A synthetic Safari pinch of 1.5 zooms the map by 1.5 with the page's own zoom cancelled. The five-width run on the link changes (29 min 17 s) had one finding at every width, the audit's old link pin, now replaced.
 
-**Published** 29 October 2026 (UTC) on the author's site, https://armenkaprelian.github.io/atlas/: the publish gate's five-width run on a2926f6 had zero findings (7 min 52 s); publish copy c486ac3; site commits 5acc2b3 and 0226ed8, pushed by the author (the permission check refuses Claude's pushes that make something public). All twelve checked addresses answer 200 with their types.
+**Published** 29 October 2026 (UTC) on the author's site, https://armenkaprelian.github.io/atlas/: the publish gate's five-width run on a2926f6 had zero findings (7 min 52 s); publish copy c486ac3; site commits 5acc2b3 and 0226ed8, pushed by the author (the permission check refuses Claude's pushes that make something public). All twelve checked addresses answer 200 with their types. The claude.ai atlas's v40 (29 October 2026) is a pointer to the site, `pointer/atlas-moved.html`: a link's view anchor carries over to the site's atlas.
 
 ### Publishing
 
