@@ -9,7 +9,8 @@
 #     5. the site's tools/import_atlas.py copies the set into the site's atlas/, and the site commits it
 #   motion/tools/publish.sh --push   pushes the site, which GitHub Pages publishes; only on the author's word. One command for an atlas publish
 #                                    and a site-only change: the site clean, an atlas change only from this gate's import, the site's check
-#                                    in both engines (site-check.py, about 45 s) with zero findings, then the push.
+#                                    in both engines (site-check.py, about 45 s) with zero findings, then the push. It pushes main only:
+#                                    site work waiting for the author's approval stays on a local branch until it is merged.
 #
 # The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab.
 set -euo pipefail
@@ -18,12 +19,14 @@ LAB="$(git -C "$HERE" rev-parse --show-toplevel)"
 SITE="${SITE:-$HOME/Documents/website}"
 say() { printf '%s\n' "publish: $*"; }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
 
 if [[ "${1:-}" == "--push" ]]; then   # the author's pick B2 (29 October 2026): one push for atlas publishes and site-only changes
+  branch="$(git -C "$SITE" rev-parse --abbrev-ref HEAD)"   # the author's pick B5: work waiting for approval stays on a branch, main is what is live
+  [[ "$branch" == main ]] || { say "the site is on '$branch': merge it into main once it is approved, then push"; exit 1; }
   [[ -z "$(git -C "$SITE" status --porcelain)" ]] || { say "the site has uncommitted changes; commit or discard them first"; exit 1; }
   git -C "$SITE" fetch -q origin
-  up="$(git -C "$SITE" rev-parse --abbrev-ref --symbolic-full-name '@{u}')"
+  up="origin/main"
   ahead="$(git -C "$SITE" log --oneline "$up..HEAD")"
   [[ -n "$ahead" ]] || { say "nothing to push: the site's commits are all on GitHub"; exit 0; }
   atlas="$(git -C "$SITE" log -1 --format=%s "$up..HEAD" -- atlas)"   # the last commit to push that touches atlas/
@@ -31,7 +34,7 @@ if [[ "${1:-}" == "--push" ]]; then   # the author's pick B2 (29 October 2026): 
   say "the site's check in both engines (about 45 s)"
   if ! out="$(python3 -I "$HERE/site-check.py" --site "$SITE" 2>&1)"; then printf '%s\n' "$out" | tail -25; say "the site's check has findings; nothing was pushed"; exit 1; fi
   printf '%s\n' "$out" | tail -2
-  git -C "$SITE" push origin HEAD
+  git -C "$SITE" push origin main
   say "pushed:"; printf '%s\n' "$ahead" | sed 's/^/  /'
   say "GitHub Pages publishes it in about a minute. Check it with a hard reload (Ctrl+Shift+R): browsers keep a script or a stylesheet for 10 minutes."   # the author's pick B1 (29 October 2026)
   exit 0
