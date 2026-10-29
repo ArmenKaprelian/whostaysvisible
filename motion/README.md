@@ -2198,7 +2198,9 @@ The author's requests of 29 October 2026, after round 22 went live; detail in `r
 
 Proof: `build/proof-r23` against HEAD (`7a606f2`): no text differs; the two REFERENCES frames differ (98 percent), nothing else, the map outside its panels unchanged. The pulse is not among the proof's still states; the build's frames match the 2x preview pixel for pixel in 9 of 10 (the tenth by 2 pixels of rounding).
 
-Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings. Not published.
+Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings.
+
+**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry), the five-width audit with zero findings (1,376 states, 7 min 49 s), the publish set (141.1 MB), the publish copy 6db6a40 and the site's import ea4c93b. The site's push is the author's (`publish.sh --push`).
 
 ## How to add or change content
 
