@@ -49,53 +49,61 @@ def lead(D, y, band, name, layer='share'):
     return t
 
 def facts(D, y, band, name):
-    T, R, CY, FM, F, C = D['treatednational'], D['regions'], D['cellsyears'], D['firms'], D['series']['facts'], D['cells100']
+    """The data items in the page's order (round 25: about a quarter on the lists, half on how the body of firms responds, a quarter other)."""
+    T, R, CY, FM, S, C = D['treatednational'], D['regions'], D['cellsyears'], D['firms'], D['series'], D['cells100']; F = S['facts']
     ys, out = ys_of(y), []
     nat = band == 'national'; reg = name if (not nat and any(r == name for r in R['region'])) else None
+    TS = S['transitions']; tr = lambda prior: next((i for i in range(len(TS['year'])) if TS['year'][i] == y and TS['prior'][i] == prior), -1); ia, ib = tr('available'), tr('absent')
+    G = S['groups']; own = lambda g, yy: next((i for i in range(len(G['year'])) if G['year'][i] == yy and G['dimension'][i] == 'ownership' and G['group'][i] == g), -1)
+    pct_of = lambda a, n: fmt_pct(100 * a / n)
+    k = CY['totals']['year'].index(y) if y in CY['totals']['year'] else -1; k21 = CY['totals']['year'].index(2021) if 2021 in CY['totals']['year'] else -1
+    b = FM['by_year'].get(str(y))
     n = nr = 0; ri = T['regions'].index(reg) if reg and reg in T['regions'] else -1
     for i in range(T['n']):
         if T['red_from'][i] == y and not T['undated'][i]:
             n += 1
             if ri >= 0 and T['reg'][i] == ri: nr += 1
-    out.append(f'{ys}: {fmt_int(n)} firms added to a list (treated) nationally')
-    if reg: out.append(f'{ys}: {fmt_int(nr)} firms added to a list (treated) in {reg}')
-    if y in CY['totals']['year']:
-        k = CY['totals']['year'].index(y); E, L, na, nla = CY['totals']['n'][k], CY['totals']['n_located'][k], CY['totals']['n_available'][k], CY['totals']['n_located_available'][k]
-        out.append(f'{ys}: {fmt_int(E)} eligible firms, {fmt_int(na)} with a statement ({fmt_pct(CY["totals"]["eligible_share"][k])})')
-        out.append(f'{ys}: {fmt_int(L)} located firms, {fmt_int(nla)} with a statement and {fmt_int(L - nla)} without')
-        out.append(f'{ys}: {fmt_int(L)} of {fmt_int(E)} eligible firms located ({fmt_pct(CY["totals"]["located_share"][k])})')
+    out.append(f'{ys}: {fmt_int(n)} firms added to a list (treated) nationally' + (f', {fmt_int(nr)} in {reg}' if reg else ''))
+    if k >= 0:
+        E, na = CY['totals']['n'][k], CY['totals']['n_available'][k]
+        out.append(f'{ys}: {fmt_int(na)} of {fmt_int(E)} eligible firms with a statement ({fmt_pct(CY["totals"]["eligible_share"][k])})' + (f', against {fmt_pct(CY["totals"]["eligible_share"][k21])} in 2021' if y != 2021 and k21 >= 0 else ''))
+    if ia >= 0: out.append(f'{ys}: {fmt_int(TS["N"][ia])} of the {fmt_int(TS["origin"][ia])} firms with a statement in {y - 1} had none ({pct_of(TS["N"][ia], TS["origin"][ia])})')
+    if k >= 0: out.append(f'{ys}: {fmt_int(CY["totals"]["n_located"][k])} of {fmt_int(CY["totals"]["n"][k])} eligible firms located ({fmt_pct(CY["totals"]["located_share"][k])})')
+    s, p, s21, p21 = own('state', y), own('private', y), own('state', 2021), own('private', 2021)
+    if s >= 0 and p >= 0:
+        if y == 2021 or s21 < 0 or p21 < 0: out.append(f'{ys}: {fmt_pct(G["share"][s])} of the {fmt_int(G["n"][s])} state-related firms had a statement, against {fmt_pct(G["share"][p])} of the {fmt_int(G["n"][p])} private firms')
+        else: out.append(f'{ys}: {fmt_pct(G["share"][s])} of the {fmt_int(G["n"][s])} state-related firms had a statement, against {fmt_pct(G["share"][s21])} in 2021. Private firms: {fmt_pct(G["share"][p])} of {fmt_int(G["n"][p])}, against {fmt_pct(G["share"][p21])}')
+    red = sum(1 for i in range(T['n']) if T['red_from'][i] <= y)
+    out.append(f'By {ys}: {fmt_int(red)} of the {fmt_int(T["n"])} firms on the lists (treated) are shown red. The {fmt_int(T["undated_n"])} on undated lists are red from 2014, and {fmt_int(T["inferred_n"])} dates of addition to a list are inferred')
+    if ib >= 0: out.append(f'{ys}: {fmt_int(TS["A"][ib])} of the {fmt_int(TS["origin"][ib])} firms without a statement in {y - 1} had one ({pct_of(TS["A"][ib], TS["origin"][ib])})')
     iN = D['regrow'].get(('Russia', y))
     if iN is not None and R['d1'][iN] != 255:
-        d = R['d1'][iN]; rows = [i for i in range(len(R['region'])) if R['year'][i] == y and R['region'][i] not in SKIP]; k = sum(1 for i in rows if R['d1'][i] == d)
-        out.append(f'{ys}: {div_short(D, d)} ({d:02d}) leads nationally and in {fmt_int(k)} of {fmt_int(len(rows))} regions')
+        d = R['d1'][iN]; rows = [i for i in range(len(R['region'])) if R['year'][i] == y and R['region'][i] not in SKIP]; kd = sum(1 for i in rows if R['d1'][i] == d)
+        out.append(f'{ys}: {div_short(D, d)} ({d:02d}) leads nationally and in {fmt_int(kd)} of {fmt_int(len(rows))} regions')
         if reg:
             ir = D['regrow'].get((reg, y))
             if ir is not None and R['d1'][ir] != 255 and R['d1'][ir] != d: out.append(f'{reg}, {ys}: {div_short(D, R["d1"][ir])} ({R["d1"][ir]:02d}) leads with {R["s1"][ir]}% of revenue')
     if reg:
         ir = D['regrow'].get((reg, y))
-        if ir is not None:
-            out.append(f"{reg}, {ys}: firms on the lists (treated) hold {R['lsh'][ir]}% of the region's revenue")
-            out.append(f'{reg}, {ys}: {fmt_int(R["listed"][ir])} of {fmt_int(R["n"][ir])} firms registered in the region are on the five lists (treated)')
-    b = FM['by_year'].get(str(y))
+        if ir is not None: out.append(f'{reg}, {ys}: {fmt_int(R["listed"][ir])} of {fmt_int(R["n"][ir])} firms registered in the region are on the five lists (treated) and hold {R["lsh"][ir]}% of its revenue')
+    if ia >= 0 and ib >= 0: out.append(f'{ys}: {fmt_int(TS["X"][ib])} of the firms without a statement in {y - 1} were removed from the registry ({pct_of(TS["X"][ib], TS["origin"][ib])}), against {fmt_int(TS["X"][ia])} of those with one ({pct_of(TS["X"][ia], TS["origin"][ia])})')
     if b:
         out.append(f'{ys}: {fmt_int(b["firms"])} firms on no list (comparison group) at {fmt_int(b["addresses"])} coordinate pairs')
+        if y in FM['median_by_year']['year']:
+            km = FM['median_by_year']['year'].index(y); out.append(f'{ys}: the median real-revenue change of firms on no list (comparison group) is {fmt_signed(FM["median_by_year"]["med"][km])}% against their own 2019 to 2021 average')
         out.append(f'{ys}: {fmt_int(b["listed"])} located firms on the lists (treated). {fmt_int(b["city_level"])} firms have other geocodes')
         out.append(f'{ys}: the largest coordinate pair holds {fmt_int(b["max_at_address"])} firms on no list. {fmt_int(b["firms_at_100plus"])} firms sit at the {fmt_int(b["addresses_100plus"])} pairs shared by 100 or more')
-        if y in FM['median_by_year']['year']:
-            k = FM['median_by_year']['year'].index(y); out.append(f'{ys}: the median real-revenue change of firms on no list (comparison group) is {fmt_signed(FM["median_by_year"]["med"][k])}% against their own 2019 to 2021 average')
     if y == 2021: out.append(f'2021: {fmt_int(F["largest_location_firms"])} firms share the largest coordinate pair. Across all located firms, {fmt_int(F["firms_at_100plus_locations"])} sit at pairs shared by 100 or more')
     ct = C['change_totals']; sup = sum(1 for v in C['change']['supported'] if v)
     out.append(f'2024 against 2021: {fmt_int(sup)} 100 km cells have 50 or more located firms in both years. {fmt_pct(ct["availability_share_percent"][0])} of located firms had a statement in 2021 and {fmt_pct(ct["availability_share_percent"][1])} in 2024')
-    out.append(f'2021: {fmt_int(sum(1 for v in C["lists"]["sanctioned"] if v is not None and v >= 5))} cells hold 5 or more sanctions-list members')
-    out.append(f'2021: {fmt_int(F["cohorts"]["revenue_cash"])} eligible firms in the revenue cohort by cash share')
-    red = sum(1 for i in range(T['n']) if T['red_from'][i] <= y)
-    out.append(f'By {ys}: {fmt_int(red)} of the {fmt_int(T["n"])} firms on the lists (treated) are shown red')
-    out.append(f'{fmt_int(T["undated_n"])} firms on the undated lists are red from 2014. {fmt_int(T["inferred_n"])} dates of addition to a list are inferred')
+    out.append(f'2019 to 2024: {fmt_int(F["hist_all_available"])} of the {fmt_int(F["fixed_2019_cohort"])} firms followed from 2019 had a statement in every year ({pct_of(F["hist_all_available"], F["fixed_2019_cohort"])})')
     return out
 
 def firms(D, y, band, name):
-    T, ys = D['treatednational'], ys_of(y)
-    ri = T['regions'].index(name) if band != 'national' and name in T['regions'] else -1
+    """Four named firms on the lists that turned red in y, each as (text, follow-up): the share line of its region (round 25), or None where that region is the one shown or has no row."""
+    T, R, ys = D['treatednational'], D['regions'], ys_of(y)
+    here = name if band != 'national' and any(r == name for r in R['region']) else None
+    ri = T['regions'].index(name) if here and name in T['regions'] else -1
     def pick(use_reg):
         idx = [i for i in range(T['n']) if T['red_from'][i] == y and not T['undated'][i] and T['name'][i] and (not use_reg or T['reg'][i] == ri)]
         return sorted(idx, key=lambda i: (T['name'][i], i))
@@ -103,13 +111,18 @@ def firms(D, y, band, name):
     if len(idx) < 2: idx = pick(False)
     if not idx: return []
     picks = []
-    for i in range(10):
-        j = idx[(i * len(idx)) // 10]
+    for i in range(4):
+        j = idx[(i * len(idx)) // 4]
         if j not in picks: picks.append(j)
+    def follow(r):
+        if r == here or r in ('outside the basemap outline', 'region not recorded'): return None
+        i = D['regrow'].get((r, y))
+        if i is None or not R['n'][i]: return None
+        return lead(D, y, 'region', r)
     out = []
     for j in picks:
         ch = T['filed'][j][y - D['firms']['years'][0]]; st = 'available' if ch == '1' else 'absent' if ch == '0' else 'not in the registry'; d = date_of(T['red_date'][j])
-        out.append(f'{T["name"][j]} · {("on a list from " + d) if d else ("on a list from " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}')
+        out.append((f'{T["name"][j]} · {("on a list from " + d) if d else ("on a list from " + str(y))}{" (date inferred)" if T["inferred"][j] else ""} · {ys} statement {st}', follow(T['regions'][T['reg'][j]])))
     return out
 
 def anniversary(D, iso):
@@ -128,15 +141,15 @@ def anniversary(D, iso):
 def cycle(D, y, band, name, cycle_index=0, layer='share', today=None):
     """The 50 items as dicts {kind, text}; a tip's text is None (any of the page's tips is accepted); on an anniversary (today, an ISO day) the lead carries the sentence."""
     ann = anniversary(D, today) if today else None
-    L = {'kind': 'lead', 'text': lead(D, y, band, name, layer) + ('. ' + ann if ann else '')}; fs = [{'kind': 'data', 'text': t} for t in facts(D, y, band, name)]; fr = [{'kind': 'firm', 'text': t} for t in firms(D, y, band, name)]
-    fa, fb = fr[0::2], fr[1::2]; slots = {2, 6, 10, 14, 18}
+    L = {'kind': 'lead', 'text': lead(D, y, band, name, layer) + ('. ' + ann if ann else '')}; fs = [{'kind': 'data', 'text': t} for t in facts(D, y, band, name)]; fr = firms(D, y, band, name)
+    fa, fb = fr[0::2], fr[1::2]; slots = {6, 14}
     def half(fo, fh):
-        data, fi, di = [], 0, 0
-        for sl in range(20):
-            if sl == 0: data.append(L); continue
-            if sl in slots and fi < len(fh): data.append(fh[fi]); fi += 1; continue
-            if di < len(fo): data.append(fo[di]); di += 1; continue
-            if fi < len(fh): data.append(fh[fi]); fi += 1; continue
+        data, fi, di = [L], 0, 0
+        while len(data) < 20:   # a firm at its slot, or wherever the facts have run out, with its follow-up right after it
+            if (len(data) in slots or di >= len(fo)) and fi < len(fh):
+                text, fol = fh[fi]; fi += 1; data.append({'kind': 'firm', 'text': text})
+                if fol and len(data) < 20: data.append({'kind': 'data', 'text': fol})
+                continue
             data.append(fo[di % len(fo)] if fo else L); di += 1
         items, dj = [], 0
         for p in range(25):

@@ -1378,8 +1378,8 @@ void main() {
   function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (wireScrolls()) { unpinTip(); return; } if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
   // ---- the data wire (round 10, the author's item 14a) and the cat facts (item 15) -------------------------------------------------------------
   // A cycle is 50 items in two halves of 25: each half opens with the lead fact (the band's own fact), carries the data facts below in one order (the
-  // second half reversed), five named listed firms that turned red that year at data slots 2, 6, 10, 14 and 18 (the halves taking alternate picks of the
-  // ten, chosen at floor(i n / 10) over the names sorted), and a tip at every fifth slot; one slot keyed to the year and the region carries a cat fact
+  // second half reversed), two named firms on the lists that turned red that year at data slots 6 and 14 (the halves taking alternate picks of the
+  // four, chosen at floor(i n / 4) over the names sorted), each followed by its region's statement share unless that is the region shown (round 25), and a tip at every fifth slot; one slot keyed to the year and the region carries a cat fact
   // from data/offwire.json with the prefix in the muted context colour (never a tip slot, never beside a named firm; the fact advancing by seven each
   // loop). Every string is a template over named fields of the shipped data; tools/wire_check.py re-derives each one for the audit.
   const WIRE_SPEED = 60, WIRE_HALF = 25, WIRE_RM_MS = 8000, OFFWIRE = D.offwire || null;
@@ -1419,45 +1419,54 @@ void main() {
   let annivCache;   // the day's sentence, built at the first cycle (after every helper below is defined), never at script load
   const anniv = () => { if (annivCache === undefined) annivCache = anniversaryLine(TODAY); return annivCache; };
   const regRowsOf = y => { const out = []; for (let i = 0; i < REG.region.length; i++) if (REG.year[i] === y && REG.region[i] !== 'Russia' && REG.region[i] !== 'outside the basemap outline' && REG.region[i] !== 'region not recorded') out.push(i); return out; };
+  // Round 25 (the author's request of 29 October 2026): about a quarter of a cycle's content on the lists, half on how the body of firms responds and a quarter other.
+  // The facts run in that mix (the second half plays them reversed); the transitions, the ownership groups and the 2019 histories are series.json's.
   function wireFacts(y, band, name) {
     const ys = y + (y === 2025 ? '*' : ''), out = [], loc = s => `<span class="loc">${esc(s)}</span>`, num = f => `<span class="num">${f}</span>`, add = (src, html) => out.push({ kind: 'data', text: html, src });
-    const nat = band === 'national', reg = !nat && regIndex.has(name) ? name : null;
+    const nat = band === 'national', reg = !nat && regIndex.has(name) ? name : null, t = totals[y], t21 = totals[2021], b = FM ? FM.by_year[y] : null;
+    const TS = S.transitions, trRow = prior => TS.year.findIndex((v, i) => v === y && TS.prior[i] === prior), ia = trRow('available'), ib = trRow('absent'), pctOf = (a, n) => num(fmt.pct(100 * a / n));
+    const G = S.groups, own = (g, yy) => G.year.findIndex((v, i) => v === yy && G.dimension[i] === 'ownership' && G.group[i] === g);
     if (TRN) { let n = 0, nr = 0; const ri = reg ? TRN.regions.indexOf(reg) : -1; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i]) { n++; if (ri >= 0 && TRN.reg[i] === ri) nr++; }
-      add('treatednational.red_from', `${ys}: ${num(fmt.int(n))} firms added to a list (treated) nationally`); if (reg) add('treatednational.reg', `${ys}: ${num(fmt.int(nr))} firms added to a list (treated) in ${loc(reg)}`); }
-    { const t = totals[y]; if (t) { const k = CY.totals.year.indexOf(y), na = CY.totals.n_available[k], nla = CY.totals.n_located_available[k];
-      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.eligible))} eligible firms, ${num(fmt.int(na))} with a statement (${num(fmt.pct(t.share))})`);
-      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} located firms, ${num(fmt.int(nla))} with a statement and ${num(fmt.int(t.located - nla))} without`);
-      add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`); } }
+      add('treatednational.red_from', `${ys}: ${num(fmt.int(n))} firms added to a list (treated) nationally` + (reg ? `, ${num(fmt.int(nr))} in ${loc(reg)}` : '')); }
+    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(CY.totals.n_available[CY.totals.year.indexOf(y)]))} of ${num(fmt.int(t.eligible))} eligible firms with a statement (${num(fmt.pct(t.share))})` + (y !== 2021 && t21 ? `, against ${num(fmt.pct(t21.share))} in 2021` : ''));
+    if (ia >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.N[ia]))} of the ${num(fmt.int(TS.origin[ia]))} firms with a statement in ${y - 1} had none (${pctOf(TS.N[ia], TS.origin[ia])})`);
+    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`);
+    { const s = own('state', y), p = own('private', y), s21 = own('state', 2021), p21 = own('private', 2021);
+      if (s >= 0 && p >= 0) add('series.groups', y === 2021 || s21 < 0 || p21 < 0 ? `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[p]))} of the ${num(fmt.int(G.n[p]))} private firms`
+        : `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[s21]))} in 2021. Private firms: ${num(fmt.pct(G.share[p]))} of ${num(fmt.int(G.n[p]))}, against ${num(fmt.pct(G.share[p21]))}`); }
+    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of the ${num(fmt.int(TRN.n))} firms on the lists (treated) are shown red. The ${num(fmt.int(TRN.undated_n))} on undated lists are red from 2014, and ${num(fmt.int(TRN.inferred_n))} dates of addition to a list are inferred`); }
+    if (ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.A[ib]))} of the ${num(fmt.int(TS.origin[ib]))} firms without a statement in ${y - 1} had one (${pctOf(TS.A[ib], TS.origin[ib])})`);
     if (REG) { const iN = regRow('Russia', y); if (iN != null && REG.d1[iN] !== 255) { const d = REG.d1[iN], rows = regRowsOf(y), k = rows.filter(i => REG.d1[i] === d).length;
         add('regions.d1', `${ys}: ${esc(divShort(d))} (${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
         if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
-      if (reg) { const ir = regRow(reg, y); if (ir != null) { add('regions.lsh', `${loc(reg)}, ${ys}: firms on the lists (treated) hold ${num(REG.lsh[ir] + '%')} of the region's revenue`); add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region are on the five lists (treated)`); } } }
-    if (FM && FM.by_year[y]) { const b = FM.by_year[y];
-      add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
-      add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated). ${num(fmt.int(b.city_level))} firms have other geocodes`);
-      add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list. ${num(fmt.int(b.firms_at_100plus))} firms sit at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
-      const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) is ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their own 2019 to 2021 average`); }
+      if (reg) { const ir = regRow(reg, y); if (ir != null) add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region are on the five lists (treated) and hold ${num(REG.lsh[ir] + '%')} of its revenue`); } }
+    if (ia >= 0 && ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.X[ib]))} of the firms without a statement in ${y - 1} were removed from the registry (${pctOf(TS.X[ib], TS.origin[ib])}), against ${num(fmt.int(TS.X[ia]))} of those with one (${pctOf(TS.X[ia], TS.origin[ia])})`);
+    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
+    if (b) { const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) is ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their own 2019 to 2021 average`); }
+    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated). ${num(fmt.int(b.city_level))} firms have other geocodes`);
+    if (b) add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list. ${num(fmt.int(b.firms_at_100plus))} firms sit at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
     if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms share the largest coordinate pair. Across all located firms, ${num(fmt.int(F.firms_at_100plus_locations))} sit at pairs shared by 100 or more`);
     { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} 100 km cells have 50 or more located firms in both years. ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms had a statement in 2021 and ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
-    { const k = C100.lists.sanctioned.filter(v => v >= 5).length; add('cells100.lists', `2021: ${num(fmt.int(k))} cells hold 5 or more sanctions-list members`); }
-    add('series.facts.cohorts', `2021: ${num(fmt.int(F.cohorts.revenue_cash))} eligible firms in the revenue cohort by cash share`);
-    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of the ${num(fmt.int(TRN.n))} firms on the lists (treated) are shown red`); add('treatednational', `${num(fmt.int(TRN.undated_n))} firms on the undated lists are red from 2014. ${num(fmt.int(TRN.inferred_n))} dates of addition to a list are inferred`); }
+    add('series.facts.histories', `2019 to 2024: ${num(fmt.int(F.hist_all_available))} of the ${num(fmt.int(F.fixed_2019_cohort))} firms followed from 2019 had a statement in every year (${pctOf(F.hist_all_available, F.fixed_2019_cohort)})`);
     return out;
   }
-  function wireFirms(y, band, name) {
-    if (!TRN) return []; const ri = band !== 'national' && regIndex.has(name) ? TRN.regions.indexOf(name) : -1, ys = y + (y === 2025 ? '*' : '');
+  function wireFirms(y, band, name) {   // each firm carries its follow-up, the share line of the region it is registered in (round 25), or null where that region is the one shown (the lead gives its line) or has no row
+    if (!TRN) return []; const here = band !== 'national' && regIndex.has(name) ? name : null, ri = here ? TRN.regions.indexOf(name) : -1, ys = y + (y === 2025 ? '*' : '');
     const pick = useReg => { const idx = []; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.name[i] && (!useReg || TRN.reg[i] === ri)) idx.push(i); idx.sort((a, b) => (TRN.name[a] < TRN.name[b] ? -1 : TRN.name[a] > TRN.name[b] ? 1 : a - b)); return idx; };
     let idx = ri >= 0 ? pick(true) : []; if (idx.length < 2) idx = pick(false); if (!idx.length) return [];
-    const picks = []; for (let i = 0; i < 10; i++) { const j = idx[Math.floor(i * idx.length / 10)]; if (!picks.includes(j)) picks.push(j); }
+    const picks = []; for (let i = 0; i < 4; i++) { const j = idx[Math.floor(i * idx.length / 4)]; if (!picks.includes(j)) picks.push(j); }
+    const follow = r => { if (!REG || r === here || r === 'outside the basemap outline' || r === 'region not recorded') return null; const i = regRow(r, y), i21 = regRow(r, 2021); if (i == null || !REG.n[i]) return null;
+      const sh = shareOf(REG.a[i], REG.n[i]), s21 = i21 != null ? shareOf(REG.a[i21], REG.n[i21]) : null;
+      return { kind: 'data', text: `<span class="loc">${esc(r)}</span>, ${ys}: <span class="num">${fmt.int(REG.n[i])}</span> firms registered in the region, <span class="num">${fmt.pct(sh)}</span> with a statement` + (y !== 2021 && s21 != null ? `, <span class="num">${pts(0, sh - s21)}</span> against 2021` : ''), src: 'regions.follow' }; };
     return picks.map(j => { const ch = TRN.filed[j][y - 2014], st = ch === '1' ? 'available' : ch === '0' ? 'absent' : 'not in the registry', d = dateOf(TRN.red_date[j]);
-      return { kind: 'firm', text: `<span class="nm">${esc(TRN.name[j])}</span> · ${d ? 'on a list from ' + d : 'on a list from ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j }; });
+      return { kind: 'firm', text: `<span class="nm">${esc(TRN.name[j])}</span> · ${d ? 'on a list from ' + d : 'on a list from ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j, follow: follow(TRN.regions[TRN.reg[j]]) }; });
   }
   const wireTipsList = () => { const out = []; TIPS.forEach(t => { if (t.firms && !FIRMS_OK) return; if (t.mouse && coarse()) return; out.push(coarse() && t.touch ? t.touch : t.text); }); return out; };
   function buildCycle(y, band, name, cycleIndex) {
     const lf = factFor(band, name, true), an = anniv(), lead = { kind: 'lead', text: lf.text + (an ? '. ' + an.html : ''), src: 'lead:' + lf.kind + (an ? '+anniversary' : '') } /* on an anniversary the lead item carries the sentence (item 6) */, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
-    const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([2, 6, 10, 14, 18]);
-    const half = (fo, fh, tipStart) => { const data = []; let fi = 0, di = 0;
-      for (let sl = 0; sl < 20; sl++) { if (sl === 0) { data.push(lead); continue; } if (firmSlots.has(sl) && fi < fh.length) { data.push(fh[fi++]); continue; } if (di < fo.length) { data.push(fo[di++]); continue; } if (fi < fh.length) { data.push(fh[fi++]); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
+    const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([6, 14]);
+    const half = (fo, fh, tipStart) => { const data = [lead]; let fi = 0, di = 0;   // a firm at its slot, or wherever the facts have run out, with its follow-up right after it
+      while (data.length < 20) { if ((firmSlots.has(data.length) || di >= fo.length) && fi < fh.length) { const f = fh[fi++]; data.push(f); if (f.follow && data.length < 20) data.push(f.follow); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
       const items = []; let ti = tipStart, dj = 0; for (let p = 0; p < WIRE_HALF; p++) { if (p % 5 === 4) { const t = tipsL[ti % tipsL.length]; items.push({ kind: 'tip', text: units(esc(t)), src: 'tips:' + (ti % tipsL.length) }); ti++; } else items.push(data[dj++]); } return items; };
     const cycle = half(facts, firmsA, 0).concat(half(facts.slice().reverse(), firmsB, 5));
     if (OFFWIRE && OFFWIRE.facts && OFFWIRE.facts.length) { const h = fnv(`${y}|${name}`), pool = OFFWIRE.facts, isFirm = i => i >= 0 && i < cycle.length && cycle[i].kind === 'firm'; let slot = 12 + (h % 26), guard = 0;

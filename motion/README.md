@@ -2258,6 +2258,19 @@ Proof:
 
 **Published** 29 October 2026 (UTC) on the author's site. The author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed 6c3c0bf..15e0cc5. armenkaprelian.com/film serves the 244 s file (26,030,333 bytes), the new chapter times and "4 min 4 s".
 
+### Round 25 (29 October 2026): the wire rebalanced
+
+The author asked for a side chat's advice on the data wire to be checked and the valid parts built, with one review at the end in place of the text and frames steps (a one-time exception; the written rules are unchanged). Detail in `review/2026-10-29-round-25-wire.md`; both cycles and the strips in `review/2026-10-29-round-25-wire.html`.
+- **The aim:** of a cycle's 40 content items, about a quarter on the lists, half on how the body of firms responds and a quarter other. Russia 2024 had 20, 10 and 10.
+- **Named firms:** 4 per cycle instead of 10. Each is followed by its region's statement share against 2021, except where that region is the one shown.
+- **New facts** from `data/series.json`: firms with a statement the year before that had none, firms without one that had one, removals among the two, state-related against private firms, and the firms followed from 2019 with a statement in every year. The eligible share gains its 2021 figure.
+- **Merged or dropped:** the two method notes on the red marks and the region's two list facts are merged. Dropped: the 100 km cells with five or more sanctions-list members, the revenue cohort by cash share, and the located firms with and without a statement.
+- **After:** Russia 2024 has 9, 22 and 9; Moscow Oblast 2024 has 13, 19 and 8. `tools/wire_check.py` re-derives the new cycle.
+
+Proof: `build/round-25/proof` against 4cef203. 574 text groups changed at 1,600 and 400 px, every one a wire item. 68 of 88 frames differ at 1,600 px, all inside the wire strip, with the map unchanged and no new rule hits. At 400 px (`proof-400`, frames only) no frame differs. The audit ran at 1,600 px only, the lighter check the author allowed: 284 states and zero findings, the wire states included. The page's `wireAt` and `wire_check.py` agree on all 1,000 items of 20 contexts.
+
+**Not yet reviewed or published:** the author reviews it before any publish.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
