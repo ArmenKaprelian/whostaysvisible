@@ -2186,7 +2186,9 @@ Proof: `build/proof-r22-final` against HEAD (`f895dcd`): no text differs; 30 of 
 
 Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings (the first run, before REFERENCES and the casing, also zero).
 
-**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry: round 22 corrects nothing), the five-width audit with zero findings (1,376 states, 7 min 55 s), the publish set (141.1 MB), the publish copy fa93e9b and the site's import 4e1b27a. The site's push is the author's (`publish.sh --push`).
+**Ready to publish** on the author's word (29 October 2026, UTC): `publish.sh` ran the date check (no CORRECTIONS entry: round 22 corrects nothing), the five-width audit with zero findings (1,376 states, 7 min 55 s), the publish set (141.1 MB), the publish copy fa93e9b and the site's import 4e1b27a.
+
+**Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed the site's import (cf774e5..4e1b27a).
 
 ## How to add or change content
 
