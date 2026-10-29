@@ -2218,6 +2218,13 @@ Proof: `build/round-24/proof-final` against HEAD (`82f1db8`): the approved wordi
 
 **Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads, 40 s), and it pushed the site's import (ea4c93b..c6b160a).
 
+### The text rules first (29 October 2026)
+
+The author's approval of a side chat's proposal, after round 24's publish gate stopped twice on text rules checked late: the CORRECTIONS entry's limits only inside the eight-minute audit, the agent guide's 1,200 words with its dated line only at the publish set, after the audit.
+- `tools/publish-set.py --texts`: every text-only rule in about 0.1 s, nothing copied: the date check; the audit's own `corrections_check` (two sentences, 300 characters with the date, no semicolon, em-dash or "listed", newest first, one date per entry); the guide as the set ships it, dated, against `agent_guide.py`'s rules, and the working copy's freshness; `glossary_build.py`'s check. Each rule is imported from its tool, not copied. With `--from COMMIT` it checks the texts as of that commit.
+- `tools/publish.sh` runs it as step 1, so a text that breaks a rule stops the gate before the audit. Run it after any text change.
+- Tested: at c3f8f8e (today's first gate) it refuses the entry (312 characters, 3 sentences) and the guide (1,214 words as published); on the current build it passes. The reading texts the page builds need a browser; the proof's text snapshot covers them.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.

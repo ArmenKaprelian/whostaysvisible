@@ -2,7 +2,7 @@
 # The atlas's publish to the author's site in one command (round 19, the author's decision of 28 October 2026). It stops at the first failure.
 #
 #   motion/tools/publish.sh          the gate and the copies; nothing goes public:
-#     1. publish-set.py --dates      the publish day (UTC) and the CORRECTIONS entry
+#     1. publish-set.py --texts      the publish day (UTC), the CORRECTIONS entry and every text-only rule (round 24)
 #     2. audit-five.sh               the full five-width audit of the working tree, served for the run; zero findings, or it stops
 #     3. publish-set.py --write      the publish set in motion/publish/, its checks passed
 #     4. the publish copy committed and pushed to the lab's repository (the lab's rule: commit at each checkpoint, push after each commit)
@@ -46,8 +46,8 @@ cd "$LAB"
 round="$(grep -oE '^### Round [0-9]+' motion/README.md | tail -1 | grep -oE '[0-9]+')"
 src="$(git rev-parse --short=7 HEAD)"
 
-say "1/5 the publish day"
-python3 -I motion/tools/publish-set.py --dates
+say "1/5 the publish day and the text rules (seconds; a text that breaks a rule stops the gate before the audit)"
+python3 -I motion/tools/publish-set.py --texts
 
 say "2/5 the five-width audit (about 8 minutes)"
 motion/tools/audit-five.sh

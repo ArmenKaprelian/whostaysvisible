@@ -43,6 +43,14 @@ already hold (one entry per date; a second publish with corrections on one UTC d
 copies nothing: run it before the publish gate's five-width audit, so that a date edit lands before that run and needs no second one;
 tools/audit_five.py shows its result as a note at the start of every run.
 
+Round 24 (the author's approval of 29 October 2026, after two publish gates stopped on text rules checked late): --texts runs every text-only
+rule in seconds and copies nothing: the date check above; the audit's CORRECTIONS rule (tools/atlas-audit.py's corrections_check: at most
+two sentences and 300 characters with the date, no semicolon, em-dash or "listed", newest first, one date per entry); the guide as the set
+ships it, dated, against tools/agent_guide.py's rules (1,200 words with the dated line), and the working copy's freshness; tools/glossary_build.py's
+check. Each rule is imported from its tool, never copied. tools/publish.sh runs it as its first step, so a text that breaks a rule stops the gate
+before the audit; run it after any text change. The reading texts the page builds (the cards, the layers, the legend, the tooltips) need a
+browser: change-proof.py's text snapshot covers them.
+
 Round 19 (the author's decision of 28 October 2026): only --write builds into publish/. Without it the set is built and checked in a scratch
 folder under build/, compared with publish/ (files added and changed) and removed, so a trial run never touches the publish copy. -h or
 --help prints this note and builds nothing."""
@@ -52,7 +60,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FROM = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
 MOTION = os.path.normpath(os.path.join(HERE, ".."))
 if "-h" in sys.argv or "--help" in sys.argv: print(__doc__); sys.exit(0)
-DATES_ONLY = "--dates" in sys.argv
+DATES_ONLY = "--dates" in sys.argv or "--texts" in sys.argv   # --texts (round 24) runs the date check with the other text rules; neither copies anything
+TEXTS = "--texts" in sys.argv
 WRITE = "--write" in sys.argv   # round 19: the publish copy is written only on request; a run without it builds in scratch and reports
 PUBLISH = os.path.join(MOTION, "publish")
 OUT = PUBLISH if WRITE or DATES_ONLY else tempfile.mkdtemp(prefix="publish-dry-", dir=os.path.join(MOTION, "build"))
@@ -153,8 +162,7 @@ def copy(sub, name):
     else: shutil.copyfile(src, dst)
     return os.path.getsize(dst)
 
-def agent_guide(problems):   # the guide rebuilt for the set (see the module's note); returns a line for the report, or None when the pages do not load it
-    if "agent-guide.js" not in SCRIPTS: return None
+def guide_module():   # tools/agent_guide.py as of --from, else the working tree's (round 24: shared by the set and --texts)
     if FROM:
         try:   # round 18: the builder imports Motion.fmt's port; the commit's own copy is registered first, so the guide formats as it did at that commit
             jf = types.ModuleType("jsfmt"); jf.__file__ = os.path.join(HERE, "jsfmt.py")
@@ -164,7 +172,10 @@ def agent_guide(problems):   # the guide rebuilt for the set (see the module's n
         exec(compile(git("show", FROM + ":motion/tools/agent_guide.py"), "agent_guide.py at " + FROM, "exec"), mod.__dict__)
     else:
         sys.path.insert(0, HERE); import agent_guide as mod
-    when = long_date(publish_day())
+    return mod
+def agent_guide(problems):   # the guide rebuilt for the set (see the module's note); returns a line for the report, or None when the pages do not load it
+    if "agent-guide.js" not in SCRIPTS: return None
+    mod = guide_module(); when = long_date(publish_day())
     text = mod.build(os.path.join(MOTION, "data"), published=when)
     for f in mod.rules(text): problems.append("agent guide: " + " | ".join(f))
     same = source("js/agent-guide.js").decode("utf-8") == mod.js_of(mod.build(os.path.join(MOTION, "data")))
@@ -201,6 +212,26 @@ def dates_check():   # corrections_dates on the shipped script against the last 
     if base is None: return [], ["CORRECTIONS: no publish copy at HEAD names its commit, so the entries were not compared; the publish day is %s (UTC)" % long_date(publish_day())]
     cur = correction_entries(source("js/explorer-app.js").decode("utf-8")); pub = correction_entries(git("show", base + ":motion/js/explorer-app.js"))
     return corrections_dates(cur, pub, publish_day())
+
+def tool(name):   # another tool's own checks, imported, so each text rule keeps one home (round 24)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name.replace("-", "_"), os.path.join(HERE, name + ".py")); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
+def texts_check():   # round 24: every text-only rule, in seconds, before the five-width audit (see the module's note); (problems, notes)
+    import html
+    bad, notes = dates_check()
+    entries = [{"lead": d, "text": d + ": " + html.unescape(re.sub(r"<[^>]+>", "", t))} for d, t in correction_entries(source("js/explorer-app.js").decode("utf-8"))]
+    found = tool("atlas-audit").corrections_check(entries)   # the audit's own rule: sentences, characters with the date, wording, order, one date per entry
+    bad += ["CORRECTIONS: " + f for f in found]
+    if not found: notes.append("CORRECTIONS: %d entries within the audit's rules" % len(entries))
+    G = guide_module(); text = G.build(os.path.join(MOTION, "data"), published=long_date(publish_day()))   # the guide as the set will ship it, dated
+    found = ["agent guide (as published): " + " | ".join(f) for f in G.rules(text)]
+    if not FROM: found += ["agent guide: " + " | ".join(f) for f in G.check(MOTION) if f[0] not in [g[0] for g in G.rules(text)]]   # the working copy: stale or missing
+    bad += found
+    if not found: notes.append("agent guide: the published copy keeps the builder's rules")
+    found = [f for f in tool("glossary_build").check() if not f.startswith("note:")]
+    bad += ["REFERENCES: " + f for f in found]
+    if not found: notes.append("REFERENCES: the glossary check passes")
+    return bad, notes
 
 def keys_of(obj, out):
     if isinstance(obj, dict):
@@ -279,7 +310,7 @@ def twin_checks(data_dir, loads):   # round 18: twins against their JSON, JSON a
 
 def main():
     if DATES_ONLY:
-        bad, notes = dates_check()
+        bad, notes = texts_check() if TEXTS else dates_check()
         for t in notes: print(t)
         for pr in bad: print("REFUSED: " + pr)
         return 1 if bad else 0
