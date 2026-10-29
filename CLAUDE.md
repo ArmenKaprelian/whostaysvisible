@@ -4,7 +4,7 @@ Claude's visualization lab for the dissertation: the Visibility Atlas (`motion/e
 
 ## Read first
 
-- `motion/README.md`: the record of every round, the data passes, the tools and the publishing history. Round 19 is the latest.
+- `motion/README.md`: the record of every round, the data passes, the tools and the publishing history; its last round entry is the latest.
 - `design/principles.md`: the author's design rules. Read it before any visual work.
 - `motion/review/`: round notes, proposals, measurements and review exports.
 

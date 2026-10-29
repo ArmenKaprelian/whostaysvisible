@@ -80,8 +80,8 @@ def build(data_dir, published=None):
     add('## 4. Key results')
     add('')
     add('4.1. Nationally, %s of eligible firms have a statement for 2021 and %s for 2024 (Table B.1).' % (pct(e[2021]), pct(e[2024])))
-    add('4.2. From 2021 to 2024 availability rises for private and joint-stock firms and falls for state-related firms (%s to %s), all in their state-run half, mostly municipal unitary enterprises (%s to %s), and mostly in 2024 (Figures 2.2 and 2.3).'   # the author's choice of 29 October 2026, so the published guide, with its dated line, keeps to 1,200 words
-        % (pct(F['own']['state'][0]), pct(F['own']['state'][1]), pct(SS['state_unitary']['share'][0]), pct(SS['state_unitary']['share'][1])))
+    add('4.2. From 2021 to 2024 availability rises for private and joint-stock firms and falls for state-related firms (%s to %s, Figures 2.2 and 2.3), all among their state-run unitary enterprises (%s to %s), while the rest rise (%s to %s).'   # variant V, the author's choice of 29 October 2026: the contrast kept, 1,200 words with the published copy's dated line
+        % (pct(F['own']['state'][0]), pct(F['own']['state'][1]), pct(SS['state_unitary']['share'][0]), pct(SS['state_unitary']['share'][1]), pct(SS['state_other']['share'][0]), pct(SS['state_other']['share'][1])))
     add('4.3. Among continuing firms with a statement for the year before, larger asset quintiles have greater conditional availability in both provider eras (Tables B.4 and B.5). ' + size)
     add('4.4. Sanctioned-only firms, on the sanctions list and on no other list, have lower availability than firms on no list by 2024: an odds ratio of %s (%s) (Table B.7).' % (dec(F['sanctioned_only_or_2024']), ci(F['sanctioned_only_or_2024_low'], F['sanctioned_only_or_2024_high'])))
     add('4.5. The estimates come from binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Standard errors are two-way clustered by industry and region.')
