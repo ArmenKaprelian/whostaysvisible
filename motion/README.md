@@ -2204,6 +2204,16 @@ Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings.
 
 **Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed the site's import (4e1b27a..ea4c93b).
 
+### Round 24 (29 October 2026): the Groups card redrawn, state-run, the pulse's trail
+
+The author's report of a misdrawn Groups chart and request for a stronger pulse, then picks made from frames and sandbox previews; detail in `review/2026-10-29-round-24.md`.
+- **The bug:** a layout fault, not a data error. The slope chart pushed its labels apart in order, so in the 124 px card Private's label sat 24 px below its dot and Unitary's beside Private's, and State-related and Unitary began at one dot with unnamed ends. The data match the chapter, and the groups' denominators sum to the eligible counts.
+- **The card** (`MotionCharts.changes`): a table with each group's change drawn as a bar from one shared zero line (a range frame over the bars), the change in points; lower-case names on one left edge, state-run joined to state-related by a hairline bracket (pick A); bars on whole device pixels.
+- **State-run** (M14, `R/motion/M14-statesplit.R`, `data/statesplit.json`, 12 checks): the state-related unitary enterprises, about half of the state-related firms, carry the whole decline (70.1 to 48.8 percent); the other state-related firms rise (69.5 to 73.7); 86 percent were municipal in 2024. The card's i text, its Findings, the CHANGE: STATE-RELATED reading text, REFERENCES (State-run firms) and the agent guide's 4.2 say so, "unitary" kept only where state-run is defined.
+- **The pulse** (pick E): a 1.5 s sweep by longitude, each firm swelling 7.5 to 18 px as it passes (three times round 22's), with the year's minimum spanning tree tracing behind it as a fading trail; 2.4 s in all; the Cells view's dot and the found ring keep 1.8 s. The tree is built once per year in idle time. The pulse button's tooltip and label read "Replay sweep of firms added to a list in {year}. Lines join them by distance only." (the author's wording, in place of a note on the legend's tall reading side).
+
+Proof: `build/round-24/proof-final` against HEAD (`82f1db8`): the approved wording in four text groups at each width; 10 of 88 frames differ, in the Groups card, its pop-out and the two cards below it; no new rule hits. Review gate (`audit-five.sh --widths 1600,400`, 558 states): zero findings at 1,600 px; one at 400 px, solo-confirmed: on a 360 px phone the card's "2024" header meets "change (points)" and the bars keep about 20 px. A two-line layout for narrow cards awaits the author's frames. The tooltip move, proved against a copy of the audited build: only its strings changed, 0 of 88 frames.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
