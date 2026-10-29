@@ -2156,7 +2156,9 @@ The author's pick C of 29 October 2026, from the plan after the site pass; the r
 
 Proof: `build/round-21/proof-address-files` against HEAD, identical (no string, frame or rule hit differs; 260 s). The Firms view requests only `.bin.gz` files, with no script errors.
 
-**Ready to publish:** `publish.sh` (29 October 2026, UTC) ran the date check, the five-width audit with zero findings (1,376 states, 7 min 46 s), the publish set (141.1 MB, the addresses 75.9 MB), the publish copy 7624997 and the site's import 3d64c1e. The copy's build line names 3cb5b50, whose atlas sources are be8761f's: the pointer commits made during the audit touch none of them. In the site's copy the Firms view fetches only `.bin.gz` files, with no errors. The push is the author's (`tools/publish.sh --push`).
+**Ready to publish:** `publish.sh` (29 October 2026, UTC) ran the date check, the five-width audit with zero findings (1,376 states, 7 min 46 s), the publish set (141.1 MB, the addresses 75.9 MB), the publish copy 7624997 and the site's import 3d64c1e. The copy's build line names 3cb5b50, whose atlas sources are be8761f's: the pointer commits made during the audit touch none of them. In the site's copy the Firms view fetches only `.bin.gz` files, with no errors.
+
+**Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings, and it pushed the six site commits (d2c23ad..3d64c1e), the README and tool commits of picks B2 to B5 among them.
 
 ### The claude.ai pointers (29 October 2026)
 
