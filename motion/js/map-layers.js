@@ -300,6 +300,7 @@
   // release (the pale core's fade to the mark's colour, 0 to 1), grow (the mark's opacity ramp), glowA (the glow's alpha), p (the rings, 0 to 1).
   // The atlas's reformed pulse (round 15, the author's items 4 and 7B, M.pulseModern 1 there, 0 in the video): no swell, no pale core and no glow; the mark fades
   // in to its red over 0.35 s and one thin ring expands and fades (pulseRing), so a year's new firms read as a quiet sweep and each frame draws one stroke per firm.
+  // Since round 22 that ring marks only the firm found by name; a year's listed firms swell instead (M.swellPhase below).
   M.pulseModern = 0;
   M.pulsePhase = function (t, o, P = M.PULSE) {
     if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
@@ -340,6 +341,22 @@
     ctx.lineWidth = w1; ctx.globalAlpha = a1; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + r1, 0, TAU); ctx.stroke();
     if (a2 > 0.01) { ctx.lineWidth = w2; ctx.globalAlpha = light ? a2 * 0.5 : a2; ctx.strokeStyle = light ? theme.treated : theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + r2, 0, TAU); ctx.stroke(); }
     ctx.restore();
+  };
+  // The atlas's listed pulse since round 22 (the author's pick A of 29 October 2026): each new red mark swells to r + swellPeak(r) and settles back over
+  // 0.9 s, with no ring, no glow and no pale core; on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
+  // before it read as an explosion, and painting 1,480 of them (2024) dropped about a third of the frames; the swell draws one disc per firm.
+  M.SWELL = 0.9;   // seconds
+  M.swellPeak = r => Math.min(6, Math.max(2.5, 1.2 * r));   // the extra radius at the peak, px
+  M.swellPhase = function (t, o) {   // into the bloom phase's fields: on, grow (the red's fade-in over 0.2 s), swell (0 to 1 and back), p (0 to 1)
+    if (t <= 0) { o.on = false; o.swell = 0; o.release = 0; o.grow = 0; o.glowA = 0; o.p = 0; return o; }
+    const u = Motion.clamp(t / M.SWELL, 0, 1);
+    o.on = true; o.release = 1; o.glowA = 0; o.grow = Motion.ease.outCubic(Motion.clamp(t / 0.2, 0, 1)); o.swell = Math.sin(Math.PI * u); o.p = u; return o;
+  };
+  M.swellDot = function (ctx, px, py, r, p, theme, still) {   // still (reduced motion): held at 0.6 of the peak
+    const R = (r + M.swellPeak(r)) * (still ? 0.6 : Math.sin(Math.PI * p)); if (R <= 0.3) return;
+    const dark = theme.dark !== false; ctx.save(); ctx.globalAlpha = dark ? 0.9 : 0.8;
+    { const cw = dark ? 1.5 : 1; ctx.strokeStyle = theme.stage; ctx.lineWidth = cw; ctx.beginPath(); ctx.arc(px, py, R + cw / 2, 0, Math.PI * 2); ctx.stroke(); }   // the casing (the author's picks of 29 October 2026): the stage colour outside the dot, as on the hover ring; 1.5 px on the dark theme, where the orange and amber cells swallowed the dot, 1 px on the light theme, where the red is 1.01 to 1.62:1 against every industry colour and 1.5 px read as a white ring
+    ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   };
   M.locationAt = function (entries, l) {
     let i = 0; while (i < entries.length - 1 && l >= entries[i + 1].start) i++;

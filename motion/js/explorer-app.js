@@ -446,8 +446,8 @@
   // its size it is drawn from a bitmap made once. Below the fit the names shrink with the land. Only 17 of the 22 names fit at the fit at 1,600 px, and a
   // collision at the fit is a collision at every zoom, so a hidden name enters at the first zoom where it fits, once the names that blocked it have left the
   // view or faded. In the tile's ice at 30 percent, drawn as light on the dark theme (8C) and plainly on the light theme, never over the authorship mark.
-  // Drawn above the cells, the dots and the listed marks and below the pulse rings, the hover ring, the crosshair, the tile and the panels: on the map canvas
-  // after the cells layers, on the marks canvas after the marks and before the rings in the Firms view; 22 text calls at most, no new canvas.
+  // Drawn above the cells, the dots and the listed marks and below the Cells view's pulse dots, the hover ring, the tile and the panels: on the map canvas
+  // after the cells layers, on the marks canvas after the marks in the Firms view; 22 text calls at most, no new canvas.
   const cloudBitmaps = new Map();   // label -> the name drawn once at twice its resting size, per colour
   function cloudBitmap(txt, size, colour) {
     const key = txt + '|' + size + '|' + colour; if (cloudBitmaps.has(key)) return cloudBitmaps.get(key);
@@ -889,16 +889,16 @@ void main() {
     if (am > 0) { const b = mosaicCache.get(y + '|1'); drawAround(c, fw ? winRect(fw.w.d, 24) : null, fw ? af : 0, a => drawMosaicLevel(c, b, L, 1, am * a), false); drawLog.push('squares'); }
     if (fw) { if (L === 'share') MM.drawDensityShares(mctx, stage, c, fw.w.paths, theme.ramp5, theme.below, af); else MM.drawDensityCounts(mctx, stage, c, fw.w.paths, theme.density, af); drawLog.push('fine'); }
   }
-  function drawCellsMarks(c) {   // the Cells view's marks canvas: the ghost names and the city labels above the squares, the pulse rings between them (the Firms view's order)
+  function drawCellsMarks(c) {   // the Cells view's marks canvas: the ghost names and the city labels above the squares, the pulse dots between them
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');
-    if (cellPulse) cellPulseRings(c);
+    if (cellPulse) cellPulseDots(c);
     if (found) foundRings(kctx, c);
     drawLabels(kctx, c, 'marks');
   }
   // The Cells view's pulse (round 14): the button pulses every cell at the shown level that holds a firm listed in the shown year (dated and present that year;
-  // undated firms never pulse), with the Firms view's two rings at the cell's centre and its west-to-east stagger over the cells in view; under reduced motion
-  // the still highlight for the same 1.8 s. The automatic pulse on a forward year change stays in the Firms view.
+  // undated firms never pulse), a red dot at the cell's centre swelling and gone in 0.9 s (round 22; the Firms view's ring before), with the west-to-east
+  // stagger over the cells in view; under reduced motion the dot held for the same 1.8 s. The automatic pulse on a forward year change stays in the Firms view.
   const CELL_PULSE_LAYERS = new Set(LAYERS.filter(L => L.pulse).map(L => L.id));   // from the layers' facts (round 18)
   let cellPulse = null, cellPulseRaf = 0, cellPulseTimer = 0;
   function endCellPulse() { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) clearTimeout(cellPulseTimer); cellPulseTimer = 0; if (cellPulse) { cellPulse = null; setLive(false); } }
@@ -923,31 +923,30 @@ void main() {
     drawCellsMarks(c); return cells.length;
   }
   function cellPulseTick() { cellPulseRaf = 0; if (!cellPulse) return; if (performance.now() - cellPulse.t0 >= PULSE_MS) { cellPulse = null; setLive(false); } if (state.mode !== 'firms') drawCellsMarks(cam()); if (cellPulse) cellPulseRaf = requestAnimationFrame(cellPulseTick); }
-  function cellPulseRings(c) {
+  function cellPulseDots(c) {
     const P = cellPulse, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), r = MM.listedRadius(LR, 1), t = P.at != null ? P.at : performance.now() - P.t0, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k;
     for (const q of P.cells) {
       const px = ox + q.x * k, py = oy - q.y * k; if (px < -MARK_MARGIN || px > stage.width + MARK_MARGIN || py < -MARK_MARGIN || py > stage.height + MARK_MARGIN) continue;
-      if (P.static) { MM.pulseRing(kctx, px, py, r, LR, 1, theme, true); continue; }
-      MM.pulsePhase((t - q.delay) / 1000, PH); if (PH.on && PH.p > 0 && PH.p < 1) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, false);
+      if (P.static) { MM.swellDot(kctx, px, py, r, 1, theme, true); continue; }
+      MM.swellPhase((t - q.delay) / 1000, PH); if (PH.on && PH.p > 0 && PH.p < 1) MM.swellDot(kctx, px, py, r, PH.p, theme, false);
     }
   }
   const MARK_MARGIN = 80;   // CSS px beyond the view inside which marks are drawn: the street zoom's flash and ring reach 72.6 px (round 9)
   const PH = { on: false, swell: 0, release: 0, grow: 0, glowA: 0, p: 0 };   // the bloom phase of the mark being drawn, reused (no allocation per frame)
-  // The listed marks and the bloom (round 9): while a pulse runs, pass 0 lays the pale glows of the pulsing marks under
-  // everything and pass 1 draws the marks and their rings; each pulsing firm runs its own clock, started by its stagger delay.
+  // The listed marks and the pulse: each pulsing firm runs its own clock, started by its stagger delay, and its red mark swells and settles back
+  // (MM.swellPhase, round 22, the author's pick A of 29 October 2026); rounds 9 to 21 added a glow pass under the marks and a ring pass above the names.
   function drawMarks(c) {
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     const year = state.year, yi = year - 2014, k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), L = state.layer, now = performance.now();
     const st = !!(pulse && pulse.static), tNow = pulse ? (pulse.at != null ? pulse.at : now - pulse.t0) : 0;
     const ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN;
     if (markShared) sharedRings(c);   // round 16: the shared pairs, under the listed marks
-    for (let pass = pulse && !st ? 0 : 1; pass < 2; pass++) for (let i = 0; i < TRN.n; i++) {
+    for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
-      const pulsing = !!(pulse && pulse.mask[i]); if (pass === 0 && !pulsing) continue;
+      const pulsing = !!(pulse && pulse.mask[i]);
       const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue;
       const r = MM.listedRadius(LR, TRN.pile[i]);
-      if (pulsing) { if (st) { PH.on = true; PH.swell = 0.6; PH.release = 3 / 7; PH.grow = 1; PH.glowA = 0; PH.p = 1; } else MM.pulsePhase((tNow - pulseDelay[i]) / 1000, PH); }
-      if (pass === 0) { if (PH.on && PH.glowA > 0.01) MM.glowDisc(kctx, px, py, 2 * (r + MM.flashPeak(r) * PH.swell), PH.glowA, theme); continue; }
+      if (pulsing) { if (st) { PH.on = true; PH.swell = 0.6; PH.release = 1; PH.grow = 1; PH.glowA = 0; PH.p = 1; } else MM.swellPhase((tNow - pulseDelay[i]) / 1000, PH); }   // still: held at 0.6 of the swell
       const fade = pulsing && PH.on ? 1 - PH.grow : 1;   // the ordinary fill and rim fade as the bloom grows; a firm whose stagger has not started is still rimmed
       if (TRN.red_from[i] > year || (pulsing && fade > 0.001)) {
         const sc = TRN.state[i][yi], col = L === 'fin' && sc >= '1' && sc <= '6' ? theme.div6[+sc - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
@@ -956,20 +955,13 @@ void main() {
       if (TRN.red_from[i] <= year) {
         if (pulsing) {
           if (!PH.on) continue;   // before its own start the firm shows its rimmed mark only
-          const rr = r + MM.flashPeak(r) * PH.swell, core = PH.release < 1 ? MM.coreAt(ch === '1' ? theme.coreRed : theme.coreLand, PH.release) : null;
-          const tt = st ? 0 : Motion.clamp((tNow - pulseDelay[i]) / DECAY_MS, 0, 1);
-          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, core, LR);
+          const rr = r + MM.swellPeak(r) * PH.swell, tt = st ? 0 : Motion.clamp((tNow - pulseDelay[i]) / DECAY_MS, 0, 1);
+          MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, null, LR);
         } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo, null, LR);
       }
     }
     { const sw = sweepX(); if (sw) { kctx.save(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); const g = kctx.createLinearGradient(sw.x - sw.feather, 0, sw.x, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); kctx.globalCompositeOperation = 'destination-in'; kctx.fillStyle = g; kctx.fillRect(0, 0, stage.width, stage.height); kctx.restore(); } }   // the opening sweep: the listed marks fade in with the field (round 14); the names and labels below are drawn whole
     drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');   // the floating names above the field and the marks (round 12, part D)
-    if (pulse) for (let i = 0; i < TRN.n; i++) {   // the pulse rings above the names: the same geometry as the marks pass, rings only, while a pulse runs
-      if (!pulse.mask[i] || TRN.red_from[i] > year) continue; const ch = TRN.filed[i][yi]; if (ch === '-') continue;
-      const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue;
-      const r = MM.listedRadius(LR, TRN.pile[i]); if (st) { PH.on = true; PH.p = 1; } else MM.pulsePhase((tNow - pulseDelay[i]) / 1000, PH); if (!PH.on) continue;
-      if (st || (PH.p > 0 && PH.p < 1)) MM.pulseRing(kctx, px, py, r, LR, PH.p, theme, st);
-    }
     if (found) foundRings(kctx, c);   // the firm found by name (round 14)
     drawLabels(kctx, c, 'marks');
   }
@@ -1968,11 +1960,6 @@ void main() {
   }
   function drawOverlay(h) {
     octx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); octx.clearRect(0, 0, stage.width, stage.height);
-    if (cross.on) {   // the crosshair at the (eased) cursor, 2 px, in the cursor colour: the full neon when still, the live variant while moving
-      const cx = Math.round(cross.x) + 0.5, cy = Math.round(cross.y) + 0.5;
-      octx.strokeStyle = cursorStill ? theme.cursor : theme.cursorLive; octx.lineWidth = 2; octx.globalAlpha = 0.9;
-      octx.beginPath(); octx.moveTo(cx, 0); octx.lineTo(cx, stage.height); octx.moveTo(0, cy); octx.lineTo(stage.width, cy); octx.stroke(); octx.globalAlpha = 1;
-    }
     if (!h) return; const c = cam();
     if (hoverRegionName && state.hover && regIndex.has(hoverRegionName)) {   // the region under the cursor outlined in the cursor colour at every zoom and in both views, inside a city window included (round 10, G13b as corrected 25 October): the cached region path, stroked with the overlay
       octx.save(); Motion.camTransform(octx, stage, c); octx.strokeStyle = theme.cursor; octx.lineWidth = 1 / c.k; octx.lineJoin = 'round'; MM.strokeHair(octx, regionPath(hoverRegionName)); octx.restore(); octx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
@@ -2090,17 +2077,17 @@ void main() {
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   const MAP_UI = '.zoombox, .toggle, button, input, .maplegend, .mixbox, .mapnote, .ctx, .popout';   // the map's overlays and controls (round 15, the author's item 1): a press on any of them is theirs, never a click on the map under them (a press on the legend's "i" had flown the map to the cell beneath)
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } crossOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } stillOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
   }
-  // ---- the cursor tile, the crosshair and the still state (round 9, 25 October 2026) ------------------------------------
+  // ---- the cursor tile and the still state (round 9, 25 October 2026) -----------------------------------------------------
   // The tile is the glance view: the tooltip's lines, a class-mix bar on the industry layer and a footer with the cursor's
   // coordinate (the inverse of the basemap's projection) and the scale (metres per CSS pixel). It is placed clear of the hovered
-  // mark and of every panel; the crosshair runs across the map at the cursor in the cursor colour, the live variant while the
-  // cursor moves and the resting neon once it has been still for 200 ms, easing toward the cursor over 120 ms (a snap under
-  // reduced motion).
+  // mark and of every panel; the hover ring takes the live variant of the cursor colour while the cursor moves and the resting
+  // neon once it has been still for 200 ms. The crosshair that followed the cursor (rounds 9 to 21) was retired in round 22, the
+  // author's request of 29 October 2026; its code is kept in motion/review/2026-10-29-crosshair-retired.md.
   const LAEA = { lam0: BM.projection.longitude_origin * Math.PI / 180, phi0: BM.projection.latitude_origin * Math.PI / 180, R: BM.projection.earth_radius_km };
   function inverseLAEA(x, y) {
     const { lam0, phi0, R } = LAEA, rho = Math.hypot(x, y); if (rho < 1e-9) return [phi0 * 180 / Math.PI, lam0 * 180 / Math.PI];
@@ -2148,7 +2135,7 @@ void main() {
   }
   // The docked tile (round 14, the author's decision of 25 October 2026): on a map under 600 px wide, where the floating tile has no clear place, the tile spans the map's
   // width less 12 px margins along its top edge, so its lines wrap less and it is shorter. It may cover the note, the mix box and the legend, never the zoom box, the scale
-  // bar or the strip, and the point stays below it with the hover's clearance, the crosshair joining the two.
+  // bar or the strip, and the point stays below it with the hover's clearance.
   function dockTile(x, y, obs, r) {
     const tip = $('tip'), d = Math.max(14, r + 9);
     tip.classList.add('docked'); tip.style.width = (stage.width - 24) + 'px';
@@ -2191,18 +2178,7 @@ void main() {
     const fx = Math.max(0, Math.min(x + d, W - tw - 1)), fy = Math.max(0, Math.min(y - 10, H - th - 4)); return { x: fx, y: fy, x1: fx + tw, y1: fy + th, anchor: -1, fallback: true };
   }
   let tileState = null, stillTimer = 0, cursorStill = true;
-  const cross = { on: false, x: 0, y: 0, tx: 0, ty: 0, x0: 0, y0: 0, t0: 0, raf: 0 };
-  function crossOff() { cross.on = false; if (cross.raf) { cancelAnimationFrame(cross.raf); cross.raf = 0; } if (stillTimer) { clearTimeout(stillTimer); stillTimer = 0; } cursorStill = true; wrap.classList.remove('cursor-live'); }
-  function setCross(x, y, snap) {
-    cross.tx = x; cross.ty = y;
-    if (snap || !cross.on || reduceMotion()) { cross.on = true; cross.x = x; cross.y = y; if (cross.raf) { cancelAnimationFrame(cross.raf); cross.raf = 0; } return; }
-    cross.x0 = cross.x; cross.y0 = cross.y; cross.t0 = performance.now(); if (!cross.raf) cross.raf = requestAnimationFrame(easeCross);
-  }
-  function easeCross() {
-    cross.raf = 0; const u = Math.min(1, (performance.now() - cross.t0) / 120), e = Motion.ease.outCubic(u);
-    cross.x = cross.x0 + (cross.tx - cross.x0) * e; cross.y = cross.y0 + (cross.ty - cross.y0) * e;
-    drawOverlay(state.hover); if (u < 1) cross.raf = requestAnimationFrame(easeCross);
-  }
+  function stillOff() { if (stillTimer) { clearTimeout(stillTimer); stillTimer = 0; } cursorStill = true; wrap.classList.remove('cursor-live'); }
   function armStill(touch) {
     if (stillTimer) clearTimeout(stillTimer);
     if (touch) { cursorStill = true; wrap.classList.remove('cursor-live'); return; }
@@ -2224,7 +2200,7 @@ void main() {
     if (b.fallback && narrow()) { const dk = dockTile(x, y, obs, mark ? h.r : 0); if (dk) b = dk; }
     tip.style.left = b.x + 'px'; tip.style.top = b.y + 'px';
     tileState = { box: b, cursor: [x, y], mark: mark ? [h.px, h.py] : null, anchor: b.anchor, fallback: !!b.fallback, slid: !!b.slid, searched: !!b.searched, docked: !!b.docked, relaxed: b.relaxed || null };
-    setCross(x, y, !!opts.touch); drawOverlay(h); syncCursor(h); armStill(!!opts.touch);
+    drawOverlay(h); syncCursor(h); armStill(!!opts.touch);
     if (fresh) { drawCellPanel(h); fillMixBox(h); hoverUnit.key = key; }   // the panel, its chart and the mix box once per hovered unit
     return h;
   }
@@ -2935,14 +2911,14 @@ void main() {
   // the site's atlas/ folder, whose home is one level up.
   if (/\/atlas\/(index\.html)?$/.test(location.pathname)) for (const a of [$('lockup'), $('sitelink')]) { a.href = '../'; a.removeAttribute('target'); }
   // ---- the REFERENCES panel (round 16, the author's General 7 of 26 October 2026; the picks of 27 October: refA, rxA, raC, rlA, riA, rtA, rfA, rsA, rdB revised) ----
-  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 94 percent (the sea
+  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 97 percent (94 until round 22, the author's pick of 29 October 2026; the sea
   // at the same alpha on the light theme), with short entries under prompt-line heads in one scrolling body and a row of shortcuts. DEFINITIONS is the atlas's
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
   // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
   // page behind is inert. Escape, the close toggle or a press outside close it, focus returns to the button, and the page's own keys stand down while it is open.
   // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance;
   // the blink's quotation is uncited by the author's choice.
-  const REFS_ALPHA = 94, GLOSS = D.glossary || null;
+  const REFS_ALPHA = 97, GLOSS = D.glossary || null;
   const refsIsOpen = () => { const d = $('refs'); return !!(d && d.open); };
   const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text || url)}</a>`;
   const longDate = d => { const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(d || ''); if (!m) return d || ''; return [m[3] ? String(+m[3]) : '', m[2] ? MONTHS[+m[2] - 1] : '', m[1]].filter(Boolean).join(' '); };   // 2024-06-12 as 12 June 2024
