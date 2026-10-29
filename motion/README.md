@@ -2156,6 +2156,10 @@ The author's pick C of 29 October 2026, from the plan after the site pass; the r
 
 Proof: `build/round-21/proof-address-files` against HEAD, identical (no string, frame or rule hit differs; 260 s). The Firms view requests only `.bin.gz` files, with no script errors.
 
+### The claude.ai pointers (29 October 2026)
+
+The author's pick A2: the claude.ai explainer's last version is a pointer to the film on the author's site (`pointer/explainer-moved.html`), set as the atlas's pointer (`pointer/atlas-moved.html`, v40), with no anchor script since the explainer reads none. Both pointers load IBM Plex Mono's three Latin files from the artifact's own `fonts/` (Google's Latin rules, the woff2 files Google serves, the OFL text) in place of Google Fonts. Frames (`build/pointer-stage/frames`): the atlas pointer pixel-identical before and after at 1,440 px and on a phone, with no request to Google; the explainer pointer approved by the author from its frames. Published on the author's word as explainer v30 and atlas v41.
+
 ### Publishing
 
 Publish dates are UTC days: run `tools/publish-set.py --dates` before the publish gate's five-width audit (round 18, after v39).

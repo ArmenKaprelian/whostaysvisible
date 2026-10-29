@@ -1,0 +1,63 @@
+<title>Who stays visible?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* IBM Plex Mono's Latin faces from this artifact's own fonts/ folder, not from Google Fonts (the author's pick A2, 29 October 2026): Google's
+   rules for the Latin subset and the woff2 files Google serves. SIL Open Font License 1.1, fonts/IBMPlexMono-OFL.txt. */
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/IBMPlexMono-400-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/IBMPlexMono-500-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/IBMPlexMono-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+</style>
+<style>
+/* Layout: the claude.ai explainer's last version (the author's pick A2, 29 October 2026), a pointer to the film on the author's site, set as the atlas's
+   pointer (pointer/atlas-moved.html). One column on the atlas's navy stage: the
+   header lock-up, the striped title, the move in one sentence, one fuchsia button. A single dark look, the atlas's own, so no light theme. */
+:root {
+  --stage: #03060E; --panel: #091023; --rule: #2E333D;
+  --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C;
+  --cursor: #FF45C8; --cursor-live: #FF8FDF; --context: #4DFF7F;
+  --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
+  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+body { margin: 0; background: var(--stage); color: var(--ink); font: 15px/1.5 var(--font); -webkit-text-size-adjust: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: clamp(32px, 12vh, 120px) 48px; }
+main { max-width: 620px; margin-left: clamp(0px, 10vw, 160px); display: grid; gap: 22px; }
+.lock { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mk { width: 32px; height: 32px; flex: 0 0 auto; color: var(--context); }
+.who { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.what { font-size: 11px; line-height: 16px; color: var(--muted); }
+h1 { margin: 0; font-size: clamp(28px, 7vw, 44px); line-height: 1.05; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; text-wrap: balance; }
+@supports (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000)) {
+  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); }
+}
+hr { border: 0; height: 2px; margin: 0; background: var(--rule); }
+p { margin: 0; max-width: 56ch; color: var(--muted); }
+p.move { color: var(--ink); }
+.open { justify-self: start; position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--panel); color: var(--ink);
+  border: 3px solid var(--cursor); text-decoration: none; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.open:hover { border-color: var(--cursor-live); }
+.open:focus-visible { outline: none; }
+.open:focus-visible::after { content: ""; position: absolute; inset: -9px; pointer-events: none;
+  background: var(--mk-tl) left top / 8px no-repeat, var(--mk-tr) right top / 8px no-repeat, var(--mk-bl) left bottom / 8px no-repeat, var(--mk-br) right bottom / 8px no-repeat; }
+.open svg { width: 14px; height: 14px; }
+.addr { font-size: 13px; color: var(--dim); overflow-wrap: anywhere; }
+.addr code { font-family: var(--font); color: var(--ink); user-select: all; }
+.addr a { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }
+.addr a:hover, .addr a:focus-visible { color: var(--cursor-live); outline: none; }
+</style>
+
+<main>
+  <div class="lock">
+    <svg class="mk" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+    <div><div class="who">Armen G. Kaprelian · PhD Candidate, Claremont Graduate University</div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div>
+  </div>
+  <h1><span class="striped">Who stays visible?</span></h1>
+  <hr>
+  <p class="move">The film has moved to the author's site, where it is kept up to date. This copy is no longer updated.</p>
+  <a class="open" href="https://armenkaprelian.github.io/film/" target="_blank" rel="noopener">Open the film <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 11l6-6M6 5h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  <p class="addr">The address: <code>armenkaprelian.github.io/film/</code><br>The author's site: <a href="https://armenkaprelian.github.io/" target="_blank" rel="noopener">armenkaprelian.github.io</a></p>
+</main>
+
