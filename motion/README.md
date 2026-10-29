@@ -2214,6 +2214,8 @@ The author's report of a misdrawn Groups chart and request for a stronger pulse,
 
 Proof: `build/round-24/proof-final` against HEAD (`82f1db8`): the approved wording in four text groups at each width; 10 of 88 frames differ, in the Groups card, its pop-out and the two cards below it; no new rule hits. Review gate (`audit-five.sh --widths 1600,400`, 558 states): zero findings at 1,600 px; one at 400 px, solo-confirmed: on a 360 px phone the card's "2024" header meets "change (points)" and the bars keep about 20 px. The two-line layout for narrow cards closes it: proof against 99c073e, no text differs and 10 of 88 frames, in the Groups card and its pop-out; review gate again, 558 states, zero findings. The tooltip move, proved against a copy of the audited build: only its strings changed, 0 of 88 frames.
 
+**Ready to publish** on the author's word (29 October 2026, UTC), at the third run of `publish.sh`: the date check (the CORRECTIONS entry of 29 October, in the author's wording), the five-width audit with zero findings (1,376 states, 8 min 25 s), the publish set (141.1 MB), the publish copy aea6113 (from b16968a) and the site's import c6b160a. The first run stopped at the audit (the first CORRECTIONS entry ran 3 sentences and 312 characters, over the rule's 2 and 300); the second at the publish set (the published guide, with its dated line, at 1,214 words over 1,200; 4.2 shortened). In the site's copy the Groups card, the pulse and its tooltip and the entry load with no script errors.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
