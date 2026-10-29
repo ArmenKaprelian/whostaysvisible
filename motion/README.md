@@ -2190,6 +2190,16 @@ Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings (the
 
 **Published** 29 October 2026 (UTC) on the author's site: the author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads), and it pushed the site's import (cf774e5..4e1b27a).
 
+### Round 23 (29 October 2026): the swell at twice its size, REFERENCES at 98 percent
+
+The author's requests of 29 October 2026, after round 22 went live; detail in `review/2026-10-29-round-23.md`.
+- **The swell:** the peak doubled, from 2.5 to 6 px to 5 to 12 px (`MM.swellPeak`), the author's pick of 2x from stills at the peak and real-time clips at 1x, 1.5x and 2x; round 22's read too quiet. The Cells view's dot, which takes the same peak, doubles with it. Script time per frame was the same at all three sizes.
+- **REFERENCES:** `REFS_ALPHA` 98 (97 in round 22), picked from the corrected sheet of round 22.
+
+Proof: `build/proof-r23` against HEAD (`7a606f2`): no text differs; the two REFERENCES frames differ (98 percent), nothing else, the map outside its panels unchanged. The pulse is not among the proof's still states; the build's frames match the 2x preview pixel for pixel in 9 of 10 (the tenth by 2 pixels of rounding).
+
+Review gate: `audit-five.sh --widths 1600,400`, 1,376 states, zero findings. Not published.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
