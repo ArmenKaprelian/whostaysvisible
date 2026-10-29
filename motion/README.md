@@ -2269,7 +2269,7 @@ The author asked for a side chat's advice on the data wire to be checked and the
 
 Proof: `build/round-25/proof` against 4cef203. 574 text groups changed at 1,600 and 400 px, every one a wire item. 68 of 88 frames differ at 1,600 px, all inside the wire strip, with the map unchanged and no new rule hits. At 400 px (`proof-400`, frames only) no frame differs. The audit ran at 1,600 px only, the lighter check the author allowed: 284 states and zero findings, the wire states included. The page's `wireAt` and `wire_check.py` agree on all 1,000 items of 20 contexts.
 
-**Not yet reviewed or published:** the author reviews it before any publish.
+**Approved** by the author from the review page (29 October 2026), who asked for the publish gate.
 
 ## How to add or change content
 
