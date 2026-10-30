@@ -2304,6 +2304,8 @@ The author asked for the hovered region's fill to fade out sooner on zoom. They 
 
 **Ready to publish** without the five-width audit, on the author's word. `publish.sh`'s other steps ran by hand: `publish-set.py --texts`, `--write` (141.2 MB, no refusals), the publish copy c5fee20 and the site's import b79f51f. The import changes only the build line and the fill's line. The site's push (`publish.sh --push`) is the author's.
 
+**Published** 30 October 2026 (UTC). The author ran `publish.sh --push`, which pushed 885b4fb..b79f51f. The live `js/explorer-app.js` matches the site's copy byte for byte and holds the new fade.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
