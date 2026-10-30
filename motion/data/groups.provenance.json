@@ -1,13 +1,13 @@
 {
   "id": "groups",
-  "run_id": "20261030T020351Z-run-M13-groups.R",
+  "run_id": "20261030T093231Z-run-M13-groups.R",
   "mode": "guarded",
-  "time_utc": "2026-10-30T02:03:53Z",
+  "time_utc": "2026-10-30T09:32:36Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M13-groups.R",
-    "sha256": "ba1e7a3c82686bc69ba59ba220c67630130cfe0bc2879e18a8863ee18f8c4eba"
+    "sha256": "d68ceea183628d2f050644e026f7fda2490be0c27bc548947c70aa76af355211"
   },
-  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
+  "lab_commit": "5cb5944c37513074389eeca9036791375f18851d",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -66,7 +66,7 @@
     }
   ],
   "sql": null,
-  "rows": 4785,
+  "rows": 1561,
   "r_version": "R version 4.5.2 (2025-10-31)",
   "packages": [
     {
@@ -218,7 +218,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "4GB",
     "LAB_DUCKDB_THREADS": "4",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-SnO3qxH8/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-wopsWp6X/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -226,10 +226,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/groups.json",
-    "json_sha256": "b01fcfc4b529824b79a811a7602d85214f3c05cbe252d04027cf22c05aaa5cd0",
-    "json_bytes": 194551,
+    "json_sha256": "0041b29071c6aacf5c5955a682f603a7718047fd086cb4cbbe346906b7b0ca8a",
+    "json_bytes": 81568,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/groups.js",
-    "js_sha256": "80cff407d10e81d29d4b41b46be2610693321256236b90ab618126238aeb54b2",
-    "names": ["years", "support", "cell_km", "focus", "labels", "regions", "cells100", "support_counts", "basis", "notes", "legal", "ownership", "dimension", "group", "label", "region", "year", "n", "a", "ix", "iy", "regions_clear_both", "cells_with_firms", "cells_clear_both", "firms_2024_in_clear_cells", "firms_2024"]
+    "js_sha256": "aa2aac66adefc1085a9366a9a3526dfefbbd9926015bc6e7857028b9d1a49138",
+    "names": ["years", "support", "cell_km", "focus", "labels", "regions", "support_counts", "basis", "notes", "legal", "ownership", "dimension", "group", "label", "region", "year", "n", "a", "regions_clear_both", "cells_with_firms", "cells_clear_both", "firms_2024_in_clear_cells", "firms_2024"]
   }
 }

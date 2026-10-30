@@ -5,7 +5,8 @@
 # (programming/R/chapter2-pass2-addendum-data.R): ownership_form and legal_form joined to the chapter's crosswalk
 # (motion.classifier-crosswalk) on the code; '__MISSING__' kept apart, a code outside the crosswalk '__UNMAPPED__'.
 # Per 100 km cell (located firms, M12's projection, M5's grid: floor(x_km / 100)), the same for unitary enterprises and
-# state-related firms only, to count the cells that clear the 50-firm rule before any cell form is proposed.
+# state-related firms only, to count the cells that clear the 50-firm rule before any cell form is proposed (the counts ship in
+# support_counts; the cells themselves no longer ship since round 31, as no page draws them).
 # Checks: for every group and year the regions' sums (with the firms without a region) equal series.json's n and a exactly.
 # Nothing firm-level leaves DuckDB.
 # Run: scripts/lab-run.sh --max 8G --duck-mem 4GB --duck-threads 4 --cpu 400% Rscript --vanilla R/motion/M13-groups.R
@@ -93,10 +94,10 @@ regions <- regions[order(regions$region == "__NO_REGION__", regions$region, regi
 cells <- cells[order(cells$dimension, cells$year, cells$iy, cells$ix), c("ix", "iy", "year", "dimension", "group", "n", "a")]
 labels <- unique(cw[, c("dimension", "display_group", "display_label")]); names(labels) <- c("dimension", "group", "label")
 out <- list(years = YEARS, support = SUPPORT, cell_km = CELL_KM, focus = as.list(FOCUS), labels = labels,
-            regions = regions, cells100 = cells, support_counts = unname(clear),
-            basis = "regions: eligible firms registered in the region (region_model through config/regions-crosswalk.csv), located or not, the population of series.json's groups; '__NO_REGION__' holds the firms without a region; cells100: located eligible firms of the two groups the layer shows, in M5's 100 km grid",
+            regions = regions, support_counts = unname(clear),
+            basis = "regions: eligible firms registered in the region (region_model through config/regions-crosswalk.csv), located or not, the population of series.json's groups; '__NO_REGION__' holds the firms without a region; support_counts: the regions and M5's 100 km cells (located eligible firms of the two groups the layer shows) with 50 or more firms in both years",
             notes = c("Groups as the chapter's addendum classifies them: the registry's ownership_form and legal_form codes through the chapter's classifier crosswalk; missing codes and codes outside the crosswalk kept apart.",
                       "Shares within a group only where 50 or more firms of the group in the year (the project's support rule).",
                       "Registered addresses and registry regions, not operating sites; descriptive figures, not effects."))
-motion_save_json(out, "groups", checks = checks_df, rows = nrow(regions) + nrow(cells))
+motion_save_json(out, "groups", checks = checks_df, rows = nrow(regions))
 message(sprintf("  groups: %d region rows, %d cell rows", nrow(regions), nrow(cells)))
