@@ -2285,6 +2285,8 @@ The author asked for a guide for a reader's AI agent "with as many words as you 
 
 Proof: `build/proof-guide-v2` against d5a0a54. Two text groups changed, `/fixed/guide` at 1,600 and 400 px. 0 of 88 frames differ, and there are no new rule hits. `agent_guide.py --check` and `publish-set.py --texts` pass. The 1,600 px audit, through `audit-five.sh --widths 1600`, had 284 states and zero findings. Nothing is published: the publish gate and the site's push are next, on the author's word.
 
+**Ready to publish** (30 October 2026, UTC), on the author's word to run the gate, at the first run of `publish.sh`. The text rules passed, and there is no CORRECTIONS entry, since nothing published was wrong. The five-width audit had zero findings (1,376 states, 7 min 49 s), recorded for e8b1e49. The publish set is 141.2 MB, with the guide dated 30 October 2026. The publish copy is 0fa5515 (from e8b1e49) and the site's import 620618b, which changes the guide, its script and the build line. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.

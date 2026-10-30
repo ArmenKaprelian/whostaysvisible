@@ -33,4 +33,13 @@ The rules replace the 1,200-word cap and the six sections: numbered sections fro
 - `change-proof.py` against d5a0a54 (`build/proof-guide-v2`): two text groups changed, `/fixed/guide` at 1,600 and 400 px. 0 of 88 frames differ, the map outside its panels is unchanged, and there are no new rule hits. The guide has no layout of its own, so under the review rule it needs no frames.
 - The 1,600 px audit (`audit-five.sh --widths 1600`, 20261029T195701-0400): 284 states, 13,078 boxes, zero findings in 4 min 11 s, the guide's check and TEACH YOUR AGENT's copy check included. A first attempt called `atlas-audit.py` directly with no server running, and it stopped on an empty page. The wrapper serves `motion/` itself.
 
-Nothing is published. The publish gate (`publish.sh`) and the site's push are the author's call.
+## The publish gate (30 October 2026, UTC)
+
+The author said to run the gate. `publish.sh`, first run:
+- the text rules passed
+- the five-width audit (20261029T201009-0400) had 1,376 states, 63,817 boxes and zero findings in 7 min 49 s, recorded for e8b1e49
+- the publish set is 141.2 MB, with the guide rebuilt and dated 30 October 2026, and `publish/agent-guide.md` equals `build(data, published='30 October 2026')`
+- the publish copy is 0fa5515, pushed
+- the site's import 620618b changes `atlas/agent-guide.md`, `atlas/js/agent-guide.js` and the build line in `atlas/index.html`
+
+Nothing is public until the author runs `publish.sh --push`.
