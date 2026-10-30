@@ -315,7 +315,7 @@
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight && !motion) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame or a wheel step   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); drawRegionFill(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
@@ -1236,14 +1236,7 @@ void main() {
     if (L === 'change') { const i24 = regRow(name, 2024); if (i24 != null && i21 != null) { const s21 = shareOf(REG.a[i21], REG.n[i21]), s24 = shareOf(REG.a[i24], REG.n[i24]); return { band, name, kind: 'change', text: `${loc(name)}: ${num(s21, fmt.pct(s21))} with a statement in 2021, ${num(s24, fmt.pct(s24))} in 2024, ${num(s24 - s21, pts(0, s24 - s21))}`, nums: N, short: `${loc(name)}: ${sp(fmt.pct(s21))} in 2021, ${sp(fmt.pct(s24))} in 2024`, shortNums: [s21, s24] }; } }
     return Object.assign({ band, name, kind: 'share' }, shareLine(loc(name), n, a, n21, a21, what));
   }
-  let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it
-  const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
-  const regionFillFade = k => Motion.clamp(Math.log2(8 * kFit() / k) / 2, 0, 1);   // round 28 (the author's request of 30 October 2026): full to twice the country view, gone at eight times, linear in log zoom, so the fill marks the region at the national zooms and leaves the dots once the camera is in; the outline stays (round 15 held it full to k 50 and gone at k 100)
-  function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
-    if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
-    const fade = regionFillFade(c.k); if (fade <= 0) return;
-    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = (theme.dark ? REGION_FILL.dark : REGION_FILL.light) * fade; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore();   // the restore alone: drawBasemap strokes the graticule and the borders in km after this hook (a base() here redrew them in pixels on every hover, the glitch of 25 October)
-  }
+  let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it (its fill on the map went in round 30)
   // Round 16: the two layers' data, loaded on first use, and their drawing.
   function ensureData(id) {   // 'shared' (data/shared.js and shared-city.js) or 'groups' (data/groups.js)
     if ((id === 'shared' ? SHD : GRP) || dataPending.has(id)) return; dataPending.add(id);
@@ -2140,7 +2133,7 @@ void main() {
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   const MAP_UI = '.zoombox, .toggle, button, input, .maplegend, .mixbox, .mapnote, .ctx, .popout';   // the map's overlays and controls (round 15, the author's item 1): a press on any of them is theirs, never a click on the map under them (a press on the legend's "i" had flown the map to the cell beneath)
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } stillOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region until the settled hover re-reads it, so the strip does not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); } stillOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -2251,7 +2244,7 @@ void main() {
   function showHoverAt(x, y, opts = {}) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     if (h.region === undefined) h.region = regionAt(x, y);
-    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); requestDraw(); } }   // the map redraws with the region's fill on a region change only, coalesced with any queued draw   // the strip follows the cursor's region (round 10)
+    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); } }   // the strip follows the cursor's region (round 10); the overlay outlines it
     const tip = $('tip'), key = unitKey(h), fresh0 = key !== hoverUnit.key, prof = profileFor(h), pkey = prof ? prof.id : '', fresh = fresh0 || pkey !== hoverUnit.prof;
     if (fresh0) $('tipbody').innerHTML = tipText(h);
     if (pkey !== hoverUnit.prof) { fillTileBio(prof); hoverUnit.prof = pkey; }   // the profile box (round 15, item 9): a fixed height, so the tile changes size only when the box appears or goes
@@ -3307,8 +3300,6 @@ void main() {
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
     ghost() { const c = cam(), gl = groundLayout(kFit()); return { alpha: GHOST_ALPHA, drawn: ghostDrawn, laid: gl.placed.length, hidden: gl.hidden.map(g => g.city.label), sizes: gl.placed.map(g => [g.city.label, g.size]), colour: theme.tileInk, scale: c.k / kFit() }; },   // the ghost names (round 10; on the ground since round 16)
     hoverRegion() { return hoverRegionName; },
-    pxOf(x, y) { const c = cam(); return [c.ox + (x - c.cx) * c.k, c.oy - (y - c.cy) * c.k]; },   // a km point on the screen (the region-fill states)
-    regionFill() { return { name: hoverRegionName, alpha: theme.dark ? REGION_FILL.dark : REGION_FILL.light }; },
     regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
     pixelsAt(id, px, py) { const cv = $(id), d = window.devicePixelRatio || 1, g = cv.getContext('2d'), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(Array.from(g.getImageData(Math.round((px + dx) * d), Math.round((py + dy) * d), 1, 1).data)); return out; },   // the 3 by 3 pixels of a canvas around a point   // the city-window hand-over (round 10): the window's strength, the outside layer's alpha and whether it is outlined
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
