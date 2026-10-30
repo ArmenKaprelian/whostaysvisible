@@ -46,7 +46,7 @@ tools/audit_five.py shows its result as a note at the start of every run.
 Round 24 (the author's approval of 29 October 2026, after two publish gates stopped on text rules checked late): --texts runs every text-only
 rule in seconds and copies nothing: the date check above; the audit's CORRECTIONS rule (tools/atlas-audit.py's corrections_check: at most
 two sentences and 300 characters with the date, no semicolon, em-dash or "listed", newest first, one date per entry); the guide as the set
-ships it, dated, against tools/agent_guide.py's rules (1,200 words with the dated line), and the working copy's freshness; tools/glossary_build.py's
+ships it, dated, against tools/agent_guide.py's rules (since 29 October 2026 its numbering and every layer named, in place of 1,200 words), and the working copy's freshness; tools/glossary_build.py's
 check. Each rule is imported from its tool, never copied. tools/publish.sh runs it as its first step, so a text that breaks a rule stops the gate
 before the audit; run it after any text change. The reading texts the page builds (the cards, the layers, the legend, the tooltips) need a
 browser: change-proof.py's text snapshot covers them.
