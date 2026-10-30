@@ -58,15 +58,13 @@ def main():
     proc = subprocess.Popen(brave_flags(profile, a.width, a.height) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         port = wait_port_file(profile, proc); cdp = CDP(page_ws_url(port)); cdp.call("Page.enable"); cdp.call("Runtime.enable"); cdp.call("DOM.enable"); cdp.call("CSS.enable")
-        cur = None; themeScript = None
+        cur = None
         for sh in shots:
             dpr = sh.get("dpr", 1); theme = sh.get("theme", "dark"); opt = sh.get("opt"); block = tuple(sh.get("block") or ())   # round 16: a shot's ?opt= variants (the page reads them at load), so one run covers every variant
             if cur != (dpr, theme, opt, block):
                 cdp.call("Network.enable"); cdp.call("Network.setBlockedURLs", {"urls": list(block)})   # round 16: the files a shot loads without
                 cdp.call("Emulation.setDeviceMetricsOverride", {"width": a.width, "height": a.height, "deviceScaleFactor": dpr, "mobile": False})
                 cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": theme}]})   # for pages that still read the browser scheme (round 9 and before); the round-10 page reads the remembered choice below
-                if themeScript is not None: cdp.call("Page.removeScriptToEvaluateOnNewDocument", {"identifier": themeScript})
-                themeScript = cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', %s); } catch (e) {}" % json.dumps(theme)})["identifier"]   # the page no longer reads the browser scheme (round 10): a light shot is a remembered choice
                 cdp.call("Page.navigate", {"url": a.url + ("&" if "?" in a.url else "?") + "v=frames" + str(int(time.time())) + ("&opt=" + opt if opt else "")}); cdp.wait_event("Page.loadEventFired", timeout=60)
                 cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4); cur = (dpr, theme, opt, block)
             js = """(async () => { const A = window.__atlas; A.pulseAt(null); A.mode(%s); if (%s) A.layer(%s); A.preset(%s); A.year(%d); await A.ready(); { const J = %s; if (Array.isArray(J)) { const c0 = A.camera(); await A.jump(J.length >= 3 ? { cx: J[0], cy: J[1], k: J[2] } : { cx: c0.cx, cy: c0.cy, k: J[0] }); } } if (%s == null) A.pulseAt(null); A.redraw(); if (%s) A.legend(true); if (%s) { A.tip('reset'); A.tip(true); } %s

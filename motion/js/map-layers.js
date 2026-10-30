@@ -130,14 +130,12 @@
     return paths;
   };
   // Classes listed in `stroke` are outlined (strokePx design pixels, strokeAlpha) instead of filled.
-  M.tileEdge = null;   // set by the atlas's light theme: { colour, alpha, low(fill) } (27 October 2026); the video leaves it unset
   M.drawTiles = function (ctx, stage, cam, paths, colorOf, { alpha = 1, alphaOf = null, stroke = null, strokePx = 1, strokeAlpha = 0.3, outline = null } = {}) {   // outline: { colour, alpha, px } strokes every filled tile after its fill (round 10, the city-window hand-over)
     Motion.camTransform(ctx, stage, cam);
     ctx.save(); ctx.globalAlpha *= alpha;
     for (const [c, p] of paths) {
       if (stroke && stroke.has(c)) { ctx.save(); ctx.globalAlpha *= strokeAlpha; ctx.strokeStyle = colorOf(c); ctx.lineWidth = strokePx / cam.k; ctx.stroke(p); ctx.restore(); continue; }
       ctx.fillStyle = colorOf(c); if (alphaOf) { ctx.save(); ctx.globalAlpha *= alphaOf(c); ctx.fill(p); ctx.restore(); } else ctx.fill(p);
-      const e = M.tileEdge; if (e && e.low(colorOf(c))) { ctx.save(); ctx.globalAlpha *= e.alpha * (alphaOf ? alphaOf(c) : 1); ctx.strokeStyle = e.colour; ctx.lineWidth = 1 / cam.k; M.strokeHair(ctx, p); ctx.restore(); }   // the atlas's light-theme edge on a fill under 3:1 against the land (27 October 2026)
     }
     ctx.restore();
     if (outline && outline.alpha > 0) { ctx.save(); ctx.globalAlpha *= outline.alpha; ctx.strokeStyle = outline.colour; ctx.lineWidth = (outline.px || 1) / cam.k; for (const [c, p] of paths) M.strokeHair(ctx, p); ctx.restore(); }
@@ -326,12 +324,12 @@
     ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   };
   // The two rings at progress p (0 to 1) around a mark of resting radius r: ring 1 in the listed red reaching r + 2 + Rmax,
-  // ring 2 trailing at 0.7 of it in the pale outline colour (the red at half alpha on a light theme); still: the held highlight.
+  // ring 2 trailing at 0.7 of it in the pale outline colour; still: the held highlight. Dark ground only (the atlas's light theme went in round 30).
   M.pulseRing = function (ctx, px, py, r, L, p, theme, still) {
-    const TAU = Math.PI * 2, light = theme.dark === false; let r1, w1, a1, r2, w2, a2;
+    const TAU = Math.PI * 2; let r1, w1, a1, r2, w2, a2;
     if (M.pulseModern) {   // one ring in the treated red, about half the bloom's width, eased out to r + 2 + Rmax and gone; still: held at half that reach
       const w = Math.max(1.25, 0.55 * L.W), rr = still ? 2 + 0.5 * L.Rmax : 2 + L.Rmax * Motion.ease.outCubic(p), a = still ? 0.6 : 0.85 * (1 - p) * (1 - p);
-      if (a <= 0.01) return; ctx.save(); ctx.lineWidth = w; ctx.globalAlpha = light ? 0.8 * a : a; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + rr, 0, TAU); ctx.stroke(); ctx.restore(); return;
+      if (a <= 0.01) return; ctx.save(); ctx.lineWidth = w; ctx.globalAlpha = a; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + rr, 0, TAU); ctx.stroke(); ctx.restore(); return;
     }
     if (still) { r1 = 2 + 0.6 * L.Rmax; w1 = L.W; a1 = 0.6; r2 = 0.7 * r1; w2 = 0.8 * L.W; a2 = 0.4; }
     else {
@@ -340,7 +338,7 @@
     }
     ctx.save();
     ctx.lineWidth = w1; ctx.globalAlpha = a1; ctx.strokeStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, r + r1, 0, TAU); ctx.stroke();
-    if (a2 > 0.01) { ctx.lineWidth = w2; ctx.globalAlpha = light ? a2 * 0.5 : a2; ctx.strokeStyle = light ? theme.treated : theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + r2, 0, TAU); ctx.stroke(); }
+    if (a2 > 0.01) { ctx.lineWidth = w2; ctx.globalAlpha = a2; ctx.strokeStyle = theme.treatedOutline; ctx.beginPath(); ctx.arc(px, py, r + r2, 0, TAU); ctx.stroke(); }
     ctx.restore();
   };
   // The atlas's listed pulse since round 22 (the author's pick A of 29 October 2026): each new red mark swells to r + swellPeak(r) and settles back over
@@ -355,8 +353,8 @@
   };
   M.swellDot = function (ctx, px, py, r, p, theme, still) {   // still (reduced motion): held at 0.6 of the peak
     const R = (r + M.swellPeak(r)) * (still ? 0.6 : Math.sin(Math.PI * p)); if (R <= 0.3) return;
-    const dark = theme.dark !== false; ctx.save(); ctx.globalAlpha = dark ? 0.9 : 0.8;
-    { const cw = dark ? 1.5 : 1; ctx.strokeStyle = theme.stage; ctx.lineWidth = cw; ctx.beginPath(); ctx.arc(px, py, R + cw / 2, 0, Math.PI * 2); ctx.stroke(); }   // the casing (the author's picks of 29 October 2026): the stage colour outside the dot, as on the hover ring; 1.5 px on the dark theme, where the orange and amber cells swallowed the dot, 1 px on the light theme, where the red is 1.01 to 1.62:1 against every industry colour and 1.5 px read as a white ring
+    ctx.save(); ctx.globalAlpha = 0.9;
+    { const cw = 1.5; ctx.strokeStyle = theme.stage; ctx.lineWidth = cw; ctx.beginPath(); ctx.arc(px, py, R + cw / 2, 0, Math.PI * 2); ctx.stroke(); }   // the casing (the author's picks of 29 October 2026): the stage colour outside the dot, as on the hover ring; 1.5 px, where the orange and amber cells swallowed the dot
     ctx.fillStyle = theme.treated; ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   };
   M.locationAt = function (entries, l) {

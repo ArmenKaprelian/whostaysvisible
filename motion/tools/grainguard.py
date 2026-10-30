@@ -73,16 +73,15 @@ def guard(cdp, tol=0.05):
 def main():
     from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
     from cdp import CDP
-    ap = argparse.ArgumentParser(); ap.add_argument("--url", required=True); ap.add_argument("--theme", default="dark"); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--url", required=True); a = ap.parse_args()
     profile = tempfile.mkdtemp(prefix="grain-"); proc = subprocess.Popen(brave_flags(profile, 1600, 1000) + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         port = wait_port_file(profile, proc); cdp = CDP(page_ws_url(port)); cdp.call("Page.enable"); cdp.call("Runtime.enable")
         cdp.call("Emulation.setDeviceMetricsOverride", {"width": 1600, "height": 1000, "deviceScaleFactor": 1, "mobile": False})
-        cdp.call("Page.addScriptToEvaluateOnNewDocument", {"source": "try { localStorage.setItem('atlas-theme', %s); } catch (e) {}" % json.dumps(a.theme)})
         cdp.call("Page.navigate", {"url": a.url + "?v=grain" + str(int(time.time()))}); cdp.wait_event("Page.loadEventFired", timeout=60); cdp.evaluate("document.fonts.ready.then(() => true)", await_promise=True, timeout=60); time.sleep(0.4)
         findings, table = guard(cdp)
-        for row in table: print(a.theme, *row)
-        print("grain guard (%s): %d finding(s)" % (a.theme, len(findings)))
+        for row in table: print(*row)
+        print("grain guard: %d finding(s)" % len(findings))
         for f in findings: print("  ", f)
     finally:
         proc.terminate()

@@ -238,7 +238,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 ## 3. The page
 
-3.1. The header gives the title, the subtitle, the author line and the dissertation's title. REFERENCES at its right opens the reference panel (14). LIGHT THEME switches between dark and light colours.
+3.1. The header gives the title, the subtitle, the author line and the dissertation's title. REFERENCES at its right opens the reference panel (14).
 
 3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the scale bar and zoom buttons (7.5), and along its bottom edge the context line (7.4).
 

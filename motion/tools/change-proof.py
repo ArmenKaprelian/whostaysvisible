@@ -8,7 +8,7 @@ Given two served copies of the atlas, a base and a trial, the tool
   the base already shows (tools/text-rules-allow.json holds the author's decided and pending exceptions);
 - takes one set of frames from both (tools/atlas-frames.py, every shot with "settle", "wire" and "boxes", after a first shot per
   load that is not compared): both views on every layer, the Moscow preset, a hover per layer, a red mark, every card with its
-  reading block, every chart that pops out, the footer, the REFERENCES panel and the legend's two sides, in both themes; at
+  reading block, every chart that pops out, the footer, the REFERENCES panel and the legend's two sides, on the dark theme (the only one since round 30); at
   1,600 px, or at the five widths with --full. The layers, cards and charts come from the pages (__atlas.layers, cards() and the
   canvases that pop out), so a new layer or card is covered without an edit here;
 - compares the frames pixel for pixel, finds the regions that differ, names the panels each touches, and says whether the map
@@ -20,7 +20,7 @@ Two runs of one build give "identical". Browsers start only above the lab's memo
 once, and each removes its profile (capture.remove_profile, inside the tools called).
 
 Usage: python3 -I motion/tools/change-proof.py --base http://127.0.0.1:8783/explorer.html --trial http://127.0.0.1:8782/explorer.html
-         --out motion/build/round-18/proof/NAME [--full | --widths 1600,400] [--themes dark,light] [--jobs 3] [--title TEXT]
+         --out motion/build/round-18/proof/NAME [--full | --widths 1600,400] [--themes dark] [--jobs 3] [--title TEXT]
          [--labels base,trial] [--reuse-base DIR] [--skip-text] [--skip-frames]
 Round 19 (the author's decision of 28 October 2026): --base and --trial also take a git commit (HEAD, a hash) or "worktree" in place of an address.
 A commit's page, scripts, stylesheet and fonts are copied under build/proof-base/COMMIT with data/ linked to the lab's own, and each build is served
@@ -280,7 +280,7 @@ def serve_build(spec, want_port):   # an address is used as given; a commit or "
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--base", default="HEAD", help="an address, a git commit or worktree (default HEAD)"); ap.add_argument("--trial", default="worktree", help="an address, a git commit or worktree (default worktree)"); ap.add_argument("--out", required=True)
-    ap.add_argument("--full", action="store_true"); ap.add_argument("--widths", default=None); ap.add_argument("--themes", default="dark,light")
+    ap.add_argument("--full", action="store_true"); ap.add_argument("--widths", default=None); ap.add_argument("--themes", default="dark")
     ap.add_argument("--jobs", type=int, default=3); ap.add_argument("--title", default="Change proof"); ap.add_argument("--labels", default="base,trial")
     ap.add_argument("--reuse-base", default=None, help="an earlier run's --out: its base texts and frames are reused when its shots match")
     ap.add_argument("--skip-text", action="store_true"); ap.add_argument("--skip-frames", action="store_true")

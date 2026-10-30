@@ -8,9 +8,9 @@
 <meta name="build" content="the working tree">   <!-- publish-set.py writes the commit the publish set is built from (round 12, part D) -->
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
-   Dark on every device, whatever the browser's colour scheme (round 10, 25 October 2026: the light media block is gone); the
-   theme button switches to light through data-theme and the choice is remembered per viewer. The dark theme shares the
-   explainer's near-black navy stage with the lit navy land (round 9: css/theme.css); the light theme uses the manuscript's production colours. The two accents, fuchsia for
+   Dark on every device, whatever the browser's colour scheme (round 10, 25 October 2026: the light media block is gone; the
+   light theme and its button, round 15, were removed in round 30 on the author's request of 30 October 2026). The page shares the
+   explainer's near-black navy stage with the lit navy land (round 9: css/theme.css). The two accents, fuchsia for
    the cursor layer and green for the context layer, never colour data; the full neon rests and the live variants show while
    something moves or has focus (the author's correction, 25 October 2026). */
 :root {
@@ -28,23 +28,10 @@
   --tile-ink: #CFE6FF;   /* the cursor tile's text (round 15, the author's item 6): a near-white ice, the minimap leaders' tone; 14.8:1 on the tile */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22): 2.5 percent on the dark theme */
   --grain-bar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.010'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the title bars' grain (round 15): the panel tile with white at 0.010, so on #020307 the lift (about 2.5 levels) matches the drop the near-black allows */
-  --grain-band: var(--grain);   /* the header and footer bands keep the panel grain on the dark theme (round 15) */
+  --grain-band: var(--grain);   /* the header and footer bands keep the panel grain (round 15) */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets in the live cursor colour (W14b) */
   color-scheme: dark;
 }
-:root[data-theme="light"] {
-  --stage: #FBFBF9; --land: #D7DCE0; --border: #C7CFCA; --graticule: #E0E5E3; --band: #E2EEFE; --bar: #EFF2F5;   /* round 15 (the author's light-theme request of 26 October 2026 and the revisions that followed): the sea the near white and Russia the shape, swapped on 26 October; Russia darker on 27 October, OKLab L 0.892, 85 percent of the way from #EDF1F5 (L 0.956) to the second addendum's #D3D8DC (L 0.880), on the map and in the minimap; the header and footer bands a faint cool blue */
-  --tint-act: #FFF5FA; --tint-read: #EAFEF2; --tint-go: var(--stage);   /* the role tints (round 15, the author's fourth light-theme change): the panel's OKLab L 0.979 in the hue of each role, rose where you act (OKLCH C 0.013, the most sRGB holds there), green where you read (0.025); the GO TO card takes the sea since the revision of 26 October 2026, so its minimap is the map in small (a blue at C 0.010, #F4F9FF, before); the dark theme has none, so its cards keep the panel */
-  --ink: #24323D; --muted: #52636D; --wire-pre: #52636D; --dim: #8A98A4; --grid: #E3E7E9; --panel: #F7F8FA; --panel-2: #ECEFEE;
-  --accent: #2166AC; --accent-strong: #0B3D6E; --fall: #9970AB; --rise: #5AAE61; --below: #B9BEBB; --highlight: rgba(33,102,172,0.10);
-  --ind-1: #936E16; --ind-2: #2550B4; --ind-3: #973001; --ind-4: #1A7F7A; --ind-5: #6D6816; --ind-6: #7B3FD1; --ind-7: #5D4E78; --ind-8: #537A9B; --ind-9: #5B6470;
-  --div-1: #854505; --div-2: #9D5E01; --div-3: #B27901; --div-4: #1C989E; --div-5: #0A7E83; --div-6: #196369; --zero: #727C86; --fall: #9D5E01; --rise: #0A7E83;
-  --control: #E6EBEF; --control-on: #2166AC; --treated: #E31A1C; --cursor: #C60198; --cursor-live: #9E0079; --context: #037E52; --context-live: #037E52; --scheme: light; color-scheme: light; --go: #22364D; --go-leader: #22364D; --go-live: #000000; --ghost: #C3C8CC; --tile-ink: #22364D;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.020 0 0.75'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the light theme's grain, the same tile: black at 0.020 and white at 0.75, about 5 levels up and down on the #F7F8FA panel (round 15; 4 levels before) */
-  --grain-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.021 0 0.28'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the same tile for the #E9EDF2 bands: black at 0.021 and white at 0.28, about 5 levels each way */
-  --cat: color-mix(in srgb, var(--context) 85%, var(--panel));
-  --grain-bar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.020 0 0.37'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the light title bars' grain: the panel tile with white at 0.37, so on #EFF2F5 the lift matches the drop (about 4.8 levels each way in green; the panel's 0.75 lifted the bar's average) */
-  --by: "Armen G. Kaprelian"; --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%239E0079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 html, body { height: 100%; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* round 19 (WebKit): iOS enlarges text when the phone turns to landscape without it */
 body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums;
@@ -53,7 +40,7 @@ body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(
 /* The header, final (round 11, the author's item 8): three groups on one 44 px row, never touching. At the left the striped title with the tagline under it and no
    mark before it; at the centre one lock-up, the project mark at the height of two text lines (32 px) with the name and affiliation in tracked small capitals on the
    first line and the dissertation title in the muted tone on the second, left-aligned against the mark and centred as a unit on the header's width (two equal
-   outer columns); at the right the theme button at the edge. Below about 1,400 px the lock-up drops the affiliation to a third line and lets the title wrap; on
+   outer columns); at the right the REFERENCES button at the edge. Below about 1,400 px the lock-up drops the affiliation to a third line and lets the title wrap; on
    phones it stacks under the title, left-aligned. */
 header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; column-gap: 18px; row-gap: 6px; min-height: 44px; flex: 0 0 auto; }   /* never shrinks over the map */
 footer { flex: 0 0 auto; }
@@ -66,7 +53,7 @@ header h1 { font-size: 28px; line-height: 28px; margin: 0; font-weight: 700; tex
   .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); -webkit-mask-position: 0 5px; mask-position: 0 5px; }
 }
 .tagline { color: var(--muted); font-size: 11px; line-height: 16px; }   /* 11 px since round 11: the tagline must fit the outer column beside the centred lock-up at 1,600 px */
-.hright { justify-self: end; display: flex; align-items: center; min-width: 0; }   /* the theme button at the right edge */
+.hright { justify-self: end; display: flex; align-items: center; min-width: 0; }   /* the REFERENCES button at the right edge */
 .lockup { justify-self: center; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .lockup .mk { width: 32px; height: 32px; margin: 0; flex: 0 0 auto; }
 /* The byline and the about line (round 10, the author's item 16; in the lock-up since round 11): the name and affiliation in tracked small capitals, the dissertation title beneath in the muted tone, nothing larger. */
@@ -82,7 +69,7 @@ button, select { font: inherit; }
 /* The chrome (round 10, the author's item 10 as corrected from the mock): every button carries a 3 px border in its role colour at rest, the live
    variant on hover, the pressed state the solid accent fill with the stage colour as text; no left-edge bar anywhere; the side column's cards 3 px,
    the map overlays their quieter widths; squared corners everywhere but the round listed-state glyphs; focus shows the mark's four corner brackets
-   instead of a ring. Fuchsia: a control acts on the map (the Layer and Go to cards, the zoom box, the theme and pulse buttons, the tile); green:
+   instead of a ring. Fuchsia: a control acts on the map (the Layer and Go to cards, the zoom box, the REFERENCES and pulse buttons, the tile); green:
    a panel only reads (the Under the cursor and chart cards, the legend, the note, the mix box, the scale bar, the strip, the method button). */
 .btn { background: var(--control); color: var(--ink); border: 3px solid var(--cursor); border-radius: 0; padding: 4px 9px; cursor: pointer; position: relative; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* interface labels in tracked capitals (round 10, the author's widening of T4) */
 .btn:hover { border-color: var(--cursor-live); }
@@ -201,7 +188,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 @media (max-width: 378.98px) { .fbox input::placeholder { font-size: 11px; } }   /* narrower phones (375 and 360 px): 11 px, the page's smallest text, rather than a clipped placeholder */
 .fbox input { height: 28px; padding-top: 0; padding-bottom: 0; }   /* 28 px, the height of the i buttons and the year row's pulse button (round 15, item 5.3B; 33 px before) */
 .fbox input:focus, .linkfield:focus { outline: none; border-color: var(--go-live); }
-.flist { position: absolute; left: 0; right: 0; top: calc(100% - 3px); z-index: 8; background: var(--tint-go, var(--panel)); border: 3px solid var(--go); max-height: 360px; overflow-y: auto; }
+.flist { position: absolute; left: 0; right: 0; top: calc(100% - 3px); z-index: 8; background: var(--panel); border: 3px solid var(--go); max-height: 360px; overflow-y: auto; }
 .flist .fo { display: block; width: 100%; text-align: left; background: transparent; color: var(--ink); border: 0; border-radius: 0; padding: 5px 8px; font: 13px/1.3 var(--font); cursor: pointer; }
 .flist .fo + .fo { border-top: 1px solid var(--grid); }
 .flist .fo.on, .flist .fo:hover { background: var(--control); }
@@ -250,10 +237,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctxt .track { position: absolute; left: 0; top: 0; height: 24px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--context); will-change: transform; transition: opacity 0.3s; font-family: "Tomorrow", "IBM Plex Mono", sans-serif; font-size: 13.5px; }   /* scrolled by one linear Web Animations entry (round 11, item 6): a queue of cycles, continuous across context changes; the track's items in Tomorrow at 13.5 px (round 15, the author's final choice of 26 October 2026), the line height 24 px as before */
 /* The wire's scanlines and glow (round 15, the author's final choice): each item cut by horizontal lines, a 2 px bar and a 1 px gap with a 1 px offset, sized in whole
    device pixels by wireStripes() in the script; the glow on the window, which does not move, never animated. The lead slot, the region glyph, the separator marks
-   outside the track and the collapse button keep Plex Mono and no treatment. The light theme drops the glow; a request for more contrast or forced colours drops both. */
+   outside the track and the collapse button keep Plex Mono and no treatment. A request for more contrast or forced colours drops both. */
 .ctxt .track .wi { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
 .ctxt .trackwin { filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
-:root[data-theme="light"] .ctxt .trackwin { filter: none; }
 @media (prefers-contrast: more), (forced-colors: active) { .ctxt .trackwin { filter: none; } .ctxt .track .wi { -webkit-mask-image: none; mask-image: none; } }
 .ctxt .track.in { opacity: 0; transition: none; }
 .ctxt .track.old { pointer-events: none; }
@@ -272,12 +258,11 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctxt .t.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the strip's tips in tracked capitals (round 10) */
 @media (prefers-reduced-motion: reduce) { .ctx .glyph path, .ctxt .t, .tooltip { transition: none !important; } .slider .thumb path { transition: none !important; transform: none !important; } .yearrow .yr, .slider .thumb, .yearrow .pulse { transition: none !important; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: auto; }
-.card { background: var(--tint-read, var(--panel)); border-radius: 0; border: 3px solid var(--context); padding: 8px 10px; min-width: 0; }
+.card { background: var(--panel); border-radius: 0; border: 3px solid var(--context); padding: 8px 10px; min-width: 0; }
 .card.act { border-color: var(--cursor); }
 /* The GO TO card (round 10, the author's item 21): travel neither acts on the data nor reads it, so the card and its buttons take the page's neutral, the ink,
    with the pressed city (the preset the camera sits at) in a solid ink fill and the hover in full white; every other panel keeps its role colour. */
-.card.go { border-color: var(--go); position: relative; isolation: isolate; background-color: var(--tint-go, var(--panel)); }
-.card.act { background-color: var(--tint-act, var(--panel)); }   /* the LAYER card's tint on the light theme (round 15) */
+.card.go { border-color: var(--go); position: relative; isolation: isolate; }
 .cardgrat { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; overflow: hidden; }   /* the graticule behind the GO TO card's controls (round 15, item 14A revised): above the card's own background, below everything in it */
 .cardgrat path { fill: none; stroke: var(--graticule); stroke-width: 1; vector-effect: non-scaling-stroke; }   /* the GO TO card's neutral (item 21, amended 25 October): travel neither acts on the data nor reads it */
 .card.go .btn { border-color: var(--go); }
@@ -300,7 +285,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mixbox .mread { font-size: 12px; line-height: 1.4; color: var(--muted); }
 .mixbox .mread p { margin: 0 0 6px; }
 .ctoggle { color: var(--context); }
-.card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 25 October; 14.4:1 on the dark panel, 4.8:1 on the light) */
+.card .cbody { margin-top: 8px; }   /* the card titles in the neon green at rest (the author's correction of 25 October; 14.4:1 on the panel) */
 .card .prov { color: var(--dim); font-size: 12px; margin-top: 6px; line-height: 1.35; }
 /* The method block (round 10, the author's correction): under VIEW, a green i button toggles the block, collapsed by default and remembered; the block shows two lines
    under a fade with a More toggle (remembered too); the first section follows the view and the layer, the second holds the reading notes. */
@@ -308,12 +293,12 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .method[hidden] { display: none; }   /* the hidden attribute must win over the grid display */
 [hidden] { display: none !important; }   /* as the published host's skeleton rules (round 10): a hidden element never shows through its own display rule, the pulse button in the Cells view included */
 /* The surface grain (round 10, the author's item 22): one 128 px fractal-noise tile (feTurbulence, two octaves, stitched, desaturated) as a second background layer on every
-   chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels on the dark theme, 2.5 percent of the range, and 5 on the light since round 15, 2 percent; the header and footer bands with their own alphas), composited normally; never on the map
+   chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels, 2.5 percent of the range; the header and footer bands with their own alphas), composited normally; never on the map
    canvas or in the video; the audit's guard measures the text contrast on a grained patch against the plain surface (within 0.05). The nograin class clears it for that measure. */
 .card, .maplegend, .tooltip, .mixbox, .ctx, .scalebar, .zoombox, .mapnote, .popout, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
-header, footer { background-color: var(--band); background-image: var(--grain-band); }   /* the bands (round 15): the stage and the panel grain on the dark theme as before; a step under the sea, with the same tile sized to the band, on the light */
+header, footer { background-color: var(--band); background-image: var(--grain-band); }   /* the bands (round 15): the stage and the panel grain */
 /* The title bars (round 15, the author's revision of 26 October 2026, for every panel): the row with the title, the i and the toggle on a bar halfway from the stage to black
-   (#020307, the sRGB midpoint of #03060E and #000000) on the dark theme and a step under the panel on the light (#EFF2F5: the green title at 4.55:1). The bar spans the panel
+   (#020307, the sRGB midpoint of #03060E and #000000). The bar spans the panel
    inside its border, as its top layer: over the GO TO card's graticule, which runs on under it. A collapsed panel is its bar. */
 .card > .chead, .maplegend > .lhead, .mapnote > .nhead, .mixbox > .mhead, .popout > .pohead { background-color: var(--bar); background-image: var(--grain-bar); background-size: 128px 128px; background-repeat: repeat; }
 .card > .chead { margin: -8px -10px 0; padding: 8px 10px; }
@@ -409,7 +394,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .minimap .city .ld { fill: none; stroke: var(--go-leader); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 0; }   /* the leaders in the paler ice; the dots and box strokes in the card's blue */
 .minimap.drawn .city .ld { animation: mmdraw 0.6s ease-out backwards; }
 @keyframes mmdraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.minimap .box { fill: var(--tint-go, var(--panel)); stroke: currentColor; stroke-width: 1; }
+.minimap .box { fill: var(--panel); stroke: currentColor; stroke-width: 1; }
 .minimap text { fill: var(--ink); font-family: var(--font); font-size: 9px; font-weight: 500; letter-spacing: 0.08em; dominant-baseline: central; }
 .minimap .city:hover, .minimap .city:focus-visible, .minimap .frame:hover, .minimap .frame:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
 .minimap .city:hover .ld, .minimap .city:focus-visible .ld { stroke: var(--context-live); }
@@ -471,7 +456,7 @@ footer .byfoot a.site:hover, footer .byfoot a.site:focus-visible { color: var(--
 footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
 footer .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
-footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the LIGHT THEME button's style beside the email copy */
+footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the header buttons' style beside the email copy */
 footer #copymail, footer #teachagent { vertical-align: middle; }   /* round 17: the copy button and TEACH YOUR AGENT sat on the text's baseline, TEACH YOUR AGENT 3.4 px under the copy button; centred on the line, both share the X buttons' centre */
 footer a.btn.sq { box-sizing: border-box; }   /* round 17 (the author's pick of 27 October 2026): the two X links at the 28 px the rule above sets, like the copy button and TEACH YOUR AGENT; an <a> had added its 3 px border outside the box, 34 px */
 footer .lic { margin-left: auto; }   /* round 17 (the author's pick): the data licences stay at the right, on a row of their own where the footer does not fit one line (below about 1,690 px) */
@@ -483,7 +468,7 @@ footer .lic { margin-left: auto; }   /* round 17 (the author's pick): the data l
 @media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
 /* The REFERENCES panel (round 16, the author's General 7 of 26 October 2026, as picked on 27 October 2026: raC, rdB revised, refA, rxA, rlA, riA, rtA, rfA, rsA): a fuchsia button
-   beside LIGHT THEME opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Plex Mono, section
+   in the header opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Plex Mono, section
    heads as prompt lines, a still block cursor. The icon at its top left, the green i meshed with a wire globe, carries the wire's 3B treatment, scanlines and the glow. */
 .hright { gap: 10px; }
 @media (min-width: 901px) and (max-width: 1020px) { header { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .hright { margin-left: auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }   /* the fallback: below the width where two buttons and the centred lock-up would meet (about 1,020 px, with DARK THEME), the lock-up takes its own row, as on phones */
@@ -511,7 +496,6 @@ dialog.refs::backdrop { background: transparent; }
 .refs .rglow { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
 .refs .rlines { display: block; width: 100%; height: 100%; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
 .refs .rlines svg { display: block; width: 100%; height: 100%; overflow: visible; }
-:root[data-theme="light"] .refs .rglow { filter: none; }
 @media (prefers-contrast: more), (forced-colors: active) { .refs .rglow { filter: none; } .refs .rlines { -webkit-mask-image: none; mask-image: none; } }
 .refs .copied { color: var(--context); font-size: 11px; margin-left: 8px; }
 dialog.refs.anim { transition: transform 180ms ease-out, opacity 180ms ease-out; }
@@ -526,7 +510,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <header id="hdr">
   <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
   <a class="lockup" id="lockup" href="https://armenkaprelian.github.io/" target="_blank" rel="noopener" title="HOME"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></a>
-  <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button><button class="btn" id="theme" type="button" aria-pressed="false">Light theme</button></div>
+  <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button></div>
 </header>
 <main>
   <div class="mapwrap" id="mapwrap" tabindex="0" role="group" aria-label="Map of Russia. Plus and minus zoom, 0 fits the whole country, the arrow keys pan; click a cell to zoom to it.">

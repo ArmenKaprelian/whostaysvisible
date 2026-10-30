@@ -31,46 +31,29 @@
   console.log(['+--      --+', '|          |', '      o', '|          |', '+--      --+', 'Visibility Atlas · Armen G. Kaprelian', 'Built from ' + BUILD, 'github.com/ArmenKaprelian/whostaysvisible'].join('\n'));
   const CLASS_LABELS = ['≤ −50%', '−50 to −20%', '−20 to 0%', '0 to +50%', '+50 to +150%', '> +150%'];
 
-  // ---- theme -----------------------------------------------------------------------------------
+  // ---- theme: dark only (the light theme of round 15 and its button were removed in round 30, the author's request of 30 October 2026) ----
   const root = document.documentElement;
   function readTheme() {
     const css = getComputedStyle(root), tok = n => css.getPropertyValue('--' + n).trim();
-    const scheme = tok('scheme'); const dark = scheme ? scheme !== 'light' : tok('stage').toUpperCase() !== '#FFFFFF';
-    // Dark theme (round 10): the single-hue cyan ramp for ordered layers and one amber-to-orange against cyan pair for the signed
-    // layers (the Change layer, the revenue layer in both views), the industry nine and the pair read from the page's tokens (the data
-    // tables as the fallback); rounds 2 to 9 used ColorBrewer YlGnBu and PRGn. Light theme: the manuscript's navy ramps for ordered
-    // layers, the light pair (darker outward) for signed change, the light nine. The light share ramp's palest step is #E0EFFC since 27 October 2026 (#D9E8F5, 0.02 darker in OKLab L,
-    // before), so it stays visible on the darker land (a colour difference of 5.5 from #D7DCE0 against 3.6).
-    const t = { dark, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'), panel: tok('panel'),
-             ind9: (() => { const t = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => tok('ind-' + i)); return t.every(Boolean) ? t : IND_T ? (dark ? IND_T.classes.colour_dark : IND_T.classes.colour_light) : []; })(),   // the tokens first (round 10), the pass's table as the fallback
+    // Round 10: the single-hue cyan ramp for ordered layers and one amber-to-orange against cyan pair for the signed layers (the Change layer,
+    // the revenue layer in both views), the industry nine and the pair read from the page's tokens (the data tables as the fallback); rounds 2
+    // to 9 used ColorBrewer YlGnBu and PRGn. dark stays true for the shared drawing code (map-layers.js), which the film also calls.
+    const t = { dark: true, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'), panel: tok('panel'),
+             ind9: (() => { const t = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => tok('ind-' + i)); return t.every(Boolean) ? t : IND_T ? IND_T.classes.colour_dark : []; })(),   // the tokens first (round 10), the pass's table as the fallback
              cursor: tok('cursor') || '#FF45C8', cursorLive: tok('cursor-live') || '#FF8FDF', context: tok('context') || '#4DFF7F', contextLive: tok('context-live') || '#9AFFB8',   // the two accents (round 9): UI only, never data; the full neon rests, the live variant moves
              accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), below: tok('below'), highlightBand: tok('highlight'), tick: tok('dim'), axis: tok('dim'), barMuted: tok('border'),
-             ramp6: dark ? ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#E0EFFC', '#A9C4DE', '#78A3C9', '#4F84B4', '#2F6395', '#16436E'],
-             ramp5: dark ? ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
-             change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : dark ? ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3'] : ['#854505', '#9D5E01', '#B27901', '#1C989E', '#0A7E83', '#196369']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
-             density: dark ? '#79CDBF' : '#16436E',
-             ghost: tok('ghost') || (dark ? '#1F3350' : '#C3C8CC'),   // one step above the land (round 10): the hand-over outline, the hairline borders
-             go: tok('go') || (dark ? '#9CC8FF' : '#22364D'),
-             tileInk: tok('tile-ink') || (dark ? '#CFE6FF' : '#22364D'),   // the tile's text, and the ghost names from 8B on (rounds 15 and 16)   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
-             neutral: FM ? (dark ? FM.neutral.dark : FM.neutral.light) : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? (dark ? FM.zero.dark : FM.zero.light) : (dark ? '#6B7482' : '#727C86')), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
-    // The light theme's edges (27 October 2026, the author's request that the light theme's contrast need no worry): a cell whose fill is under 3:1 against the land takes a
-    // hairline in the ink at 60 percent (3.4:1 against the land), so its edge reads where its colour does not; a dot takes the same edge, inside its disc, only where its fill
-    // is under 1.5:1 (the share ramp's two palest steps), since on a dot of 2 or 3 px a rim outweighs the colour of the mid classes. The colours stay as they are, the grey of
-    // cells with too few firms keeps none (it is meant to recede), and the dark theme has none.
-    t.edge = dark ? null : (() => { const Lland = relLum(t.land), memo = new Map(), ratio = col => { let v = memo.get(col); if (v === undefined) { const l = relLum(col); v = (Math.max(l, Lland) + 0.05) / (Math.min(l, Lland) + 0.05); memo.set(col, v); } return v; };
-      return { colour: t.ink, alpha: 0.6, low: col => !!col && col !== t.below && ratio(col) < 3, faint: col => !!col && col !== t.below && ratio(col) < 1.5 }; })();
-    MM.tileEdge = t.edge;   // the cells' tiles read it in MM.drawTiles; the video never sets it
+             ramp6: ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],
+             ramp5: ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],
+             change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
+             density: '#79CDBF',
+             ghost: tok('ghost') || '#1F3350',   // one step above the land (round 10): the hand-over outline, the hairline borders
+             go: tok('go') || '#9CC8FF',
+             tileInk: tok('tile-ink') || '#CFE6FF',   // the tile's text, and the ghost names from 8B on (rounds 15 and 16)   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
+             neutral: FM ? FM.neutral.dark : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? FM.zero.dark : '#6B7482'), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
     t.div6 = t.change6;   // the revenue classes of the Firms view and the Cells view's fin layer share the Change layer's pair (round 10; the blue six of rounds 3 to 9 stay in the manifests' class_colours)
     return Object.assign(t, MM.coreRamp(t));   // the bloom's pale-core tables (round 9)
   }
-  function relLum(h) { const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(parseInt(h.slice(1, 3), 16)) + 0.7152 * f(parseInt(h.slice(3, 5), 16)) + 0.0722 * f(parseInt(h.slice(5, 7), 16)); }   // WCAG relative luminance of #RRGGBB
-  // The remembered choice is applied before the first read (round 10): until then a viewer who had chosen light saw the canvases drawn dark until a click.
-  let explicit = null;
-  try { explicit = localStorage.getItem('atlas-theme'); } catch (e) { explicit = null; }
-  if (explicit === 'light' || explicit === 'dark') root.setAttribute('data-theme', explicit);
-  let theme = readTheme();
-  function syncThemeButton() { const light = !readTheme().dark; $('theme').textContent = light ? 'Dark theme' : 'Light theme'; $('theme').setAttribute('aria-pressed', String(light)); }
-  $('theme').addEventListener('click', () => { const next = readTheme().dark ? 'light' : 'dark'; root.setAttribute('data-theme', next); try { localStorage.setItem('atlas-theme', next); } catch (e) { /* no storage */ } theme = readTheme(); syncThemeButton(); redrawAll(); });
+  const theme = readTheme();
 
   // ---- data ------------------------------------------------------------------------------------
   const bmp = MM.buildBasemap(BM);
@@ -445,7 +428,7 @@
   // zooms. A name fades by its width against the map's (full until a third, gone at three widths), so none lies over the dots at city zoom; beyond three times
   // its size it is drawn from a bitmap made once. Below the fit the names shrink with the land. Only 17 of the 22 names fit at the fit at 1,600 px, and a
   // collision at the fit is a collision at every zoom, so a hidden name enters at the first zoom where it fits, once the names that blocked it have left the
-  // view or faded. In the tile's ice at 30 percent, drawn as light on the dark theme (8C) and plainly on the light theme, never over the authorship mark.
+  // view or faded. In the tile's ice at 30 percent, drawn as light on the dark ground (8C), never over the authorship mark.
   // Drawn above the cells, the dots and the listed marks and below the Cells view's pulse dots, the hover ring, the tile and the panels: on the map canvas
   // after the cells layers, on the marks canvas after the marks in the Firms view; 22 text calls at most, no new canvas.
   const cloudBitmaps = new Map();   // label -> the name drawn once at twice its resting size, per colour
@@ -483,7 +466,7 @@
     ghostDrawn = 0; Motion.audit.scene = scene;
     const kf = kFit(), W = stage.width, H = stage.height, s = c.k / kf, L = groundLayout(kf), shown = [], ink = theme.tileInk;
     ctx.save();
-    if (theme.dark) ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = 'lighter';
     if (markBox && s > 1.001) { ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(markBox.x, markBox.y, markBox.x1 - markBox.x, markBox.y1 - markBox.y); ctx.clip('evenodd'); }   // the names pass around the authorship mark
     const place = g => { const [px, py] = Motion.project(c, g.city.x, g.city.y); return { g, x: px + g.dx * s, y: py + g.dy * s, w: g.w * s, h: g.h * s }; };
     const inView = b => !(b.x + b.w < 0 || b.x > W || b.y + b.h < 0 || b.y > H);
@@ -507,8 +490,8 @@
   const GL_R = [Math.round(bmp.cities[0].x * 1000), Math.round(bmp.cities[0].y * 1000)];
   const GL_VS = `
 attribute vec2 a_pos; attribute float a_n; attribute vec4 a_cls;
-uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_edge[16]; uniform float u_w;
-varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square; varying float v_rimw;
+uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_w;
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 rel = a_pos + u_shift;
   float dx = u_off.x + rel.x * u_kk, dy = u_off.y - rel.y * u_kk;
@@ -519,19 +502,15 @@ void main() {
   gl_Position = vec4(dx / u_size.x * 2.0 - 1.0, 1.0 - dy / u_size.y * 2.0, 0.0, 1.0);
   gl_PointSize = size;
   v_col = vec4(col * 0.9, 0.9) * u_w; v_r = rd; v_half = size * 0.5; v_square = r < 1.75 ? 1.0 : 0.0;
-  v_rimw = (u_edge[int(cls + 0.5)] > 0.5 && r >= 2.0) ? min(1.0, 0.35 * r) * u_sc : 0.0;   // the light theme's edge, inside the disc, from 2 px radius
 }`;
   const GL_FS = `
 precision mediump float;
-varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square; varying float v_rimw;
-uniform vec4 u_rim;
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 d = (gl_PointCoord - 0.5) * (v_half * 2.0);
   float e = v_square > 0.5 ? v_r - max(abs(d.x), abs(d.y)) : v_r - length(d);
   float cov = clamp(e + 0.5, 0.0, 1.0);
-  vec4 c = v_col;
-  if (v_rimw > 0.0) { float t = clamp(e - v_rimw + 0.5, 0.0, 1.0); c.rgb = mix(u_rim.rgb * c.a, c.rgb, mix(1.0 - u_rim.a, 1.0, t)); }
-  gl_FragColor = c * cov;
+  gl_FragColor = v_col * cov;
 }`;
   let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null, pfGL = null, sqGL = null;
   const glYears = new Map();   // year -> { pos, n, a, f, rv, cls, count }
@@ -551,7 +530,7 @@ void main() {
     const sq = PixelField.createSquaresGL(g); if (!sq.ok) { glError = 'squares: ' + sq.reason; return false; }
     gl = g; glKind = kind; glProg = p; pfGL = pf; sqGL = sq; glIdx = g.createBuffer(); glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
     glLoc = { pos: g.getAttribLocation(p, 'a_pos'), n: g.getAttribLocation(p, 'a_n'), cls: g.getAttribLocation(p, 'a_cls') };
-    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_edge', 'u_rim', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
+    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
     g.disable(g.DEPTH_TEST); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
     return true;
   }
@@ -564,7 +543,6 @@ void main() {
   }
   function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; for (const k of ['pos', 'n', 'a', 'f', 'rv', 'cls']) gl.deleteBuffer(b[k]); glYears.delete(y); }
   const glPal = L => (L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.zero].concat(theme.div6) : L === 'industry' ? [theme.neutral].concat(theme.ind9) : [theme.neutral]);
-  function glEdges(L) { const pal = glPal(L), out = new Float32Array(16); for (let i = 0; i < 16; i++) out[i] = theme.edge && theme.edge.faint(pal[Math.min(i, pal.length - 1)]) ? 1 : 0; return out; }   // the light theme's edge on the faintest dots, per palette entry
   function glPalette(L) { const pal = glPal(L); const out = new Float32Array(48); for (let i = 0; i < 16; i++) { const c = hex2rgb(pal[Math.min(i, pal.length - 1)]); out[3 * i] = c[0] / 255; out[3 * i + 1] = c[1] / 255; out[3 * i + 2] = c[2] / 255; } return out; }
   // The discs at weight w (the dots' crossfade), from the index of the discs in view, largest first.
   function glDiscs(c, buf, L, idx, w) {
@@ -578,7 +556,7 @@ void main() {
     gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
     gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh); gl.uniform1f(glLoc.u_sc, sc);
     const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
-    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L)); gl.uniform1fv(glLoc.u_edge, glEdges(L)); { const rc = hex2rgb(theme.edge ? theme.edge.colour : '#000000'); gl.uniform4f(glLoc.u_rim, rc[0] / 255, rc[1] / 255, rc[2] / 255, theme.edge ? theme.edge.alpha : 0); } gl.uniform1f(glLoc.u_w, w);
+    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L)); gl.uniform1f(glLoc.u_w, w);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0);
     gl.disableVertexAttribArray(glLoc.pos); gl.disableVertexAttribArray(glLoc.n); gl.disableVertexAttribArray(glLoc.cls);
   }
@@ -597,8 +575,7 @@ void main() {
   function discs2d(f, c, d, L, idx, w) {
     const ctx2 = f.ctx, rule = markRule(c.k); ctx2.save(); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     ctx2.globalAlpha = 0.9 * w;
-    for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill();
-      if (theme.edge && r >= 2 && theme.edge.faint(ctx2.fillStyle.toUpperCase())) { const rw = Math.min(1, 0.35 * r); ctx2.save(); ctx2.globalAlpha = 0.9 * w * theme.edge.alpha; ctx2.strokeStyle = theme.edge.colour; ctx2.lineWidth = rw; ctx2.beginPath(); ctx2.arc(px, py, r - rw / 2, 0, Math.PI * 2); ctx2.stroke(); ctx2.restore(); } }   // the light theme's edge, as on the GPU
+    for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill(); }
     ctx2.restore();
   }
   // The discs' order: the largest first, by a counting sort on the radius in tenths of a pixel, over the x-band and the y-range.
@@ -1244,7 +1221,7 @@ void main() {
   function sharedRings(c) {   // the Firms view's marks (spB, the author's pick: the radius 4 px at 100 firms and 16 at 10,000, by the log of the pair's firms), from the loaded address file's counts: 100 or more firms on no list
     const d = firmYears.get(state.year); if (!d) return;
     const k = c.k / 1000, ox = c.ox - c.cx * c.k, oy = c.oy + c.cy * c.k, W = stage.width + 24, H = stage.height + 24;
-    kctx.save(); kctx.strokeStyle = theme.ink; kctx.globalAlpha = theme.dark ? 0.6 : 0.7; kctx.lineWidth = 1.5; kctx.beginPath();
+    kctx.save(); kctx.strokeStyle = theme.ink; kctx.globalAlpha = 0.6; kctx.lineWidth = 1.5; kctx.beginPath();
     for (let i = 0; i < d.n; i++) { const n = d.nn[i]; if (n < 100) continue; const px = ox + d.x[i] * k, py = oy - d.y[i] * k; if (px < -24 || px > W || py < -24 || py > H) continue;
       const r = 4 + 6 * Math.log10(n / 100); kctx.moveTo(px + r, py); kctx.arc(px, py, r, 0, 2 * Math.PI); }
     kctx.stroke(); kctx.restore();
@@ -2903,7 +2880,7 @@ void main() {
   // the site's atlas/ folder, whose home is one level up.
   if (/\/atlas\/(index\.html)?$/.test(location.pathname)) for (const a of [$('lockup'), $('sitelink')]) { a.href = '../'; a.removeAttribute('target'); }
   // ---- the REFERENCES panel (round 16, the author's General 7 of 26 October 2026; the picks of 27 October: refA, rxA, raC, rlA, riA, rtA, rfA, rsA, rdB revised) ----
-  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
+  // A fuchsia button in the header opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
   // at the same alpha on the light theme), with short entries under prompt-line heads in one scrolling body and a row of shortcuts. DEFINITIONS is the atlas's
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
   // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
@@ -2988,7 +2965,7 @@ void main() {
   }
   { const d = $('refs'), b = $('refsbtn');
     if (d && b) {
-      d.style.setProperty('--refs-alpha', REFS_ALPHA + '%');   // both themes: on the light theme 88 percent had let the links fall to 4.2 to 1 over the darkest marks behind
+      d.style.setProperty('--refs-alpha', REFS_ALPHA + '%');   // the stage behind the panel at this alpha
       $('refsicon').innerHTML = globeIcon();
       { const n = $('superusernote'); if (n) n.textContent = n.textContent.replace(/^\s*\n/, '').replace(/\n\s*$/, ''); }   // the author's note as written, blank edge lines aside
       b.addEventListener('click', refsOpen); $('refsclose').addEventListener('click', refsClose);
@@ -3086,7 +3063,7 @@ void main() {
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
   function overflowing() {
-    const out = [], sels = ['#theme', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#cellinfo b', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '#methodbtn', '#methodmore'];
+    const out = [], sels = ['#refsbtn', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#cellinfo b', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '#methodbtn', '#methodmore'];
     for (const sel of sels) for (const el of document.querySelectorAll(sel)) {
       if (!el.offsetParent) continue;
       const host = el.closest('.card, .maplegend, .mixbox, .mapnote, header, footer'); if (!host) continue;
@@ -3250,5 +3227,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"'), document.fonts.load('400 13.5px "Tomorrow"'), document.fonts.load('500 13.5px "Tomorrow"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"'), document.fonts.load('400 13.5px "Tomorrow"'), document.fonts.load('500 13.5px "Tomorrow"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
 })();
