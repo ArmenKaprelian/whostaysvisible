@@ -2289,6 +2289,10 @@ Proof: `build/proof-guide-v2` against d5a0a54. Two text groups changed, `/fixed/
 
 **Published** 30 October 2026 (UTC) on the author's site. The author ran `tools/publish.sh --push`, whose two-engine check had zero findings (34 page loads, 42 s), and it pushed 6650f2b..620618b. armenkaprelian.com/atlas/ serves build e8b1e49, and its `agent-guide.md` matches the publish copy byte for byte.
 
+### Round 27 (30 October 2026): "not where they operate" removed
+
+The author asked for the clause to be removed from the revenue mix's reading text and everywhere like it. This was a one-time exception with minimal checks and no previews, and it changes no rule. The mix box now ends "Revenue is counted where firms are registered." The guide drops the same clause (2.15) and "not an operating site" (2.10, 13.3), which no atlas text says. The shared-pairs text's "rather than production premises" stays, since it explains why firms share an address. Lab 9493bf8. `agent_guide.py --check` and `publish-set.py --texts` passed. `publish.sh --audited e8b1e49` carried round 26's five-width pass: two strings changed, and the proof is in `build/carry/20261029T202451`. Publish copy ebed172, site import 885b4fb. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
