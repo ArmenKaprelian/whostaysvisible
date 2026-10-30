@@ -2732,7 +2732,8 @@ void main() {
   // minimapCheck() tests the layout against the left edge that still shows (MM_VX0); the card's graticule follows the crop. 1.12 leaves Rostov-on-Don no room
   // (its box would meet Voronezh's leader), and 1.25 would need the Siberian labels moved or a label row added.
   const MM_F = 1.1, MM_VX0 = MM_W * (1 - 1 / MM_F);
-  const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['L', 22], 'Kazan': ['L', 50], 'Voronezh': ['L', 64], 'Rostov-on-Don': ['X', 34.5, 80] };   // the hand placements (27 October 2026): the two northern labels over the Baltic and the Barents, three raised, Rostov-on-Don beside its dot; every other label keeps MM_LAYOUT's entry
+  const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['L', 22], 'Kazan': ['L', 50], 'Voronezh': ['L', 64], 'Rostov-on-Don': ['L', 80], 'Khabarovsk': ['X', 302.5, 94] };   // the hand placements (27 October 2026): the two northern labels over the Baltic and the Barents, three raised; every other label keeps MM_LAYOUT's entry. Round 29 (30 October 2026): Rostov-on-Don back in the column under a short label, since its full name's box had covered Crimea and no placement of it clears both the land and the layout rules, and Khabarovsk above its dot, off Sakhalin
+  const MM_SHORT = { 'Rostov-on-Don': 'Rostov' };   // round 29: the minimap's label where the full name has no room (the group's title and the button keep the full name)
   let mmTry = null;   // a trial layout from the audit hook (minimapTry), over MM_LAYOUT_F's
   const MM_LAYOUT = {   // ['L', top]: the left column, the box's right edge at x 98; ['X', left, top]: the box's left edge and top; ['R', right, top]: the box's right edge and top
     'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
@@ -2785,7 +2786,8 @@ void main() {
     const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
     const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
     const rings = landRings(0.03, 4); MMAP.rings = rings.length;
-    let d = ''; for (const ring of rings) { const r = simplify(ring, ring === rings[0] ? 12 : 8); if (r.length < 3) continue; d += 'M' + r.map(([x, y]) => mmX(x).toFixed(1) + ' ' + mmY(y).toFixed(1)).join('L') + 'Z'; }
+    let d = ''; MMAP.isles = []; for (const ring of rings) { const r = simplify(ring, ring === rings[0] ? 12 : 8); if (r.length < 3) continue; const pts = r.map(([x, y]) => [mmX(x), mmY(y)]); d += 'M' + pts.map(([x, y]) => x.toFixed(1) + ' ' + y.toFixed(1)).join('L') + 'Z';
+      if (ring !== rings[0]) MMAP.isles.push({ x: Math.min(...pts.map(q => q[0])), y: Math.min(...pts.map(q => q[1])), x1: Math.max(...pts.map(q => q[0])), y1: Math.max(...pts.map(q => q[1])) }); }   // round 29: every land ring but the mainland, for minimapCheck's box-land rule
     el('path', { class: 'land', d, 'fill-rule': 'evenodd' }, land);
     // The graticule (round 15, the author's item 14A, revised): the basemap's own projection extended across the whole GO TO card (drawCardGraticule), and here
     // the same lines once more over the land, clipped to it, since the land is opaque. Round 10's minimap graticule had never drawn (Float64Array.prototype.map
@@ -2808,7 +2810,7 @@ void main() {
     PRESETS.find(p => p.label === 'Russia').node = fr;
     { const rb = PRESETS.find(p => p.label === 'Russia').button; rb.classList.add('keep', 'russia'); }
     for (const city of bmp.cities) {
-      const lay = (mmTry && mmTry[city.label]) || MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = city.label.toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
+      const lay = (mmTry && mmTry[city.label]) || MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
       const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
       const dx = mmX(city.x), dy = mmY(city.y), box = { x: left, y: top, x1: left + w, y1: top + MM_BOX_H };
       const mids = [[box.x, (box.y + box.y1) / 2], [box.x1, (box.y + box.y1) / 2], [(box.x + box.x1) / 2, box.y], [(box.x + box.x1) / 2, box.y1]];   // the edge midpoints: left, right, top, bottom
@@ -2849,6 +2851,7 @@ void main() {
         if (j > i && cross(a, b, a2, b2)) out.push(['leader-cross', C[i].label, C[j].label]);
         if (segDist(C[j].dot, a, b) < near + MM_R) out.push(['leader-dot', C[i].label, C[j].label, +segDist(C[j].dot, a, b).toFixed(1)]); }
       for (const bx of boxes) if (bx.label !== C[i].label && segBox(a, b, bx)) out.push(['leader-box', C[i].label, bx.label]); }
+    for (const b of boxes) for (const s of MMAP.isles || []) if (inter(b, s)) out.push(['box-land', b.label]);   // round 29: no box over land apart from the mainland (Crimea had lain under Rostov-on-Don's box, part of Sakhalin under Khabarovsk's)
     return out;
   }
   function presetFromHash() {
