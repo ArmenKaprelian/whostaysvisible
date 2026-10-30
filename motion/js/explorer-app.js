@@ -3130,7 +3130,7 @@ void main() {
       H('Findings') + 'Larger asset quintiles have greater conditional availability in both provider eras. ' + sizeLine + ' Sanctioned-only firms have lower availability than firms on no list by 2024.',
       H('The question') + 'The list comparison tests the chapter’s opacity prediction most directly: under its assumptions, firms exposed to sanctions value withholding more. Sanctioned-only firms are less visible than firms on no list by 2024. The size comparison describes financial selection: the largest firms stay visible, and their advantage rises modestly after 2021. These are descriptive and conditional associations.');
     $('mixread').innerHTML = P('The revenue mix of what lies under the cursor, or of the whole view when the cursor is off the map: each division’s share of nominal revenue among firms with a statement and a positive revenue value, eight divisions and then the rest.',
-      'The colours are the industry layer’s nine classes. Revenue is counted where firms are registered, not where they operate.');
+      'The colours are the industry layer’s nine classes. Revenue is counted where firms are registered.');
   }
   // The mix box's two sides (round 15): the i turns it to the sentences on how to read it, as the legend's i does; remembered per viewer.
   const mixRead = { on: readPref('atlas-mix-read') === 'open' };
