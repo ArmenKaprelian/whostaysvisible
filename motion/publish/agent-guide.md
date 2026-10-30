@@ -139,7 +139,7 @@ The atlas computes this comparison from its address files. The chapter does not 
 
 6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "added later" (added to a list after the year shown). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
 
-6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are 10.1 million rubles of revenue and 3.8 million of total assets. The tile carries a short headline of the same sentence. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (14.5).
+6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are 10.1 million rubles of revenue and 3.8 million of total assets. The tile carries a short headline of the same sentence. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (14.4).
 
 6.5. A firm on the five lists. The tile gives the firm's display name, the year it was added to a list ("undated" for lists without dates) and, in brackets, its share of the revenue of every firm at its coordinate pair, from its most recent statement up to the year shown. The year is named when it is not the slider's year. Under the cursor adds:
 - the name as filed, in Cyrillic
@@ -261,24 +261,19 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
 
-## 14. REFERENCES and the corrections
+## 14. REFERENCES
 
-14.1. REFERENCES has eight tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, CORRECTIONS, LINKS and SUPERUSER.
+14.1. REFERENCES has seven tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, LINKS and SUPERUSER.
 
 14.2. DATA gives the sources in 2.2, the five lists' provenance, the GDP deflator (World Bank, NY.GDP.DEFL.ZS.AD, rebased to 2021) and the industry and ownership classifications. DEFINITIONS gives the terms in section 2. METHODS names the chapter (chapter 2 of the dissertation in 2.1) and the tables and figures behind the panels: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map, the change layer's source) and Figure 2.8 (cohort inclusion). It also restates the models (9.2) and that they give associations, not effects.
 
 14.3. TYPE AND SOFTWARE: IBM Plex Mono and Tomorrow (SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
 
-14.4. CORRECTIONS lists the dated corrections to the published atlas, newest first. In its words:
-- 29 October 2026: corrected one chart, whose labels could sit beside the wrong points, and two statements that called the state-run firms largely the same as all state-related firms. They are about half of them and carry the group’s whole decline.
-- 28 October 2026: corrected three source references, six statements on the method and its disclosure rules, three figures or counts as labelled, one legend row and one tip. The round's record in the lab's README names each.
-- 27 October 2026: the city windows' shares with a statement now read the windows' own totals. Before, each window summed its cells, counting the firms of cells whose statements are withheld and none of their statements, so every window's share read 1.4 to 17.4 points low (median 7.2).
+14.4. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
 
-14.5. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
+14.5. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
 
-14.6. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
-
-14.7. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
+14.6. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
 
 ## 15. How to cite
 
