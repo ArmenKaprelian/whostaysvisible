@@ -1,78 +1,83 @@
 {
  "id": "shared-city",
  "tool": "motion/tools/shared_pairs.py",
- "tool_sha256": "212a2c1b87cdfffe77711c10a060fb47f93fa7d22ed345e8c49cb60ab1676bba",
- "run_utc": "2026-10-27T08:29:04Z",
+ "tool_sha256": "94fb4145fdefc44a208503e348ec93ff141433f2fc6343fc26680ee95c9d2d81",
+ "run_utc": "2026-10-30T09:25:15Z",
  "inputs": [
   {
    "path": "data/firms/firms-2014.bin.gz",
-   "sha256": "e7686ec801011ce813161ba7e153123357baa1cc4b8efa6ed78a0f775e8020a0",
-   "bytes": 6419408
+   "sha256": "0867e0a61f7409b69e7d44f24b2ccd03a39cbe351c1750a1d0a5eb8cfda9ac1f",
+   "bytes": 3771987
   },
   {
    "path": "data/firms/firms-2015.bin.gz",
-   "sha256": "41f26991d22853724e93d8f3888ee19f77adcf9050c684967fa28556da14fe97",
-   "bytes": 6688766
+   "sha256": "d71cdd80855e438517631099e0fc14f9e3c0028e1ab9102c06ff4f64bdc6f136",
+   "bytes": 4027381
   },
   {
    "path": "data/firms/firms-2016.bin.gz",
-   "sha256": "55b3376be48cc8042b5c64451b32258aa14234a9c60b564adf19b52440e6f6fd",
-   "bytes": 6833091
+   "sha256": "894ea3c591a179c68e984455bef6873722ad1ff201f8d291647f2ff6ce072225",
+   "bytes": 4106987
   },
   {
    "path": "data/firms/firms-2017.bin.gz",
-   "sha256": "ec0cf480b960ffbf894616d6cb8bebda6b7c63cd9194248c2c5cfc6663a019c5",
-   "bytes": 6885256
+   "sha256": "f19b613cec333afeb588a095f5d7c6565e99f14f1ad89c2dc686e8615d1e468b",
+   "bytes": 4158254
   },
   {
    "path": "data/firms/firms-2018.bin.gz",
-   "sha256": "ae785d6aa9d28ca3f3cd230b99cad645e9528a9c02d0ff8d1a73e8564c4bddaa",
-   "bytes": 6791033
+   "sha256": "67a26e3821a86a25cac86d7c5fe65cfd68dccdba0663b04fc54bbca086730f02",
+   "bytes": 4107549
   },
   {
    "path": "data/firms/firms-2019.bin.gz",
-   "sha256": "5b335feaf5b4cd36386f0b7d6ee9feaef513c6db002bf97fbdc4b81a75cb6352",
-   "bytes": 6702112
+   "sha256": "da0f72b53b3f12e57c8679a7c4985c9836f26144749f46c5f4e380c057726e42",
+   "bytes": 4065373
   },
   {
    "path": "data/firms/firms-2020.bin.gz",
-   "sha256": "18f6e318860ed58a587f558b533f7f3e758e962a38c1951eb5e164b4fbb79334",
-   "bytes": 6721235
+   "sha256": "df4d3c6534618991453788ab7773c209d8123182f9e57d821ed7c252fa375cf9",
+   "bytes": 4135695
   },
   {
    "path": "data/firms/firms-2021.bin.gz",
-   "sha256": "7be88dfb19e77f2d11b08c48860f98eef7fb48a7c65f94d494651980a402a5ce",
-   "bytes": 6586618
+   "sha256": "1ac0cd34758fd7fa2449782af455abf06790f23f227baff8b0bda16b9ab8deed",
+   "bytes": 4065366
   },
   {
    "path": "data/firms/firms-2022.bin.gz",
-   "sha256": "b5165bd558c9635dce1eb9441eb44bffa2de406ae9ffa974f07af003fe652269",
-   "bytes": 6512203
+   "sha256": "955b97ff26cb6d4f8fbbb8eb0671f0beab9f133682813202c859f4d7784faf16",
+   "bytes": 4013610
   },
   {
    "path": "data/firms/firms-2023.bin.gz",
-   "sha256": "55fea65087598c6be594dbd2ee67d599c69eb78501eb7d6ad831cb9f0a796fdf",
-   "bytes": 6500313
+   "sha256": "f5bd3807ddded780b8b20c0f016cda4b5681dbf01ad5848c444255bb9a894674",
+   "bytes": 4005795
   },
   {
    "path": "data/firms/firms-2024.bin.gz",
-   "sha256": "637770d6f5ec9e1affe4147c686b15618cf532e75f89afdc48beb9426d9aaf89",
-   "bytes": 6510016
+   "sha256": "2710de6d6c65771dec63cf31a334616fe6c4f869609f46dae48ab32b2028a534",
+   "bytes": 4001145
   },
   {
    "path": "data/firms/firms-2025.bin.gz",
-   "sha256": "236d7b69c2e397c165fb4e21cd3d9ac69ae667f092a738c0567a3db94515bbfb",
-   "bytes": 6460520
+   "sha256": "cb905d6d61b592c3ceabb0742703d2d28ebc1cdb2369decdb5f50878ab4c1d15",
+   "bytes": 3929493
+  },
+  {
+   "path": "data/firms/firms-coords.bin.gz",
+   "sha256": "b660a626924eab8960d62f5b9dad34890dd06a6e733a5f58f145f7214b1b4eac",
+   "bytes": 3683796
   },
   {
    "path": "data/firms.json",
-   "sha256": "198c0a512457f25fda8f3644e9995ca3a0d88c6a23e3fecc2b6440fa9c68dfb4",
-   "bytes": 18563
+   "sha256": "19a6741bc41319380387e73cdf595b8de565583c85e5db545aebc90a815b7238",
+   "bytes": 18906
   },
   {
    "path": "data/basemap.json",
-   "sha256": "e681002a4146424ce0ea772afbb20ec64b657ef6587826859437271fac7b0ba3",
-   "bytes": 1159783
+   "sha256": "e109c44b5115952c9a2bf33bec2c29ed54f21ae752c92a0e2e2182ac82ef4c26",
+   "bytes": 1164373
   }
  ],
  "checks": "60 of 60 passed (shared.checks.csv)",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Coordinate pairs shared by 100 or more firms (round 16, the author's item of 27 October 2026).
 
-Reads the shipped address files (data/firms/firms-YYYY.bin.gz, M9: one record per coordinate pair of located eligible
+Reads the shipped address files (data/firms/firms-YYYY.bin.gz and firms-coords.bin.gz, M9: one record per coordinate pair of located eligible
 firms on no list with a house- or street-level geocode, its firms n and statements a) and writes data/shared.json and its
 twin, provenance and checks: per year 2014 to 2025, nationally and per 100 km and 25 km cell (the grids of M5 and M10,
 floor(x_km / size)) and per 1 km square of the 22 city windows (M11's window: 45 km either side of the city, inclusive),
@@ -28,15 +28,29 @@ def b64(typecode, values):
     if sys.byteorder != "little": a.byteswap()
     return base64.b64encode(a.tobytes()).decode("ascii")
 
-def read_year(y):
+def col(b, tc, off, n):
+    a = array.array(tc); a.frombytes(b[off:off + a.itemsize * n])
+    if sys.byteorder != "little": a.byteswap()
+    return a
+
+def read_coords():   # version 4 (round 31): every address of every year once; x as the step from the previous address, y as the step where x repeats, else y itself
+    b = gzip.open(os.path.join(DATA, "firms", "firms-coords.bin.gz"), "rb").read()
+    magic, u, _, _, _, ver = struct.unpack_from("<4sIiiHH", b, 0)
+    if magic != b"FRC1" or ver != 4: raise SystemExit("shared_pairs: bad header in firms-coords")
+    xs, ys, x, y = array.array("i"), array.array("i"), 0, 0
+    for dx, dy in zip(col(b, "i", 32, u), col(b, "i", 32 + 4 * u, u)):
+        if dx: x += dx; y = dy
+        else: y += dy
+        xs.append(x); ys.append(y)
+    return xs, ys
+
+def read_year(y, coords):   # the year's addresses from its bitmap over the coordinates, then its n and a
     b = gzip.open(os.path.join(DATA, "firms", "firms-%d.bin.gz" % y), "rb").read()
-    magic, n, _, _, year, ver = struct.unpack_from("<4sIiiHH", b, 0)
-    if magic != b"FRM1" or ver != 3 or year != y: raise SystemExit("shared_pairs: bad header in firms-%d" % y)
-    def col(tc, off, size):
-        a = array.array(tc); a.frombytes(b[off:off + size * n])
-        if sys.byteorder != "little": a.byteswap()
-        return a
-    return col("i", 32, 4), col("i", 32 + 4 * n, 4), col("H", 32 + 8 * n, 2), col("H", 32 + 10 * n, 2)
+    magic, n, u, _, year, ver = struct.unpack_from("<4sIIiHH", b, 0)
+    if magic != b"FRM1" or ver != 4 or year != y or u != len(coords[0]): raise SystemExit("shared_pairs: bad header in firms-%d" % y)
+    o = 32 + 4 * ((u + 31) // 32); idx = [8 * i + k for i, v in enumerate(b[32:o]) if v for k in range(8) if v >> k & 1]
+    if len(idx) != n: raise SystemExit("shared_pairs: the bitmap of firms-%d marks %d addresses, the header %d" % (y, len(idx), n))
+    return [coords[0][i] for i in idx], [coords[1][i] for i in idx], col(b, "H", o, n), col(b, "H", o + 2 * n, n)
 
 def level(cells):   # {(ix, iy): [n, a, n100, a100, p100]} -> dense ix, iy, n, a for every cell with firms; the shared columns only where a shared pair is
     keys = sorted(cells, key=lambda k: (k[1], k[0]))
@@ -58,8 +72,9 @@ def main():
     national, cells100, cells25, city1km, checks = [], {}, {}, {}, []
     def check(name, expected, observed):
         checks.append({"check": name, "expected": expected, "observed": observed, "tolerance": 0, "pass": expected == observed})
+    coords = read_coords()
     for y in YEARS:
-        xs, ys, nn, aa = read_year(y)
+        xs, ys, nn, aa = read_year(y, coords)
         c100, c25, w1 = {}, {}, {lab: {} for lab, _, _ in wins}
         tot = [0, 0, 0, 0, 0]; big = [0, 0, 0]
         for x_m, y_m, n, a in zip(xs, ys, nn, aa):
@@ -105,7 +120,7 @@ def main():
         w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC, lineterminator="\n"); w.writerow(["check", "expected", "observed", "tolerance", "pass"])
         for c in checks: w.writerow([c["check"], json.dumps(c["expected"]), json.dumps(c["observed"]), 0, "TRUE" if c["pass"] else "FALSE"])
     if bad: raise SystemExit("shared_pairs: %d of %d checks failed: %s" % (len(bad), len(checks), "; ".join(c["check"] for c in bad)))
-    inputs = [os.path.join(DATA, "firms", "firms-%d.bin.gz" % y) for y in YEARS] + [os.path.join(DATA, "firms.json"), os.path.join(DATA, "basemap.json")]
+    inputs = [os.path.join(DATA, "firms", "firms-%d.bin.gz" % y) for y in YEARS] + [os.path.join(DATA, "firms", "firms-coords.bin.gz"), os.path.join(DATA, "firms.json"), os.path.join(DATA, "basemap.json")]
     ins = [{"path": os.path.relpath(p, os.path.dirname(DATA)), "sha256": sha256(p), "bytes": os.path.getsize(p)} for p in inputs]
     run = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for oid, obj in outs.items():   # each file loads on demand (the layer or the toggle's first use), like the address files
