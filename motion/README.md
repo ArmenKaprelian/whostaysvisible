@@ -2370,6 +2370,18 @@ The author asked for three audit speedups to be checked: conditions in place of 
 - **Not done:** fixed sleeps are 12 to 18 s a width and partly inherent; checks run once would cost the layout checks each state makes at its width; solo re-runs only matter when there are findings.
 - **Result:** the five-width audit in 3 min 19 s from 6 min 55 s, the same 1,296 states and zero findings (one run, on the author's word that it proved the point).
 
+### Round 31 (30 October 2026): a lighter atlas, no visible change
+
+Round 30's plan, second half. Detail in `review/2026-10-30-round-31-lighter.md`.
+- **D, dead code** (9f05779): the 1 km city windows' decoding and paths at load, ten unused hooks, and unused shared code (`charts.js`, `map-layers.js`, `motion-core.js`).
+- **L, the first load** (1ecbff3, 92cba29): the windows' 1 km cells move to `cellsyears-city.json` and the 25 km industry grid to `industry25.json`, and both 25 km files load in idle time after the first draw. Scripts and data before the first draw: 14.8 MB to 6.5 MB (4.1 to 1.7 MB gzipped).
+- **M, the address files' version 4** (5cb5944): every address once in `firms-coords.bin.gz` (3.7 MB, fetched with the first year), and per year a bitmap and the columns. A year switch fetches 4.0 MB in place of 6.5, and all twelve years 52.1 MB in place of 79.6. M9 no longer writes the unread `.js` twins.
+- **Q, the tidy** (0cd87b0, a1ff9b8; the author asked for it after it had first been left out as minor): `js/agent-guide.js` holds only the link (37 KB to 0.3 KB), and the lab keeps the guide in `agent-guide.md`. The profiles' short form leaves `insights.json`, and `groups.json` stops shipping the 100 km cells (`groups.js` 195 to 82 kB).
+
+Checks, kept to an essential minimum at the author's request (a one-time exception, no rule change): the change proofs for D, L, M and Q came out identical, and M and Q were checked against their previous builds served with their previous data. Every address-file year decodes byte for byte to version 3, and M9 passes 351 of 351 checks. `shared_pairs.py` reads version 4 with identical outputs. The audit's fixed checks at 1,600 px had zero findings, and the film's frames are unchanged. The publish set's dry run: 112.7 MB (141.1 at round 30), 193 links, all expected.
+
+**Not done:** the speed run in the author's Brave, the tile by transform, the DejaVu subset (needs `fonttools`), and comments stripped from the published copy (needs a JavaScript parser). The 12 stale `firms-YYYY.js` twins (about 107 MB, git-ignored) wait for the author's OK to delete.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
