@@ -42,16 +42,6 @@
     const lod0Parts = bm.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = 0, y = 0; for (let i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; const X = x / 10, Y = y / 10; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; } } return { x0, y0, x1, y1, path: M.partsToPath([p]) }; });
     return { lod0, lod1, grat, extents: bm.extents, cities, lod1MinK: bm.lod1.use_when_px_per_km_at_least || 9, land, lod0Parts };
   };
-  // The fine geometry of a city window applies only when the whole viewport lies inside its box.
-  M.chooseLod = function (bmp, cam, stage) {
-    if (cam.k >= bmp.lod1MinK) {
-      const hw = stage.width / (2 * cam.k), hh = stage.height / (2 * cam.k);
-      for (const w of Object.values(bmp.lod1)) {
-        if (cam.cx - hw >= w.box[0] && cam.cx + hw <= w.box[1] && cam.cy - hh >= w.box[2] && cam.cy + hh <= w.box[3]) return w.path;
-      }
-    }
-    return bmp.lod0;
-  };
   // The fine geometry (lod1) of a city window, when the viewport lies inside its box, or null.
   M.windowLod = function (bmp, cam, stage) {
     const hw = stage.width / (2 * cam.k), hh = stage.height / (2 * cam.k);
@@ -164,12 +154,13 @@
     return { label: layer.label, grid: layer.grid_km, origin: layer.origin, ix, iy, n, a, count: layer.count, sum_n: layer.sum_n, sum_a: layer.sum_a, max_n: layer.max_n, shown_shares: layer.shown_shares };
   };
   // Paths by count class (8) and by share class (5 classes over 50+ firm cells, class 5 = below support).
-  M.buildDensityPaths = function (d, shareBreaks) {
+  M.buildDensityPaths = function (d, shareBreaks, countsOnly) {   // countsOnly: no share paths (the atlas's national blocks draw counts only, round 31)
     const byCount = new Map(), byShare = new Map(); const g = d.grid, ox = d.origin[0], oy = d.origin[1];
     const gap = g >= 1 ? g * 0.12 : g * 0.1; const s = g - gap, h = gap / 2;
     for (let i = 0; i < d.count; i++) {
       const x = ox + d.ix[i] * g + h, y = oy + d.iy[i] * g + h;
       const cc = M.countClass(d.n[i]); let p = byCount.get(cc); if (!p) { p = new Path2D(); byCount.set(cc, p); } p.rect(x, y, s, s);
+      if (countsOnly) continue;
       let sc = 5; if (d.a[i] >= 0 && d.n[i] >= 50) { const share = 100 * d.a[i] / d.n[i]; sc = 0; while (sc < shareBreaks.length && share >= shareBreaks[sc]) sc++; }
       let q = byShare.get(sc); if (!q) { q = new Path2D(); byShare.set(sc, q); } q.rect(x, y, s, s);
     }

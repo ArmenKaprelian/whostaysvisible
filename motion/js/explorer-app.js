@@ -51,7 +51,7 @@
              tileInk: tok('tile-ink') || '#CFE6FF',   // the tile's text, and the ghost names from 8B on (rounds 15 and 16)   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
              neutral: FM ? FM.neutral.dark : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? FM.zero.dark : '#6B7482'), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
     t.div6 = t.change6;   // the revenue classes of the Firms view and the Cells view's fin layer share the Change layer's pair (round 10; the blue six of rounds 3 to 9 stay in the manifests' class_colours)
-    return Object.assign(t, MM.coreRamp(t));   // the bloom's pale-core tables (round 9)
+    return t;   // the bloom's pale-core tables (MM.coreRamp, round 9) are the film's alone since round 22
   }
   const theme = readTheme();
 
@@ -64,7 +64,7 @@
   // the pass inside a city window only the blocks under it (24 October 2026; the picture is unchanged).
   const NAT_BLOCK = 500;
   const natBlocks = (() => { const by = new Map(); for (let i = 0; i < nat.count; i++) { const bx = Math.floor(nat.ix[i] * nat.grid / NAT_BLOCK), byy = Math.floor(nat.iy[i] * nat.grid / NAT_BLOCK), key = bx + ',' + byy; let b = by.get(key); if (!b) { b = { x0: bx * NAT_BLOCK, y0: byy * NAT_BLOCK, x1: (bx + 1) * NAT_BLOCK, y1: (byy + 1) * NAT_BLOCK, ix: [], iy: [], n: [], a: [] }; by.set(key, b); } b.ix.push(nat.ix[i]); b.iy.push(nat.iy[i]); b.n.push(nat.n[i]); b.a.push(nat.a[i]); }
-    return [...by.values()].map(b => ({ x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1, paths: MM.buildDensityPaths({ grid: nat.grid, origin: nat.origin, ix: b.ix, iy: b.iy, n: b.n, a: b.a, count: b.ix.length }, FINE_BREAKS) })); })();
+    return [...by.values()].map(b => ({ x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1, paths: MM.buildDensityPaths({ grid: nat.grid, origin: nat.origin, ix: b.ix, iy: b.iy, n: b.n, a: b.a, count: b.ix.length }, FINE_BREAKS, true) })); })();   // counts only: nothing draws the national grid's shares (round 31)
   // Below k 0.5 (a 5 km cell under 2.5 px) the national counts come from a picture rendered once per theme at 0.35 px per
   // km (a cell is 1.75 px) and drawn scaled, which keeps the country view and the start of every flight at the frame rate;
   // the rasteriser averaged those sub-pixel cells anyway, so the picture is the same. Above it the blocks' rectangles draw.
@@ -78,21 +78,20 @@
     for (const b of natBlocks) MM.drawDensityCounts(ctx2, st, camB, b.paths, theme.density, 1);
     natBmp = { cv, cam: camB, W, H, colour: theme.density }; return natBmp;
   }
-  // Draws the national grid's blocks that meet the view, or the given km rectangle, as counts or as shares.
-  function drawNat(c, alpha, region, shares) {
-    if (!shares && c.k < 0.5) {
+  // Draws the national grid's blocks that meet the view as counts.
+  function drawNat(c, alpha) {
+    if (c.k < 0.5) {
       const b = natBitmap(), [px, py] = Motion.project(c, b.cam.cx - b.W / 2 / b.cam.k, b.cam.cy + b.H / 2 / b.cam.k), f = c.k / b.cam.k;
       mctx.save(); stage.base(); mctx.globalAlpha *= alpha; mctx.drawImage(b.cv, px, py, b.W * f, b.H * f); mctx.restore(); return;
     }
-    const hx = stage.width / 2 / c.k, hy = stage.height / 2 / c.k; let x0 = c.cx - hx, x1 = c.cx + hx, y0 = c.cy - hy, y1 = c.cy + hy;
-    if (region) { x0 = Math.max(x0, region.origin[0]); x1 = Math.min(x1, region.origin[0] + region.size); y0 = Math.max(y0, region.origin[1]); y1 = Math.min(y1, region.origin[1] + region.size); }
-    for (const b of natBlocks) if (b.x1 > x0 && b.x0 < x1 && b.y1 > y0 && b.y0 < y1) { if (shares) MM.drawDensityShares(mctx, stage, c, b.paths, theme.ramp5, theme.below, alpha); else MM.drawDensityCounts(mctx, stage, c, b.paths, theme.density, alpha); }
+    const hx = stage.width / 2 / c.k, hy = stage.height / 2 / c.k, x0 = c.cx - hx, x1 = c.cx + hx, y0 = c.cy - hy, y1 = c.cy + hy;
+    for (const b of natBlocks) if (b.x1 > x0 && b.x0 < x1 && b.y1 > y0 && b.y0 < y1) MM.drawDensityCounts(mctx, stage, c, b.paths, theme.density, alpha);
   }
   const win1 = {}, win025 = {};
-  for (const [label, w] of Object.entries(DEN.windows_1km)) { const d = MM.decodeDensity(w); win1[label] = { d, paths: MM.buildDensityPaths(d, FINE_BREAKS), cx: w.origin[0] + 45, cy: w.origin[1] + 45 }; }
+  for (const [label, w] of Object.entries(DEN.windows_1km)) win1[label] = { d: { origin: w.origin }, cx: w.origin[0] + 45, cy: w.origin[1] + 45 };   // the windows' origins and centres only: nothing draws their 1 km cells (round 31: no decode, no paths)
   for (const [label, w] of Object.entries(DEN.windows_250m)) { const d = MM.decodeDensity(w); win025[label] = { d, paths: MM.buildDensityPaths(d, FINE_BREAKS), cx: w.origin[0] + 12, cy: w.origin[1] + 12 }; }
-  const cityYear = {};   // label -> year -> {d, paths}
-  for (const w of CY.city_1km) { const d = MM.decodeDensity(w); (cityYear[w.label] = cityYear[w.label] || {})[w.year] = { d, paths: MM.buildDensityPaths(d, FINE_BREAKS) }; }
+  const cityYear = {};   // label -> year -> {d: the window's totals}; round 31: the 1 km cells were decoded and pathed at load, and only these totals were read
+  for (const w of CY.city_1km) (cityYear[w.label] = cityYear[w.label] || {})[w.year] = { d: { sum_n: w.sum_n, sum_a: w.sum_a } };
   const years = CY.mapped_years;
   const yearIndex = {}; CY.avail.year.forEach((y, i) => { (yearIndex[y] = yearIndex[y] || []).push(i); });
   const cellKey = (ix, iy) => iy * 65536 + ix;
@@ -270,7 +269,6 @@
   const stepAt = (km, f) => zoomStep(f, km);
   const stepCentre = f => zoomStep(f, null);
   const cityInCell = (ix, iy) => bmp.cities.find(c => Math.floor(c.x / 100) === ix && Math.floor(c.y / 100) === iy) || null;
-  function fitNational() { state.cam = fitTarget(); }
   function nearestCity(c) { let best = null, bd = Infinity; for (const city of bmp.cities) { const d = Math.hypot(city.x - c.cx, city.y - c.cy); if (d < bd) { bd = d; best = city; } } return { city: best, dist: bd }; }
 
   const winRect = (d, size) => ({ origin: d.origin, size });
@@ -307,7 +305,7 @@
       if (key !== lastMarksKey || pulse || found) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
     else if (L === 'density') { drawLog.push('density');
       const am = microA(c.k, 2021); if (c.k >= 1.2 && !flight && !motion) ensureMicro(2021);
-      if (am < 1) drawNat(c, 1 - am, null, false);   // the national 5 km counts (2021), fading as the 1 km squares come in
+      if (am < 1) drawNat(c, 1 - am);   // the national 5 km counts (2021), fading as the 1 km squares come in
       drawCellsSquares2d(c);
     } else if (L === 'share') { drawLog.push('share');
       // 100 km cells, then the 25 km cells, then the 1 km squares from the address files and the 2021 250 m windows (on the field canvas).
@@ -398,7 +396,6 @@
   const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const firmClass = (d, i, L) => (L === 'share' ? d.share[i] : L === 'fin' ? d.cls[i] : L === 'industry' ? d.indCls[i] : 0);
   const firmColour = (L, cl) => (L === 'share' ? theme.ramp6[cl] : L === 'fin' ? (cl ? theme.div6[cl - 1] : theme.zero) : L === 'industry' ? (cl ? theme.ind9[cl - 1] : theme.neutral) : theme.neutral);
-  const firmPalette = L => (L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.zero].concat(theme.div6) : L === 'industry' ? [theme.neutral].concat(theme.ind9) : [theme.neutral]).map(hex2rgb);
   function clearField() { if (gl && !glLost) { gl.viewport(0, 0, fieldC.width, fieldC.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); } if (field2d) { field2d.ctx.setTransform(1, 0, 0, 1, 0, 0); field2d.ctx.clearRect(0, 0, field2d.canvas.width, field2d.canvas.height); } }
   function clearMarks() { kctx.setTransform(1, 0, 0, 1, 0, 0); kctx.clearRect(0, 0, marksC.width, marksC.height); }
   function drawLabels(ctx, c, scene) {   // a label is drawn only when its text sits wholly inside the canvas (the audit's offcanvas rule; the video's 300 px edge fade is sized for its own frame)
@@ -2165,13 +2162,9 @@ void main() {
       return chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], 'share with a statement, its 25 km cell, by year');
     }
     if (h.fine) {
-      // 1 km city cells carry year series for 2019 to 2024 (cellsyears.city_1km); 250 m cells and the 5 km density cells carry 2021 only.
+      // 250 m cells and the 5 km density cells carry 2021 only.
       if (h.n == null && h.nrev == null) return note(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`);   // the industry layer's 1 km hit carries the revenue count, not n: its series comes from the city grid below (25 October)
-      if (h.grid !== 1 || !cityYear[h.city]) return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');
-      const pts = [];
-      for (const [y, L1] of Object.entries(cityYear[h.city])) { const d = L1.d, jx = Math.floor((h.kmx - d.origin[0]) / 1), jy = Math.floor((h.kmy - d.origin[1]) / 1); for (let i = 0; i < d.count; i++) if (d.ix[i] === jx && d.iy[i] === jy) { if (d.n[i] >= 50 && d.a[i] >= 0) pts.push({ x: +y, y: 100 * d.a[i] / d.n[i] }); break; } }
-      if (!pts.length) return note('Fewer than 50 located firms in every year, 2019 to 2024');
-      return chart(pts.sort((a, b) => a.x - b.x), [2018.5, 2024.5], [2019, 2021, 2024], [], 'share with a statement, this 1 km cell, 2019 to 2024');
+      return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');   // a fine hit is a 250 m or a 5 km cell (round 31: the 1 km series branch here could not be reached)
     }
     const key = cellKey(h.ix, h.iy); const pts = [];
     if (h.grid === G25 && C25) { for (const y of years) { const d = c25[y]; if (!d) continue; const i = d.map.get(key); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); } }
@@ -2806,20 +2799,15 @@ void main() {
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
-    minimapTry(over, trace) { mmTry = over || null; mmTrace = trace || null; const svg = $('minimap'); while (svg.firstChild) svg.removeChild(svg.firstChild); svg.classList.remove('drawn'); MMAP = null; buildMinimap(); drawCardGraticule(); return { f: MM_F, vx0: MM_VX0, violations: minimapCheck() }; },   // round 16: a trial layout for the hand placement (the audit and the frames)
     minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.filter(p => p.button.isConnected).map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (25 October): true when it rebuilt
-    ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
-    verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py, { touch: !!opts.touch }); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, origin: h.origin || [0, 0], fine: !!h.fine, micro: !!h.micro, n: h.n == null ? null : h.n, listed: h.listed || null }; },
     click(x, y, opts) { const c = cam(); const p = { x, y, px: c.ox + (x - c.cx) * c.k, py: c.oy - (y - c.cy) * c.k }; const h = hitAt(p); h.kmx = x; h.kmy = y; const r = ladderTarget(h, p, !!(opts && opts.shift)); return (r ? flyTo(r.target, { instant: true }) : Promise.resolve()).then(() => Object.assign(this.camera(), { moved: !!r, rung: r ? r.rung : null })); },
     zoom(dir) { return flyTo(dir > 0 ? stepCentre(2) : dir < 0 ? stepCentre(0.5) : fitTarget(), { instant: true }).then(() => this.camera()); },
     zoomBy(f, km) { const c = cam(); const p = km ? { x: km[0], y: km[1], px: c.ox + (km[0] - c.cx) * c.k, py: c.oy - (km[1] - c.cy) * c.k } : null; return flyTo(p ? stepAt(p, f) : stepCentre(f), { instant: true }).then(() => this.camera()); },   // an instant step by a factor, anchored at a km point or the centre (the audit's wheel)
-    fly(target) { return flyTo(target); },
     // the real frame cadence of a flight to target: intervals between animation frames while it runs
-    profileFlight(target) { const stamps = [], ks = []; const tick = now => { stamps.push(now); ks.push(state.cam.k); if (flight) requestAnimationFrame(tick); }; requestAnimationFrame(tick); return flyTo(target).then(r => { const iv = [], slow = []; for (let i = 1; i < stamps.length; i++) { const d = stamps[i] - stamps[i - 1]; iv.push(d); if (d > 25) slow.push([+ks[i - 1].toFixed(2), Math.round(d)]); } const sorted = iv.slice().sort((a, b) => a - b); const mean = iv.reduce((s, v) => s + v, 0) / Math.max(1, iv.length); return { frames: r.frames, ms: Math.round(r.ms), fps: Math.round(r.frames / Math.max(1, r.ms) * 1000), mean: +mean.toFixed(1), p95: +(sorted[Math.floor(sorted.length * 0.95)] || 0).toFixed(1), max: +(sorted[sorted.length - 1] || 0).toFixed(1), over25: slow.length, slow }; }); },
     hoverCost(n = 30) { const W = stage.width, H = stage.height; const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); showHoverAt(W * (0.2 + 0.6 * ((i * 7919) % 1000) / 1000), H * (0.2 + 0.6 * ((i * 104729) % 1000) / 1000)); mx = Math.max(mx, performance.now() - a); } hideHover(); return { mean: +((performance.now() - t0) / n).toFixed(2), max: +mx.toFixed(2) }; },
     // the subject's screen distance from the centre along the flight that fly(target) would take, at n + 1 samples
     pathPreview(target, n = 20) { const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) }; const ms = 1000, path = flightPath(from, to, ms); const out = []; for (let i = 0; i <= n; i++) { const p = path(ms * i / n); out.push(Math.hypot((to.cx - p.cx) * p.k, (to.cy - p.cy) * p.k)); } return out; },
@@ -2844,7 +2832,6 @@ void main() {
     },
     sweep(on) { if (on === false) endSweep(); else if (on) { try { sessionStorage.removeItem('atlas-sweep'); } catch (e) { /* no storage */ } fieldAnim.swept = false; maybeSweep(); } const sw = sweepX(); return { on: !!fieldAnim.sweep, pending: !!fieldAnim.sweepPending, x: sw ? sw.x : null, raf: fieldAnim.raf }; },   // the opening sweep (round 14): start it again, end it, or read it
     dissolve() { return { on: !!fieldAnim.dissolve, t: dissolveT(), started: !!(fieldAnim.dissolve && fieldAnim.dissolve.t0 != null) }; },
-    glState() { return { kind: glKind, lost: glLost, isContextLost: gl ? gl.isContextLost() : null, error: glError, events: glEvents.slice() }; },
     loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
     pulsing() { return pulse ? pulse.count : 0; },
@@ -2859,7 +2846,6 @@ void main() {
     refs(on) { if (on === true) refsOpen(); else if (on === false) refsClose(); const d = $('refs'), r = d.getBoundingClientRect(), m = wrap.getBoundingClientRect(), n = $('superusernote');   // the REFERENCES panel (round 16)
       return { open: d.open, rect: [r.left, r.top, r.width, r.height], map: [m.left, m.top, m.width, m.height], sections: [...d.querySelectorAll('section')].map(x => x.dataset.name), links: [...d.querySelectorAll('a')].map(a => a.href), note: n ? n.textContent : null, alpha: REFS_ALPHA, focus: document.activeElement && document.activeElement.id }; },
     mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
-    binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
     hoverPixel() { const h = state.hover, p = h && (h.kind === 'pixel' ? h : h.pixel); return p ? { cell: p.cell, n: p.n, a: p.a, p: p.p, size: p.size } : null; },   // the hovered pixel (round 14)
     pixelSum(gx, gy) { const d = firmYears.get(state.year); if (!d) return null; const c = cam(); let n = 0, a = 0, p = 0; for (let i = 0; i < d.n; i++) { const sx = c.ox + (d.x[i] / 1000 - c.cx) * c.k, sy = c.oy - (d.y[i] / 1000 - c.cy) * c.k; if (Math.floor(sx) === gx && Math.floor(sy) === gy) { n += d.nn[i]; a += d.a[i]; p++; } } return { n, a, p }; },   // every address of the year tested against one CSS pixel, for the audit's independent sum
     legendSide(v) { if (v != null) { ui.legendRead = v ? 'open' : 'closed'; applyPanels(); } return ui.legendRead === 'open'; },   // the legend's reading side on or off (round 14)
@@ -2867,12 +2853,10 @@ void main() {
     findKeys(i) { return findIndex()[i]; },
     foundState() { return { found: found ? { i: found.i, static: found.static } : null, pin: findPin, hash: location.hash, mode: state.mode, year: state.year, cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k } }; },
     viewHash() { return viewHash(); },
-    foundAt(ms) { if (!found) return false; if (foundRaf) cancelAnimationFrame(foundRaf); foundRaf = 0; found.at = ms; redrawMarksNow(); return true; },   // a frozen frame of the found firm's pulse, for the pictures
     viewLink() { return viewLink(); },
     tileCount() { const el = $('tipbody').querySelector('.lc'); if (!el) return null; const cs = getComputedStyle(el); return { text: el.textContent, colour: cs.color, size: parseFloat(cs.fontSize), weight: cs.fontWeight, year: layerYear(), dot: !!el.querySelector('.dot'), first: el.parentElement.classList.contains('t-l1') }; },   // the Cells tile's red count (round 14)
     cellPulseAt(ms) { endCellPulse(); if (ms == null) { drawCellsMarks(cam()); return 0; } const n = cellsPulse(); if (cellPulse) { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) { clearTimeout(cellPulseTimer); cellPulseTimer = 0; } cellPulse.at = ms; drawCellsMarks(cam()); } return n; },   // a frozen Cells pulse at ms (round 14); cellPulseAt(null) clears it
     cellPulseState() { return cellPulse ? { count: cellPulse.count, static: cellPulse.static, cells: cellPulse.cells.map(q => [q.x, q.y, q.delay]) } : null; },
-    mosaicOff(v) { if (v != null) { mosaicOff = !!v; drawMap(); } return mosaicOff; },   // the squares off, for the contrast probe
     anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
     tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
@@ -2892,7 +2876,6 @@ void main() {
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
     drawOrder() { return drawLog.slice(); },   // the last drawMap's steps: basemap, mark, then the layer
-    handover() { return Object.assign({}, handover); },
     grain(on) { document.documentElement.classList.toggle('nograin', on === false); return !document.documentElement.classList.contains('nograin'); },   // the surface grain on or off, for the audit's contrast guard (round 10)
     card(id, open, persist) { if (persist) writePref('atlas-card-' + id, open ? 'open' : 'closed'); setCard(id, open == null ? null : open ? 'open' : 'closed'); return cardOpen(id); },   // a card's collapse state (round 10)
     cards() { return Object.fromEntries(CARDS.map(id => [id, cardOpen(id)])); },

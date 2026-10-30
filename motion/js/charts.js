@@ -71,24 +71,6 @@
     return { sx, sy };
   };
 
-  // Slope chart between two columns. items: [{label, a, b, color}]. progress draws the lines from a to b.
-  C.slopes = function (ctx, box, items, { yDomain, progress = 1, theme, leftLabel = '2021', rightLabel = '2024', fmt = v => v.toFixed(1) + '%', size = 26, leftMargin = 330, rightMargin = 130 } = {}) {
-    const sy = C.scale(yDomain, [box.y + box.h, box.y]);
-    const la = items.map(it => sy(it.a)), lb = items.map(it => sy(it.b));
-    const x0 = box.x + leftMargin, x1 = box.x + box.w - rightMargin;
-    ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; [x0, x1].forEach(x => { ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); });
-    const hy = box.y - (size >= 20 ? 18 : size + 4);   // the column headers sit closer to a small chart's box
-    T(ctx, leftLabel, x0, hy, { size, color: theme.muted, align: 'center' }); T(ctx, rightLabel, x1, hy, { size, color: theme.muted, align: 'center' });
-    items.forEach((it, i) => {
-      const ya = sy(it.a), yb = sy(it.b); const u = progress;
-      ctx.strokeStyle = it.color; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0, ya); ctx.lineTo(x0 + (x1 - x0) * u, ya + (yb - ya) * u); ctx.stroke();
-      ctx.fillStyle = it.color; ctx.beginPath(); ctx.arc(x0, ya, 6, 0, Math.PI * 2); ctx.fill();
-      T(ctx, fmt(it.a), x0 - 16, la[i], { size, color: theme.ink, align: 'right', baseline: 'middle' });
-      T(ctx, it.label, x0 - 16 - Motion.measure(ctx, fmt(it.a), size) - 14, la[i], { size, color: theme.muted, align: 'right', baseline: 'middle' });
-      if (u >= 1) { ctx.beginPath(); ctx.arc(x1, yb, 6, 0, Math.PI * 2); ctx.fill(); }
-      if (u >= 0.85) T(ctx, fmt(it.b), x1 + 16, lb[i], { size, color: it.color, align: 'left', baseline: 'middle', weight: 500, alpha: tail(u) });
-    });
-  };
 
   // A table with its change drawn (the atlas's Groups card, round 24): one row per item in the order given, the name, the two values, a bar from one
   // vertical zero line shared by every row to the change b - a, and the change signed in the item's colour. The slope chart it replaces there pushed its
@@ -147,22 +129,6 @@
     });
   };
 
-  // Dot and whisker on a log x axis. rows: [{label, v, low, high, color, highlight}]. progress reveals rows top to bottom.
-  C.dotWhiskers = function (ctx, box, rows, { xDomain = [0.02, 5], progress = 1, theme, ticks = [0.05, 0.1, 0.25, 0.5, 1, 2, 4], size = 24, rowH = null, refLine = 1 } = {}) {
-    const sx = C.logScale(xDomain, [box.x, box.x + box.w]); const rh = rowH || box.h / rows.length;
-    for (const t of ticks) { const x = sx(t); ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y + box.h); ctx.stroke(); T(ctx, String(t), x, box.y + box.h + 30, { size: size - 2, color: theme.muted, align: 'center' }); }
-    if (refLine != null) { const x = sx(refLine); ctx.strokeStyle = theme.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, box.y - 6); ctx.lineTo(x, box.y + box.h); ctx.stroke(); }
-    rows.forEach((r, i) => {
-      const u = Motion.clamp(progress * rows.length - i, 0, 1); if (u <= 0) return;
-      const y = box.y + rh * (i + 0.5); ctx.save(); ctx.globalAlpha *= u;
-      T(ctx, r.label, box.x - 18, y, { size, color: r.highlight ? theme.ink : theme.muted, align: 'right', baseline: 'middle', weight: r.highlight ? 600 : 400 });
-      if (r.low != null && r.high != null) { ctx.strokeStyle = r.color; ctx.lineWidth = r.highlight ? 4 : 2.5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(sx(r.low), y); ctx.lineTo(sx(r.high), y); ctx.stroke(); }
-      ctx.fillStyle = r.color; ctx.beginPath(); ctx.arc(sx(r.v), y, r.highlight ? 9 : 7, 0, Math.PI * 2); ctx.fill();
-      if (r.valueLabel !== false) T(ctx, r.valueLabel || Motion.fmt.dec(r.v, 2), sx(r.high != null ? r.high : r.v) + 16, y, { size: size - 2, color: r.highlight ? theme.ink : theme.muted, baseline: 'middle' });
-      ctx.restore();
-    });
-    return sx;
-  };
 
   // Year-by-year dots joined by lines for several series, on a log y axis by default. series: [{label, color, points: [{x, y, low, high}], whiskers}].
   // Round 18: log: false draws a linear axis; ref is the tick drawn as the reference line (1 for ratios, 0 suits coefficients on a linear axis); yFmt writes the
@@ -194,20 +160,6 @@
     return { sx, sy };
   };
 
-  // Six-year history strips: rows of A/N/X letters as coloured cells. rows: [{history, share, firms}].
-  C.historyStrips = function (ctx, box, rows, { progress = 1, theme, colors, years = ['2019', '2020', '2021', '2022', '2023', '2024'], cell = 44, gap = 6, size = 22 } = {}) {
-    years.forEach((y, j) => T(ctx, y, box.x + j * (cell + gap) + cell / 2, box.y - 12, { size: size - 2, color: theme.muted, align: 'center' }));
-    rows.forEach((r, i) => {
-      const u = Motion.clamp(progress * rows.length - i, 0, 1); if (u <= 0) return;
-      const y = box.y + i * (cell + gap); ctx.save(); ctx.globalAlpha *= u;
-      for (let j = 0; j < r.history.length; j++) { const ch = r.history[j]; const col = colors[ch] || theme.grid; ctx.fillStyle = col; ctx.fillRect(box.x + j * (cell + gap), y, cell, cell); T(ctx, ch, box.x + j * (cell + gap) + cell / 2, y + cell / 2 + 1, { size: size - 2, color: ch === 'A' ? theme.stage : theme.ink, align: 'center', baseline: 'middle', weight: 500 }); }
-      const xx = box.x + r.history.length * (cell + gap) + 14;
-      const barW = Math.max(0, (box.w - (xx - box.x) - 150) * (r.share / 100) * 2.5);
-      ctx.fillStyle = theme.barMuted; ctx.fillRect(xx, y + 8, barW, cell - 16);
-      T(ctx, Motion.fmt.pct(r.share) + '  ' + Motion.fmt.int(r.firms), xx + barW + 12, y + cell / 2 + 1, { size, color: theme.ink, baseline: 'middle' });
-      ctx.restore();
-    });
-  };
 
   // A firm's path against its comparison group: the group's median line and interquartile band, the
   // firm's line (broken where a year is missing), on a log y axis. data: { firm: [{x, y|null}],
