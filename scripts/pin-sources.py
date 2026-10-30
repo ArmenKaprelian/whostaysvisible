@@ -3,8 +3,17 @@
 size, mtime, and sha256 (computed for small files, copied from the generation's
 stage-manifest.csv or the RFSD manifest for large parquet). Re-run deliberately
 when a selected generation changes; R/lab-sources.R refuses drifted inputs.
-`--only PREFIX` re-pins just the entries of one prefix (e.g. motion) into the existing file."""
+`--only PREFIX` re-pins just the entries of one prefix (e.g. motion) into the existing file.
+
+Usage: scripts/pin-sources.py                 re-pins every source and records the programming HEAD
+       scripts/pin-sources.py --only PREFIX   re-pins the PREFIX.* entries only, the others untouched
+       scripts/pin-sources.py -h              prints this help"""
 import csv, glob, hashlib, json, os, re, subprocess, sys, time
+
+# Round 29 (30 October 2026): -h prints the help, and any argument other than --only PREFIX stops before anything is read, so a
+# mistyped flag never re-pins every source (on 29 October a run given -h re-pinned all 191).
+if len(sys.argv) > 1 and not (len(sys.argv) == 3 and sys.argv[1] == "--only" and sys.argv[2] and not sys.argv[2].startswith("-")):
+    print(__doc__); sys.exit(0 if sys.argv[1:] in (["-h"], ["--help"]) else 2)
 
 ROOT = "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation"
 PROG = f"{ROOT}/programming"
@@ -178,6 +187,11 @@ add_small("motion.font-tomorrow-400", f"{LAB}/data/external/fonts/tomorrow/Tomor
 add_small("motion.font-tomorrow-500", f"{LAB}/data/external/fonts/tomorrow/Tomorrow-Medium.ttf", "motion", kind="ttf")
 add_small("motion.font-tomorrow-licence", f"{LAB}/data/external/fonts/tomorrow/OFL.txt", "motion", kind="txt")
 add_small("motion.okopf", f"{PROG}/output/pass2-addendum-20261011/classifier-sources/okopf-2012.csv", "motion")
+# Crimea and Sevastopol drawn as regions (round 29, the author's decision of 30 October 2026): their geoBoundaries UKR ADM1 shapes and
+# metadata, and Natural Earth's land cut to a box around them; data/external/*/README.md record the URLs, commits and hashes.
+add_small("boundaries.ukr-adm1", f"{LAB}/data/external/geoboundaries-ukr/geoBoundaries-UKR-ADM1_simplified.geojson", "motion", kind="geojson")
+add_small("boundaries.ukr-adm1-meta", f"{LAB}/data/external/geoboundaries-ukr/geoBoundaries-UKR-ADM1-metaData.json", "motion", kind="json")
+add_small("boundaries.ne-land-crimea-box", f"{LAB}/data/external/natural-earth/ne_10m_land_crimea-box.geojson", "motion", kind="geojson")
 
 head = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 dirty = subprocess.run(["git", "-C", PROG, "--no-optional-locks", "status", "--porcelain"], capture_output=True, text=True).stdout.count("\n")
