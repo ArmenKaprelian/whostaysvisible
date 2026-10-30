@@ -2384,6 +2384,8 @@ Checks, kept to an essential minimum at the author's request (a one-time excepti
 
 **Ready to publish** (30 October 2026, UTC), on the author's word, at the first run of `publish.sh`. The text rules passed, and the five-width audit had zero findings (1,296 states, 3 min 22 s). The publish set is 112.7 MB from build 219785b, with 193 links, all on the expected list. The publish copy is 419bd68, and the site's import is 6cd95c9 (60 files, 71.7 MB).
 
+**Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 43 s), and it pushed 0bb9cd7..6cd95c9.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
