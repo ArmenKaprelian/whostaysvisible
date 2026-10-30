@@ -2295,6 +2295,15 @@ The author asked for the clause to be removed from the revenue mix's reading tex
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`, whose two-engine check had zero findings (34 page loads, 43 s), and it pushed 620618b..885b4fb. The live `agent-guide.md` and `js/explorer-app.js` match the lab's byte for byte. The publish copy's and the site's commit messages say "round 26", because the gate ran before this entry existed.
 
+### Round 28 (30 October 2026): the region fill fades sooner; firms outside the outline
+
+The author asked for the hovered region's fill to fade out sooner on zoom. They also asked about dots on the dark ground in their screenshot. The fill change was a one-time pass with a light check, no frames and no audit, on the author's word. It changes no rule. Detail is in `review/2026-10-30-round-28-outline-check.md`.
+- **The fill:** `regionFillFade` is full to twice the country view and gone at eight times, linear in log zoom. Round 15 held it full to k 50 and gone at k 100. The outline stays. `page-probe.py` read the fill's pixel at ×1 to ×12 in both themes; it matched the formula within 8-bit rounding, and the page had no errors. Lab ccdf6b4.
+- **The dots:** they are firms the registry places in Crimea and Sevastopol: 34,235 firms at 11,663 addresses in 2024, drawn since 2014. From 2022 there are also firms in occupied Donetsk, Luhansk, Zaporizhzhia and Kherson: 2,644 firms in 2024. The outline (geoBoundaries 2017) follows Ukraine's recognised border. `basemap.json` records the choice, but the page does not say it.
+- **Slip-ups:** about 25 firms registered in Kherson and Zaporizhzhia are geocoded to Ukrainian-held places (Kharkiv, Pavlohrad, Dnipro, Odesa, Khmelnytskyi). Within Russia, 0.21% of drawn firms in 2024 sit more than 5 km outside their registry region. The largest groups are 1,254 Moscow firms in one square in Moscow Oblast and firms from Udmurtia, Chechnya and Chuvashia placed in other republics. The dots and cells are affected; the region figures, which use the registry region, are not. Whether to act on either finding is the author's call.
+
+**Ready to publish** without the five-width audit, on the author's word. `publish.sh`'s other steps ran by hand: `publish-set.py --texts`, `--write` (141.2 MB, no refusals), the publish copy c5fee20 and the site's import b79f51f. The import changes only the build line and the fill's line. The site's push (`publish.sh --push`) is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
