@@ -1,5 +1,5 @@
-"""Motion.fmt (js/motion-core.js) in Python, for the tools that re-derive the page's texts (round 18): wire_check.py, agent_guide.py and
-profile_check.py, which kept three copies that rounded exact ties differently.
+"""Motion.fmt (js/motion-core.js) in Python, for the tools that re-derive the page's texts (round 18): agent_guide.py and profile_check.py
+(wire_check.py too until round 30), which kept three copies that rounded exact ties differently.
 
 The page writes int as Intl.NumberFormat('en-US') of Math.round(v), pct as Math.round(v * 10^d) / 10^d through toFixed(d) and '%', dec as
 toFixed(d), and signed as '+' or the minus sign U+2212 before toFixed(d) of the magnitude. toFixed rounds the exact binary value of the number

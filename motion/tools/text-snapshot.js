@@ -2,7 +2,7 @@
 // identical give identical JSON (compare with cmp); a content edit shows as the strings it changed. It reads, through the page's own hooks and
 // the DOM, the legend (title, key side, reading side), the NOTE, the METHOD block and the layer's provenance, the year row and the red
 // button's label and title, the mix box, the view link, the tile and the Under the cursor panel after a hover, every card's reading block, the
-// wire's cycle for three places, the profiles, the tips, the REFERENCES panel's text, the TEACH YOUR AGENT guide, the footer and the presets'
+// wire's cycle for three places (builds before round 30), the profiles, the tips, the REFERENCES panel's text, the TEACH YOUR AGENT guide, the footer and the presets'
 // titles. Nothing is written into the page.
 (async () => {
   const A = window.__atlas, $ = id => document.getElementById(id), tx = el => (el ? el.innerText.replace(/\s+\n/g, '\n').trim() : null);
@@ -23,7 +23,7 @@
     out.states[[mode, L, y, p].join('/')] = s;
   }
   for (const id of [...document.querySelectorAll('[id^="cr-"]')].map(e => e.id).concat('mixread')) out.fixed[id] = tx($(id));   // every card's reading block, read from the page (round 18), and the mix box's
-  out.fixed.wire = {}; for (const y of [2014, 2021, 2024, 2025]) for (const r of ['Russia', 'Moscow Oblast', 'Novosibirsk Oblast']) out.fixed.wire[y + '/' + r] = A.wireAt(y, r).map(it => it.kind + ': ' + it.text);
+  if (A.wireAt) { out.fixed.wire = {}; for (const y of [2014, 2021, 2024, 2025]) for (const r of ['Russia', 'Moscow Oblast', 'Novosibirsk Oblast']) out.fixed.wire[y + '/' + r] = A.wireAt(y, r).map(it => it.kind + ': ' + it.text); }   // the wire went in round 30
   out.fixed.profiles = A.profiles ? A.profiles() : null;
   out.fixed.tips = A.tipTexts ? A.tipTexts() : null;
   $('refsbtn').click(); await new Promise(r => setTimeout(r, 400)); out.fixed.refs = tx($('refs')); if ($('refsclose')) $('refsclose').click();

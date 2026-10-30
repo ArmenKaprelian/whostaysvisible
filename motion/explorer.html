@@ -15,7 +15,7 @@
    something moves or has focus (the author's correction, 25 October 2026). */
 :root {
   --stage: #03060E; --band: var(--stage); --bar: #020307; --land: #172A45; --border: #495669; --graticule: #2E333D;   /* the stage a step darker (round 15, the author's item 2: OKLab L 0.122, #060B18 at 0.152 before); the land, the panels and the data colours as they were */
-  --ink: #ECEEF1; --muted: #B4C0D0; --wire-pre: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
+  --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C; --grid: #0D162B; --panel: #091023; --panel-2: #0D162B;
   --accent: #79CDBF; --accent-strong: #C7F8E7; --fall: #F39523; --rise: #79CDBF; --below: #3C4852; --highlight: rgba(121,205,191,0.10);   /* the cyan ramp's steps 4 and 6; the diverging pair's classes 2 and 5 (round 10) */
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
   --div-1: #FFB000; --div-2: #F39523; --div-3: #EA7719; --div-4: #50B5AA; --div-5: #79CDBF; --div-6: #A1E4D3; --zero: #6B7482;   /* the signed layers' pair (round 10): declines amber to orange, rises the cyan ramp's steps 3 to 5, the slate for no usable baseline */
@@ -24,7 +24,6 @@
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
   --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 25 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
   --ghost: #1F3350;   /* one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders */
-  --cat: color-mix(in srgb, var(--context) 85%, var(--panel));   /* the cat's head (round 15): the green at 85 percent over the panel, the author's pick of 27 October 2026 (55 blurred under the wire's glow on a 1x screen; 70 shown in the addendum) */
   --tile-ink: #CFE6FF;   /* the cursor tile's text (round 15, the author's item 6): a near-white ice, the minimap leaders' tone; 14.8:1 on the tile */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22): 2.5 percent on the dark theme */
   --grain-bar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.010'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the title bars' grain (round 15): the panel tile with white at 0.010, so on #020307 the lift (about 2.5 levels) matches the drop the near-black allows */
@@ -97,8 +96,8 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #field, #field2d, #marks, #overlay { pointer-events: none; }
 .mapwrap { --lift: 0px; }
-.mapwrap.strip-open { --lift: 34px; }   /* the wire lifts the legend, the zoom box and the scale bar while it is open (round 9's strip at 26 px; the 34 px wire since round 10) */
-.mapwrap.strip-open.rm2 { --lift: 58px; }   /* the two-line reduced-motion form on a phone-width map (round 12, part D) */
+.mapwrap.strip-open { --lift: 34px; }   /* the context line lifts the legend, the zoom box and the scale bar while it is open (round 9's strip at 26 px, 34 px since round 10) */
+.mapwrap.strip-open.narrow { --lift: 58px; }   /* the two-line form on a phone-width map (round 12, part D) */
 .maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
@@ -201,9 +200,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .linkfield { margin-top: 6px; font-size: 12px; }   /* the tile's text in the GO TO card's ice (round 14, the author's request); the footer keeps the reading green, the listed count its red */
 @supports (-webkit-touch-callout: none) { .fbox input, .linkfield { font-size: 16px; } }   /* round 19 (WebKit): iOS zooms the page into a focused field under 16 px; only iOS WebKit knows this property, so other browsers keep 13 and 12 px */
 /* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
-.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the data wire (round 10, item 14): 34 px */
+.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the context line: 34 px (round 10) */
 .ctx .toggle { pointer-events: auto; color: var(--context); }
-.ctx.narrow .ctxt.rm .t { white-space: normal; }   /* the phone's two-line form stays for the reduced-motion path only; the wire scrolls on a phone as on a desktop */
+.ctx.narrow .ctxt .t { white-space: normal; }   /* the phone's two-line form (round 12, part D) */
 .ctx .toggle:hover { color: var(--context-live); }
 .ctx.closed { left: auto; right: 244px; bottom: 12px; height: auto; padding: 2px; border-top: 0; border-radius: 0; }   /* the stub clears the 220 px zoom row (12 + 220 + 12) */
 .mapwrap.narrow .ctx.closed { right: 12px; bottom: 206px; }   /* a phone-width map: the stub above the ruler, clear of the legend (12 + 140 + 4 + 46 + 4) */
@@ -213,44 +212,14 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctx .glyph path.live { stroke: var(--context-live); }
 .ctx .glyph path.nt { transition: none; }
 .ctx .glyph path.out { opacity: 0; }
-/* The data wire (round 10, the author's item 14a): one row of short dated statements written twice in a track that a transform animation scrolls at
-   60 px per second (the duration set from the track's width), paused under the pointer or keyboard focus; the text row takes pointer events, so the
-   map's bottom 34 px are not hoverable under it (round 9's strip passed hovers through). Place names in tracked capitals, figures tabular; the mark at
-   10 px as the separator; a cat fact's prefix in the muted context colour and its text in the ink (item 15). The two stacked spans serve the
-   reduced-motion path only (one item at a time, 8 s each, round 9's crossfade). */
+/* The context line (round 9; the data wire that scrolled here from round 10 was removed in round 30, the author's request of 30 October 2026): the two stacked
+   spans crossfade as round 9's strip did and take the short form when the full one would clip; on a phone-width map one fact at a time over two lines of 13 px. */
 .ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; line-height: 24px; font-size: 14px; overflow: hidden; pointer-events: auto; display: flex; align-items: center; }
-/* The strip's first slot (round 12, part D): a lead zone before the scrolling track shows the region under the cursor at once, whatever the queue holds; the
-   two stacked spans crossfade as round 9's strip did and take the short form when the full one would clip. Under reduced motion the lead takes the whole width. */
-.ctxt > .lead { display: grid; flex: 0 0 auto; width: 0; max-width: 33%; min-width: 0; height: 24px; color: var(--context); }   /* the slot's essentials (the author's request of 25 October 2026): the region's name and the year, sized to the text by the script (about a fifth of the bar at 1,600 px), never more than a third; the width snaps and the wire's offset moves with it, so the items keep their place */   /* a fixed slot (round 12, part D): the window's width never follows the lead's text, so the scroll never jumps and the layout guard sees one width per map width */
-.ctx.narrow .ctxt:not(.rm) > .lead, .ctx.narrow .ctxt:not(.rm) > .lsep { display: none; }   /* a phone-width map has no room for a slot beside the window: the lead rides the wire (the first item after those in view) */
-.ctxt .lsep { flex: 0 0 auto; margin: 0 12px; }   /* 0.86 em on both sides of the lead separator (the author's report of 25 October 2026: the mark had sat 4 px from a glyph clipped at the window's edge) */
-.ctxt .trackwin { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent); }   /* the window's edges fade over 14 px, so a glyph scrolling under them leaves softly instead of being cut beside the separator */
-.ctxt.rm .trackwin, .ctxt.rm .lsep { display: none; }
-.ctxt.rm > .lead { flex: 1 1 auto; max-width: 100%; width: auto; }
-.ctx.narrow .ctxt.rm, .ctx.narrow .ctxt.rm > .lead { height: 48px; font-size: 13px; }   /* the reduced-motion form on a phone-width map: one item at a time over two lines of 13 px (36 characters a line) */
-.ctx.narrow.rm2 { height: 58px; }
-.ctx.narrow .ctxt.rm .t.tip { text-transform: none; letter-spacing: 0; font-weight: 400; }   /* a tip of up to 68 characters fits two lines in sentence case; in capitals it would need three */
-/* The wire's capitals (round 12, part D; round 15, the author's decision of 26 October 2026): every wire item and the lead in tracked capitals, firm names included at weight 400;
-   the cat facts keep their colour and sentence form; unit symbols keep their case through .u. */
-.ctxt.caps .wi:not(.cat), .ctxt.caps .t:not(.tip) { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.ctxt.caps .wi .nm { font-weight: 400; }
-.ctxt .track { position: absolute; left: 0; top: 0; height: 24px; display: inline-flex; align-items: center; white-space: nowrap; color: var(--context); will-change: transform; transition: opacity 0.3s; font-family: "Tomorrow", "IBM Plex Mono", sans-serif; font-size: 13.5px; }   /* scrolled by one linear Web Animations entry (round 11, item 6): a queue of cycles, continuous across context changes; the track's items in Tomorrow at 13.5 px (round 15, the author's final choice of 26 October 2026), the line height 24 px as before */
-/* The wire's scanlines and glow (round 15, the author's final choice): each item cut by horizontal lines, a 2 px bar and a 1 px gap with a 1 px offset, sized in whole
-   device pixels by wireStripes() in the script; the glow on the window, which does not move, never animated. The lead slot, the region glyph, the separator marks
-   outside the track and the collapse button keep Plex Mono and no treatment. A request for more contrast or forced colours drops both. */
-.ctxt .track .wi { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
-.ctxt .trackwin { filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
-@media (prefers-contrast: more), (forced-colors: active) { .ctxt .trackwin { filter: none; } .ctxt .track .wi { -webkit-mask-image: none; mask-image: none; } }
-.ctxt .track.in { opacity: 0; transition: none; }
-.ctxt .track.old { pointer-events: none; }
-.ctxt .track.old.fade { opacity: 0; }
-.wi { display: inline-block; padding: 0 12px; }
-.wi .num { font-variant-numeric: tabular-nums; }
-.wi.tip { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-.wi.cat .cf { color: var(--ink); }   /* a cat fact in sentence case at weight 400 in the ink, after a cat's head in place of the mark (round 15, the author's item 7C) */
-.catin { width: 14px; height: 14px; color: var(--cat); vertical-align: -2px; margin-right: 8px; }
-.wsep.catsep { color: var(--cat); }   /* the cat's head (round 15; the author's picks of 27 October 2026): the second drawing, a filled head with eye holes, four long whiskers and a small nose, in the green at 85 percent over the panel, under the wire's own glow (the doubled glow of the second addendum declined) */
-.wsep { width: 14px; height: 14px; color: var(--context); flex: 0 0 auto; }   /* the separator mark at 14 px with 2 px strokes in the full context green (round 11) */
+.ctxt > .lead { display: grid; flex: 1 1 auto; width: auto; max-width: 100%; min-width: 0; height: 24px; color: var(--context); }
+.ctx.narrow .ctxt, .ctx.narrow .ctxt > .lead { height: 48px; font-size: 13px; }   /* 36 characters a line */
+.ctx.narrow:not(.closed) { height: 58px; }
+.ctx.narrow .ctxt .t.tip { text-transform: none; letter-spacing: 0; font-weight: 400; }   /* a tip of up to 68 characters fits two lines in sentence case; in capitals it would need three */
+.ctxt .t:not(.tip) { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the line in tracked capitals (round 15, the author's decision of 26 October 2026); unit symbols keep their case through .u */
 .ctxt .t { grid-area: 1 / 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }
 .ctxt .t.hid { opacity: 0; }
 .ctxt .t.live { color: var(--context-live); }
@@ -469,7 +438,7 @@ footer .lic { margin-left: auto; }   /* round 17 (the author's pick): the data l
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
 /* The REFERENCES panel (round 16, the author's General 7 of 26 October 2026, as picked on 27 October 2026: raC, rdB revised, refA, rxA, rlA, riA, rtA, rfA, rsA): a fuchsia button
    in the header opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Plex Mono, section
-   heads as prompt lines, a still block cursor. The icon at its top left, the green i meshed with a wire globe, carries the wire's 3B treatment, scanlines and the glow. */
+   heads as prompt lines, a still block cursor. The icon at its top left, the green i meshed with a wire globe, carries the 3B treatment of round 15's wire, scanlines and the glow. */
 .hright { gap: 10px; }
 @media (min-width: 901px) and (max-width: 1020px) { header { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .hright { margin-left: auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }   /* the fallback: below the width where two buttons and the centred lock-up would meet (about 1,020 px, with DARK THEME), the lock-up takes its own row, as on phones */
 @font-face { font-family: 'Atlas Armenian Mono'; src: url('fonts/DejaVuSansMono.ttf') format('truetype'); unicode-range: U+0530-058F, U+FB13-FB17; font-display: swap; }   /* DejaVu Sans Mono (Bitstream Vera licence, DejaVu's changes in the public domain), for Armenian letters only: Plex Mono has none */
@@ -506,7 +475,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol><symbol id="mark-wire" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="3.43" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol><symbol id="mark-cat" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5 12.5V3.2l4.8 4h4.4l4.8-4v9.3a7 7 0 0 1-14 0ZM9.6 12.6a1.3 1.3 0 1 0 0.01 0ZM14.4 12.6a1.3 1.3 0 1 0 0.01 0Z"/><path d="M5 15.4 0.2 14.6M5.4 17.6 0.8 19M19 15.4l4.8-.8M18.6 17.6l4.6 1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M11 15.6h2l-1 1.1Z" style="fill: var(--panel)"/></symbol></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol></defs></svg>
 <header id="hdr">
   <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
   <a class="lockup" id="lockup" href="https://armenkaprelian.github.io/" target="_blank" rel="noopener" title="HOME"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></a>
@@ -527,7 +496,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
       <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="ZOOM OUT (−)">−</button>
       <button class="btn" type="button" id="zoom-fit" aria-label="Fit the whole country" title="FIT THE WHOLE COUNTRY (0)"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="zf" id="zoomfactor" aria-hidden="true">×1.0</span></button>
     </div>
-    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div><svg class="mk wsep lsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg><div class="trackwin" id="ctxwin"><div class="track" id="wiretrack"></div></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line"></button></div>
+    <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line"></button></div>
     <div class="popout" id="popout" hidden role="dialog" aria-modal="false" aria-labelledby="potitle"><div class="pohead"><span class="potitle" id="potitle"></span><span class="pohint">Click to put back</span></div><canvas id="pochart" aria-hidden="true"></canvas></div>
     <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div><div class="t-bio" id="tipbio" hidden><div class="t-bio-h" id="tipbioh"></div><div class="t-bio-t" id="tipbiot"></div></div></div>
   </div>
@@ -609,7 +578,6 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <script src="data/cells25.js" onerror="this.remove()"></script>
 <script src="data/industry.js" onerror="this.remove()"></script>
 <script src="data/regions.js" onerror="this.remove()"></script>
-<script src="data/offwire.js" onerror="this.remove()"></script>   <!-- the wire's cat facts (round 10, item 15) -->
 <script src="data/treatednational.js" onerror="this.remove()"></script>
 <script src="data/profiles.js" onerror="this.remove()"></script>   <!-- the profiles' counts and medians (round 15, item 9, M12) -->
 <script src="data/insights.js" onerror="this.remove()"></script>   <!-- the profiles' researched insights (round 16, the author's audit of 27 October 2026) -->

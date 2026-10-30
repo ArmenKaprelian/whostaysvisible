@@ -12,7 +12,7 @@
   // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
   let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
   const grpLayer = () => state.layer === 'gs';
-  const runState = { on: false, timer: 0 }, catKey = { buf: '', next: 0 };   // the extras' state (round 15, item 7)
+  const runState = { on: false, timer: 0 };   // the year run's state (round 15, item 7B)
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
   if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
@@ -1129,7 +1129,9 @@ void main() {
   // One line along the bottom of the map: a fact about the region under the camera (the country, the registry region or the
   // city window, by zoom band and layer, from the loaded data: regions.json and the page's own totals) or, once in a while, a
   // tip on using the page (each once per session, never while the cursor moves, at least 12 s after the last fact change).
-  // At the left the region's simplified outline, stroked on over 0.4 s when the region changes. Nothing external, no fetch.
+  // At the left the region's simplified outline, stroked on over 0.4 s when the region changes. Nothing external, no fetch. The data wire that
+  // carried the line from round 10 (a scrolling track of dated statements, the cat facts and the lead slot) was removed in round 30 (the author's
+  // request of 30 October 2026); its reduced-motion form, this round-9 line, is now the only form.
   let obsCache = null;   // the tile's obstacle boxes (the panels), read once per layout and dropped when a panel is written, toggled or resized
   const dropObstacles = () => { obsCache = null; };
   const regIndex = new Map();   // region -> year -> row index of regions.json
@@ -1145,7 +1147,7 @@ void main() {
   const pts = (n, d) => `${fmt.signed(d)} points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
   // The fact under the camera: {band, name, kind, text (HTML with the figures in .num spans), nums (the figures, for the tick)}
-  function factFor(band, name, full) {   // full: the wire's lead item takes the full form whatever the map's width (round 10)
+  function factFor(band, name, full) {   // full: the full form whatever the map's width
     const y = state.year, L = state.layer, ys = y + (y === 2025 ? '*' : ''), N = [], num = (v, f) => { N.push(v); return `<span class="num">${f}</span>`; };
     const nw = !full && narrow();   // the short forms: no change clause, no basis words
     const loc = s => `<span class="loc">${esc(s)}</span>`;   // the place name in tracked capitals (round 10)
@@ -1244,7 +1246,6 @@ void main() {
     const rn = regionAt(stage.width / 2, stage.height / 2);
     return rn && regIndex.has(rn) ? ['region', rn] : ['national', 'Russia'];
   }
-  let wireHold = false;
   function updateContext(force) {
     syncNoteDefault();
     if (!stripOpen()) return;
@@ -1254,19 +1255,16 @@ void main() {
     const prev = stripState.fact; stripState.fact = f; stripState.lastFactAt = performance.now();
     if (stripState.tip) endTip(false);
     const gname = band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name;
-    f.slot = `<span class="loc">${esc(gname)}</span> · <span class="num">${state.year}${state.year === 2025 ? '*' : ''}</span>`;   // the slot's essentials (the author's request of 25 October 2026): the glyph's region and the slider's year; the full fact rides the wire as the set's first item
-    setStripText(f, prev); setGlyph(gname);   // the first slot shows the hovered region at once (round 16: the author's pick of 27 October 2026, wsA)
-    if (wireHold) return;   // the year run (round 15): the slot follows the year shown, the track waits for the end
-    rebuildWire(band, name); scheduleTip();
+    setStripText(f, prev); setGlyph(gname);   // the line shows the hovered region at once (round 16: the author's pick of 27 October 2026, wsA)
+    scheduleTip();
   }
   function setStripText(f, prev) {   // crossfade the two stacked spans; when the previous fact had the same figures, the numbers count to the new values
     const ina = stripState.cur === 'A' ? $('ctxB') : $('ctxA'), out = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); stripState.cur = stripState.cur === 'A' ? 'B' : 'A';
-    const slotMode = wireScrolls() && f.kind !== 'tip' && !!f.slot;   // the scrolling wire's slot shows the essentials; the reduced-motion form shows the facts and tips themselves
-    ina.innerHTML = slotMode ? f.slot : f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
-    if (slotMode) sizeSlot(ina); else { $('ctxlead').style.width = ''; if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; } }   // one layout read per fact change, never per frame
+    ina.innerHTML = f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
+    if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; }   // one layout read per fact change, never per frame
     ina.classList.add('live'); ina.classList.remove('hid'); out.classList.add('hid'); out.classList.remove('live');
     if (stripState.tickRaf) { cancelAnimationFrame(stripState.tickRaf); stripState.tickRaf = 0; }
-    if (!slotMode && prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {   // the slot's year changes under the crossfade, never ticks (a ticking year would read as a count)
+    if (prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {
       const spans = ina.querySelectorAll('.num'), finals = [...spans].map(sp => sp.textContent), t0 = performance.now();
       const fmtLike = (final, v) => { const m = final.match(/^([+−-]?)([\d,]+)(\.(\d+))?(.*)$/); if (!m) return final; const dec = m[4] ? m[4].length : 0; const sign = m[1] === '−' || m[1] === '-' ? (v < 0 ? '−' : m[1] === '+' ? '+' : '') : (m[1] === '+' ? (v < 0 ? '−' : '+') : ''); return sign + fmt.int(Math.floor(Math.abs(v))).replace(/\.\d+$/, '') .replace(/^(\d)/, '$1') + (dec ? '.' + Math.abs(v).toFixed(dec).split('.')[1] : '') + m[5]; };
       const step = () => { stripState.tickRaf = 0; const u = Math.min(1, (performance.now() - t0) / 300), e = Motion.ease.outCubic(u); spans.forEach((sp, j) => { sp.textContent = u >= 1 ? finals[j] : fmtLike(finals[j], prev.nums[j] + (f.nums[j] - prev.nums[j]) * e); }); if (u < 1) stripState.tickRaf = requestAnimationFrame(step); };
@@ -1275,7 +1273,7 @@ void main() {
     setTimeout(() => { if (stripState.fact === f) ina.classList.remove('live'); }, 320);
   }
   // Tips on using the page, each once per session, shown only when the strip is open, nothing is moving, the cursor is still and 12 s have passed since the last fact change.
-  const TIPS = [   // each at most 68 characters (round 12, part D: in tracked capitals the reduced-motion slot at 768 px holds 68, and a phone's two-line form holds 68 in sentence case); round 15 (the author's item 13): plain sentences in place of the compressed notes ("THE CITY WINDOW FROM THE COUNTRY")
+  const TIPS = [   // each at most 68 characters (round 12, part D: in tracked capitals the line at 768 px holds 68, and a phone's two-line form holds 68 in sentence case); round 15 (the author's item 13): plain sentences in place of the compressed notes ("THE CITY WINDOW FROM THE COUNTRY")
     { text: 'Click a cell to fly to it, or to its city if the cell holds one.', touch: 'Tap a cell for its values, double-tap to zoom, pinch to zoom.' },
     { text: 'From a city, a click goes to the 20 km scale, then 2.5 times closer.', mouse: true },
     { text: 'In the Firms view, clicks past the 20 km scale zoom 4 times closer.', mouse: true, firms: true },
@@ -1291,263 +1289,24 @@ void main() {
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
   function nextTip() { for (let i = 0; i < TIPS.length; i++) { const t = TIPS[i]; if (stripState.seen.has(i)) continue; if (t.firms && !FIRMS_OK) continue; if (t.mouse && coarse()) continue; return [i, coarse() && t.touch ? t.touch : t.text]; } return null; }
-  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); if (wireScrolls()) return; stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }   // the scrolling wire carries its tips itself
+  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }
   function maybeTip(force) {
-    if (wireScrolls()) return force ? pinTip() : false;   // the wire: a forced tip pins the next tip item at the window's left edge (the audit's tip states)
     if (!stripOpen() || stripState.tip || (!force && (flight || press || pinch || !cursorStill || performance.now() - stripState.lastFactAt < 12000))) return false;
     const nt = nextTip(); if (!nt) return false;
     const [i, text] = nt; stripState.seen.add(i); try { sessionStorage.setItem('atlas-tips', JSON.stringify([...stripState.seen])); } catch (e) { /* no storage */ }
     stripState.tip = { i, text }; setStripText({ kind: 'tip', name: '', text: units(esc(text)), nums: [] }, null);
     stripState.tipEnd = setTimeout(() => endTip(true), 8000); return true;
   }
-  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (wireScrolls()) { unpinTip(); return; } if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
-  // ---- the data wire (round 10, the author's item 14a) and the cat facts (item 15) -------------------------------------------------------------
-  // A cycle is 50 items in two halves of 25: each half opens with the lead fact (the band's own fact), carries the data facts below in one order (the
-  // second half reversed), two named firms on the lists that turned red that year at data slots 6 and 14 (the halves taking alternate picks of the
-  // four, chosen at floor(i n / 4) over the names sorted), each followed by its region's statement share unless that is the region shown (round 25), and a tip at every fifth slot; one slot keyed to the year and the region carries a cat fact
-  // from data/offwire.json with the prefix in the muted context colour (never a tip slot, never beside a named firm; the fact advancing by seven each
-  // loop). Every string is a template over named fields of the shipped data; tools/wire_check.py re-derives each one for the audit.
-  const WIRE_SPEED = 60, WIRE_HALF = 25, WIRE_RM_MS = 8000, OFFWIRE = D.offwire || null;
-  // Round 11 (the author's item 6): the track is a queue of cycles scrolled by one linear Web Animations entry at 60 px per second, so the scroll is continuous
-  // across context changes. A change of region (hover or camera), layer or view appends the new context's cycle, the lead first, after the last item queued;
-  // the old items run off the left edge; a further change before the queued set has entered the view replaces the queued set, never the visible one; the
-  // queue tops itself up with the next cycle of the current context (the cat fact advancing by seven places) before it runs out and drops the sets that have
-  // passed. Only a year change rebuilds at once, under a 0.3 s crossfade of the whole track. The tips and the cat slot keep their places in every cycle.
-  // Round 12, part D: at most two sets exist at any time, the committed set playing on the track and one pending set. A change of region, layer or view replaces
-  // the pending set, never the committed one, and the replaced set is dropped; a pending set is committed once the cursor has rested on its region for 600 ms or the
-  // camera has settled there, and a later change then queues behind it. Priority: a tip or a cat fact due in the playing cycle plays before a pending set takes over
-  // (the committed set keeps its items up to and including the first tip or cat past the visible ones; the rest go). The lead fact of the region under the cursor
-  // shows at once in the strip's first slot, a fixed lead zone before the scrolling track, whatever the queue holds. The items of a superseded set that are still
-  // crossing the view stay as orphans until they pass; nothing else is kept, so the track never grows and no timer outlives a change.
-  const wireState = { pad: 0, h: 0, cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], orphans: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, restarts: 0, watchX: null, watchT: null, topTimer: 0, commitTimer: 0, changedAt: 0, vis: 0, builds: 0, resets: 0, commits: 0 };
-  let WIRE_CAPS = true;   // the wire's capitals (round 12, part D; round 15): every wire item and the lead in tracked capitals, firm names included; the cat facts as they are
-  const wireScrolls = () => !reduceMotion();
+  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const fnv = str => { let h = 2166136261; for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
-  const dateOf = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : ''; };
-  // Anniversaries (round 12, part D, item 6): the viewer's local date at load (window.__today, an ISO day, is the audit's hook); the sentence is built from the shipped dates
-  // only: the anchor firm's listing date, the 2020 filing-exemption list's decree (Government Decree No. 35 of 22 January 2020, the one date typed in), and every other day on which
-  // firms of the national list file were listed by a dated, non-inferred designation; null on every other day. tools/wire_check.py re-derives it for the audit.
-  const TODAY = (() => { const o = window.__today; if (typeof o === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o)) return o; const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
-  function anniversaryLine(iso) {   // { text, html } or null
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return null; const md = m[2] + '-' + m[3], day = `${+m[3]} ${MONTHS[+m[2] - 1]}`;
-    const mk = (text, html) => ({ text, html: html || esc(text) });
-    if (AN && AN.a.listed && AN.a.listed.date && AN.a.listed.date.slice(5) === md) return mk(`${day}: ${AN.a.label} was added to a list on this day in ${AN.a.listed.date.slice(0, 4)}.`, `${esc(day)}: <span class="nm">${esc(AN.a.label)}</span> was added to a list on this day in <span class="num">${esc(AN.a.listed.date.slice(0, 4))}</span>.`);
-    if (md === '01-22') return mk(`${day}: the 2020 filing-exemption list rests on Government Decree No. 35, signed on this day in 2020.`);
-    if (!TRN || !TRN.red_date) return null;
-    const hits = []; for (let i = 0; i < TRN.n; i++) { const d = TRN.red_date[i]; if (d && d.slice(5) === md && !TRN.inferred[i] && !TRN.undated[i]) hits.push(i); }
-    if (!hits.length) return null;
-    const years = [...new Set(hits.map(i => TRN.red_date[i].slice(0, 4)))].sort(), yrs = years.length === 1 ? years[0] : years.slice(0, -1).join(', ') + ' and ' + years[years.length - 1];
-    if (hits.length === 1 && TRN.name[hits[0]]) return mk(`${day}: ${TRN.name[hits[0]]} was added to a list on this day in ${yrs}.`, `${esc(day)}: <span class="nm">${esc(TRN.name[hits[0]])}</span> was added to a list on this day in <span class="num">${esc(yrs)}</span>.`);
-    return mk(`${day}: ${fmt.int(hits.length)} firms were added to a list (treated) on this day in ${yrs}.`, `${esc(day)}: <span class="num">${fmt.int(hits.length)}</span> firms were added to a list (treated) on this day in <span class="num">${esc(yrs)}</span>.`);
-  }
-  let annivCache;   // the day's sentence, built at the first cycle (after every helper below is defined), never at script load
-  const anniv = () => { if (annivCache === undefined) annivCache = anniversaryLine(TODAY); return annivCache; };
-  const regRowsOf = y => { const out = []; for (let i = 0; i < REG.region.length; i++) if (REG.year[i] === y && REG.region[i] !== 'Russia' && REG.region[i] !== 'outside the basemap outline' && REG.region[i] !== 'region not recorded') out.push(i); return out; };
-  // Round 25 (the author's request of 29 October 2026): about a quarter of a cycle's content on the lists, half on how the body of firms responds and a quarter other.
-  // The facts run in that mix (the second half plays them reversed); the transitions, the ownership groups and the 2019 histories are series.json's.
-  function wireFacts(y, band, name) {
-    const ys = y + (y === 2025 ? '*' : ''), out = [], loc = s => `<span class="loc">${esc(s)}</span>`, num = f => `<span class="num">${f}</span>`, add = (src, html) => out.push({ kind: 'data', text: html, src });
-    const nat = band === 'national', reg = !nat && regIndex.has(name) ? name : null, t = totals[y], t21 = totals[2021], b = FM ? FM.by_year[y] : null;
-    const TS = S.transitions, trRow = prior => TS.year.findIndex((v, i) => v === y && TS.prior[i] === prior), ia = trRow('available'), ib = trRow('absent'), pctOf = (a, n) => num(fmt.pct(100 * a / n));
-    const G = S.groups, own = (g, yy) => G.year.findIndex((v, i) => v === yy && G.dimension[i] === 'ownership' && G.group[i] === g);
-    if (TRN) { let n = 0, nr = 0; const ri = reg ? TRN.regions.indexOf(reg) : -1; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i]) { n++; if (ri >= 0 && TRN.reg[i] === ri) nr++; }
-      add('treatednational.red_from', `${ys}: ${num(fmt.int(n))} firms added to a list (treated) nationally` + (reg ? `, ${num(fmt.int(nr))} in ${loc(reg)}` : '')); }
-    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(CY.totals.n_available[CY.totals.year.indexOf(y)]))} of ${num(fmt.int(t.eligible))} eligible firms with a statement (${num(fmt.pct(t.share))})` + (y !== 2021 && t21 ? `, against ${num(fmt.pct(t21.share))} in 2021` : ''));
-    if (ia >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.N[ia]))} of the ${num(fmt.int(TS.origin[ia]))} firms with a statement in ${y - 1} had none (${pctOf(TS.N[ia], TS.origin[ia])})`);
-    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`);
-    { const s = own('state', y), p = own('private', y), s21 = own('state', 2021), p21 = own('private', 2021);
-      if (s >= 0 && p >= 0) add('series.groups', y === 2021 || s21 < 0 || p21 < 0 ? `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[p]))} of the ${num(fmt.int(G.n[p]))} private firms`
-        : `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[s21]))} in 2021. Private firms: ${num(fmt.pct(G.share[p]))} of ${num(fmt.int(G.n[p]))}, against ${num(fmt.pct(G.share[p21]))}`); }
-    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of the ${num(fmt.int(TRN.n))} firms on the lists (treated) are shown red. The ${num(fmt.int(TRN.undated_n))} on undated lists are red from 2014, and ${num(fmt.int(TRN.inferred_n))} dates of addition to a list are inferred`); }
-    if (ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.A[ib]))} of the ${num(fmt.int(TS.origin[ib]))} firms without a statement in ${y - 1} had one (${pctOf(TS.A[ib], TS.origin[ib])})`);
-    if (REG) { const iN = regRow('Russia', y); if (iN != null && REG.d1[iN] !== 255) { const d = REG.d1[iN], rows = regRowsOf(y), k = rows.filter(i => REG.d1[i] === d).length;
-        add('regions.d1', `${ys}: ${esc(divShort(d))} (${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
-        if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
-      if (reg) { const ir = regRow(reg, y); if (ir != null) add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region are on the five lists (treated) and hold ${num(REG.lsh[ir] + '%')} of its revenue`); } }
-    if (ia >= 0 && ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.X[ib]))} of the firms without a statement in ${y - 1} were removed from the registry (${pctOf(TS.X[ib], TS.origin[ib])}), against ${num(fmt.int(TS.X[ia]))} of those with one (${pctOf(TS.X[ia], TS.origin[ia])})`);
-    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
-    if (b) { const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) is ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their own 2019 to 2021 average`); }
-    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated). ${num(fmt.int(b.city_level))} firms have other geocodes`);
-    if (b) add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list. ${num(fmt.int(b.firms_at_100plus))} firms sit at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
-    if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms share the largest coordinate pair. Across all located firms, ${num(fmt.int(F.firms_at_100plus_locations))} sit at pairs shared by 100 or more`);
-    { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} 100 km cells have 50 or more located firms in both years. ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms had a statement in 2021 and ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
-    add('series.facts.histories', `2019 to 2024: ${num(fmt.int(F.hist_all_available))} of the ${num(fmt.int(F.fixed_2019_cohort))} firms followed from 2019 had a statement in every year (${pctOf(F.hist_all_available, F.fixed_2019_cohort)})`);
-    return out;
-  }
-  function wireFirms(y, band, name) {   // each firm carries its follow-up, the share line of the region it is registered in (round 25), or null where that region is the one shown (the lead gives its line) or has no row
-    if (!TRN) return []; const here = band !== 'national' && regIndex.has(name) ? name : null, ri = here ? TRN.regions.indexOf(name) : -1, ys = y + (y === 2025 ? '*' : '');
-    const pick = useReg => { const idx = []; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.name[i] && (!useReg || TRN.reg[i] === ri)) idx.push(i); idx.sort((a, b) => (TRN.name[a] < TRN.name[b] ? -1 : TRN.name[a] > TRN.name[b] ? 1 : a - b)); return idx; };
-    let idx = ri >= 0 ? pick(true) : []; if (idx.length < 2) idx = pick(false); if (!idx.length) return [];
-    const picks = []; for (let i = 0; i < 4; i++) { const j = idx[Math.floor(i * idx.length / 4)]; if (!picks.includes(j)) picks.push(j); }
-    const follow = r => { if (!REG || r === here || r === 'outside the basemap outline' || r === 'region not recorded') return null; const i = regRow(r, y), i21 = regRow(r, 2021); if (i == null || !REG.n[i]) return null;
-      const sh = shareOf(REG.a[i], REG.n[i]), s21 = i21 != null ? shareOf(REG.a[i21], REG.n[i21]) : null;
-      return { kind: 'data', text: `<span class="loc">${esc(r)}</span>, ${ys}: <span class="num">${fmt.int(REG.n[i])}</span> firms registered in the region, <span class="num">${fmt.pct(sh)}</span> with a statement` + (y !== 2021 && s21 != null ? `, <span class="num">${pts(0, sh - s21)}</span> against 2021` : ''), src: 'regions.follow' }; };
-    return picks.map(j => { const ch = TRN.filed[j][y - 2014], st = ch === '1' ? 'available' : ch === '0' ? 'absent' : 'not in the registry', d = dateOf(TRN.red_date[j]);
-      return { kind: 'firm', text: `<span class="nm">${esc(TRN.name[j])}</span> · ${d ? 'on a list from ' + d : 'on a list from ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j, follow: follow(TRN.regions[TRN.reg[j]]) }; });
-  }
-  const wireTipsList = () => { const out = []; TIPS.forEach(t => { if (t.firms && !FIRMS_OK) return; if (t.mouse && coarse()) return; out.push(coarse() && t.touch ? t.touch : t.text); }); return out; };
-  function buildCycle(y, band, name, cycleIndex) {
-    const lf = factFor(band, name, true), an = anniv(), lead = { kind: 'lead', text: lf.text + (an ? '. ' + an.html : ''), src: 'lead:' + lf.kind + (an ? '+anniversary' : '') } /* on an anniversary the lead item carries the sentence (item 6) */, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
-    const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([6, 14]);
-    const half = (fo, fh, tipStart) => { const data = [lead]; let fi = 0, di = 0;   // a firm at its slot, or wherever the facts have run out, with its follow-up right after it
-      while (data.length < 20) { if ((firmSlots.has(data.length) || di >= fo.length) && fi < fh.length) { const f = fh[fi++]; data.push(f); if (f.follow && data.length < 20) data.push(f.follow); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
-      const items = []; let ti = tipStart, dj = 0; for (let p = 0; p < WIRE_HALF; p++) { if (p % 5 === 4) { const t = tipsL[ti % tipsL.length]; items.push({ kind: 'tip', text: units(esc(t)), src: 'tips:' + (ti % tipsL.length) }); ti++; } else items.push(data[dj++]); } return items; };
-    const cycle = half(facts, firmsA, 0).concat(half(facts.slice().reverse(), firmsB, 5));
-    if (OFFWIRE && OFFWIRE.facts && OFFWIRE.facts.length) { const h = fnv(`${y}|${name}`), pool = OFFWIRE.facts, isFirm = i => i >= 0 && i < cycle.length && cycle[i].kind === 'firm'; let slot = 12 + (h % 26), guard = 0;
-      while (guard++ < 60 && (cycle[slot].kind === 'tip' || isFirm(slot) || isFirm(slot - 1) || isFirm(slot + 1))) { slot++; if (slot >= cycle.length) slot = 12; }
-      const f = pool[(h + 7 * cycleIndex) % pool.length]; cycle[slot] = { kind: 'cat', text: `<span class="cf">${esc(f.text)}</span>`, src: 'offwire:' + f.id }; }
-    return cycle;
-  }
-  const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg>';   // the separator: the mark at 14 px with 2 px strokes in the full context green (round 11)
-  const catSep = sep => { if (sep && sep.classList && sep.classList.contains('wsep')) { sep.classList.add('catsep'); sep.innerHTML = '<use href="#mark-cat"/>'; } };   // the mark before a cat fact becomes a cat's head (round 15, the author's item 7C)
-  const wireTrack = () => $('wiretrack'), wireVisW = () => $('ctxwin').clientWidth;
-  const wirePos = el => { const tr = wireTrack().getBoundingClientRect(), r = el.getBoundingClientRect(); return [r.left - tr.left, r.right - tr.left]; };   // an item's edges along the track, whatever its transform (the separators are SVG, without offsetLeft)
-  // Round 16 (the author's item of 27 October 2026: the wire stuttered while the cursor crossed regions; the record showed every region change
-  // cancelling and restarting the scroll, at once for the first slot's width and again 250 ms later for the queued set). A region change no longer
-  // touches the running scroll: one linear animation runs far past the content (WIRE_FAR), so an append only re-arms the top-up timer; items that
-  // leave at the left go into a spacer of the same width at the track's start (ws.pad, its padding), so no item moves; the first slot's width change
-  // is taken up by the track's own margin (ws.h), not by the scroll. The offset x is the track coordinate at the window's left edge, the animation's
-  // own offset plus ws.h. Only a year change, a reset, a pinned tip and the watchdog start a new animation.
-  const WIRE_FAR = 1e6;
-  function wireX() { const ws = wireState; if (ws.anim && !ws.pinned && ws.anim.currentTime != null) return ws.animX0 + WIRE_SPEED * (ws.anim.currentTime / 1000) + ws.h; return ws.x; }   // the scroll offset now, px
-  function wireStop() { const ws = wireState; if (ws.anim) { ws.x = wireX(); ws.anim.cancel(); ws.anim = null; } if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; } return ws.x; }
-  function wireAnimate(fromX) {   // one linear animation from fromX far past the track's end at the wire's speed; a top-up is scheduled before the content's end enters the view
-    const ws = wireState, tr = wireTrack(); wireStop(); ws.x = fromX; const s = fromX - ws.h;
-    tr.style.transform = `translateX(${-s}px)`;
-    if (!tr.animate) return;
-    ws.animX0 = s; ws.anim = tr.animate([{ transform: `translateX(${-s}px)` }, { transform: `translateX(${-(s + WIRE_FAR)}px)` }], { duration: WIRE_FAR / WIRE_SPEED * 1000, easing: 'linear', fill: 'forwards' });
-    if (ws.paused) ws.anim.pause();
-    wireArm(fromX);
-  }
-  function wireArm(x = wireX()) {   // the top-up timer from the content's end, re-armed after every append without touching the scroll
-    const ws = wireState, tr = wireTrack(); if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; }
-    const last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0, vis = wireVisW(); if (!(vis > 0)) return;   // a hidden frame has no widths: a timer from them fires at once and advances the cycle, and the rebuild once the frame shows would draw the next cat fact; the watchdog tops up once it is shown (a shown, emptied track still gets its timer at once)
-    ws.topTimer = setTimeout(wireTopUp, Math.max(0, end - vis - 300 - x) / WIRE_SPEED * 1000);
-  }
-  function wireRun(x) { const ws = wireState; if (ws.anim && !ws.pinned) wireArm(x); else wireAnimate(x); }   // the running scroll is kept; one starts only where none runs
-  const wireItems = cycle => { const tr = wireTrack(), els = []; for (const it of cycle) { if (it.kind === 'cat') catSep(tr.lastElementChild); const sp = document.createElement('span'); sp.className = 'wi ' + it.kind; sp.innerHTML = it.text; tr.appendChild(sp); els.push(sp); const hold = document.createElement('span'); hold.innerHTML = SEP; const svg = hold.firstChild; tr.appendChild(svg); els.push(svg); } return els; };
-  function wireMake(cycle, key, ctx, status) {   // a set's items and separators appended after everything on the track
-    const ws = wireState, set = { key, ctx, cycle, cycleIndex: ws.cycleIndex, els: wireItems(cycle), status };
-    ws.sets.push(set); ws.cycle = cycle; ws.key = key; ws.width = setEnd(set) - setStart(set); ws.vis = wireVisW(); ws.builds++; return set;
-  }
-  const setStart = set => (set.els.length ? wirePos(set.els[0])[0] : 0), setEnd = set => (set.els.length ? wirePos(set.els[set.els.length - 1])[1] : 0), setEntered = (set, x) => set.els.length > 0 && setStart(set) < x + wireVisW();
-  function wireDrop(set) { for (const el of set.els) el.remove(); set.els = []; }
-  function wireCutAfterTip(set, x) {   // the priority rule: the playing set keeps its items up to and including the first tip or cat fact past the visible ones; the rest go
-    const vis = x + wireVisW(); let cut = set.els.length;
-    for (let i = 0; i < set.els.length; i += 2) { const sp = set.els[i]; if (wirePos(sp)[0] < vis) continue; if (sp.classList.contains('tip') || sp.classList.contains('cat')) { cut = i + 2; break; } }
-    for (const el of set.els.splice(cut)) el.remove();
-  }
-  function wirePrune(x) {   // the items that have passed the left edge leave the track, orphans and the committed set's alike; the spacer at the track's start takes their width (round 16), so nothing moves and the offset stays
-    const ws = wireState, tr = wireTrack(); let removed = 0;
-    while (tr.firstElementChild) { const el = tr.firstElementChild, [l, r] = wirePos(el); if (r + removed >= x - 20) break;   // an element's place in the track's original frame: what has left so far shifted it left by that much (25 October 2026: compared unshifted, the loop emptied the whole track once the first item had passed, and the new set leapt into view on every region change)
-      const next = el.nextElementSibling, nl = next ? wirePos(next)[0] : null; el.remove(); removed += next ? nl - wirePos(next)[0] : r - l;   // the exact shift of what follows, margins included
-      if (ws.orphans[0] === el) ws.orphans.shift(); else for (const set of ws.sets) if (set.els[0] === el) { set.els.shift(); break; } }
-    while (ws.sets.length > 1 && !ws.sets[0].els.length) { ws.sets.shift(); ws.sets[0].status = 'committed'; ws.commits++; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } }   // the committed set has played out: the pending one plays now
-    if (removed) { ws.pad += removed; tr.style.paddingLeft = ws.pad + 'px'; }   // the spacer in place of what left (round 16): until 27 October the offset moved by the width removed and the scroll restarted from it
-    return removed;
-  }
-  function wireAutoCommit(x) {   // a pending set whose items have entered the view is playing: it is the committed set now, the old one's remaining items orphans
-    const ws = wireState; if (ws.sets.length > 1 && setEntered(ws.sets[1], x)) wireCommit('play');
-  }
-  function wireCommit(why) {   // the pending set becomes the committed set: a committed set that has not entered the view is dropped unseen, one that has plays out to its cut as orphans
-    const ws = wireState; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
-    if (ws.sets.length < 2) return false;
-    let x = wireX(); wirePrune(x);
-    if (ws.sets.length > 1) { const cur = ws.sets.shift(); if (setEntered(cur, x)) ws.orphans.push(...cur.els); else wireDrop(cur); }
-    ws.sets[0].status = 'committed'; ws.commits++; ws.cycle = ws.sets[0].cycle; ws.key = ws.sets[0].key; wireRun(x); return true;
-  }
-  function wireTopUp() {   // the track is about to run out: the committed set continues with its context's next cycle (the cat fact advancing by seven)
-    const ws = wireState; ws.topTimer = 0; if (!wireScrolls() || ws.pinned || !ws.sets.length) return;
-    let x = wireX(); wirePrune(x); wireAutoCommit(x); x = wireX(); const last = ws.sets[ws.sets.length - 1];
-    if (last.status === 'committed') { ws.cycleIndex++; last.els.push(...wireItems(buildCycle(last.ctx.y, last.ctx.band, last.ctx.name, ws.cycleIndex))); ws.width = setEnd(last) - setStart(last); }
-    wireRun(x);
-  }
-  function wireReset(ctx, key, crossfade) {   // a fresh track from x 0 with one committed set; under crossfade (a year change) a frozen copy of the old track fades out as the new one fades in, 0.3 s
-    const ws = wireState, tr = wireTrack(), box = $('ctxwin');
-    if (crossfade && tr.childElementCount && !reduceMotion()) {
-      const x = wireX(), ghost = tr.cloneNode(true); ghost.removeAttribute('id'); ghost.classList.add('old'); ghost.classList.remove('in', 'pinned'); ghost.style.transform = `translateX(${-(x - ws.h)}px)`; box.appendChild(ghost);   // the copy keeps the track's spacer and margin
-      requestAnimationFrame(() => { ghost.classList.add('fade'); setTimeout(() => ghost.remove(), 400); });
-      tr.classList.add('in'); requestAnimationFrame(() => requestAnimationFrame(() => tr.classList.remove('in')));
-    }
-    wireStop(); if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.sets = []; ws.orphans = []; tr.innerHTML = ''; ws.x = 0; ws.pinned = false; tr.classList.remove('pinned'); ws.resets++;
-    ws.pad = 0; ws.h = 0; tr.style.paddingLeft = ''; tr.style.marginLeft = '';   // a fresh track has nothing to hold in place
-    wireMake(buildCycle(ctx.y, ctx.band, ctx.name, ws.cycleIndex), key, ctx, 'committed'); wireAnimate(0);
-  }
-  function wireContextNow(band, name, how, settled) {   // how: 'append' (a region, layer or view change), 'year' (a rebuild under the crossfade), 'reset' (the first build, or a layout guard)
-    const ws = wireState, ctx = { y: state.year, band, name }, key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|');
-    if (stripState.tip && !wireScrolls()) endTip(false);
-    applyRm2();
-    if (!wireScrolls()) { ws.key = key; ws.cycle = buildCycle(state.year, band, name, ws.cycleIndex); $('ctxtext').classList.add('rm'); wireTrack().innerHTML = ''; ws.sets = []; ws.orphans = []; startRM(); return; }
-    $('ctxtext').classList.remove('rm');
-    const cur = ws.sets[0];
-    if (how !== 'append' || !cur || narrow()) { wireReset(ctx, key, how === 'year' || narrow()); return; }   // a phone-width map has no lead slot: every change rebuilds under the crossfade, as a year change does, so the lead shows at once
-    let x = wireX(); wirePrune(x); wireAutoCommit(x); x = wireX();   // round 16: no stop, so no restart
-    const head = ws.sets[0], pend = ws.sets[1];
-    if (!setEntered(head, x) && head.key !== key) {   // a committed set that has not entered the view is replaced unseen, as a pending one is (round 13): nothing visible is touched and the new lead is not kept waiting behind it
-      if (pend) wireDrop(pend); wireDrop(head); ws.sets = []; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
-      ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'committed'); ws.commits++; wireRun(x); return;
-    }
-    if (head.key === key) { if (pend) { wireDrop(pend); ws.sets.length = 1; } if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.cycle = head.cycle; ws.key = key; wireRun(x); return; }   // back on the committed context: the pending set goes
-    if (pend && pend.key === key) { if (settled) wireCommit('settle'); else { wireRun(x); wireArmCommit(key); } return; }   // already pending; a settled camera commits it now, a hover back onto its region restarts the rest
-    if (pend) { wireDrop(pend); ws.sets.length = 1; }
-    if (setEntered(head, x)) wireCutAfterTip(head, x);   // the priority rule on the playing set; a set not yet in view keeps every item and the new one queues behind it
-    ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'pending'); wireRun(x);
-    if (settled) { wireCommit('settle'); return; }
-    wireArmCommit(key);
-  }
-  function wireArmCommit(key) {   // the pending set commits once the cursor has rested 600 ms on its region, counted from the region change
-    const ws = wireState; if (ws.commitTimer) clearTimeout(ws.commitTimer);
-    ws.commitTimer = setTimeout(() => { ws.commitTimer = 0; if (ws.sets[1] && ws.sets[1].key === key) wireCommit('rest'); }, Math.max(0, 600 - (performance.now() - ws.changedAt)));
-  }
-  function sizeSlot(el) {   // the slot's width follows its text (the width transition carries the wire's window with it), capped at a third of the bar (the author's rule); on a resize the cap is applied again
-    const lead = $('ctxlead'); if (!el) el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); if (!wireScrolls() || narrow()) { lead.style.width = ''; return; }
-    const rg = document.createRange(); rg.selectNodeContents(el); const tw = Math.ceil(rg.getBoundingClientRect().width), cap = Math.floor($('ctxstrip').clientWidth / 3), w0 = lead.getBoundingClientRect().width, w1 = Math.max(0, Math.min(tw + 2, cap));
-    if (Math.abs(w1 - w0) < 0.5) return; lead.style.width = w1 + 'px';
-    const ws = wireState, d = lead.getBoundingClientRect().width - w0; if (!ws.sets.length || Math.abs(d) < 0.01) return;   // the width as drawn: the stylesheet's cap can hold it under w1 (round 16: a long name at the cap was over-compensated by 24 px)   // the window's left edge moved by the change: the track's margin takes it (round 16), so every item keeps its place on screen and the scroll runs on unbroken
-    ws.h += d; ws.x += d; wireTrack().style.marginLeft = (-ws.h) + 'px';
-  }
-  function applyRm2() { const on = narrow() && !wireScrolls(); $('ctxstrip').classList.toggle('rm2', on); wrap.classList.toggle('rm2', on); }   // the two-line reduced-motion form on a phone-width map (round 12, part D): the strip and the lift grow with it
-  let wireSettled = false;   // set by afterCameraMove around its context update: a settled camera commits the pending set at once
-  function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead slot changes at once); the rest at once
-    const ws = wireState, settled = wireSettled; if (ws.timer) { clearTimeout(ws.timer); ws.timer = 0; }
-    if (how !== 'append' || !ws.sets.length || settled) { if (how === 'append') ws.changedAt = performance.now(); wireContextNow(band, name, how, settled); return; }
-    if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }   // the cursor has moved to another region: the pending set's rest ends now, not after the debounce
-    ws.changedAt = performance.now(); ws.timer = setTimeout(() => { ws.timer = 0; wireContextNow(band, name, 'append', false); }, 250);
-  }
-  function applyWireCaps() { $('ctxtext').classList.toggle('caps', WIRE_CAPS); }
-  // The wire's scanlines (round 15, the author's final choice of 26 October 2026): a 2 px bar and a 1 px gap with a 1 px offset, each rounded to whole device pixels so
-  // the lines stay even at fractional device ratios (browser zoom, display scaling); recomputed when the ratio changes (zoom, or the window moved to another screen).
-  function wireStripes(phase = 1) {   // phase in CSS px
+  // The REFERENCES icon's scanlines (round 15's wire lines, on the icon since round 16; the wire went in round 30): a 2 px bar and a 1 px gap with a 1 px
+  // offset, each rounded to whole device pixels so the lines stay even at fractional device ratios (browser zoom, display scaling); recomputed when the ratio changes.
+  function refsStripes(phase = 1) {   // phase in CSS px
     const d = window.devicePixelRatio || 1, bar = Math.round(2 * d), gap = Math.max(1, Math.round(d)), s = document.documentElement.style;
     s.setProperty('--wbar', bar / d + 'px'); s.setProperty('--wpitch', (bar + gap) / d + 'px'); s.setProperty('--wphase', Math.round(phase * d) / d + 'px');
-    matchMedia(`(resolution: ${d}dppx)`).addEventListener('change', () => wireStripes(phase), { once: true });
+    matchMedia(`(resolution: ${d}dppx)`).addEventListener('change', () => refsStripes(phase), { once: true });
   }
-  wireStripes(1);
-  // The wire watchdog (the author's request of 25 October 2026): once a second while the document is visible, and at once on visibilitychange and on window focus, the
-  // track's rendered offset is compared with the last check's; a track that should be moving (the scrolling form, an animation started, neither paused under the pointer nor
-  // pinned) but has not advanced restarts its animation from its rendered offset, or tops up when it sits at the track's end. The offset at hiding is kept, so a return finds
-  // a stalled track at once. Nothing is logged.
-  const wireRenderedX = () => { const t = getComputedStyle(wireTrack()).transform; if (!t || t === 'none') return 0; const m = t.match(/matrix\(([^)]+)\)/); return m ? -parseFloat(m[1].split(',')[4]) : 0; };
-  function wireWatch() {
-    const ws = wireState, x = wireRenderedX(), now = performance.now();
-    if (document.visibilityState !== 'visible') { ws.watchX = x; ws.watchT = now; return; }
-    const should = wireScrolls() && !!ws.anim && !ws.paused && !ws.pinned;
-    if (ws.watchT != null && now - ws.watchT < 500) return;   // a focus event right after a tick is no evidence of a stall
-    if (should && ws.watchX != null && Math.abs(x - ws.watchX) < 0.5) { const tr = wireTrack(), last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0, xe = x + ws.h; ws.restarts++; ws.watchX = null; ws.watchT = now; if (end - xe <= 1) wireTopUp(); else wireAnimate(xe); return; }
-    if (should) { const vis = wireVisW(), last = wireTrack().lastElementChild, end = last ? wirePos(last)[1] : 0; if (vis > 0 && end - (x + ws.h) < vis) wireTopUp(); }   // the scroll runs past the content (round 16): a missed top-up shows here as content ending inside the window, an emptied track included; a hidden frame has no widths and is left alone
-    ws.watchX = x; ws.watchT = now;
-  }
-  setInterval(wireWatch, 1000); document.addEventListener('visibilitychange', wireWatch); window.addEventListener('focus', wireWatch);
-  { const bar = $('ctxstrip'), setPause = on => { const ws = wireState; ws.paused = on; if (ws.anim) { if (on) ws.anim.pause(); else ws.anim.play(); } };   // paused under the pointer or focus, as the CSS animation was
-    bar.addEventListener('mouseenter', () => setPause(true)); bar.addEventListener('mouseleave', () => setPause(false)); bar.addEventListener('focusin', () => setPause(true)); bar.addEventListener('focusout', () => setPause(false)); }
-  function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
-    if (wireState.rmTimer) { clearInterval(wireState.rmTimer); wireState.rmTimer = 0; } if (wireScrolls() || !wireState.cycle.length) return; wireState.rmIndex = 0;
-    wireState.rmTimer = setInterval(() => { if (!stripOpen() || !stripState.fact) return; wireState.rmIndex = (wireState.rmIndex + 1) % wireState.cycle.length; const it = wireState.cycle[wireState.rmIndex]; stripState.tip = it.kind === 'tip' ? { i: -1, text: plainOf(it) } : null; setStripText({ kind: it.kind === 'lead' ? stripState.fact.kind : it.kind, name: '', text: it.kind === 'cat' ? '<svg class="catin" aria-hidden="true" focusable="false"><use href="#mark-cat"/></svg>' + it.text : it.text, nums: [] }, null); }, WIRE_RM_MS);
-  }
-  const plainOf = it => { const d = document.createElement('span'); d.innerHTML = it.text; return d.textContent.replace(/ /g, ' '); };
-  function pinTip() { const ws = wireState, tr = wireTrack(); if (!ws.sets.length) return false; const x = wireX(), tips = [...tr.querySelectorAll('.wi.tip')], el = tips.find(e => wirePos(e)[0] >= x - 1) || tips[0]; if (!el) return false; wireStop(); ws.x = wirePos(el)[0]; ws.pinned = true; tr.classList.add('pinned'); tr.style.transform = `translateX(${-(ws.x - ws.h)}px)`; const i = [...tr.children].filter(e => e.classList.contains('wi')).indexOf(el); stripState.tip = { i, text: plainOf({ text: el.innerHTML }) }; return true; }
-  function unpinTip() { const ws = wireState, tr = wireTrack(); if (!tr) return; tr.classList.remove('pinned'); if (!ws.pinned) return; ws.pinned = false; if (wireScrolls() && ws.sets.length) wireAnimate(ws.x); }
+  refsStripes(1);
 
   // The region glyph: one pre-simplified outline per region from the basemap's parts (the largest ring and any ring with at least a
   // quarter of its area, Douglas-Peucker to about 60 points, fitted into 22 by 22), built once on first use; Russia's outline traced
@@ -2006,7 +1765,7 @@ void main() {
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); hoverUnit.key = null; refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -2534,14 +2293,14 @@ void main() {
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); if (!wireHold) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
+  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); });
   // ---- the author's extras (round 15, item 7; each labelled optional in the review): the year run; the blink comparator (7A) was removed in round 30 --
   // 7B, the year run: a play button by YEAR runs the years from 2014 (or from the year shown, after a pause) to 2025, one a second, through the slider, so every year
-  // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line); the wire holds and rebuilds once, at the end or the pause.
+  // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line).
   function setYear(y) { const yEl = $('year'); yEl.value = String(y); yEl.dispatchEvent(new Event('input')); }
   function runStart() {
     if (runState.on) return;
-    runState.on = true; wireHold = true; syncYearLine2();
+    runState.on = true; syncYearLine2();
     if (+$('year').value >= 2025) setYear(2014);
     runState.timer = setTimeout(runStep, 1000);
   }
@@ -2552,7 +2311,7 @@ void main() {
   }
   function runEnd() {
     if (!runState.on) return; runState.on = false; if (runState.timer) clearTimeout(runState.timer); runState.timer = 0;
-    wireHold = false; syncYearLine2(); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); }
+    syncYearLine2();
   }
   function syncYearLine2() {
     const run = $('yearrun'); run.hidden = false;
@@ -2560,24 +2319,6 @@ void main() {
     $('yline2').hidden = ![...$('yline2').children].some(el => !el.hidden);
   }
   $('yearrun').addEventListener('click', () => { if (runState.on) runEnd(); else runStart(); });
-  document.addEventListener('keydown', e => {
-    const t = e.target; if (e.ctrlKey || e.metaKey || e.altKey || refsIsOpen() || (t && t.closest && t.closest('input, textarea, select, [contenteditable]'))) return;   // the REFERENCES panel holds the page's keys (round 16)
-    const k = (e.key || '').toLowerCase();
-    // 7C, the cat key: c-a-t typed anywhere outside a field puts the next cat fact on the wire just past the items in view (folklore; the wire checker knows these items by their source tag)
-    if (k.length === 1 && !e.repeat) { catKey.buf = (catKey.buf + k).slice(-3); if (catKey.buf === 'cat') { catKey.buf = ''; wireCatNow(); } }
-  });
-  function wireCatNow() {
-    if (!OFFWIRE || !OFFWIRE.facts || !OFFWIRE.facts.length || !wireScrolls() || !stripOpen() || !wireState.sets.length) return false;
-    const ws = wireState, tr = wireTrack(), x = wireX(), right = x + wireVisW(); let target = null, owner = null, idx = -1;
-    for (const set of ws.sets) { for (let i = 0; i < set.els.length; i += 2) { if (wirePos(set.els[i])[0] > right) { target = set.els[i]; owner = set; idx = i; break; } } if (target) break; }
-    const f = OFFWIRE.facts[catKey.next++ % OFFWIRE.facts.length];
-    const sp = document.createElement('span'); sp.className = 'wi cat keyed'; sp.dataset.src = 'offwire-key:' + f.id; sp.innerHTML = `<span class="cf">${esc(f.text)}</span>`;
-    const hold = document.createElement('span'); hold.innerHTML = SEP; const sep = hold.firstChild;
-    const cur = wireX();   // the fact goes in past the visible items, so the scroll runs on (round 16)
-    if (target) { catSep(target.previousElementSibling); tr.insertBefore(sp, target); tr.insertBefore(sep, target); owner.els.splice(idx, 0, sp, sep); }
-    else { const last = ws.sets[ws.sets.length - 1]; catSep(tr.lastElementChild); tr.appendChild(sp); tr.appendChild(sep); last.els.push(sp, sep); }
-    wireRun(cur); return true;
-  }
 
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
@@ -2883,7 +2624,7 @@ void main() {
   // A fuchsia button in the header opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
   // at the same alpha on the light theme), with short entries under prompt-line heads in one scrolling body and a row of shortcuts. DEFINITIONS is the atlas's
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
-  // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
+  // globe whose central meridian is the i's stem, carries round 15's wire scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
   // page behind is inert. Escape, the close toggle or a press outside close it, focus returns to the button, and the page's own keys stand down while it is open.
   // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance.
   const REFS_ALPHA = 98, GLOSS = D.glossary || null;
@@ -2918,7 +2659,7 @@ void main() {
       if (items.length) S.push(['insights', 'Insights', items]);
     }
     S.push(['type', 'Type and software', [
-      `<b>IBM Plex Mono</b> (IBM) and <b>Tomorrow</b>, SIL Open Font License 1.1, from Google Fonts.`,
+      `<b>IBM Plex Mono</b> (IBM), SIL Open Font License 1.1, from Google Fonts.`,
       `<b>DejaVu Sans Mono</b>, Bitstream Vera licence with DejaVu's changes in the public domain, for the Armenian letters.`,
       `<b>The data passes</b>: R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.`]]);
     S.push(['links', 'Links', [
@@ -3049,16 +2790,15 @@ void main() {
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });
   // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
   // Load-time measurements guarded (round 11, the author's item 7): a frame the host holds hidden at load leaves zero-width layouts behind, so every measurement
-  // taken at load (the canvases' size and the landing camera, the minimap's label boxes, the wire's track, the strip's short-form test, the tile's obstacles) is
+  // taken at load (the canvases' size and the landing camera, the minimap's label boxes, the strip's short-form test, the tile's obstacles) is
   // verified when the map's box changes (a ResizeObserver on the wrap, so a frame shown without a window resize event counts too) and after a late font load,
   // and rebuilt where it disagrees; a stage that measured 1 px at load lands on the fit (or the link's preset) instead of scaling a degenerate zoom.
   const layoutsVerified = [];
   function verifyLayouts(reason) {
     const fixed = []; if (verifyMinimap()) fixed.push('minimap');
-    if (wireScrolls() && stripOpen() && wireState.sets.length) { const first = wireState.sets[0].els[0]; if (wireVisW() !== wireState.vis || !(wireState.width > 0) || !first || first.getBoundingClientRect().width <= 0) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'reset'); fixed.push('wire'); } }
     dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
   }
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); applyRm2(); sizeSlot(); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
@@ -3076,7 +2816,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), tipbio: rel('tipbio'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), tipbio: rel('tipbio'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -3087,9 +2827,9 @@ void main() {
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
     redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return { boxes: Motion.audit.boxes, dom: domBoxes() }; },
     tips() {   // every tip measured in the strip's hidden span as it would show (round 10): the audit asserts none is clipped at any width
-      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'), box = $('ctxtext'), hadRm = box.classList.contains('rm'); el.classList.add('tip'); box.classList.add('rm');   // measured in the lead's full width, the reduced-motion form where the tips show there (round 12)
+      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip');   // measured in the line's full width, where the tips show (round 12)
       const out = TIPS.flatMap((t, i) => [t.text, t.touch].filter(Boolean).map(str => { el.innerHTML = units(esc(str)); return { i, text: str, w: el.scrollWidth, slot: el.clientWidth, h: el.scrollHeight, hslot: el.clientHeight, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 }; }));
-      el.innerHTML = keep; el.classList.toggle('tip', had); box.classList.toggle('rm', hadRm); return out;
+      el.innerHTML = keep; el.classList.toggle('tip', had); return out;
     },
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
@@ -3098,7 +2838,7 @@ void main() {
     minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (25 October): true when it rebuilt
     ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
-    layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
+    layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
     verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py, { touch: !!opts.touch }); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, origin: h.origin || [0, 0], fine: !!h.fine, micro: !!h.micro, n: h.n == null ? null : h.n, listed: h.listed || null }; },
@@ -3143,20 +2883,9 @@ void main() {
     firmsInView() { return countFirmsInView(); },   // the footer's count recomputed now (round 11, item 3)
     floor() { return { kfit: kFit(), kfloor: kFloor(), fraction: FLOOR_FRACTION }; },   // the zoom floor (round 11, item 5)
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
-    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
-    wire() { const ws = wireState, x = wireX(), vis = wireVisW(), cur = ws.sets[0], lead = cur && cur.els.length ? cur.els[0] : $('wiretrack').querySelector('.wi.lead'); return { slotW: $('ctxlead').getBoundingClientRect().width, barW: $('ctxstrip').clientWidth, slot: (stripState.cur === 'A' ? $('ctxA') : $('ctxB')).textContent.trim(), rendered: wireRenderedX(), restarts: ws.restarts, key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, commits: ws.commits, caps: WIRE_CAPS, orphans: ws.orphans.length / 2, dom: $('wiretrack').querySelectorAll('.wi').length, timers: { debounce: !!ws.timer, commit: !!ws.commitTimer, top: !!ws.topTimer }, heap: performance.memory ? performance.memory.usedJSHeapSize : null, lead: { text: $(stripState.cur === 'A' ? 'ctxA' : 'ctxB').textContent, width: $('ctxlead').clientWidth }, sets: ws.sets.map(sset => ({ key: sset.key, status: sset.status, x0: setStart(sset), x1: setEnd(sset), entered: setEntered(sset, x), items: sset.els.length / 2, lead: sset.els.length ? plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) : '' })) }; },   // the wire's current cycle, its two-set queue and the lead slot (rounds 10 to 12)
-    wireGaps() {   // the separators' clearances (the author's report of 25 October 2026): the smallest gap between a separator mark and the items beside it on the track, the lead separator's two margins, the window's edge fade, and any item box a mark covers
-      const tr = wireTrack(), kids = [...tr.children], rs = kids.map(el => { if (el.classList.contains('wsep')) return el.getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(el); return rg.getBoundingClientRect(); }); let min = Infinity, covered = 0;   // an item's text extent, not its padded box
-      for (let i = 0; i < kids.length; i++) { if (!kids[i].classList.contains('wsep')) continue; const s = rs[i]; if (i > 0) { const g = s.left - rs[i - 1].right; if (g < min) min = g; if (g < -0.5) covered++; } if (i + 1 < kids.length) { const g = rs[i + 1].left - s.right; if (g < min) min = g; if (g < -0.5) covered++; } }
-      const lead = $('ctxlead').getBoundingClientRect(), sep = document.querySelector('.ctxt .lsep'), sr = sep ? sep.getBoundingClientRect() : null, win = $('ctxwin').getBoundingClientRect(), cs = getComputedStyle($('ctxwin')), mask = cs.maskImage || cs.webkitMaskImage || 'none';
-      return { min: kids.length ? min : null, covered, lsepLeft: sr && sr.width ? sr.left - lead.right : null, lsepRight: sr && sr.width ? win.left - sr.right : null, fade: mask !== 'none' && mask.includes('gradient'), em: parseFloat(getComputedStyle($('ctxtext')).fontSize), items: kids.length };
-    },
+    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
     refs(on) { if (on === true) refsOpen(); else if (on === false) refsClose(); const d = $('refs'), r = d.getBoundingClientRect(), m = wrap.getBoundingClientRect(), n = $('superusernote');   // the REFERENCES panel (round 16)
       return { open: d.open, rect: [r.left, r.top, r.width, r.height], map: [m.left, m.top, m.width, m.height], sections: [...d.querySelectorAll('section')].map(x => x.dataset.name), links: [...d.querySelectorAll('a')].map(a => a.href), note: n ? n.textContent : null, alpha: REFS_ALPHA, focus: document.activeElement && document.activeElement.id }; },
-    wireStall(on) { const ws = wireState; if (!ws.anim) return false; if (on) ws.anim.pause(); else ws.anim.play(); return true; },   // a stalled animation the page did not ask for (the watchdog's audit state)
-    wireCaps(on) { if (on != null) { WIRE_CAPS = !!on; applyWireCaps(); } return WIRE_CAPS; },   // the capitals experiment's switch (round 12, part D)
-    wireSeek(x) { wireStop(); wireAnimate(Math.max(0, x)); return wireX(); },   // a frames hook: the track scrolled to x at once (round 12)
-    wireItemX(kind, n = 0) { const el = wireTrack().querySelectorAll('.wi.' + kind)[n]; return el ? wirePos(el)[0] : null; },   // a frames hook: the left edge of the n-th item of a kind on the track
     ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
     mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
     binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
@@ -3174,9 +2903,6 @@ void main() {
     cellPulseState() { return cellPulse ? { count: cellPulse.count, static: cellPulse.static, cells: cellPulse.cells.map(q => [q.x, q.y, q.delay]) } : null; },
     mosaicOff(v) { if (v != null) { mosaicOff = !!v; drawMap(); } return mosaicOff; },   // the squares off, for the contrast probe
     anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
-    anniversary(iso) { const a = anniversaryLine(iso); return a ? a.text : null; },   // the builder for a given ISO day (item 6)
-    today() { return TODAY; },
-    wireAt(y, region) { const keep = state.year; state.year = y; const c = buildCycle(y, region === 'Russia' ? 'national' : 'region', region, 0); state.year = keep; return c.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })); },
     tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
     glyph(name) { return regionGlyph(name); },
@@ -3208,8 +2934,7 @@ void main() {
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     methodMore(more) { if (more != null) { ui.methodMore = more ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     popout(id) { if (id === null) closePop(); else if (id) openPop(id); return pop.id; },   // the pop-out (round 15, item 5.4)
-    extras() { return { on: true, run: runState.on, wireHold, catNext: catKey.next, keyed: $('wiretrack').querySelectorAll('.wi.keyed').length }; },   // the three extras (round 15, item 7)
-    catNow() { return wireCatNow(); },
+    extras() { return { on: true, run: runState.on }; },   // the year run (round 15, item 7B; the blink and the cat key went in round 30)
     profiles() {   // every region's and city window's profile (round 15, item 9): what profile_check.py re-derives
       const out = { regions: {}, windows: {}, medians: !!PROF, insights: !!INS };
       if (REG) for (const name of regIndex.keys()) { if (name === 'Russia') continue; const p = profileRegion(name); if (p) out.regions[name] = { head: p.head, full: p.full, tile: p.tile }; }
@@ -3227,5 +2952,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"'), document.fonts.load('400 13.5px "Tomorrow"'), document.fonts.load('500 13.5px "Tomorrow"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
 })();

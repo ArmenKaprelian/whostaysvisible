@@ -6,7 +6,7 @@ Given two served copies of the atlas, a base and a trial, the tool
   lists every string that changed, grouped by the edit;
 - checks every on-screen string for a semicolon, an em-dash or "listed", and names the hits the trial brings in apart from those
   the base already shows (tools/text-rules-allow.json holds the author's decided and pending exceptions);
-- takes one set of frames from both (tools/atlas-frames.py, every shot with "settle", "wire" and "boxes", after a first shot per
+- takes one set of frames from both (tools/atlas-frames.py, every shot with "settle" and "boxes", after a first shot per
   load that is not compared): both views on every layer, the Moscow preset, a hover per layer, a red mark, every card with its
   reading block, every chart that pops out, the footer, the REFERENCES panel and the legend's two sides, on the dark theme (the only one since round 30); at
   1,600 px, or at the five widths with --full. The layers, cards and charts come from the pages (__atlas.layers, cards() and the
@@ -138,9 +138,9 @@ def shot_list(layers, cards, pops, themes):
             if not d.get("legend"): leg = "A.legend(null); " + leg
             name = "s00-%s" % slug if slug.startswith("warm") else "%02d-%s" % (n[0], slug)
             n[0] += 1
-            d.update(name=name + "-" + theme, theme=theme, settle=1.0, wire=600, boxes=True, js=RESET + leg + js)
+            d.update(name=name + "-" + theme, theme=theme, settle=1.0, boxes=True, js=RESET + leg + js)
             out.append(d)
-        for i, L in enumerate(("density", "share", "change")): sh("warm%d" % (i + 1), layer=L)   # the first shots after a load are not compared: the wire's glyphs settle over the first two (round 18: one warm-up left two frames differing in the wire between runs)
+        for i, L in enumerate(("density", "share", "change")): sh("warm%d" % (i + 1), layer=L)   # the first shots after a load are not compared (round 18: the wire's glyphs settled over the first two; kept since the wire went in round 30)
         for mode in ("cells", "firms"):
             for L in layers: sh("%s-%s" % (mode, L), mode=mode, layer=L, need={"layer": L})
         sh("moscow-cells-share", preset="Moscow"); sh("moscow-firms-industry", mode="firms", layer="industry", preset="Moscow", need={"layer": "industry"})
