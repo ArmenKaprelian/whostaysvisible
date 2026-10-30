@@ -2328,6 +2328,8 @@ The publish copy is 227b1d5 and the site's import 1201de8, which changes ten fil
 - **Profiles (fc9d26e).** The two regions have the sourced sentences their profiles need, approved by the author. Crimea: the EU's import ban of June 2014 and US Executive Order 13685. Sevastopol: the EU asset freeze on its state commercial seaport, July 2014. 83 regions now have a profile.
 - **The wire** already gave both regions' facts.
 
+**Ready to publish** on the author's word. The five-width audit had zero findings (1,376 states, 7 min 52 s). The publish set is from build f780e17, with 219 links, all on the expected list. The publish copy is 3f20891, and the site's import 2c49ad2 changes three files: `insights.js`, `explorer-app.js` and the build line. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
