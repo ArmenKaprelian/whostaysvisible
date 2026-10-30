@@ -2332,6 +2332,12 @@ The publish copy is 227b1d5 and the site's import 1201de8, which changes ten fil
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`, whose two-engine check had zero findings (34 page loads, 41 s); it pushed 1201de8..2c49ad2. The three changed files match the site's copy byte for byte when served live.
 
+**Second follow-up (the author's requests of 30 October 2026).**
+- **Crimea on the minimap.** It had published as a faint outline crossed by ROSTOV's leader: the land trace at 0.03 px per km halved its area. Two options were shown from frames: A, a finer trace, and B, the land as 100 km tiles. The author picked A (8212169). The trace is 0.06 px per km with the same smallest component, and ROSTOV and the four labels below it move down, so the leader passes south of Crimea. The build equals the approved frame pixel for pixel, and B's trial code is removed.
+- **CORRECTIONS removed (f35b286).** The REFERENCES panel's section goes, and the guide no longer names it. The audit and the date check accept the absence, and the lab's CLAUDE.md rule and README say so. Proof: the guide and the panel change, 2 of 88 frames (the panel) differ, the map does not, and there are no new rule hits.
+
+**Ready to publish.** The five-width audit had zero findings (1,376 states, 7 min 49 s). The publish copy is 54e67bb, and the site's import 6210302 changes four files: the guide in both forms, `explorer-app.js` and the build line. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
