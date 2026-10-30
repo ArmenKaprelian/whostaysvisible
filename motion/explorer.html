@@ -96,7 +96,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #field, #field2d, #marks, #overlay { pointer-events: none; }
 .mapwrap { --lift: 0px; }
-.mapwrap.strip-open { --lift: 34px; }   /* the context line lifts the legend, the zoom box and the scale bar while it is open (round 9's strip at 26 px, 34 px since round 10) */
+.mapwrap.strip-open { --lift: 34px; }   /* the context line lifts the legend and the zoom box while it is open (round 9's strip at 26 px, 34 px since round 10) */
 .mapwrap.strip-open.narrow { --lift: 58px; }   /* the two-line form on a phone-width map (round 12, part D) */
 .maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
@@ -135,15 +135,9 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .zoombox #zoom-fit { flex: 1 1 auto; width: auto; display: flex; align-items: center; justify-content: center; gap: 10px; }   /* the fit button takes the row's remaining width and shows the zoom as a factor of the country view (round 12, part D) */
 .zoombox .zf { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 .zoombox .btn svg { width: 18px; height: 18px; }
-.scalebar { position: absolute; right: 12px; bottom: calc(68px + var(--lift)); width: 220px; box-sizing: border-box; display: block; padding: 4px 8px; border-radius: 0; border: 2px solid var(--context); background: color-mix(in srgb, var(--panel) 85%, transparent); pointer-events: none; line-height: 0; }   /* the ruler above the zoom row (round 12, part D, the author's request of 25 October 2026): a fixed line with ticks at a nice step that follows the zoom */
-.scalebar .ruler { display: block; overflow: visible; }
-.scalebar .ruler .rl { fill: none; stroke: var(--ink); stroke-width: 1.5; shape-rendering: crispEdges; }
-.scalebar .ruler text { font: 500 12px/1 var(--font); fill: var(--ink); font-variant-numeric: tabular-nums; }
-.scalebar .ruler text.unit { font: 400 11px/1 var(--font); fill: var(--muted); }
 .mapwrap.narrow .zoombox { flex-direction: column; width: 100px; }   /* a phone-width map keeps the column */
 .mapwrap.narrow .zoombox .btn { flex: 0 0 auto; width: 100%; }
-.mapwrap.narrow .scalebar { width: 100px; bottom: calc(156px + var(--lift)); }
-@media (pointer: coarse) { .zoombox .btn { height: 44px; } .scalebar { bottom: calc(72px + var(--lift)); } .mapwrap.narrow .scalebar { bottom: calc(168px + var(--lift)); } }
+@media (pointer: coarse) { .zoombox .btn { height: 44px; } }
 /* The cursor tile (round 9): the glance view that follows the cursor, its border in the cursor colour (muted at rest, full while
    the cursor moves), tabular monospace figures, a class-mix bar on the industry layer and a footer with the coordinate and the scale. */
 .tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 2px solid var(--cursor); border-radius: 0; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: min(320px, calc(100% - 16px)); display: none; z-index: 5; font-variant-numeric: tabular-nums; transition: border-color .15s; }
@@ -200,8 +194,8 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctx.narrow .ctxt .t { white-space: normal; }   /* the phone's two-line form (round 12, part D) */
 .ctx .toggle:hover { color: var(--context-live); }
 .ctx.closed { left: auto; right: 244px; bottom: 12px; height: auto; padding: 2px; border-top: 0; border-radius: 0; }   /* the stub clears the 220 px zoom row (12 + 220 + 12) */
-.mapwrap.narrow .ctx.closed { right: 12px; bottom: 206px; }   /* a phone-width map: the stub above the ruler, clear of the legend (12 + 140 + 4 + 46 + 4) */
-@media (pointer: coarse) { .mapwrap.narrow .ctx.closed { bottom: 218px; } }   /* the stub above a touch phone's taller ruler, after the rule above so it wins (round 30: placed before it, it never applied, which showed once the line started collapsed on phones) */
+.mapwrap.narrow .ctx.closed { right: 12px; bottom: 156px; }   /* a phone-width map: the stub above the zoom column (12 + 140 + 4), where the ruler sat until round 30 */
+@media (pointer: coarse) { .mapwrap.narrow .ctx.closed { bottom: 168px; } }   /* above a touch phone's taller zoom column (12 + 152 + 4), after the rule above so it wins */
 .ctx.closed .glyph, .ctx.closed .ctxt { display: none; }
 .ctx .glyph { width: 22px; height: 22px; flex: 0 0 auto; overflow: visible; }
 .ctx .glyph path { fill: none; stroke: var(--context); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 0; opacity: 1; transition: stroke-dashoffset .4s ease-out, opacity .3s, stroke .3s; }
@@ -260,7 +254,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 /* The surface grain (round 10, the author's item 22): one 128 px fractal-noise tile (feTurbulence, two octaves, stitched, desaturated) as a second background layer on every
    chrome surface, each pixel black or white with an alpha sized to the theme's surface so the lift and the drop are equal (about 6 levels, 2.5 percent of the range; the header and footer bands with their own alphas), composited normally; never on the map
    canvas or in the video; the audit's guard measures the text contrast on a grained patch against the plain surface (within 0.05). The nograin class clears it for that measure. */
-.card, .maplegend, .tooltip, .mixbox, .ctx, .scalebar, .zoombox, .mapnote, .popout, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
+.card, .maplegend, .tooltip, .mixbox, .ctx, .zoombox, .mapnote, .popout, header, footer { background-image: var(--grain); background-size: 128px 128px; background-repeat: repeat; }
 header, footer { background-color: var(--band); background-image: var(--grain-band); }   /* the bands (round 15): the stage and the panel grain */
 /* The title bars (round 15, the author's revision of 26 October 2026, for every panel): the row with the title, the i and the toggle on a bar halfway from the stage to black
    (#020307, the sRGB midpoint of #03060E and #000000). The bar spans the panel
@@ -278,7 +272,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .mixbox > #mixbody { margin-top: 6px; }
 .mixbox.closed > .mhead { margin-bottom: -8px; }
 .popout > .pohead { margin: -8px -10px 0; padding: 8px 10px; }
-.nograin .card, .nograin .maplegend, .nograin .tooltip, .nograin .mixbox, .nograin .ctx, .nograin .scalebar, .nograin .zoombox, .nograin .mapnote, .nograin .popout, .nograin header, .nograin footer, .nograin .card > .chead, .nograin .maplegend > .lhead, .nograin .mapnote > .nhead, .nograin .mixbox > .mhead, .nograin .popout > .pohead { background-image: none; }
+.nograin .card, .nograin .maplegend, .nograin .tooltip, .nograin .mixbox, .nograin .ctx, .nograin .zoombox, .nograin .mapnote, .nograin .popout, .nograin header, .nograin footer, .nograin .card > .chead, .nograin .maplegend > .lhead, .nograin .mapnote > .nhead, .nograin .mixbox > .mhead, .nograin .popout > .pohead { background-image: none; }
 
 .method .mtext p { margin: 0 0 6px; }
 .method .mtext h3 { font-size: 12px; margin: 6px 0 2px; color: var(--muted); }
@@ -479,7 +473,6 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
     <div class="maplegend" id="legend"><div class="lhead"><div class="ltitle" id="legendtitle"></div><button class="btn info linfo" id="legendinfo" type="button" aria-pressed="false" aria-controls="legendbody" aria-label="Show how to read the legend" title="Show how to read the legend" hidden>i</button><button class="toggle" id="legendtoggle" type="button" aria-expanded="true" aria-controls="legendbody" aria-label="Collapse the legend"></button></div><div class="lbody" id="legendbody"></div></div>
     <div class="mixbox" id="mixbox" hidden><div class="mhead"><b id="mixtitle">Revenue mix</b><button class="btn info linfo" id="mixinfo" type="button" aria-pressed="false" aria-controls="mixread" aria-label="Show how to read the revenue mix" title="SHOW HOW TO READ THE REVENUE MIX">i</button><button class="toggle" id="mixtoggle" type="button" aria-expanded="true" aria-controls="mixbody" aria-label="Collapse the revenue mix"></button></div><div id="mixbody"><div class="mread" id="mixread" hidden></div><div class="mkey" id="mixkey"><div class="r muted" id="mixunit"></div><div id="mixrows"></div></div></div></div>
     <div class="mapnote" id="mapnote"><div class="nhead"><span class="nlabel ui" id="notelabel">Note</span><button class="toggle" id="notetoggle" type="button" aria-expanded="true" aria-controls="notebody" aria-label="Collapse the note"></button></div><div class="lbody" id="notebody"></div></div>
-    <div class="scalebar" id="scalebar" aria-hidden="true"><svg class="ruler" id="ruler" width="204" height="34" viewBox="0 0 204 34"></svg></div>
     <div class="zoombox" id="zoombox" role="group" aria-label="Zoom">
       <button class="btn" type="button" id="zoom-in" aria-label="Zoom in" title="ZOOM IN (+)">+</button>
       <button class="btn" type="button" id="zoom-out" aria-label="Zoom out" title="ZOOM OUT (−)">−</button>

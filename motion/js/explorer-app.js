@@ -347,7 +347,7 @@
       const key = layersKey(c); if (key !== lastFieldKey) { drawCellsField(c); lastFieldKey = key; }
       if (key !== lastMarksKey || cellPulse || found) { drawCellsMarks(c); lastMarksKey = key; } else drawLog.push('ghost');
     }
-    if (!flight) { drawLegend(); drawScaleBar(); }
+    if (!flight) { drawLegend(); syncZoomFactor(); }
   }
 
   // ---- firms view: loader, renderer, hover ------------------------------------------------------------
@@ -1756,7 +1756,7 @@ void main() {
   function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
-  // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons, the ruler and the tile from the hovered unit's cache; the settle, 150 ms after
+  // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons and the tile from the hovered unit's cache; the settle, 150 ms after
   // the last step (or at once after a flight, a drag or a pinch), counts the firms in view, rebuilds the tile and the panels once, updates the strip and the wire, the
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
@@ -1864,7 +1864,7 @@ void main() {
   function tileObstacles() {
     if (obsCache) return obsCache;
     const m = wrap.getBoundingClientRect();
-    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'scalebar', 'ctxstrip', 'popout'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
+    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'ctxstrip', 'popout'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
   }
   const meets = (a, b, g = 2) => a.x < b.x1 + g && a.x1 > b.x - g && a.y < b.y1 + g && a.y1 > b.y - g;
   // Eight anchors around the cursor, each keeping d px of clearance on at least one axis so the tile never covers the hovered
@@ -1882,7 +1882,7 @@ void main() {
     const tip = $('tip'), d = Math.max(14, r + 9);
     tip.classList.add('docked'); tip.style.width = (stage.width - 24) + 'px';
     const b = { x: 12, y: 12, x1: stage.width - 12, y1: 12 + tip.offsetHeight, anchor: -3, docked: true };
-    if (y >= b.y1 + d && !obs.some(o => (o.id === 'zoombox' || o.id === 'scalebar' || o.id === 'ctxstrip') && meets(b, o))) {
+    if (y >= b.y1 + d && !obs.some(o => (o.id === 'zoombox' || o.id === 'ctxstrip') && meets(b, o))) {
       const soft = obs.filter(o => (o.id === 'mapnote' || o.id === 'mixbox' || o.id === 'legend') && meets(b, o)).map(o => (o.id === 'mapnote' ? 'note' : o.id === 'mixbox' ? 'mix' : o.id));
       if (soft.length) b.relaxed = soft;
       return b;
@@ -2045,26 +2045,12 @@ void main() {
   $('zoom-out').addEventListener('click', () => flyTo(stepCentre(0.5)));
   $('zoom-fit').addEventListener('click', () => flyTo(fitTarget()));
   function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFloor() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
-  // The ruler (round 12, part D, the author's request of 25 October 2026): a line of fixed length with major ticks at a nice step (1, 2, 5 times a power of ten, in km) that
-  // follows the zoom, a minor tick at each half step, the numbers under the major ticks and the unit at the top right; the ruler's line starts 15 px in, so the end labels
-  // stay inside the box. The step is the smallest that puts the majors at least 28 px apart on a wide map (14 px on a phone-width map, where only every second major
-  // is numbered); every tick sits at i times the step times the zoom, so the ruler is exact at every zoom. Redrawn on every settled draw and wheel step, never on a flight frame.
-  const RULER_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000], RULER_PAD = 15;
-  let lastRuler = '', rulerState = null;
-  function drawScaleBar() {
+  // The zoom as a factor of the country view, beside the fit button's icon (the author's note of 25 October 2026): ×1.0 at the fit. The ruler that shared this
+  // function since round 12 was removed in round 30 (the author's request of 30 October 2026).
+  let lastZoomF = '';
+  function syncZoomFactor() {
     dropObstacles();
-    const box = $('scalebar'), svg = $('ruler'), k = state.cam.k, Wc = box.clientWidth - 16; if (!(Wc > 0)) return;
-    const L = Wc - 2 * RULER_PAD; let s = RULER_STEPS[RULER_STEPS.length - 1]; for (const v of RULER_STEPS) { if (v * k >= 14) { s = v; break; } }   // majors at least 14 px apart
-    const n = Math.max(1, Math.floor(L / (s * k))), unit = s < 1 ? 'm' : 'km', key = [Wc, k.toFixed(6), s].join('|'); if (key === lastRuler) return; lastRuler = key;
-    { const f = k / kFit(); $('zoomfactor').textContent = '×' + (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : fmt.int(Math.round(f))); }   // the zoom as a factor of the country view, beside the fit button's icon (the author's note of 25 October 2026): ×1.0 at the fit, ×0.75 at the floor
-    const labM = i => String(Math.round(s * i * (unit === 'm' ? 1000 : 1))), labW = Motion.measure(mctx, labM(n), 12, 500, 0), every = Math.max(1, Math.ceil((labW + 4) / (s * k)));   // numbers on every major, or every second, third, as the widest number allows
-    const unitShown = unit === 'm' && s * every >= 1 && Math.abs(s * every - Math.round(s * every)) < 1e-9 ? 'km' : unit, lab = i => String(Math.round(s * i * (unitShown === 'm' ? 1000 : 1)));   // whole kilometres read as km even on a half-kilometre step; a step and a half stays in metres
-    const X = i => +(RULER_PAD + i * s * k).toFixed(2), ticks = []; let d = `M${RULER_PAD} 14.5H${X(n)}`;
-    for (let i = 0; i <= n; i++) { d += ` M${X(i)} 14V23`; if (i % every === 0) ticks.push({ i, x: X(i), label: lab(i) }); }
-    for (let i = 0; i < n; i++) d += ` M${+(RULER_PAD + (i + 0.5) * s * k).toFixed(2)} 14V18`;
-    svg.setAttribute('width', Wc); svg.setAttribute('viewBox', `0 0 ${Wc} 34`);
-    svg.innerHTML = `<path d="${d}" class="rl"/>` + ticks.map(t => `<text x="${t.x}" y="33" text-anchor="middle">${t.label}</text>`).join('') + `<text x="${Wc}" y="9" text-anchor="end" class="unit">${unitShown}</text>`;
-    rulerState = { k, step: s, unit: unitShown, n, every, ticks, width: Wc, line: L, labW, pad: RULER_PAD };
+    const f = state.cam.k / kFit(), t = '×' + (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : fmt.int(Math.round(f))); if (t === lastZoomF) return; lastZoomF = t; $('zoomfactor').textContent = t;
   }
 
   // ---- side panels -------------------------------------------------------------------------------
@@ -2244,7 +2230,7 @@ void main() {
     const m = wrap.getBoundingClientRect(), W = Math.round(Math.min(640, Math.max(360, 0.6 * m.width)));
     const canvasH = Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
     el.hidden = false; const H = el.getBoundingClientRect().height;
-    const ctrl = ['zoombox', 'scalebar'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
+    const ctrl = ['zoombox'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
     const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 34 : 0)) - 12;
     el.style.top = Math.round(Math.max(12, floor - H)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
   }
@@ -2802,7 +2788,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => p.button.isConnected && !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => p.button.isConnected && !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -2872,7 +2858,6 @@ void main() {
     context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
     refs(on) { if (on === true) refsOpen(); else if (on === false) refsClose(); const d = $('refs'), r = d.getBoundingClientRect(), m = wrap.getBoundingClientRect(), n = $('superusernote');   // the REFERENCES panel (round 16)
       return { open: d.open, rect: [r.left, r.top, r.width, r.height], map: [m.left, m.top, m.width, m.height], sections: [...d.querySelectorAll('section')].map(x => x.dataset.name), links: [...d.querySelectorAll('a')].map(a => a.href), note: n ? n.textContent : null, alpha: REFS_ALPHA, focus: document.activeElement && document.activeElement.id }; },
-    ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
     mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
     binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
     hoverPixel() { const h = state.hover, p = h && (h.kind === 'pixel' ? h : h.pixel); return p ? { cell: p.cell, n: p.n, a: p.a, p: p.p, size: p.size } : null; },   // the hovered pixel (round 14)

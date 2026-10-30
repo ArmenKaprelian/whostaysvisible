@@ -240,7 +240,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 3.1. The header gives the title, the subtitle, the author line and the dissertation's title. REFERENCES at its right opens the reference panel (13).
 
-3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the scale bar and zoom buttons (7.5), and along its bottom edge the context line (7.4).
+3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the zoom buttons (7.5), and along its bottom edge the context line (7.4).
 
 3.3. The side column holds six cards: LAYER (8.1), GO TO (8.4), UNDER THE CURSOR (6.2), ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY (9.2), NATIONAL AVAILABILITY BY YEAR (9.3) and GROUPS, 2021 TO 2024 (9.4). Each card's i button opens its reading text. On the three chart cards it gives what the chart shows, its findings, the question behind it and its source. On LAYER it opens the METHOD text (8.1), on GO TO the instructions for moving the map (10.1 to 10.3), and on UNDER THE CURSOR an account of its rows, chart and disclosure rules. The legend and the mix box have i buttons of their own. The triangle buttons collapse the cards, the legend, the mix box and the NOTE.
 
@@ -333,7 +333,7 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 7.4. The context line runs along the bottom of the map, with the outline of the place it describes at its left. It gives one sentence about the place under the camera for the layer and year shown: the country at the national view, the region under the cursor or at the map's centre, or a city window when zoomed into one. On most layers the sentence gives the place's firms and its share with a statement, and in years other than 2021 the change against 2021. On Change, 2024 against 2021 it gives the shares in 2021 and 2024, on Leading industry by year the leading division and its share of revenue, on List members, 2021 how many of the place's firms are on the five lists, and in the Firms view the year's firms on no list, their coordinate pairs and the firms on the lists. A region's figures count the firms registered in the region. On a narrow map, such as a phone's, the line starts collapsed and opens in two rows with a shorter sentence. Once in a while, when nothing moves, a tip on using the page takes its place. The triangle at its right end collapses it.
 
-7.5. The scale bar shows kilometres at the current zoom. Under it, + and − zoom, and the bracket button fits the country. The ×1.0 readout gives the zoom relative to that fit.
+7.5. The zoom buttons: + and − zoom, and the bracket button fits the country. The ×1.0 readout gives the zoom relative to that fit.
 
 7.6. City names are printed on the map. A watermark of the author's initials sits near the bottom of the map.
 

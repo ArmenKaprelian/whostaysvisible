@@ -480,38 +480,6 @@ def main():
             # interface labels in tracked capitals (round 10): the computed styles of every labelled element with a tip showing and a hover on, the zoom titles, every tip fitting the strip at this width
             state("industry", 2021, "A.mode('cells'); A.strip(true); A.preset('Moscow'); A.hoverKm(m[0], m[1], { show: true }); A.tip('reset'); A.tip(true); window.__extra = { caps: %s, tips: A.tips() }; A.tip(false);" % CAPS_JS, "caps",
                   lambda r: ([("caps", "dom", b) for b in (r["extra"] or {}).get("caps", ["no result"])] + [("tips", "strip", "clipped: %s" % json.dumps(t)) for t in (r["extra"] or {}).get("tips", []) if t["clipped"]] + ([] if r["extra"] and len(r["extra"]["tips"]) >= 9 else [("tips", "strip", "fewer tips measured than expected")])))
-            # the ruler (round 12, part D, the author's request of 25 October 2026): at the three presets and the floor every major tick sits at the pad plus i times the step times
-            # the zoom, the step a 1-2-5 value in km, the numbers on every every-th major with the right values, every label inside the box and clear of its neighbours
-            RULER_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
-            def ruler_ok(r):
-                x = r["extra"]; bad = []
-                if not x: return [("ruler", "dom", "no report")]
-                for name, R in x.items():
-                    if not R or "step" not in R: bad.append(("ruler", name, "no ruler state")); continue
-                    if R["step"] not in RULER_STEPS: bad.append(("ruler", name, "step %s is not a 1-2-5 value" % R["step"]))
-                    if R["n"] < 1 or R["every"] < 1: bad.append(("ruler", name, "n %s every %s" % (R["n"], R["every"])))
-                    if R["step"] * R["k"] < 14 - 1e-6: bad.append(("ruler", name, "majors %.1f px apart, under 14" % (R["step"] * R["k"])))
-                    if (R["n"] + 1) * R["step"] * R["k"] <= R["line"] + 1e-6: bad.append(("ruler", name, "a further major would fit: n %s, line %s px, step %.2f px" % (R["n"], R["line"], R["step"] * R["k"])))
-                    if R["n"] * R["step"] * R["k"] > R["line"] + 1e-6: bad.append(("ruler", name, "the last major lies past the line's end"))
-                    mult = 1000 if R["unit"] == "m" else 1
-                    for t in R["ticks"]:
-                        want = R["pad"] + t["i"] * R["step"] * R["k"]
-                        if abs(t["x"] - want) > 0.3: bad.append(("ruler", name, "tick %d at %.2f, expected %.2f" % (t["i"], t["x"], want)))
-                        if t["i"] % R["every"]: bad.append(("ruler", name, "tick %d numbered off the every-th rule" % t["i"]))
-                        if t["label"] != str(round(R["step"] * t["i"] * mult)): bad.append(("ruler", name, "tick %d reads %r, expected %r" % (t["i"], t["label"], str(round(R["step"] * t["i"] * mult)))))
-                    if [t["i"] for t in R["ticks"]] != list(range(0, R["n"] + 1, R["every"])): bad.append(("ruler", name, "numbered ticks %s" % [t["i"] for t in R["ticks"]]))
-                    nums = [l for l in R["labels"] if not l["unit"]]; units = [l for l in R["labels"] if l["unit"]]
-                    if len(units) != 1 or units[0]["text"] != R["unit"]: bad.append(("ruler", name, "unit label %s" % json.dumps(units)))
-                    for l in R["labels"]:
-                        if l["x"] < -0.5 or l["x1"] > R["box"]["w"] + 0.5 or l["y"] < -0.5 or l["y1"] > R["box"]["h"] + 0.5: bad.append(("ruler", name, "label %r outside the box: %s" % (l["text"], json.dumps({k: round(l[k], 1) for k in ("x", "x1", "y", "y1")}))))
-                    nums.sort(key=lambda l: l["x"])
-                    for a, b in zip(nums, nums[1:]):
-                        if b["x"] < a["x1"] + 2: bad.append(("ruler", name, "labels %r and %r %.1f px apart" % (a["text"], b["text"], b["x"] - a["x1"])))
-                    for u in units:
-                        for l in nums:
-                            if not (u["y1"] <= l["y"] + 0.5 or l["y1"] <= u["y"] + 0.5) and not (u["x1"] <= l["x"] or l["x1"] <= u["x"]): bad.append(("ruler", name, "the unit label meets %r" % l["text"]))
-                return bad
-            state("share", 2021, "A.mode('cells'); const out = {}; for (const p of ['Russia', 'Moscow', 'Central Moscow (250 m)']) { A.preset(p); await A.ready(); A.redraw(); out[p] = A.ruler(); } await A.zoom(-1); A.redraw(); out.floor = A.ruler(); A.preset('Russia'); window.__extra = out;", "ruler", ruler_ok)
             # the authorship mark (round 10, item 17): on the left bracket's arm the stage colour lifted 0.04 toward the ink, the plain stage 12 px to its left (a sea point at the Russia preset), and
             # under the data at the Moscow preset on the density layer the sample is a data colour; the twin's gzip comment reads through the page
             def mark_check(under):
