@@ -345,7 +345,7 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 8.3. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a west-to-east sweep in which each of those firms swells in turn. Its label counts the firms it shows that year: {pulse_2014} in 2014, {pulse_2021} in 2021, {pulse_2024} in 2024 and {pulse_2025} in 2025. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
-8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the {n_windows} cities (on a phone, a row of city buttons takes its place), RUSSIA (fit the country), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
+8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the {n_windows} cities (on a phone, a row of city buttons takes its place), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
 8.5. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
 

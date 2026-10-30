@@ -350,9 +350,6 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .minimap { display: block; width: 100%; height: auto; overflow: visible; margin: 10px 0; color: var(--go); }   /* 10 px above and below since round 15 (item 5.3B): the trimmed drawing sits centred between the search field and the buttons */
 .minimap .land { fill: var(--land); stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .minimap .grat { fill: none; stroke: var(--graticule); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.minimap .frame { cursor: pointer; outline: none; }
-.minimap .frame path { fill: none; stroke: var(--context); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }   /* the four corner marks in the neon green at every view (round 15, the author's general point 4; they had taken the card's ice except while the RUSSIA view was active) */
-.minimap .frame:hover path, .minimap .frame:focus-visible path { stroke: var(--context-live); }
 .minimap .city { cursor: pointer; outline: none; }
 .minimap .city .dot { fill: currentColor; }
 .minimap .city .ld { fill: none; stroke: var(--go-leader); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 0; }   /* the leaders in the paler ice; the dots and box strokes in the card's blue */
@@ -360,21 +357,17 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 @keyframes mmdraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .minimap .box { fill: var(--panel); stroke: currentColor; stroke-width: 1; }
 .minimap text { fill: var(--ink); font-family: var(--font); font-size: 9px; font-weight: 500; letter-spacing: 0.08em; dominant-baseline: central; }
-.minimap .city:hover, .minimap .city:focus-visible, .minimap .frame:hover, .minimap .frame:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
+.minimap .city:hover, .minimap .city:focus-visible { color: var(--context-live); }   /* the route lights to the live green together: the dot, the leader and the box; no motion */
 .minimap .city:hover .ld, .minimap .city:focus-visible .ld { stroke: var(--context-live); }
-.minimap .city:focus-visible .box, .minimap .frame:focus-visible .box { stroke: var(--cursor-live); stroke-width: 2; }
+.minimap .city:focus-visible .box { stroke: var(--cursor-live); stroke-width: 2; }
 /* The selected preset (the author's correction of 25 October): the city whose preset the camera is on, after a click, a hash link or a flight there, shows its dot, leader, box
    stroke and name in the full neon green until the camera leaves it; RUSSIA likewise at the fit; a hover keeps the name in the ink. */
 .minimap [aria-pressed="true"] { color: var(--context); }
 .minimap [aria-pressed="true"] .ld { stroke: var(--context); }
 .minimap [aria-pressed="true"] text { fill: var(--context); }
-.minimap .city:hover text, .minimap .frame:hover text { fill: var(--ink); }
+.minimap .city:hover text { fill: var(--ink); }
 @media (max-width: 900px) { .minimap { display: none; } }
-@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } .presets { flex-direction: column; align-items: flex-start; } .presets .btn.keep { font-size: 11px; padding: 2px 6px; } }   /* under the minimap the two kept buttons stack at the left, RUSSIA above CENTRAL MOSCOW, at one size between the frame label's 9 px and the list's 12 px (the author's request of 25 October 2026) */
-.card.go .btn.russia { border-color: var(--context); color: var(--context); }   /* RUSSIA keeps the context green of the minimap's frame */
-.card.go .btn.russia:hover { border-color: var(--context-live); color: var(--context-live); }
-.card.go .btn.russia[aria-pressed="true"] { background: var(--context); color: var(--stage); border-color: var(--context); }
-.card.go .btn.russia[aria-pressed="true"]:hover { background: var(--context-live); border-color: var(--context-live); color: var(--stage); }
+@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } .presets { flex-direction: column; align-items: flex-start; } .presets .btn.keep { font-size: 11px; padding: 2px 6px; } }   /* under the minimap the kept button, CENTRAL MOSCOW (RUSSIA above it until round 30), at one size between the frame label's 9 px and the list's 12 px (the author's request of 25 October 2026) */
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 canvas.chart { width: 100%; height: 170px; display: block; }
 @media (min-width: 901px) { canvas.chart.pop { height: 124px; cursor: zoom-in; } canvas.chart.pop.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 15 (the author's item 5.4): compact in the column, a click enlarges the chart over the map */

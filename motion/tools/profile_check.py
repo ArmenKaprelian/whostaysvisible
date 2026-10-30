@@ -8,7 +8,7 @@ sentence by the page's rules and tests the rest: no semicolon in either form, th
 page's own measure), and no profile at all without the insights file.
 
 Usage: profile_check.py --page profiles.json [--fit fit.json] [--data motion/data]
-       (profiles.json: the page's window.__atlas.profiles(); fit.json: window.__atlas.profileFit())
+       (profiles.json: the page's window.__atlas.profiles(); fit.json: the tile's box fit, from builds before round 30, when the tile carried a profile box)
 As a module: check(page, data_dir, fit=None) returns a list of findings (empty when clean).
 """
 import argparse, json, math, os, re, sys

@@ -1753,7 +1753,7 @@ void main() {
   // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
   let drawQueued = false, drawAfter = null, drawMotion = false;
   function requestDraw(after, motion) { if (after) drawAfter = after; drawMotion = !!motion; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(drawMotion ? { motion: true } : undefined); drawMotion = false; const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
-  function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
+  function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
   // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons, the ruler and the tile from the hovered unit's cache; the settle, 150 ms after
@@ -2319,10 +2319,9 @@ void main() {
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
-  // One short historical fact per place (round 12, part D, item 3): a native tooltip on each minimap group and the RUSSIA frame (an SVG title) and on the phone's
+  // One short historical fact per place (round 12, part D, item 3): a native tooltip on each minimap group (an SVG title) and on the phone's
   // buttons (a title attribute); every fact verified against a reference recorded in motion/README.md, never on screen; at most 200 characters, no semicolons.
   const MM_FACTS = {
-    'Russia': 'Russia and the United States lie 3.8 km apart at the Diomede Islands in the Bering Strait. The date line runs between them, so the Russian island is almost a day ahead.',
     'Moscow': 'From 1680 to the late 19th century the Kremlin\'s walls were kept whitewashed with lime. The red brick showed again only after the coats were left to wear away, by the early 1900s.',
     'St Petersburg': 'In April 1942, with the paintings evacuated to the Urals, a Hermitage guide led visiting cadets through the halls and described the pictures by their empty frames.',
     'Novosibirsk': 'Novosibirsk began in 1893 as a camp for the Trans-Siberian bridge over the Ob and passed one million inhabitants in 1962, 69 years after its founding.',
@@ -2348,8 +2347,8 @@ void main() {
     'Central Moscow (250 m)': 'An eighth Stalin skyscraper was begun in Zaryadye in 1947 and abandoned. The Rossiya hotel rose on its foundations in 1967, and since 2017 the site has been a park.',
   };
   const slugOf = label => label.replace(/\s*\(.*\)$/, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
-  addPreset('Russia', fitTarget);
+  const addPreset = (label, target, listed = true) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; if (listed) presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
+  addPreset('Russia', fitTarget, false);   // round 30 (the author's request of 30 October 2026): no RUSSIA button and no minimap frame; the zoom box's fit button and the 0 key fit the country, and #Russia links and the audit's preset still land there
   for (const city of bmp.cities) addPreset(city.label, () => goToTarget(city));
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }); PRESETS[PRESETS.length - 1].button.classList.add('keep');   // the one button that stays under the minimap (round 10)
 
@@ -2430,21 +2429,12 @@ void main() {
     // turned every coordinate string into NaN); these lines are generated, not decoded.
     { const clip = el('clipPath', { id: 'mmlandclip' }, defs); el('path', { d, 'clip-rule': 'evenodd' }, clip);
       el('path', { class: 'grat', d: GRAT_KM.map(l => 'M' + l.map(([x, y]) => mmX(x).toFixed(1) + ' ' + mmY(y).toFixed(1)).join('L')).join(''), 'clip-path': 'url(#mmlandclip)' }, land); }
-    // the Russia frame: the mark's four brackets at the outline box's corners (10 px arms), a focusable group with the label box at the top-right corner
-    const fr = el('g', { class: 'frame', id: 'mm-russia', tabindex: 0, role: 'button', 'aria-label': 'Go to Russia', 'aria-pressed': 'false' });
-    el('title', {}, fr).textContent = MM_FACTS.Russia;   // the native tooltip (item 3)
-    const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
-    el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
     // The label widths come from the canvas, never from the SVG's own layout (the author's report of 25 October: a browser that lays the page out hidden at load
     // answered 0 from getComputedTextLength() on the published page and every box collapsed to its padding, the text spilling over the outline). The canvas measure
     // reproduces the rendered advance within 0.12 px on all 23 labels (the same font stack, the tracking counted after every glyph as the SVG lays it), and
     // verifyMinimap() rebuilds the boxes should the rendered text ever disagree, as after a late font load.
     const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
-    MMAP.russia = null;   // the frame carries no label since 25 October 2026 (the author's request): RUSSIA is a kept button under the minimap, above CENTRAL MOSCOW, in the context green; the frame keeps its brackets, its tooltip and its pressed state
-    const flyRussia = () => flyTo(fitTarget()); fr.addEventListener('click', flyRussia); fr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyRussia(); } });
-    PRESETS.find(p => p.label === 'Russia').node = fr;
-    { const rb = PRESETS.find(p => p.label === 'Russia').button; rb.classList.add('keep', 'russia'); }
     for (const city of bmp.cities) {
       const lay = (mmTry && mmTry[city.label]) || MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
       const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
@@ -2831,7 +2821,7 @@ void main() {
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
     minimapTry(over, trace) { mmTry = over || null; mmTrace = trace || null; const svg = $('minimap'); while (svg.firstChild) svg.removeChild(svg.firstChild); svg.classList.remove('drawn'); MMAP = null; buildMinimap(); drawCardGraticule(); return { f: MM_F, vx0: MM_VX0, violations: minimapCheck() }; },   // round 16: a trial layout for the hand placement (the audit and the frames)
-    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
+    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (25 October): true when it rebuilt
     ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
     layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
