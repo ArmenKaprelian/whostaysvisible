@@ -2323,6 +2323,11 @@ The publish copy is 227b1d5 and the site's import 1201de8, which changes ten fil
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 43 s), and it pushed b79f51f..1201de8. The ten changed files match the site's copy byte for byte when served live.
 
+**Follow-up (the author's requests of 30 October 2026).** The ghost names stay as they were, by the author's word.
+- **Minimap (94fd9cb).** Crimea had been drawn under Rostov-on-Don's label box, and no placement of the full name clears both the land and the layout rules. So the label reads ROSTOV in the left column, and its tooltip and button keep the full name. Khabarovsk's box, over part of Sakhalin since round 16, moves above its dot. `minimapCheck` gains a box-land rule: no label box over land other than the mainland.
+- **Profiles (fc9d26e).** The two regions have the sourced sentences their profiles need, approved by the author. Crimea: the EU's import ban of June 2014 and US Executive Order 13685. Sevastopol: the EU asset freeze on its state commercial seaport, July 2014. 83 regions now have a profile.
+- **The wire** already gave both regions' facts.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
