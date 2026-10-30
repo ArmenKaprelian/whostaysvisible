@@ -456,21 +456,22 @@
     c2.font = Motion.font(fs, 500); if ('letterSpacing' in c2) c2.letterSpacing = (fs * 0.12) + 'px'; c2.fillStyle = colour; c2.textBaseline = 'alphabetic'; c2.fillText(txt, 2, 2 + Math.round(fs * Motion.CAP));
     const b = { cv, w: w / z, h: h / z, capTop: 2 / z }; cloudBitmaps.set(key, b); return b;
   }
+  const GHOST_FULL_W = 560, ghostScale = () => Math.min(1, stage.width / GHOST_FULL_W);   // round 29 (the author's report of 30 October 2026): a map narrower than 560 px (a phone; the narrowest desktop map, at a 1,024 px window, is 578) scales the names with its width, so on a phone they keep their share of the map and their opacity; at 560 px and wider nothing changes
   let groundCache = null;   // the layout at the fit: { kf, placed: [{ city, size, dx, dy, w, h }], hidden: [...] } in screen px at kFit, offsets from the city
   function groundLayout(kf) {
-    if (groundCache && Math.abs(groundCache.kf - kf) < 1e-9) return groundCache;
+    const m = ghostScale(); if (groundCache && Math.abs(groundCache.kf - kf) < 1e-9 && groundCache.m === m) return groundCache;
     const placed = [], hidden = [], gutter = 2, meets = (a, b) => a.x < b.x + b.w + gutter && a.x + a.w + gutter > b.x && a.y < b.y + b.h + gutter && a.y + a.h + gutter > b.y;
     const at = (px, py, w, h, where) => where === 'above' ? { x: px - w / 2, y: py - 10 - h, w, h } : where === 'below' ? { x: px - w / 2, y: py + 10, w, h } : where === 'right' ? { x: px + 10, y: py - h / 2, w, h } : { x: px - 10 - w, y: py - h / 2, w, h };
     for (const g of ghostRank()) {
       const px = g.city.x * kf, py = -g.city.y * kf; let done = null;
-      for (let size = g.size; size >= GHOST_MIN && !done; size -= 2) {
+      for (let size = Math.round(g.size * m); size >= GHOST_MIN * m && !done; size -= 2) {
         const w = Motion.measure(mctx, g.city.label.toUpperCase(), size, 500, size * 0.12), h = Math.round(size * Motion.CAP);
         for (const where of ['above', 'below', 'right', 'left']) { const bx = at(px, py, w, h, where); if (!placed.some(o => meets(bx, { x: o.px + o.dx, y: o.py + o.dy, w: o.w, h: o.h }))) { done = { city: g.city, size, dx: bx.x - px, dy: bx.y - py, w, h, px, py }; break; } }
       }
       if (done) placed.push(done);
-      else { const w = Motion.measure(mctx, g.city.label.toUpperCase(), g.size, 500, g.size * 0.12), h = Math.round(g.size * Motion.CAP), bx = at(px, py, w, h, 'above'); hidden.push({ city: g.city, size: g.size, dx: bx.x - px, dy: bx.y - py, w, h, px, py }); }
+      else { const sz = Math.round(g.size * m), w = Motion.measure(mctx, g.city.label.toUpperCase(), sz, 500, sz * 0.12), h = Math.round(sz * Motion.CAP), bx = at(px, py, w, h, 'above'); hidden.push({ city: g.city, size: sz, dx: bx.x - px, dy: bx.y - py, w, h, px, py }); }
     }
-    groundCache = { kf, placed, hidden }; return groundCache;
+    groundCache = { kf, m, placed, hidden }; return groundCache;
   }
   const groundFade = r => GHOST_ALPHA * (r <= 1 / 3 ? 1 : Math.pow(1 / (3 * r), 2)) * Motion.clamp(3 - r, 0, 1);   // the fade by the name's width against the map's (round 15's)
   function drawGroundName(ctx, g, s, x, y, a, ink) {   // one name on the ground at scale s: text up to three times its size, a scaled bitmap beyond
