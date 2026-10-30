@@ -13,4 +13,4 @@
 "2025: located firms over the regions equal M5's total",3062023,3062023,0,TRUE
 "crosswalk: every matched region has a sample",0,0,0,TRUE
 "crosswalk: the lowest share of a region's sampled firms inside its polygon is at least 0.90",1,1,0,TRUE
-"crosswalk: at most 10 percent of the outside labels' samples fall inside any polygon (firms registered outside the outline but geocoded inside it)",1,1,0,TRUE
+"crosswalk: the labels mapped outside the outline are exactly Baikonur and the four occupied mainland regions (round 29)",1,1,0,TRUE

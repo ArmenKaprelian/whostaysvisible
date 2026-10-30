@@ -1,13 +1,13 @@
 {
   "id": "basemap",
-  "run_id": "20261026T000411Z-ro-M1-basemap.R",
+  "run_id": "20261030T015550Z-ro-M1-basemap.R",
   "mode": "ro",
-  "time_utc": "2026-10-26T00:07:57Z",
+  "time_utc": "2026-10-30T01:59:20Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M1-basemap.R",
-    "sha256": "1acb6e2cda5b245d5fbb20b17d3d787ba7cd79f9fadf71dcf76c34518f6fc370"
+    "sha256": "e412fb42a666b5aae14adcb12bb349f74aaa7ae2c8503ff4fec79b797537b01a"
   },
-  "lab_commit": "f4b1106d280a230a61227e21df90a13d997208bf",
+  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -35,6 +35,26 @@
       "sha256_source": "computed"
     },
     {
+      "name": "boundaries.ukr-adm1",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/geoboundaries-ukr/geoBoundaries-UKR-ADM1_simplified.geojson",
+      "kind": "geojson",
+      "generation": null,
+      "size": 761290,
+      "mtime": 1793321926,
+      "sha256": "4a5947e7497574d51f93255dfa7e03dce0c7acf6ecee52d25773a5205854a399",
+      "sha256_source": "computed"
+    },
+    {
+      "name": "boundaries.ne-land-crimea-box",
+      "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/natural-earth/ne_10m_land_crimea-box.geojson",
+      "kind": "geojson",
+      "generation": null,
+      "size": 14826,
+      "mtime": 1793324705,
+      "sha256": "ff00edddc6b97de8eb9a461a5a0732b3dba8cf718747b159d21b0daaede4f741",
+      "sha256_source": "computed"
+    },
+    {
       "name": "fig28.manifest",
       "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/programming/output/reconcile-visual-refinement-20261014/exhibits/generation-91a7a2b80fd6/maps/map-refinement-manifest.json",
       "kind": "json",
@@ -56,7 +76,7 @@
     }
   ],
   "sql": null,
-  "rows": 1637,
+  "rows": 1639,
   "r_version": "R version 4.5.2 (2025-10-31)",
   "packages": [
     {
@@ -213,19 +233,24 @@
   "duckdb": null,
   "memory_max": "none",
   "extra": {
+    "added_parts": 2,
+    "added_km2": {
+      "Crimea": 26160,
+      "Sevastopol": 907
+    },
     "vertices_in": 339862,
-    "vertices_lod0": 58490,
+    "vertices_lod0": 58665,
     "vertices_lod1": 29256,
     "lod1_parts": 115,
     "max_hausdorff_km": 0.9999,
-    "area_change_percent": 0.0026
+    "area_change_percent": 0.0028
   },
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/basemap.json",
-    "json_sha256": "e681002a4146424ce0ea772afbb20ec64b657ef6587826859437271fac7b0ba3",
-    "json_bytes": 1159783,
+    "json_sha256": "e109c44b5115952c9a2bf33bec2c29ed54f21ae752c92a0e2e2182ac82ef4c26",
+    "json_bytes": 1164373,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/basemap.js",
-    "js_sha256": "70b82dc79bf3dea2bf20d0f52e504af4a22b2d05895008cb7e99cdce36ebef8b",
-    "names": ["projection", "extents", "windows", "cities", "lod0", "land", "lod1", "graticule", "source", "notes", "name", "longitude_origin", "latitude_origin", "earth_radius_km", "units", "encoding", "national", "Moscow", "St Petersburg", "x", "y", "Novosibirsk", "Vladivostok", "Yekaterinburg", "Kazan", "Nizhny Novgorod", "Krasnodar", "Kaliningrad", "Rostov-on-Don", "Samara", "Chelyabinsk", "Omsk", "Ufa", "Perm", "Voronezh", "Volgograd", "Krasnoyarsk", "Irkutsk", "Khabarovsk", "Murmansk", "Tyumen", "label", "lon", "lat", "x_km", "y_km", "tolerance_km", "parts", "rings", "rule", "levels", "grow_km", "use_when_px_per_km_at_least", "box", "region_names", "title", "boundary_id", "year_represented", "build_date", "provider", "provider_license", "geoboundaries_acknowledgement", "url", "pinned_commit", "attribution_url", "processing"]
+    "js_sha256": "34d2228bcd5cf85eb5542927a2f599a653e8cc4c00a14ad11596cebebef91801",
+    "names": ["projection", "extents", "windows", "cities", "lod0", "land", "lod1", "graticule", "source", "source_added", "notes", "name", "longitude_origin", "latitude_origin", "earth_radius_km", "units", "encoding", "national", "Moscow", "St Petersburg", "x", "y", "Novosibirsk", "Vladivostok", "Yekaterinburg", "Kazan", "Nizhny Novgorod", "Krasnodar", "Kaliningrad", "Rostov-on-Don", "Samara", "Chelyabinsk", "Omsk", "Ufa", "Perm", "Voronezh", "Volgograd", "Krasnoyarsk", "Irkutsk", "Khabarovsk", "Murmansk", "Tyumen", "label", "lon", "lat", "x_km", "y_km", "tolerance_km", "part_count", "parts", "rings", "rule", "levels", "grow_km", "use_when_px_per_km_at_least", "box", "region_names", "title", "boundary_id", "year_represented", "build_date", "provider", "provider_license", "geoboundaries_acknowledgement", "url", "pinned_commit", "attribution_url", "processing"]
   }
 }

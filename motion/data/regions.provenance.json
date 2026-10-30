@@ -1,13 +1,13 @@
 {
   "id": "regions",
-  "run_id": "20261025T115711Z-run-M11-industry.R",
+  "run_id": "20261030T020302Z-run-M11-industry.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T11:57:45Z",
+  "time_utc": "2026-10-30T02:03:40Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M11-industry.R",
-    "sha256": "5425e9d4abf50b20c673d89f8c4aa4fbbb0df27b88ce4aa6ad2fb8f500d3c6e6"
+    "sha256": "fdd16136232e9b37537dc853fb2295d2deb058352903f8c00a355dc5e448609e"
   },
-  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
+  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -286,7 +286,7 @@
     }
   ],
   "sql": null,
-  "rows": 1020,
+  "rows": 1044,
   "r_version": "R version 4.5.2 (2025-10-31)",
   "packages": [
     {
@@ -438,7 +438,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-LgQ0BwDu/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-NEFYLCo8/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -446,10 +446,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.json",
-    "json_sha256": "e77bf5092877b12590176a48e1b6af7287d729a38e01fd0faf083f4316160419",
-    "json_bytes": 80240,
+    "json_sha256": "92e485d400a8d7bf5589d198b1e64e5ff4b4ee5d1140a2a569353dcb38731d11",
+    "json_bytes": 81635,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.js",
-    "js_sha256": "918e583c05b3c11395897f19a9b1762f019eb14bb90a255bce11cee438648ae4",
+    "js_sha256": "ed62b05359fc1671cc9522edb4e8d6e5f79b8235646dc86647658d37d8a4a8f9",
     "names": ["columns", "rows", "basis", "crosswalk", "validation", "notes", "region", "year", "n", "a", "listed", "nrev", "d1", "s1", "d2", "s2", "d3", "s3", "lsh", "osh", "od", "ods", "divisions", "classes", "division_titles_source", "region_model", "basemap_name", "lowest_inside_share", "outside_labels_inside_share", "code", "title", "short", "class", "id", "label", "colour_dark", "colour_light"]
   }
 }

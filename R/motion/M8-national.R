@@ -52,11 +52,14 @@ for (yy in years) {
 
 # ---- listed firms nationwide: coordinates, red-from, filing and state strings, pile size ---------------
 cls_sql <- paste0("1", paste(sprintf(" + CAST(y.%s > %d AS INTEGER)", PCOL, BREAKS), collapse = ""))
-tr <- lab_query(con, sprintf("SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, m.region_model, m.start_date, coalesce(nm.name, '') AS name, coalesce(nm.name_filed, '') AS name_filed, coalesce(nm.name_case, 0) AS name_case, coalesce(nm.name_shared, 0) AS name_shared, coalesce(ms.lists, '') AS lists,
+# Round 29 (30 October 2026): ordered by name (named firms first), then by the key, so a rerun keeps the firms' order. GROUP BY ALL alone
+# returned them in a new order on each run, and the tile, which names three firms at the cursor, broke its ties (same address, same
+# listing year) in that order; they now fall alphabetically, as the wire and the search sort names.
+tr <- lab_query(con, sprintf("SELECT * FROM (SELECT m.inn_key, m.x_km, m.y_km, m.red_from, m.undated, coalesce(m.inferred, false) AS inferred, m.region_model, m.start_date, coalesce(nm.name, '') AS name, coalesce(nm.name_filed, '') AS name_filed, coalesce(nm.name_case, 0) AS name_case, coalesce(nm.name_shared, 0) AS name_shared, coalesce(ms.lists, '') AS lists,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.filed THEN '1' ELSE '0' END, '' ORDER BY g.year) AS filed,
                         string_agg(CASE WHEN y.year IS NULL THEN '-' WHEN y.pct IS NOT NULL THEN CAST(%s AS VARCHAR) WHEN y.base IS NOT NULL AND NOT y.filed THEN 'd' ELSE 'b' END, '' ORDER BY g.year) AS state
                  FROM firms m CROSS JOIN (SELECT unnest(range(2014, 2026)) AS year) g LEFT JOIN fym y ON y.inn_key = m.inn_key AND y.year = g.year LEFT JOIN listnames nm ON nm.inn = m.inn_key LEFT JOIN memberships ms ON ms.inn_key = m.inn_key
-                 WHERE m.treated GROUP BY ALL", cls_sql), "treated firms nationwide")
+                 WHERE m.treated GROUP BY ALL) ORDER BY name = '', name, inn_key", cls_sql), "treated firms nationwide")
 lr <- motion_listed_revenue(); lrc <- motion_listed_revenue_cols(lr, tr$inn_key, tr$filed)
 # The wire (round 10, the author's item 14): the registry region of each listed firm as an index into the crosswalk's basemap names, and the day of its listing.
 xw <- utils::read.csv(lab_path("config", "regions-crosswalk.csv"), stringsAsFactors = FALSE, encoding = "UTF-8", colClasses = "character")

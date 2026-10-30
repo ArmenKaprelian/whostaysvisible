@@ -8,14 +8,19 @@
 "origin projects to (0,0): |x|+|y|",0,0,0.000000001,TRUE
 "Moscow reference point equals the manifest window centre (km)",0,0,0.000001,TRUE
 "LOD0 rings with a dropped vertex farther than the tolerance (count)",0,0,0,TRUE
-"area change LOD0 (percent, abs)",0,0.0026378600506462,0.5,TRUE
+"area change LOD0 (percent, abs)",0,0.00279728027631325,0.5,TRUE
 "every LOD0 ring has at least 3 distinct vertices",1,1,0,TRUE
 "Moscow LOD1 window holds Moscow and Moscow Oblast",2,2,0,TRUE
 "St Petersburg LOD1 window holds Saint Petersburg and Leningrad oblast",2,2,0,TRUE
 "graticule: 18 meridians and 8 parallels",26,26,0,TRUE
 "graticule: every meridian ends within 0.05 km of the pole",0,0,0,TRUE
 "graticule: every parallel is closed (first and last vertex within 1e-6 km)",0,0,0,TRUE
-"land union: area against the parts' own areas (percent, abs)",0,0.00000581091075470084,0.05,TRUE
+"land union: area against the parts' own areas (percent, abs)",0,0.0000059857581781208,0.05,TRUE
 "land union: five levels, coarsest first",5,5,0,TRUE
 "land levels: rings with a dropped vertex farther than the level's tolerance (count)",0,0,0,TRUE
 "land levels: vertices never fall as the tolerance falls (count of decreases)",0,0,0,TRUE
+"added regions (round 29): Crimea and Sevastopol each have at least one part",2,2,0,TRUE
+"added regions: Crimea's land against 26,081 km2 (percent, abs)",0,0.301393300604579,10,TRUE
+"added regions: Sevastopol's land against 864 km2 (percent, abs)",0,5.02758715220908,10,TRUE
+"added regions: LOD1 windows holding an added region (the pages draw them from LOD0)",0,0,0,TRUE
+"added regions: overlap of their union with the RUS parts' union (km2)",0,0,0.5,TRUE

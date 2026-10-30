@@ -1,13 +1,13 @@
 {
   "id": "national",
-  "run_id": "20261025T120308Z-run-M8-national.R",
+  "run_id": "20261030T022030Z-run-M8-national.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T12:04:13Z",
+  "time_utc": "2026-10-30T02:21:43Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M8-national.R",
-    "sha256": "425e423e78c1928fb3e355889b0103f8e4bcb80aab95b131599bdcd8b5c0ed96"
+    "sha256": "88617e4982869958ea7dd95b5a34a495b2270fc066313eaa6e85fe698a3ca76a"
   },
-  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
+  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -456,9 +456,9 @@
     }
   ],
   "duckdb": {
-    "LAB_DUCKDB_MEMORY_LIMIT": "9GB",
+    "LAB_DUCKDB_MEMORY_LIMIT": "6GB",
     "LAB_DUCKDB_THREADS": "6",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-qsZiBHkb/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-zGT2OUBu/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "60GB",
     "duckdb_version": "1.5.6"
   },

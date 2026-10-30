@@ -23,6 +23,6 @@
 "windows: top shares non-increasing",0,0,0,TRUE
 "windows: listed shares within 0 to 100",0,0,0,TRUE
 "change: the regions' firms add up to the national row",1123855,1123855,0,TRUE
-"change: never more firms than had revenue in either year",0,0,0,TRUE
+"change: never more firms than had revenue in either year (the regions)",0,0,0,TRUE
 "change: medians only where 50 or more firms",0,0,0,TRUE
 "change: every window present",22,22,0,TRUE

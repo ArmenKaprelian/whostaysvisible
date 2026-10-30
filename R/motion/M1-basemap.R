@@ -4,7 +4,8 @@
 # production function c2rr_map_project (spherical LAEA, 100E 60N, R 6371 km). Output:
 # motion/data/basemap.json: LOD0 rings simplified by Douglas-Peucker at 1 km for the national
 # view, LOD1 exact rings for the regions around the city windows, graticule, extents, city
-# reference points and licence lines. Coordinates are integers in 0.1 km, delta-encoded per ring.
+# reference points and licence lines. Coordinates are integers in 0.1 km, delta-encoded per ring. Since round 29 (30 October 2026) the
+# parts also hold Crimea and Sevastopol from the pinned geoBoundaries UKR ADM1 file, cut to land with a Natural Earth extract (below).
 source(file.path(Sys.getenv("LAB_ROOT"), "R", "lab.R")); lab_init()
 source(lab_path("R", "fig28", "fig28-common.R"))
 source(lab_path("R", "motion", "motion-common.R"))
@@ -28,6 +29,36 @@ n_parts <- length(parts); n_rings <- sum(vapply(parts, function(p) length(p$ring
 n_vertices_in <- sum(unlist(lapply(parts, function(p) vapply(p$rings, nrow, 0L)))) - n_rings   # closing vertices not counted
 prod_vertices <- sum(unlist(lapply(production$polygons, function(p) vapply(p, nrow, 0L)))) - n_rings
 same_as_production <- all(vapply(seq_len(n_parts), function(i) isTRUE(all.equal(parts[[i]]$rings, production$polygons[[i]], check.attributes = FALSE)), NA))
+
+# Crimea and Sevastopol (round 29, the author's decision of 30 October 2026) are drawn as regions like the rest, from geoBoundaries gbOpen
+# UKR ADM1 at the RUS file's commit (shapeISO UA-43 and UA-40, renamed). That file runs coastal shapes out to the 12-nautical-mile line
+# (Crimea 41,591 km2 against 26,081 of land), so each shape is intersected with Natural Earth's 1:10m land (public domain, cut to a box
+# around Crimea by scripts/ne-land-extract.py; Clipper via polyclip). They join the parts here, after the production comparison above,
+# which covers the RUS file only; the counts above stay the RUS file's.
+ADDED <- c(`UA-43` = "Crimea", `UA-40` = "Sevastopol"); ADDED_LAND_KM2 <- c(Crimea = 26081, Sevastopol = 864)
+ukr <- jsonlite::fromJSON(lab_source("boundaries.ukr-adm1", verify_hash = TRUE), simplifyVector = FALSE)
+ne_land <- jsonlite::fromJSON(lab_source("boundaries.ne-land-crimea-box", verify_hash = TRUE), simplifyVector = FALSE)
+geo_rings <- function(g) unlist(if (g$type == "Polygon") list(g$coordinates) else g$coordinates, recursive = FALSE)   # every ring of a (Multi)Polygon
+as_contour <- function(xy) list(x = xy[-nrow(xy), 1], y = xy[-nrow(xy), 2])
+contour_signed <- function(cn) { n <- length(cn$x); j <- c(2:n, 1L); sum(cn$x * cn$y[j] - cn$x[j] * cn$y) / 2 }
+in_contour <- function(px, py, cn) { x <- cn$x; y <- cn$y; j <- c(length(x), seq_len(length(x) - 1L)); sum(((y > py) != (y[j] > py)) & (px < (x[j] - x) * (py - y) / (y[j] - y + 1e-12) + x)) %% 2 == 1 }
+closed <- function(cn) { m <- cbind(cn$x, cn$y); rbind(m, m[1, ]) }
+land_box <- lapply(unlist(lapply(ne_land$features, function(f) geo_rings(f$geometry)), recursive = FALSE), function(r) as_contour(project_ring(r)))
+added <- list(); added_dropped <- 0
+for (f in ukr$features) {
+  iso <- f$properties$shapeISO; if (!iso %in% names(ADDED)) next
+  shape <- lapply(geo_rings(f$geometry), function(r) as_contour(project_ring(r)))
+  cut <- polyclip::polyclip(shape, land_box, op = "intersection", fillA = "evenodd", fillB = "evenodd")
+  sa <- vapply(cut, contour_signed, 0); outer_sign <- sign(sa[which.max(abs(sa))])   # the largest contour is an outer boundary, whichever way Clipper turns it
+  keep <- abs(sa) >= 0.5; added_dropped <- added_dropped + sum(!keep)   # slivers under half a square kilometre where the two coasts nearly meet
+  outers <- cut[keep & sign(sa) == outer_sign]; holes <- cut[keep & sign(sa) != outer_sign]
+  owner <- vapply(holes, function(h) { k <- which(vapply(outers, function(o) in_contour(h$x[1], h$y[1], o), NA)); if (length(k)) k[1] else NA_integer_ }, 0L)
+  for (k in seq_along(outers)) added[[length(added) + 1L]] <- list(name = unname(ADDED[iso]), part = k, rings = c(list(closed(outers[[k]])), lapply(holes[which(owner == k)], closed)))
+}
+added_names <- vapply(added, `[[`, "", "name")
+added_km2 <- vapply(names(ADDED_LAND_KM2), function(nm) sum(vapply(added[added_names == nm], function(p) abs(contour_signed(as_contour(p$rings[[1]]))) - sum(vapply(p$rings[-1], function(r) abs(contour_signed(as_contour(r))), 0)), 0)), 0)
+parts <- c(parts, added)
+n_rings_all <- sum(vapply(parts, function(p) length(p$rings), 0L))
 
 # Iterative Douglas-Peucker on an open chain; returns kept indices.
 dp_keep <- function(xy, tol) {
@@ -102,19 +133,24 @@ lod0 <- lapply(parts, function(p) { p$rings <- lapply(p$rings, simplify_ring, to
 # and parts that touch or overlap merge.
 ring_signed <- function(xy) sum(xy[-nrow(xy), 1] * xy[-1, 2] - xy[-1, 1] * xy[-nrow(xy), 2]) / 2
 orient <- function(xy, ccw) if ((ring_signed(xy) > 0) != ccw) xy[nrow(xy):1, , drop = FALSE] else xy
-land_in <- unlist(lapply(parts, function(p) lapply(seq_along(p$rings), function(r) { xy <- orient(p$rings[[r]], r == 1L); list(x = xy[-nrow(xy), 1], y = xy[-nrow(xy), 2]) })), recursive = FALSE)
-land_union <- polyclip::polysimplify(land_in, filltype = "nonzero", eps = 1e-4)
-land_union <- lapply(land_union, function(r) { xy <- cbind(r$x, r$y); rbind(xy, xy[1, ]) })
+contours_of <- function(ps) unlist(lapply(ps, function(p) lapply(seq_along(p$rings), function(r) { xy <- orient(p$rings[[r]], r == 1L); list(x = xy[-nrow(xy), 1], y = xy[-nrow(xy), 2]) })), recursive = FALSE)
+# Round 29: the RUS parts' union is formed alone, as before, so its rings stay exactly as they were (Clipper's integer grid takes its
+# origin from the input's extent, and Crimea lies west of every RUS part); the added regions' union follows it, and a check confirms the
+# two never overlap (the area check below cannot see an overlap between unions formed apart).
+union_rus <- polyclip::polysimplify(contours_of(parts[seq_len(n_parts)]), filltype = "nonzero", eps = 1e-4)
+union_add <- polyclip::polysimplify(contours_of(added), filltype = "nonzero", eps = 1e-4)
+added_overlap_km2 <- sum(abs(vapply(polyclip::polyclip(union_rus, union_add, op = "intersection", fillA = "nonzero", fillB = "nonzero", eps = 1e-4), contour_signed, 0)))
+land_union <- lapply(c(union_rus, union_add), function(r) { xy <- cbind(r$x, r$y); rbind(xy, xy[1, ]) })
 area_parts <- sum(vapply(parts, function(p) abs(ring_signed(p$rings[[1]])) - sum(vapply(p$rings[-1], function(xy) abs(ring_signed(xy)), 0)), 0))
 area_union <- sum(vapply(land_union, ring_signed, 0))
 land_tols <- c(16, 8, 4, 2, 1)
 # A small island collapses under a coarse tolerance, and simplify_ring then returns it at full detail; here it steps down by quarters until it keeps three vertices.
 simplify_land <- function(xy, tol) { t <- tol; repeat { r <- simplify_ring(xy, t); if (nrow(r) < nrow(xy) || t < 0.01) return(r); t <- t / 4 } }
 land_levels <- lapply(land_tols, function(t) { rs <- lapply(land_union, simplify_land, tol = t); list(tol = t, rings = rs, haus = max(mapply(ring_hausdorff, land_union, rs)), vertices = sum(vapply(rs, nrow, 0L)) - length(rs)) })
-haus <- unlist(lapply(seq_len(n_parts), function(i) vapply(seq_along(parts[[i]]$rings), function(r) ring_hausdorff(parts[[i]]$rings[[r]], lod0[[i]]$rings[[r]]), 0)))
+haus <- unlist(lapply(seq_along(parts), function(i) vapply(seq_along(parts[[i]]$rings), function(r) ring_hausdorff(parts[[i]]$rings[[r]], lod0[[i]]$rings[[r]]), 0)))
 area_in <- sum(unlist(lapply(parts, function(p) vapply(p$rings, shoelace, 0))))
 area_out <- sum(unlist(lapply(lod0, function(p) vapply(p$rings, shoelace, 0))))
-n_vertices_lod0 <- sum(unlist(lapply(lod0, function(p) vapply(p$rings, nrow, 0L)))) - n_rings
+n_vertices_lod0 <- sum(unlist(lapply(lod0, function(p) vapply(p$rings, nrow, 0L)))) - n_rings_all
 
 # Windows and LOD1 regions: exact rings for regions whose bounding box touches a city window grown by 60 km.
 manifest <- jsonlite::fromJSON(lab_source("fig28.manifest"))
@@ -174,15 +210,21 @@ out <- list(
   extents = list(national = ext$national, Moscow = ext$Moscow, `St Petersburg` = ext$`St Petersburg`),
   windows = windows,
   cities = cities,
-  lod0 = list(tolerance_km = tol_km, parts = encode_parts(lod0)),
+  lod0 = list(tolerance_km = tol_km, part_count = length(lod0), parts = encode_parts(lod0)),   # part_count: the explainer checks its load against it (round 29)
   land = list(rule = "the union of every part (Clipper via polyclip, nonzero fill after orienting outer rings counter-clockwise and holes clockwise), simplified by Douglas-Peucker at each tolerance; filled even-odd; for the atlas's national zooms only, each level while its tolerance stays under 0.3 CSS px",
               levels = lapply(land_levels, function(L) list(tolerance_km = L$tol, rings = lapply(L$rings, encode_ring)))),
   lod1 = list(tolerance_km = tol1_km, grow_km = grow1_km, use_when_px_per_km_at_least = 9,
               windows = lapply(lod1, function(w) list(label = w$label, box = w$box, region_names = w$region_names, parts = encode_parts(w$parts)))),
   graticule = lapply(grat, encode_line),
   source = raw$source,
-  notes = c("Boundaries: geoBoundaries.org gbOpen RUS ADM1 (CC BY 4.0); OpenStreetMap/Wambacher (2017), ODbL 1.0.",
-            "The outline omits Crimea, Sevastopol and the occupied Ukrainian territories; firms located there keep their cells.",
+  source_added = list(list(title = "geoBoundaries gbOpen UKR ADM1, provider simplified: UA-43 as Crimea and UA-40 as Sevastopol",
+                           boundary_id = "UKR-ADM1-14850775", year_represented = "2017", build_date = "Dec 12, 2023", provider = "OpenStreetMap, Wambacher",
+                           provider_license = "Open Data Commons Open Database License 1.0", geoboundaries_acknowledgement = raw$source$geoboundaries_acknowledgement,
+                           url = "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/UKR/ADM1/geoBoundaries-UKR-ADM1_simplified.geojson",
+                           pinned_commit = "9469f09592ced973a3448cf66b6100b741b64c0d", attribution_url = raw$source$attribution_url,
+                           processing = "the two shapes only, renamed, projected and intersected with Natural Earth 1:10m land v5.1.2 (public domain) inside lon 32 to 37, lat 44 to 46.5, since the file runs coastal shapes out to the 12-nautical-mile line")),
+  notes = c("Boundaries: geoBoundaries.org gbOpen RUS ADM1, and UKR ADM1 for Crimea and Sevastopol (CC BY 4.0); OpenStreetMap/Wambacher (2017), ODbL 1.0; the two UKR shapes cut to land with Natural Earth 1:10m land (public domain).",
+            "The outline omits the occupied parts of Donetsk, Luhansk, Zaporizhzhia and Kherson; firms located there keep their cells.",
             "Geometry is context, never a population, border or coordinate-validity screen."))
 
 checks <- motion_checks(
@@ -205,13 +247,19 @@ checks <- motion_checks(
   motion_check("land union: area against the parts' own areas (percent, abs)", 0, 100 * abs(area_union - area_parts) / area_parts, 0.05),
   motion_check("land union: five levels, coarsest first", 5, sum(diff(vapply(land_levels, `[[`, 0, "tol")) < 0) + 1),
   motion_check("land levels: rings with a dropped vertex farther than the level's tolerance (count)", 0, sum(vapply(land_levels, function(L) as.integer(L$haus > L$tol + 1e-9), 0L))),
-  motion_check("land levels: vertices never fall as the tolerance falls (count of decreases)", 0, sum(diff(vapply(land_levels, `[[`, 0, "vertices")) < 0)))
+  motion_check("land levels: vertices never fall as the tolerance falls (count of decreases)", 0, sum(diff(vapply(land_levels, `[[`, 0, "vertices")) < 0)),
+  motion_check("added regions (round 29): Crimea and Sevastopol each have at least one part", 2, length(intersect(unique(added_names), ADDED))),
+  motion_check("added regions: Crimea's land against 26,081 km2 (percent, abs)", 0, 100 * abs(added_km2[["Crimea"]] - 26081) / 26081, 10),
+  motion_check("added regions: Sevastopol's land against 864 km2 (percent, abs)", 0, 100 * abs(added_km2[["Sevastopol"]] - 864) / 864, 10),
+  motion_check("added regions: LOD1 windows holding an added region (the pages draw them from LOD0)", 0, sum(vapply(lod1, function(w) any(w$region_names %in% ADDED), NA))),
+  motion_check("added regions: overlap of their union with the RUS parts' union (km2)", 0, added_overlap_km2, 0.5))
+message(sprintf("  added regions: %s; %d parts; %d slivers under 0.5 km2 dropped", paste(sprintf("%s %.0f km2", names(added_km2), added_km2), collapse = ", "), length(added), added_dropped))
 message(sprintf("  land union: %d rings, area %.0f km2 (parts %.0f); levels %s", length(land_union), area_union, area_parts, paste(sprintf("%g km: %d vertices", land_tols, vapply(land_levels, `[[`, 0, "vertices")), collapse = ", ")))
 message(sprintf("  vertices: in %d, LOD0 %d (%.1f%%), LOD1 %d in %d clipped parts over %d windows; max Hausdorff %.3f km; area change %.3f%%",
                 n_vertices_in, n_vertices_lod0, 100 * n_vertices_lod0 / n_vertices_in, n_vertices_lod1, lod1_parts, length(lod1), max(haus), 100 * (area_out - area_in) / area_in))
 message("  Moscow LOD1 regions: ", paste(lod1$Moscow$region_names, collapse = "; "))
-motion_save_json(out, "basemap", checks = checks, rows = n_parts,
-                 extra = list(vertices_in = n_vertices_in, vertices_lod0 = n_vertices_lod0, vertices_lod1 = n_vertices_lod1,
+motion_save_json(out, "basemap", checks = checks, rows = length(parts),
+                 extra = list(added_parts = length(added), added_km2 = as.list(round(added_km2)), vertices_in = n_vertices_in, vertices_lod0 = n_vertices_lod0, vertices_lod1 = n_vertices_lod1,
                               lod1_parts = lod1_parts, max_hausdorff_km = max(haus), area_change_percent = 100 * (area_out - area_in) / area_in))
 size <- file.size(lab_path("motion", "data", "basemap.json"))
 if (size > 1.2e6) stop(sprintf("basemap.json is %.0f kB; raise the tolerance", size / 1e3))

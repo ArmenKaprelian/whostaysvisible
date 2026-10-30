@@ -114,9 +114,13 @@ cw <- lab_query(con, sprintf("SELECT w.label AS key, %s FROM chg f %s GROUP BY 1
 tidy_change <- function(d) { d$n_change <- as.integer(d$n_change); d$med_change <- round(supported(d$med_change, d$n_change), 1); d[, c("key", "n_change", "med_change")] }
 rchange <- tidy_change(rbind(cn, cr)); wchange <- tidy_change(cw)
 r21 <- regions[regions$year == 2021, ]; r24 <- regions[regions$year == 2024, ]; mc <- merge(merge(rchange, r21[, c("key", "n_rev")], by = "key"), r24[, c("key", "n_rev")], by = "key", suffixes = c("_21", "_24"))
+over <- mc[mc$n_change > pmin(mc$n_rev_21, mc$n_rev_24), ]
+if (nrow(over)) message("  change above a year's revenue count: ", paste(sprintf("%s (%d against %d and %d)", over$key, over$n_change, over$n_rev_21, over$n_rev_24), collapse = "; "))
 checks[[length(checks) + 1]] <- motion_checks(
   motion_check("change: the regions' firms add up to the national row", rchange$n_change[rchange$key == "Russia"], sum(rchange$n_change[rchange$key != "Russia"])),
-  motion_check("change: never more firms than had revenue in either year", 0, sum(mc$n_change > pmin(mc$n_rev_21, mc$n_rev_24))),
+  # Round 29: "outside the basemap outline" is left out. It holds Baikonur alone in 2021 and the occupied mainland regions from 2022, so firms
+  # registered elsewhere in 2021 join it by 2024 (18 against 6); it has no polygon and the page never shows it.
+  motion_check("change: never more firms than had revenue in either year (the regions)", 0, sum(mc$n_change > pmin(mc$n_rev_21, mc$n_rev_24) & mc$key != "outside the basemap outline")),
   motion_check("change: medians only where 50 or more firms", 0, sum(!is.na(rchange$med_change) & rchange$n_change < SUPPORT) + sum(!is.na(wchange$med_change) & wchange$n_change < SUPPORT)),
   motion_check("change: every window present", nrow(cities), nrow(wchange)))
 checks_df <- do.call(rbind, checks)

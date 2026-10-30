@@ -1,13 +1,13 @@
 {
   "id": "industry-city",
-  "run_id": "20261025T115711Z-run-M11-industry.R",
+  "run_id": "20261030T020302Z-run-M11-industry.R",
   "mode": "guarded",
-  "time_utc": "2026-10-25T11:57:45Z",
+  "time_utc": "2026-10-30T02:03:40Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M11-industry.R",
-    "sha256": "5425e9d4abf50b20c673d89f8c4aa4fbbb0df27b88ce4aa6ad2fb8f500d3c6e6"
+    "sha256": "fdd16136232e9b37537dc853fb2295d2deb058352903f8c00a355dc5e448609e"
   },
-  "lab_commit": "3c7e45184b4c2d2ec1a5dee988c7524237b2fb91",
+  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -438,7 +438,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-LgQ0BwDu/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-NEFYLCo8/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -446,10 +446,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/industry-city.json",
-    "json_sha256": "29751e7805970bd25d843a45fc25bfac8323e89840053048eb03682de234f86a",
-    "json_bytes": 4496656,
+    "json_sha256": "e6e50764f4aae227cc788e473b4c51841cd34b07f5b9aac494a05dc5edf33b66",
+    "json_bytes": 4496689,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/industry-city.js",
-    "js_sha256": "018af5c6ac6bbb7c24d37d4ebf787f7f0153b91215460845aa4355ec32a36bcb",
+    "js_sha256": "8d9fb4e3a79a5081ba2ad216d0bba27b527decd1a399b0b8caa92b9ea851c30c",
     "names": ["grid_km", "topk", "years", "windows", "city_1km", "encoding_columns", "notes", "year", "label", "origin", "count", "with_revenue", "ix", "iy", "nrev", "dom", "dsh", "rv", "top_code", "top_share"]
   }
 }
