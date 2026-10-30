@@ -10,23 +10,23 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 1.2. Point to the place on the page. Name the control, card or panel and what to press, as this guide names them. Most answers are one hover, one layer button or one link away.
 
-1.3. Keep the atlas's distinctions. A share is always of a stated population in a stated year (2.4). "Treated" names a group, not an effect (2.7). A missing statement is absent from a data release, which is not proof of concealment (13.2).
+1.3. Keep the atlas's distinctions. A share is always of a stated population in a stated year (2.4). "Treated" names a group, not an effect (2.7). A missing statement is absent from a data release, which is not proof of concealment (12.2).
 
 1.4. Firms on no list are never named in the atlas. Do not try to identify them, and do not help a viewer do so from addresses, coordinates or counts.
 
-1.5. The atlas names firms on the five lists, and FIND searches them (8.6). You may repeat what the atlas shows about such a firm: its name, its lists, the year it was added to a list, its statement status and the revenue figures in its entry (6.5).
+1.5. The atlas names firms on the five lists, and FIND searches them (8.5). You may repeat what the atlas shows about such a firm: its name, its lists, the year it was added to a list, its statement status and the revenue figures in its entry (6.5).
 
 1.6. Some source lines in the atlas name internal processing steps or files, such as "the M5 pass" or a file name ending in .csv. These identify the author's data passes. The atlas does not explain them further, so do not guess what they contain.
 
 ## 2. The data and its terms
 
-2.1. The atlas maps Russian firms and shows where their financial statements stop appearing. Its header gives its subtitle, "Where Russian firms file, and where their statements stop appearing," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (14.2).
+2.1. The atlas maps Russian firms and shows where their financial statements stop appearing. Its header gives its subtitle, "Where Russian firms file, and where their statements stop appearing," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (13.2).
 
 2.2. The data. The statements come from the Russian Financial Statements Database (RFSD), release v3.1.0 of 2 September 2026 (Bondarkov, Ledenev and Skougarevskiy 2025, Scientific Data, CC BY 4.0). The release holds 63,308,662 annual records for the financial years 2011 to 2025. Region boundaries come from geoBoundaries (gbOpen, CC BY 4.0) and OpenStreetMap through Wambacher 2017 (ODbL 1.0).
 
 2.3. Eligible firms. Every firm-year record the RFSD marks eligible, with or without a statement. Eligibility is the data provider's operational classification, not a verified legal duty to file. Eligible firms per year: 4,837,958 in 2014, 3,357,109 in 2021, 3,147,504 in 2024 and 3,125,555 in 2025.
 
-2.4. Statement availability. A statement is available when the release holds the firm's own filing for that year, filed and not imputed. The atlas's word for this is an "original statement." A share with a statement is the fraction of a group's eligible firms in a year that have one. Every share in the atlas is of one year's population. It compares years, not the same firms followed over time, unless a text says it follows firms (2.16, 12.2, 12.3, 12.5).
+2.4. Statement availability. A statement is available when the release holds the firm's own filing for that year, filed and not imputed. The atlas's word for this is an "original statement." A share with a statement is the fraction of a group's eligible firms in a year that have one. Every share in the atlas is of one year's population. It compares years, not the same firms followed over time, unless a text says it follows firms (2.16).
 
 2.5. Registered at year-end. Eligible firms that are also registered at the end of the financial year. It is the second population in the national chart (9.3) and the second line of the Statement share tile (5.2).
 
@@ -38,7 +38,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 - Firms whose membership is unknown are kept apart from the comparison group.
 - Sanctioned-only firms: firms on the sanctions list and on no other list (9.2).
 
-2.8. Dates of addition. Although memberships are fixed, the map turns a firm red from the year it was added to a list. Of the 4,803 firms on the lists, 594 are on lists without dates and are red from 2014. For 2,098 firms the date of addition is inferred rather than recorded, and their items on the context line say "(date inferred)." Firms added nationally: 68 in 2014, 33 in 2021 and 1,609 in 2024.
+2.8. Dates of addition. Although memberships are fixed, the map turns a firm red from the year it was added to a list. Of the 4,803 firms on the lists, 594 are on lists without dates and are red from 2014.
 
 2.9. Located firms. Eligible firms whose registered address has map coordinates. Unlocated firms stay in the counts but are not drawn. 97.6% of eligible firms are located in 2021 (3,277,638 of 3,357,109) and 98.0% in 2024.
 
@@ -61,15 +61,15 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.17. The 50-firm support rule and disclosure. In the Cells view a share is shown only where 50 or more firms make up its denominator. Cells, squares and regions with fewer are grey. List counts under 5 in a cell are not shown. Counts under 10 in the 250 m city cells and the 5 km density cells are banded: they read "fewer than 10." The Firms view and the 1 km squares show exact counts, and the Firms view shows each coordinate pair's own share.
 
-2.18. The 22 city windows are square areas around the cities under GO TO (8.5): Moscow, St Petersburg, Novosibirsk, Vladivostok, Yekaterinburg, Kazan, Nizhny Novgorod, Krasnodar, Kaliningrad, Rostov-on-Don, Samara, Chelyabinsk, Omsk, Ufa, Perm, Voronezh, Volgograd, Krasnoyarsk, Irkutsk, Khabarovsk, Murmansk and Tyumen. The tile names the window and its size, as in "Moscow window, 90 by 90 km." Inside them the atlas has 250 m cells for 2021 and, on the shared-pairs layer, 1 km squares.
+2.18. The 22 city windows are square areas around the cities under GO TO (8.4): Moscow, St Petersburg, Novosibirsk, Vladivostok, Yekaterinburg, Kazan, Nizhny Novgorod, Krasnodar, Kaliningrad, Rostov-on-Don, Samara, Chelyabinsk, Omsk, Ufa, Perm, Voronezh, Volgograd, Krasnoyarsk, Irkutsk, Khabarovsk, Murmansk and Tyumen. The tile names the window and its size, as in "Moscow window, 90 by 90 km." Inside them the atlas has 250 m cells for 2021 and, on the shared-pairs layer, 1 km squares.
 
 ## 3. The page
 
-3.1. The header gives the title, the subtitle, the author line and the dissertation's title. REFERENCES at its right opens the reference panel (14). LIGHT THEME switches between dark and light colours.
+3.1. The header gives the title, the subtitle, the author line and the dissertation's title. REFERENCES at its right opens the reference panel (13).
 
-3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the scale bar and zoom buttons (7.5), and along its bottom edge the context line (7.4).
+3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the zoom buttons (7.5), and along its bottom edge the context line (7.4).
 
-3.3. The side column holds six cards: LAYER (8.1), GO TO (8.5), UNDER THE CURSOR (6.2), ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY (9.2), NATIONAL AVAILABILITY BY YEAR (9.3) and GROUPS, 2021 TO 2024 (9.4). Each card's i button opens its reading text. On the three chart cards it gives what the chart shows, its findings, the question behind it and its source. On LAYER it opens the METHOD text (8.1), on GO TO the instructions for moving the map (10.1 to 10.3), and on UNDER THE CURSOR an account of its rows, chart and disclosure rules. The legend and the mix box have i buttons of their own. The triangle buttons collapse the cards, the legend, the mix box and the NOTE.
+3.3. The side column holds six cards: LAYER (8.1), GO TO (8.4), UNDER THE CURSOR (6.2), ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY (9.2), NATIONAL AVAILABILITY BY YEAR (9.3) and GROUPS, 2021 TO 2024 (9.4). Each card's i button opens its reading text. On the three chart cards it gives what the chart shows, its findings, the question behind it and its source. On LAYER it opens the METHOD text (8.1), on GO TO the instructions for moving the map (10.1 to 10.3), and on UNDER THE CURSOR an account of its rows, chart and disclosure rules. The legend and the mix box have i buttons of their own. The triangle buttons collapse the cards, the legend, the mix box and the NOTE.
 
 3.4. The footer holds the author's name, the email address with a copy button, TEACH YOUR AGENT, which copies the link to this guide, a link to the author's website, buttons for the author's X account and for sharing on X, and the data credit line: "RFSD v3.1.0, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0."
 
@@ -108,7 +108,7 @@ The LAYER card groups the layers under COUNTS, STATEMENTS and REVENUE. Some laye
 5.5. Cohort inclusion (REVENUE, fixed to 2021). The share of a cell's located eligible firms in 2021 that belong to the revenue cohort by cash share (2.16). Five classes, pooled over the supported cells: 5–33%, over 33–38, over 38–43, over 43–48 and over 48–68%. 100 km cells only. The next layer (5.6) uses the same cohort.
 
 5.6. Median revenue change (descriptive) (REVENUE, fixed). In the Cells view: the percent change of each cell's median real revenue among cohort firms observed in 2024, against the cell's 2021 median, in cells with 50 or more observed firms. Classes: more than +20%, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20% or less. 100 km cells only. It is descriptive because the firms observed change from year to year: a cell's median can move because the set of firms observed changes, not only because their revenue changed. Its source line says it is "Not a Chapter 3 estimate." Example: in the 100 km cell over Moscow, the one with the most cohort firms, 193,993 of 271,277 cohort firms are observed in 2024, and their median real revenue is 27.4% above the cell's 2021 median.
-In the Firms view the layer follows the slider and colours firms on no list by a firm-level measure: each firm's real revenue against its own 2019–2021 average, minus the year's median. Classes: −50% or less, −50 to −20, −20 to 0, 0 to +50, +50 to +150 and more than +150%. Faint marks have no usable baseline. Pixels count filers, not firms. Separately, on every layer, the context line gives "the median real-revenue change of firms on no list (comparison group) … against their own 2019 to 2021 average": +12.8% in 2014, −5.5% in 2021, −16.2% in 2024 and −18.1% in 2025*. This guide's note: the cell layer compares cell medians of a changing set of cohort firms, while the context line compares each firm with its own past, so the two can move in opposite directions without contradicting each other.
+In the Firms view the layer follows the slider and colours firms on no list by a firm-level measure: each firm's real revenue against its own 2019–2021 average, minus the year's median. Classes: −50% or less, −50 to −20, −20 to 0, 0 to +50, +50 to +150 and more than +150%. Faint marks have no usable baseline. Pixels count filers, not firms.
 
 5.7. Leading industry by year (REVENUE, follows the slider). Per cell and year, the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. Firms on the five lists are included, and the tile gives their share of the cell's revenue. Grids: 100 km and 25 km cells for 2014 to 2025, and 1 km squares for every year, coloured by the class with the largest revenue at their coordinate pairs. In the Firms view the colour is the leading class at each coordinate pair, over every firm there with a statement and a positive revenue value. Pairs without one are faint. The nine classes and their divisions:
 - Agriculture, extraction and energy: 01 to 03, 05 to 09, 35
@@ -133,13 +133,13 @@ The atlas computes this comparison from its address files. The chapter does not 
 
 ## 6. Hovering: the tile and Under the cursor
 
-6.1. The tile. Hovering the map opens a tile at the cursor. Its first line names the region and, in the Cells view on every layer but Change: state-related, ends with a red number: the firms on the five lists present in the layer's year at coordinates inside the hovered cell, counted at the cell's own size. A cell without them shows 0. The next lines give the layer's values for the cell, square, pixel, pair or region, with counts of firms. Then come the coordinates, the pixel size ("1 px = 7.4 km") and the region's or city window's headline (6.4). The tile gives the values of the cell, square or pixel. The region's own figures appear on the context line (12.7).
+6.1. The tile. Hovering the map opens a tile at the cursor. Its first line names the region and, in the Cells view on every layer but Change: state-related, ends with a red number: the firms on the five lists present in the layer's year at coordinates inside the hovered cell, counted at the cell's own size. A cell without them shows 0. The next lines give the layer's values for the cell, square, pixel, pair or region, with counts of firms. Then come the coordinates and the pixel size ("1 px = 7.4 km"). The tile gives the values of the cell, square or pixel. The region's own figures appear on the context line (7.4).
 
 6.2. UNDER THE CURSOR repeats the tile's values as labelled rows and adds a chart and the profile. In the Firms view it also lists the firms on the five lists nearby. Every share comes with its count of firms. The chart plots the share of located eligible firms with an original statement in that cell by financial year, leaving out years with fewer than 50 firms. On a 1 km square it plots the surrounding 25 km cell. The 1 km city cells plot 2019 to 2024. The 250 m cells and the 5 km density cells carry 2021 only and have no chart. On the shared-pairs layer it plots the firms at shared pairs against those elsewhere. The state-related layer shows a note in place of a chart.
 
 6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "added later" (added to a list after the year shown). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
 
-6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are 10.1 million rubles of revenue and 3.8 million of total assets. The tile carries a short headline of the same sentence. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (14.4).
+6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are 10.1 million rubles of revenue and 3.8 million of total assets. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (13.4).
 
 6.5. A firm on the five lists. The tile gives the firm's display name, the year it was added to a list ("undated" for lists without dates) and, in brackets, its share of the revenue of every firm at its coordinate pair, from its most recent statement up to the year shown. The year is named when it is not the slider's year. Under the cursor adds:
 - the name as filed, in Cyrillic
@@ -158,33 +158,23 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 7.3. NOTE states the layer's national figures for the year shown, such as the year's share with a statement and the data provider, or the Firms view's totals.
 
-7.4. The context line runs along the bottom of the map. It starts with the place under the camera and the year, as in "RUSSIA · 2024", followed by a lead sentence, then scrolls a cycle of items. Its contents:
-- facts about the place in view: the country, the registry region or the city window, depending on zoom and layer
-- national facts for the year (section 12)
-- up to four firms on the five lists that turn red in the year shown, each with its date of addition and statement status ("available", "absent", or "not in the registry", meaning the registry has no record of the firm that year), each followed by a line on its region. In 2014 these include firms added to a list before 2014.
-- for a region: how many of its registered firms are on the five lists and their share of its revenue, in the form "N of M firms registered in the region are on the five lists (treated) and hold X% of its revenue"
-- tips on using the page
-- once in a while, a cat fact
-- on some calendar days, a line on an anniversary: a firm, or a number of firms, added to a list on that day in an earlier year, or the signing of Government Decree No. 35 on 22 January 2020
-Typing c, a, t anywhere outside a text field puts a cat fact on the line. The triangle at its right end collapses it.
+7.4. The context line runs along the bottom of the map, with the outline of the place it describes at its left. It gives one sentence about the place under the camera for the layer and year shown: the country at the national view, the region under the cursor or at the map's centre, or a city window when zoomed into one. On most layers the sentence gives the place's firms and its share with a statement, and in years other than 2021 the change against 2021. On Change, 2024 against 2021 it gives the shares in 2021 and 2024, on Leading industry by year the leading division and its share of revenue, on List members, 2021 how many of the place's firms are on the five lists, and in the Firms view the year's firms on no list, their coordinate pairs and the firms on the lists. A region's figures count the firms registered in the region. On a narrow map, such as a phone's, the line starts collapsed and opens in two rows with a shorter sentence. Once in a while, when nothing moves, a tip on using the page takes its place. The triangle at its right end collapses it.
 
-7.5. The scale bar shows kilometres at the current zoom. Under it, + and − zoom, and the bracket button fits the country. The ×1.0 readout gives the zoom relative to that fit.
+7.5. The zoom buttons: + and − zoom, and the bracket button fits the country. The ×1.0 readout gives the zoom relative to that fit.
 
 7.6. City names are printed on the map. A watermark of the author's initials sits near the bottom of the map.
 
 ## 8. The LAYER and GO TO cards
 
-8.1. LAYER holds VIEW (4.1), the layer buttons in their groups (section 5), the Firms view's PAIRS SHARED BY 100+ toggle (4.7) and the year row. Its i button opens the METHOD text: a summary of the data and its counts, the current layer's source line, and "Reading the atlas", the reading rules restated in 13.1. MORE expands it.
+8.1. LAYER holds VIEW (4.1), the layer buttons in their groups (section 5), the Firms view's PAIRS SHARED BY 100+ toggle (4.7) and the year row. Its i button opens the METHOD text: a summary of the data and its counts, the current layer's source line, and "Reading the atlas", the reading rules restated in 12.1. MORE expands it.
 
 8.2. The year row appears for the layers that follow the slider (5.2, 5.7, 5.9) and in the Firms view. The slider runs from 2014 to 2025*. The play button steps the years forward one a second from the year shown to 2025, starting from 2014 if the year shown is 2025, and pauses on a second press. Its tooltip reads "Run the years from 2014 to 2025, one a second."
 
-8.3. BLINK flips the map between the year shown and a comparison year: 2021, or 2024 when the year shown is 2021. Holding B, anywhere outside a text field, does the same for as long as B is held. The button's tooltip carries a quotation about blinking.
+8.3. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a west-to-east sweep in which each of those firms swells in turn. Its label counts the firms it shows that year: 55 in 2014, 31 in 2021, 1,480 in 2024 and none in 2025. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
-8.4. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a sweep of those firms, and lines join them by distance only, not by any relation between the firms. Its label counts the firms it shows that year: 55 in 2014, 31 in 2021, 1,480 in 2024 and none in 2025. These counts are lower than the context line's national counts of firms added (2.8). The page does not explain the difference, so do not guess at it. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
+8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the 22 cities (on a phone, a row of city buttons takes its place), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
-8.5. GO TO holds FIND, a minimap of Russia whose city labels fly to the 22 cities (on a phone, a row of city buttons takes its place), RUSSIA (fit the country), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
-
-8.6. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
+8.5. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
 
 ## 9. The chart cards
 
@@ -210,7 +200,7 @@ The state-run firms are about half of the state-related firms and carry the whol
 
 10.1. Mouse. Scroll, or the + and − buttons, to zoom. Drag to pan. A click on a cell flies to it, or to its city if the cell holds one. From a city a click goes to the 20 km scale, then 2.5 times closer. In the Firms view, clicks past the 20 km scale zoom 4 times closer. Shift+click zooms back out from the point.
 
-10.2. Keys, with the map focused: + and − zoom, 0 fits the country, and the arrows pan (Shift with an arrow pans in smaller steps). Holding B blinks the map (8.3). Escape puts an enlarged chart back.
+10.2. Keys, with the map focused: + and − zoom, 0 fits the country, and the arrows pan (Shift with an arrow pans in smaller steps). Escape puts an enlarged chart back.
 
 10.3. Touch. Drag with one finger, pinch to zoom, tap a cell for its values, and double-tap to zoom.
 
@@ -237,45 +227,29 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 11.6. Shared registrations. In the four years quoted in 5.9, firms at coordinate pairs shared by 100 or more firms have a statement less often than firms elsewhere. The atlas computes this itself and marks it as descriptive, outside the chapter.
 
-## 12. Figures the context line states
+## 12. What not to infer
 
-12.1. Statements: 2,129,509 of 3,357,109 eligible firms have a statement for 2021 (63.4%), and 2,086,055 of 3,147,504 for 2024 (66.3%). For 2014: 1,784,527 of 4,837,958 (36.9%).
+12.1. The atlas's reading rules, as the METHOD text states them: descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. "Treated" names the study's group, not an effect. Every finding in section 11 is a descriptive or conditional association, so do not present a difference between groups as an effect of sanctions.
 
-12.2. Transitions. Of the firms with a 2023 statement, 150,269 of 2,086,826 have none for 2024 (7.2%). Of those without a 2023 statement, 54,790 of 812,748 have one for 2024 (6.7%). The matching figures for 2021 against 2020 are 8.8% (190,707 of 2,171,683) and 6.0% (57,135 of 945,867).
+12.2. A missing statement is absent from the RFSD release. The release does not recover the public archive as it stood in each year, so absence is not proof that a firm withheld or withdrew a statement.
 
-12.3. Removals. Of the firms without a 2023 statement, 163,496 were removed from the registry in 2024 (20.1%), against 49,743 of those with one (2.4%). For 2021: 320,707 (33.9%) against 73,674 (3.4%).
+12.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), and firms on no list are never named (1.4).
 
-12.4. Ownership. The context line gives the group sizes behind 9.4: 3,109,172 private firms in 2021 and 2,935,385 in 2024 (the state-related counts are in 5.4).
+## 13. REFERENCES
 
-12.5. One cohort followed: of the 3,413,062 firms followed from 2019, 1,236,745 had a statement in every year from 2019 to 2024 (36.2%). It is the one multi-year history the atlas gives.
+13.1. REFERENCES has seven tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, LINKS and SUPERUSER.
 
-12.6. Addresses. In 2024 the largest coordinate pair holds 3,029 firms on no list (2,444 in 2021).
+13.2. DATA gives the sources in 2.2, the five lists' provenance, the GDP deflator (World Bank, NY.GDP.DEFL.ZS.AD, rebased to 2021) and the industry and ownership classifications. DEFINITIONS gives the terms in section 2. METHODS names the chapter (chapter 2 of the dissertation in 2.1) and the tables and figures behind the panels: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map, the change layer's source) and Figure 2.8 (cohort inclusion). It also restates the models (9.2) and that they give associations, not effects.
 
-12.7. Regions. On the context line, a region's figures count the firms registered in the region, with its share with a statement and its change in points against 2021. For example, Moscow (the city) has 647,223 firms in 2024, 58.6% with a statement, −0.1 points against 2021.
+13.3. TYPE AND SOFTWARE: IBM Plex Mono (SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
 
-## 13. What not to infer
+13.4. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
 
-13.1. The atlas's reading rules, as the METHOD text states them: descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. "Treated" names the study's group, not an effect. Every finding in section 11 is a descriptive or conditional association, so do not present a difference between groups as an effect of sanctions.
+13.5. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
 
-13.2. A missing statement is absent from the RFSD release. The release does not recover the public archive as it stood in each year, so absence is not proof that a firm withheld or withdrew a statement.
+13.6. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
 
-13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
-
-## 14. REFERENCES
-
-14.1. REFERENCES has seven tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, LINKS and SUPERUSER.
-
-14.2. DATA gives the sources in 2.2, the five lists' provenance, the GDP deflator (World Bank, NY.GDP.DEFL.ZS.AD, rebased to 2021) and the industry and ownership classifications. DEFINITIONS gives the terms in section 2. METHODS names the chapter (chapter 2 of the dissertation in 2.1) and the tables and figures behind the panels: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map, the change layer's source) and Figure 2.8 (cohort inclusion). It also restates the models (9.2) and that they give associations, not effects.
-
-14.3. TYPE AND SOFTWARE: IBM Plex Mono and Tomorrow (SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
-
-14.4. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
-
-14.5. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
-
-14.6. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
-
-## 15. How to cite
+## 14. How to cite
 
 The atlas gives no citation form. This guide suggests:
 
