@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The atlas audit at the five widths, run in parallel (the lab's audit default of 26 October 2026; started by tools/audit-five.sh).
 
-Each width runs as its own atlas-audit.py process, two or three at a time. Before every launch the machine must clear the lab's
+Each width runs as its own atlas-audit.py process, all five at once since round 30 (the author's approval of 30 October 2026; two or three at a time before). Before every launch the machine must clear the lab's
 memory floors, MemAvailable and SwapFree, read from config/lab.env as scripts/lab-run.sh reads them (atlas-audit.py does not
 run under lab-run.sh, so the check is made here). When the floors are not met the next launch waits, so fewer run at once, and
 with nothing running it waits up to --max-wait and then stops without a result; the floors are never bypassed. Each process
@@ -25,7 +25,7 @@ The merged result keeps atlas-audit.py's head line unchanged (the review pages r
 says which run it came from; a mixed result is marked as not valid for a publish. Every run keeps its own folder under runs/,
 named by its start time, with each width's result and log. Nothing earlier is replaced until the new merged result is complete.
 
-Usage: tools/audit-five.sh [--url URL] [--widths 400,768,...] [--jobs 3] [--out build/audit/audit-five.txt] [--max-wait 1800]
+Usage: tools/audit-five.sh [--url URL] [--widths 400,768,...] [--jobs 5] [--out build/audit/audit-five.txt] [--max-wait 1800]
 """
 import argparse, atexit, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
@@ -71,7 +71,7 @@ def parse(path):   # one atlas-audit.py result: the head line's figures and the 
 
 def run_widths(widths, a, rundir, tag, jobs, floors):
     """Runs the widths, at most jobs at a time and each launch only when the floors are met; returns {width: result}."""
-    queue, running, done, waiting = list(widths), [], {}, None
+    queue, running, done, waiting = sorted(widths, key=lambda w: w != 1600), [], {}, None   # round 30: 1,600 px first, the longest (it also runs the REFERENCES checks)
     while queue or running:
         for r in list(running):
             if r['p'].poll() is None: continue
@@ -167,7 +167,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--url', default='http://127.0.0.1:8765/explorer.html')
     ap.add_argument('--widths', default=','.join(map(str, ALL)), help='a comma list; fewer than the five is a targeted re-run')
-    ap.add_argument('--jobs', type=int, default=3, choices=[1, 2, 3], help='widths at a time, at most')
+    ap.add_argument('--jobs', type=int, default=5, choices=[1, 2, 3, 4, 5], help='widths at a time, at most (5 since round 30; the memory floors still gate each launch)')
     ap.add_argument('--out', default=os.path.join('build', 'audit', 'audit-five.txt'), help='the merged result, relative to motion/')
     ap.add_argument('--height', type=int, default=None)
     ap.add_argument('--max-wait', type=int, default=1800, help='seconds to wait for the floors with nothing running before stopping')

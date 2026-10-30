@@ -2362,6 +2362,14 @@ Checks: each step's change proof against 3b4a7cb showed only its own changes, an
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 41 s), and it pushed 840cdfb..0bb9cd7: the atlas, the stream and the colours together.
 
+### Faster audits (30 October 2026)
+
+The author asked for three audit speedups to be checked: conditions in place of fixed sleeps, width-independent checks run once, and fewer solo re-runs. A profile of one width (every browser call and sleep timed, at 1,600 and 400 px) found the time elsewhere.
+- **The hot spot:** five 1 km-square states took 12 to 14 s each, about a third of a width. Each called `A.frameCost(20)`, which times 20 frames in the script (milliseconds) and leaves them to the headless browser's software GPU, about 0.6 s each at a city's squares, so the next state waited about 12 s. The check now times 4 frames.
+- **Five widths at once** (the author's approval of 30 October 2026, 2 or 3 before; the memory floors still gate each launch), 1,600 px first.
+- **Not done:** fixed sleeps are 12 to 18 s a width and partly inherent; checks run once would cost the layout checks each state makes at its width; solo re-runs only matter when there are findings.
+- **Result:** the five-width audit in 3 min 19 s from 6 min 55 s, the same 1,296 states and zero findings (one run, on the author's word that it proved the point).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.

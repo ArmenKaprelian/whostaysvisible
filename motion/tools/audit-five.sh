@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The atlas audit at 400, 768, 1,200, 1,600 and 2,000 px, two or three widths at a time (the lab's audit default of
+# The atlas audit at 400, 768, 1,200, 1,600 and 2,000 px, all five at once since round 30 (two or three widths at a time before, the lab's audit default of
 # 26 October 2026). Loads the lab's memory floors from config/lab.env, the values scripts/lab-run.sh enforces, and hands
 # over to tools/audit_five.py, which checks them before every launch and never bypasses them. Options: tools/audit_five.py --help.
 # Example, from the lab folder:  motion/tools/audit-five.sh               (all five widths)

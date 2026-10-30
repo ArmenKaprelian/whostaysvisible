@@ -524,7 +524,7 @@ def main():
                     if micro > 0 and (x["cost"]["mean"] > 10 or x["cost"]["max"] > 16): bad.append(("squares", "cost", "frame cost %.1f ms mean, %.1f max" % (x["cost"]["mean"], x["cost"]["max"])))
                     return bad
                 return chk
-            SQJS = "await A.ready(); A.redraw(); const M = A.mosaic(); const h = A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); const legend = document.getElementById('legendtitle').innerText; const cost = A.frameCost(20); window.__extra = { M, legend, hover: h, cost, firms: MOTION_DATA.firms.by_year[M.year].firms }; if (A.hoverOff) A.hoverOff();"
+            SQJS = "await A.ready(); A.redraw(); const M = A.mosaic(); const h = A.hoverKm(m[0] + 1.3, m[1] + 0.6, { show: true }); const legend = document.getElementById('legendtitle').innerText; const cost = A.frameCost(4); window.__extra = { M, legend, hover: h, cost, firms: MOTION_DATA.firms.by_year[M.year].firms }; if (A.hoverOff) A.hoverOff();"   # round 30: 4 frames, not 20 (each frame the script times is drawn afterwards on the headless browser's software GPU, about 0.6 s at a city's 1 km squares, so 20 held the next state about 12 s; the check reads the script's time per frame, which 4 frames give)
             state("share", 2024, "A.mode('cells'); A.preset('Russia'); " + SQJS, "sqnat", sq_ok(0, 0, "(100 km)", False))
             state("share", 2024, "A.mode('cells'); A.preset('Moscow'); " + SQJS, "sqshare", sq_ok(1, 0, "(1 km)", True))
             state("industry", 2024, "A.mode('cells'); A.preset('Moscow'); " + SQJS, "sqind", sq_ok(1, 0, "(1 km)", True))
