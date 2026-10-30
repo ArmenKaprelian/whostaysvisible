@@ -43,3 +43,7 @@ The author said to run the gate. `publish.sh`, first run:
 - the site's import 620618b changes `atlas/agent-guide.md`, `atlas/js/agent-guide.js` and the build line in `atlas/index.html`
 
 Nothing is public until the author runs `publish.sh --push`.
+
+## Published (30 October 2026, UTC)
+
+The author ran `publish.sh --push`. The site's check had zero findings in both engines (34 page loads, 42 s, `build/site-check/20261030T001910Z`), and it pushed 6650f2b..620618b. The live `agent-guide.md`, fetched through the github.io address's redirect to armenkaprelian.com, equals `publish/agent-guide.md` byte for byte, and the atlas page's build line reads e8b1e49.
