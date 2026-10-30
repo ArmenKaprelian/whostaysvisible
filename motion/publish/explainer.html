@@ -1,6 +1,6 @@
 <title>Who stays visible?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit ccdf6b434a2e">
+<meta name="build" content="commit 240d864633e9">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">
 <style>
 /* Motion pages: one dark stage by choice for the explainer; the explorer adds a light theme.
@@ -255,7 +255,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
     if (D.cells100.avail.year.length !== 7013) problems.push('cells100.avail rows ' + D.cells100.avail.year.length);
     if (D.density.national.count !== 36585) problems.push('density national cells ' + D.density.national.count);
     if (D.series.facts.located_2021 !== 3277638) problems.push('facts.located_2021 ' + D.series.facts.located_2021);
-    if (D.basemap.lod0.parts.length !== 1637) problems.push('basemap parts ' + D.basemap.lod0.parts.length);
+    { const P = D.basemap.lod0.parts; if (P.length !== D.basemap.lod0.part_count || P.some(p => !p.name || !p.rings.length)) problems.push('basemap parts ' + P.length + ' of ' + D.basemap.lod0.part_count); }   // round 29: the count M1 records with the parts, in place of a literal 1,637, so a basemap rebuild does not stop this page
     if (problems.length) throw new Error('data checks failed: ' + problems.join('; '));
     // The Moscow section's manifest checks (no rasters needed): the national rasters' Moscow pixel must sit
     // where this page projects the Moscow point at the left framing; the listed-firm counters and the cell

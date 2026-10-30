@@ -120,7 +120,7 @@ In the Firms view the layer follows the slider and colours firms on no list by a
 - Professional services: 58 to 63, 69 to 75, 77 to 82
 - Public and social: 84 to 88
 - Other: 36 to 39, 55, 56, 90 to 99, and firms without a division code
-Wholesale trade (46) leads nationally and in 58 of 83 regions in 2021 and 60 of 83 in 2024. Shares are within the year.
+Wholesale trade (46) leads nationally and in 60 of 85 regions in 2021 and 62 of 85 in 2024. Shares are within the year.
 
 5.8. List members, 2021 (COUNTS, fixed to 2021). Located members of the sanctions list per cell in 2021, at 100 km and 25 km. Classes: 5–19, 20–49 and 50 or more members, with each class's count of cells in the legend. Cells with 1 to 4 members show no count (2.17). The tile also gives the cell's members of the government strategic list. Example: the 100 km cell over Moscow holds 1,392 sanctions-list members and 239 government strategic list members among 629,730 located eligible firms.
 
