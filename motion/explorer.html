@@ -155,12 +155,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .tile .num { font-family: var(--font); font-size: 12px; font-variant-numeric: tabular-nums; }
 .t-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-top: 5px; padding-top: 4px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--context); white-space: nowrap; }
 .t-foot .firms { flex: 1 0 100%; }
-/* The profile box at the tile's foot (round 15, the author's item 9): a fixed height, so the tile never jumps as the cursor moves inside a region; 9C holds one sentence
-   on two lines, 9B the whole profile on eight; the region's or the window's name above it in tracked capitals. */
-.t-bio { margin-top: 6px; padding: 5px 7px; border: 1px solid var(--grid); box-sizing: border-box; }
-.t-bio-h { font-size: 10.5px; line-height: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.t-bio-t { font-size: 12px; line-height: 16px; height: 32px; overflow: hidden; }
-.mapwrap.narrow .t-bio { display: none; }   /* a map under 600 px wide has no profile box in its tile: the box made the tile too tall for the map and the phone's dock (round 15, the audit pass), and the profile shows in the UNDER THE CURSOR card */
+/* The tile's profile box (round 15, the author's item 9) was removed in round 30 (the author's request of 30 October 2026): the profile shows in the UNDER THE CURSOR card only. */
 /* The PROFILE block in the UNDER THE CURSOR card (9C): the whole profile of the region, the city window or the listed firm under the cursor. */
 .profile { margin: 8px 0 4px; padding-top: 6px; border-top: 1px solid var(--grid); font-size: 12px; line-height: 1.4; }
 .profile .ph { color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; margin-bottom: 3px; }
@@ -498,7 +493,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
     </div>
     <div class="ctx" id="ctxstrip"><svg class="glyph" id="ctxglyph" viewBox="0 0 22 22" aria-hidden="true"><path id="ctxpathA" pathLength="100" d=""></path><path id="ctxpathB" pathLength="100" d="" class="out"></path></svg><div class="ctxt" id="ctxtext"><div class="lead" id="ctxlead"><span class="t" id="ctxA"></span><span class="t hid" id="ctxB"></span></div></div><button class="toggle" id="ctxtoggle" type="button" aria-expanded="true" aria-controls="ctxtext" aria-label="Collapse the context line"></button></div>
     <div class="popout" id="popout" hidden role="dialog" aria-modal="false" aria-labelledby="potitle"><div class="pohead"><span class="potitle" id="potitle"></span><span class="pohint">Click to put back</span></div><canvas id="pochart" aria-hidden="true"></canvas></div>
-    <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div><div class="t-bio" id="tipbio" hidden><div class="t-bio-h" id="tipbioh"></div><div class="t-bio-t" id="tipbiot"></div></div></div>
+    <div class="tooltip tile" id="tip"><div id="tipbody"></div><div class="t-foot" id="tipfoot"><span class="coord"><span class="num" id="tlat"></span> <span id="tlatH"></span>, <span class="num" id="tlon"></span> <span id="tlonH"></span></span><span class="scale">1 px = <span class="num" id="tscale"></span><span id="tunit"></span></span><span class="firms" id="tfirmsw" hidden><span class="num" id="tfirms"></span> firms in view</span></div></div>
   </div>
   <aside class="side">
     <section class="card act" id="card-layer">
