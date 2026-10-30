@@ -2356,7 +2356,9 @@ The author asked for features that cost performance and add little to go; the pl
 
 Checks: each step's change proof against 3b4a7cb showed only its own changes, and the film's frames are unchanged. The five-width audit had zero findings over 1,301 states before the last two changes. The scale bar and the colours, on the author's one-time waiver of the long audits, had 1,600 and 400 px runs and the site's two-engine check. The 400 px run after the scale bar and the 1,600 px run after the final colours had zero findings, and so did the site's check (34 page loads in Brave and WebKit).
 
-**Approved** with revisions by the author (30 October 2026). Not published: the publish gate and the site's push are on the author's word.
+**Approved** with revisions by the author (30 October 2026).
+
+**Ready to publish** (30 October 2026, UTC), on the author's word, at the first run of `publish.sh`. The text rules passed, and the five-width audit had zero findings (1,296 states, 6 min 55 s). The publish set is 141.1 MB from build 25c003c, with 194 links, all on the expected list. It no longer holds `data/offwire.js` or the Tomorrow files. The publish copy is e04d508 and the site's import 0bb9cd7, which goes out with the site's own commits 5654abd (the stream) and 68daac9 (the colours). The site's push is the author's.
 
 ## How to add or change content
 
