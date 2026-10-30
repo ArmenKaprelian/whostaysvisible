@@ -44,7 +44,7 @@ m5 <- lab_query(con, sprintf("SELECT year, least(CAST(floor((x_km - %.9f) / 1) A
 # Our 1 km grid over the same population (all eligible firms, identifier or not, listed and city-level included).
 all1 <- lab_query(con, sprintf("SELECT year, least(CAST(floor((x_km - %.9f) / 1) AS INTEGER), 159) AS ix, least(CAST(floor((y_km - %.9f) / 1) AS INTEGER), 89) AS iy, count(*) AS n_all
                                 FROM fy_all WHERE year BETWEEN 2019 AND 2024 GROUP BY 1, 2, 3", R$xmin, R$ymin), "1 km cells over every eligible firm")
-cy <- CY$city_1km; cy <- cy[cy$label == "Moscow", ]
+cy <- motion_read_json("cellsyears-city")$city_1km; cy <- cy[cy$label == "Moscow", ]   # round 31: the 1 km cells moved to cellsyears-city.json
 dec <- function(b64, n, size) readBin(jsonlite::base64_dec(b64), "integer", n = n, size = size, endian = "little", signed = TRUE)
 m5_checks <- list(); align_checks <- list()
 for (i in seq_len(nrow(cy))) {

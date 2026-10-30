@@ -1,0 +1,25 @@
+"check","expected","observed","tolerance","pass"
+"2014: 25 km cells equal cells25's cells (count)",8031,8031,0,TRUE
+"2014: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2015: 25 km cells equal cells25's cells (count)",8011,8011,0,TRUE
+"2015: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2016: 25 km cells equal cells25's cells (count)",8002,8002,0,TRUE
+"2016: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2017: 25 km cells equal cells25's cells (count)",7930,7930,0,TRUE
+"2017: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2018: 25 km cells equal cells25's cells (count)",7890,7890,0,TRUE
+"2018: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2019: 25 km cells equal cells25's cells (count)",7824,7824,0,TRUE
+"2019: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2020: 25 km cells equal cells25's cells (count)",7745,7745,0,TRUE
+"2020: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2021: 25 km cells equal cells25's cells (count)",7702,7702,0,TRUE
+"2021: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2022: 25 km cells equal cells25's cells (count)",7777,7777,0,TRUE
+"2022: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2023: 25 km cells equal cells25's cells (count)",7801,7801,0,TRUE
+"2023: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2024: 25 km cells equal cells25's cells (count)",7810,7810,0,TRUE
+"2024: 25 km cells equal cells25's cells (set)",0,0,0,TRUE
+"2025: 25 km cells equal cells25's cells (count)",7812,7812,0,TRUE
+"2025: 25 km cells equal cells25's cells (set)",0,0,0,TRUE

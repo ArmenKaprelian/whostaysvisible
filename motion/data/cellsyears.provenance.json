@@ -1,16 +1,16 @@
 {
   "id": "cellsyears",
-  "run_id": "20261023T005141Z-run-M5-years.R",
+  "run_id": "20261030T090525Z-run-M5-years.R",
   "mode": "guarded",
-  "time_utc": "2026-10-23T00:51:50Z",
+  "time_utc": "2026-10-30T09:05:34Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M5-years.R",
-    "sha256": "726bfd708ac65fc1475d4ff7aae3ec8e30e18195e18f6b656ceaf94b0af7cebd"
+    "sha256": "5c7585248cdc4f2476fd97d87de5ca97cae9cd07c22d125421e750834e97e3e8"
   },
-  "lab_commit": "21fba8f0a90e879c9a215e9ef8bc8806eb8f630e",
+  "lab_commit": "9f057799c191ab12b1eea28831b52417b7bbca11",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
-    "dirty_files": 18,
+    "dirty_files": 20,
     "pinned_utc": "2026-10-18T19:22:42Z"
   },
   "sources": [
@@ -488,7 +488,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-y3n0up5v/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-CkKeR05R/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -496,10 +496,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/cellsyears.json",
-    "json_sha256": "f27a88595f1921f89f0a56c6514f9e27f649833298c55155e59e0c017e3e3841",
-    "json_bytes": 2466855,
+    "json_sha256": "b97f3a52459f082837b32071033ad0816d54fdb3383fb5f495146fcd69bee961",
+    "json_bytes": 386780,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/cellsyears.js",
-    "js_sha256": "cb9675f6826fd9f8a6683adcf96f083ba16fe534cf2ec36caf66169d319505cf",
-    "names": ["years", "mapped_years", "avail", "totals", "city_1km", "encoding", "notes", "year", "ix", "iy", "n", "a", "nr", "ar", "ns", "n_located", "n_available", "n_located_available", "n_registered", "n_located_registered", "n_without_payload_row", "located_share", "eligible_share", "located_eligible_share", "flagged", "label", "grid_km", "origin", "count", "sum_n", "sum_a", "max_n"]
+    "js_sha256": "4064f9565e6d0492ad1ed00796b8efa78f9f371f32ef9fcda9009916499e5864",
+    "names": ["years", "mapped_years", "avail", "totals", "city_totals", "encoding", "notes", "year", "ix", "iy", "n", "a", "nr", "ar", "ns", "n_located", "n_available", "n_located_available", "n_registered", "n_located_registered", "n_without_payload_row", "located_share", "eligible_share", "located_eligible_share", "flagged", "label", "count", "sum_n", "sum_a"]
   }
 }

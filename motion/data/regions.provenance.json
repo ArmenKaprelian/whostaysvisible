@@ -1,13 +1,13 @@
 {
   "id": "regions",
-  "run_id": "20261030T020302Z-run-M11-industry.R",
+  "run_id": "20261030T090804Z-run-M11-industry.R",
   "mode": "guarded",
-  "time_utc": "2026-10-30T02:03:40Z",
+  "time_utc": "2026-10-30T09:08:39Z",
   "script": {
     "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/R/motion/M11-industry.R",
-    "sha256": "fdd16136232e9b37537dc853fb2295d2deb058352903f8c00a355dc5e448609e"
+    "sha256": "a064da0367e3eefdb2f75e32660b4501a78fdbaf4c9ad05660a64e9dc2e9e343"
   },
-  "lab_commit": "b640e6aa3bc9abae6e063efe49566fb4327a966c",
+  "lab_commit": "9f057799c191ab12b1eea28831b52417b7bbca11",
   "programming": {
     "head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
     "dirty_files": 20,
@@ -438,7 +438,7 @@
   "duckdb": {
     "LAB_DUCKDB_MEMORY_LIMIT": "8GB",
     "LAB_DUCKDB_THREADS": "8",
-    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-NEFYLCo8/duckdb",
+    "LAB_DUCKDB_TEMP_DIRECTORY": "/var/tmp/claude-dataviz-lab-1000-zOT5Pha9/duckdb",
     "LAB_DUCKDB_MAX_TEMP": "5GB",
     "duckdb_version": "1.5.6"
   },
@@ -446,10 +446,10 @@
   "extra": [],
   "output": {
     "json": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.json",
-    "json_sha256": "92e485d400a8d7bf5589d198b1e64e5ff4b4ee5d1140a2a569353dcb38731d11",
+    "json_sha256": "106d4a3a9f0244786fb7e40222c1d8227b1383e58a3268aab76c730cd10878e3",
     "json_bytes": 81635,
     "js": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/motion/data/regions.js",
-    "js_sha256": "ed62b05359fc1671cc9522edb4e8d6e5f79b8235646dc86647658d37d8a4a8f9",
+    "js_sha256": "c7baab9302aa96f146295ba323986a256eb6d1942420f4e54c2f3f1ad7177ec6",
     "names": ["columns", "rows", "basis", "crosswalk", "validation", "notes", "region", "year", "n", "a", "listed", "nrev", "d1", "s1", "d2", "s2", "d3", "s3", "lsh", "osh", "od", "ods", "divisions", "classes", "division_titles_source", "region_model", "basemap_name", "lowest_inside_share", "outside_labels_inside_share", "code", "title", "short", "class", "id", "label", "colour_dark", "colour_light"]
   }
 }

@@ -90,8 +90,17 @@ city_layers <- unlist(lapply(names(city1), function(y) { w <- city1[[y]]; lapply
 names(city_layers) <- NULL
 
 mapped_years <- totals$year[totals$n_located > 0]   # the release carries coordinates from 2014 on; 2012-2013 have none
-out <- list(years = years, mapped_years = mapped_years, avail = avail, totals = totals, city_1km = city_layers,
-            encoding = "avail: column arrays (n located eligible firms, a with a statement, nr registered at year-end, ar registered with a statement, ns sanctions-list members or null when 1-4); city_1km: base64 little-endian int16 ix/iy and int32 n/a, a = -1 where the share is not shown",
+# Round 31: the windows' 1 km cells go to their own file (cellsyears-city.json, read by M7), and cellsyears.json, which the atlas
+# loads at start, carries only each window's totals by year (the atlas reads nothing else of them; M11 and M12 check against them).
+city_totals <- data.frame(year = vapply(city_layers, function(z) as.integer(z$year), 0L), label = vapply(city_layers, function(z) z$label, ""),
+                          count = vapply(city_layers, function(z) as.integer(z$count), 0L), sum_n = vapply(city_layers, function(z) as.integer(z$sum_n), 0L),
+                          sum_a = vapply(city_layers, function(z) as.integer(z$sum_a), 0L), stringsAsFactors = FALSE)
+motion_save_json(list(years = sort(unique(city_totals$year)), city_1km = city_layers,
+                      encoding = "city_1km: base64 little-endian int16 ix/iy and int32 n/a, a = -1 where the share is not shown; origin in km",
+                      notes = "The 22 city windows' 1 km cells by year (2019 to 2024), M5's binning; cellsyears.json carries their totals (round 31)."),
+                 "cellsyears-city", checks = checks, rows = length(city_layers))
+out <- list(years = years, mapped_years = mapped_years, avail = avail, totals = totals, city_totals = city_totals,
+            encoding = "avail: column arrays (n located eligible firms, a with a statement, nr registered at year-end, ar registered with a statement, ns sanctions-list members or null when 1-4); city_totals: each city window's 1 km cells (count), firms (sum_n) and firms with a statement (sum_a) by year; the cells are in cellsyears-city.json (round 31)",
             notes = c("Located eligible firms by financial year at registered addresses, projected and binned with the production rule; the located share differs by year and is printed with each map. The 2012 and 2013 partitions carry no coordinates, so the map starts in 2014.",
                       "Statement available: the firm's own filing for the year is in the release (filed, not imputed). 2011 has no statements; 2025 is the flagged latest year.",
                       "Providers: Rosstat for 2012-2018 and FNS for 2019-2025; no transition crosses the boundary.",

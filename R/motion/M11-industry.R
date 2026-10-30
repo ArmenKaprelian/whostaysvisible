@@ -14,7 +14,7 @@ source(lab_path("R", "motion", "industry-common.R"))
 con <- lab_duck_connect(); on.exit(lab_duck_disconnect(con))
 cy <- motion_read_json("cellsyears"); c25 <- motion_read_json("cells25")
 bm <- jsonlite::fromJSON(file.path(motion_data_dir(), "basemap.json"), simplifyVector = FALSE)   # the parts as lists, for the ray casting
-totals <- as.data.frame(cy$totals); avail <- as.data.frame(cy$avail); city1km <- as.data.frame(cy$city_1km[c("year", "label", "count", "sum_n")])
+totals <- as.data.frame(cy$totals); avail <- as.data.frame(cy$avail); city1km <- as.data.frame(cy$city_totals[c("year", "label", "count", "sum_n")])   # round 31: the windows' totals
 cities <- as.data.frame(lapply(bm$cities, unlist), stringsAsFactors = FALSE); cities$x_km <- as.numeric(cities$x_km); cities$y_km <- as.numeric(cities$y_km)
 years <- as.integer(cy$mapped_years)
 xw <- utils::read.csv(lab_path("config", "regions-crosswalk.csv"), stringsAsFactors = FALSE, encoding = "UTF-8", colClasses = "character")
@@ -31,7 +31,7 @@ located_sql <- function(y) sprintf("
        a AS (SELECT *, coalesce(isfinite(lon) AND isfinite(lat) AND lon BETWEEN -180 AND 180 AND lat BETWEEN -90 AND 90, false) AS bounds_valid,
                     lat * pi() / 180 AS phi, ((lon - 100 + 180) - 360 * floor((lon - 100 + 180) / 360) - 180) * pi() / 180 AS dl FROM j),
        b AS (SELECT *, 1 + sin(pi() / 3) * sin(phi) + cos(pi() / 3) * cos(phi) * cos(dl) AS den FROM a)
-  SELECT original_available, industry2, region_model, listed, coalesce(geocoding_quality = 'city', false) AS city_level,
+  SELECT source_row, original_available, industry2, region_model, listed, coalesce(geocoding_quality = 'city', false) AS city_level,
          CASE WHEN original_available = 1 AND line_2110 > 0 THEN line_2110 END AS rev, %s AS div,
          coalesce(bounds_valid AND den > 1e-12, false) AS located,
          CASE WHEN bounds_valid AND den > 1e-12 THEN 6371 * sqrt(2 / den) * cos(phi) * sin(dl) END AS x_km,
@@ -155,6 +155,8 @@ regions <- do.call(rbind, reg); regions <- regions[order(regions$region != "Russ
 # which have no located firms before 2022. Their 2024 geocodes fall inside a polygon for 38 percent of a sample, by the geocoder's
 # misplacements (most Luhansk-registered firms and many Donetsk-registered ones at Crimean places, Simferopol above all; Baikonur's at
 # Russian addresses), so that share is recorded, not checked, and the check names the outside labels instead.
+# Round 31: the samples are ordered by a hash of each firm's source row, not random(), so a run is reproducible (a random sample put
+# Chechnya at 0.895 on 30 October 2026, 0.925 the run before: the sampling error at 200 firms is about 0.02).
 decode_ring <- function(v) { v <- as.integer(unlist(v)); n <- length(v) / 2; x <- cumsum(v[seq(1, by = 2, length.out = n)]) / 10; y <- cumsum(v[seq(2, by = 2, length.out = n)]) / 10; cbind(x, y) }
 inside_rings <- function(px, py, rings) {   # even-odd over all rings of a region's parts
   hit <- rep(FALSE, length(px))
@@ -166,13 +168,13 @@ inside_rings <- function(px, py, rings) {   # even-odd over all rings of a regio
 }
 parts <- bm$lod0$parts; part_names <- vapply(parts, function(p) p$name, "")
 rings_of <- function(name) unlist(lapply(parts[part_names == name], function(p) lapply(p$rings, decode_ring)), recursive = FALSE)
-smp <- lab_query(con, sprintf("SELECT region_model, x_km, y_km FROM (%s) WHERE located QUALIFY row_number() OVER (PARTITION BY region_model ORDER BY random()) <= 200", located_sql(2021)), "2021 sample per region")
+smp <- lab_query(con, sprintf("SELECT region_model, x_km, y_km FROM (%s) WHERE located QUALIFY row_number() OVER (PARTITION BY region_model ORDER BY hash(source_row)) <= 200", located_sql(2021)), "2021 sample per region")
 smp$region <- xw$basemap_name[match(smp$region_model, xw$region_model)]
 matched <- setdiff(unique(xw$basemap_name), c("outside the basemap outline", "region not recorded"))
 share_in <- vapply(matched, function(nm) { s <- smp[smp$region == nm, ]; if (!nrow(s)) return(NA_real_); mean(inside_rings(s$x_km, s$y_km, rings_of(nm))) }, 0)
 all_rings <- unlist(lapply(parts, function(p) lapply(p$rings, decode_ring)), recursive = FALSE)
 outside_labels <- xw$region_model[xw$basemap_name == "outside the basemap outline"]
-so <- lab_query(con, sprintf("SELECT region_model, x_km, y_km FROM (%s) WHERE located AND region_model IN (%s) QUALIFY row_number() OVER (PARTITION BY region_model ORDER BY random()) <= 200",
+so <- lab_query(con, sprintf("SELECT region_model, x_km, y_km FROM (%s) WHERE located AND region_model IN (%s) QUALIFY row_number() OVER (PARTITION BY region_model ORDER BY hash(source_row)) <= 200",
                              located_sql(2024), paste0("'", gsub("'", "''", outside_labels), "'", collapse = ", ")), "2024 sample of the outside labels")
 out_in <- if (nrow(so)) mean(inside_rings(so$x_km, so$y_km, all_rings)) else 0
 checks[[length(checks) + 1]] <- motion_checks(
@@ -185,7 +187,7 @@ worst <- sort(share_in)[1:5]
 message(sprintf("  crosswalk validation: lowest inside shares %s; outside labels inside any polygon %.3f (2024 sample of %d)", paste(sprintf("%s %.3f", names(worst), worst), collapse = ", "), out_in, nrow(so)))
 
 tabs <- ind_tables(titles)
-out <- c(list(grid100 = list(grid_km = 100, origin = c(0, 0), topk = TOPK100, by_year = g100), grid25 = list(grid_km = G, origin = c(0, 0), topk = TOPK25, by_year = g25),
+out <- c(list(grid100 = list(grid_km = 100, origin = c(0, 0), topk = TOPK100, by_year = g100), grid25 = list(file = "industry25.json", grid_km = G, topk = TOPK25),   # round 31: the 25 km cells in their own file, which the atlas loads after its first draw
               city_1km = list(file = "industry-city.json", windows = length(city1), topk = TOPK1, years = 2019:2024),
               years = years, population = "every located eligible firm at its registered address (listed firms and other geocodes included); the revenue mix over firms with a statement and a positive revenue value that year",
               consistency_2021 = diag21,
@@ -193,7 +195,10 @@ out <- c(list(grid100 = list(grid_km = 100, origin = c(0, 0), topk = TOPK100, by
               notes = c("The leading division is the one with the largest share of nominal revenue (line 2110) at the cell among firms with a statement and a positive revenue value; shares are within the year.",
                         "Firms on the five lists (treated) are included; lsh is their share of the cell's revenue. The 1 km city cells (industry-city.json, 2019 to 2024) carry the same eight rows.",
                         "Registered addresses, not operating sites; annual populations, not the same firms; descriptive.")), tabs)
-motion_save_json(out, "industry", checks = checks_df, rows = sum(vapply(g25, function(z) z$count, 0)))
+motion_save_json(out, "industry", checks = checks_df, rows = sum(vapply(g100, function(z) z$count, 0)))
+motion_save_json(list(grid25 = list(grid_km = G, origin = c(0, 0), topk = TOPK25, by_year = g25), years = years, encoding_columns = out$encoding_columns,
+                      notes = "The 25 km cells of industry.json (round 31: their own file, which the atlas loads after its first draw); the same columns and rules."),
+                 "industry25", checks = checks_df[grepl("25 km", checks_df$check), ], rows = sum(vapply(g25, function(z) z$count, 0)))
 cityout <- list(grid_km = 1, topk = TOPK1, years = 2019:2024, windows = length(city1), city_1km = city1,
                 encoding_columns = "base64 little-endian: ix, iy, nrev int16; dom, dsh u8; rv int16 (a log code of the cell's revenue in thousands of rubles, 10^((rv - 1) / 100), 0 without revenue); top_code and top_share u8 row-major with topk entries per cell, 255 and 0 padding",
                 notes = "The 22 city windows' 1 km cells by year, as M5 joins them: the divisions with revenue in the cell by share descending (up to eight) and the cell's revenue code; loaded by the atlas when the industry layer reaches a city window.")

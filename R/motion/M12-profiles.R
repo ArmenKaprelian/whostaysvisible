@@ -15,7 +15,7 @@ source(lab_path("R", "motion", "industry-common.R"))
 con <- lab_duck_connect(); on.exit(lab_duck_disconnect(con))
 cy <- motion_read_json("cellsyears"); rg <- as.data.frame(motion_read_json("regions")[c("region", "year", "n", "a")], stringsAsFactors = FALSE)
 basemap <- motion_read_json("basemap"); cities <- as.data.frame(basemap$cities, stringsAsFactors = FALSE)
-totals <- as.data.frame(cy$totals); city1km <- as.data.frame(cy$city_1km[c("year", "label", "count", "sum_n")])
+totals <- as.data.frame(cy$totals); city1km <- as.data.frame(cy$city_totals[c("year", "label", "count", "sum_n")])   # round 31: the windows' totals
 xw <- utils::read.csv(lab_path("config", "regions-crosswalk.csv"), stringsAsFactors = FALSE, encoding = "UTF-8", colClasses = "character")
 YEARS <- c(2021L, 2024L); SUPPORT <- 50L; TOPK <- 3L
 exec <- function(sql, label) { t0 <- proc.time()[["elapsed"]]; DBI::dbExecute(con, sql); message(sprintf("  %s: %.1f s", label, proc.time()[["elapsed"]] - t0)) }
