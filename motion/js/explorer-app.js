@@ -802,12 +802,11 @@ void main() {
   // and never rimmed or pulsed. The marks' size, halo, opacity and rim follow MM.listedRule by zoom (25 October 2026):
   // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red pulse
   // once (round 24, the author's pick E of 29 October 2026): a sweep crosses the view west to east by longitude in 1.5 s, each
-  // firm swells (MM.swellPeak) as it passes, and the year's minimum spanning tree by distance traces behind it, each edge held
-  // 0.3 s once drawn and gone over 0.6 s, so a line lasts exactly as long as the swell at its east end. Backward changes show
-  // nothing, and the Cells view keeps its dot. The pulse button beside the year slider replays the pulse for the firms added
-  // to a list in the shown year; under prefers-reduced-motion a pulse is a still highlight (the swell held at 0.6 and the whole
-  // tree drawn) for the same 2.4 s.
-  const PASS_MS = 1500, TRAIL_HOLD = 300, TRAIL_FADE = 600, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
+  // firm swells (MM.swellPeak) as it passes. The minimum spanning tree that traced behind the sweep (round 24) was removed on the
+  // author's request of 30 October 2026 (round 30). Backward changes show nothing, and the Cells view keeps its dot. The pulse
+  // button beside the year slider replays the pulse for the firms added to a list in the shown year; under prefers-reduced-motion
+  // a pulse is a still highlight (the swell held at 0.6) for the same 2.4 s.
+  const PASS_MS = 1500, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
   let pulse = null, pulseRaf = 0, pulseTimer = 0;
   const pulseDelay = new Float32Array(TRN.n);   // each firm's start delay in the running pulse (ms), filled once per pulse: the west-to-east sweep
   // The sweep goes by longitude. The km plane is spherical LAEA about 60 N, 100 E (map-layers.js), so a firm's longitude is the inverse projection, computed once.
@@ -824,47 +823,6 @@ void main() {
     const span = l1 > l0 ? l1 - l0 : 0;
     for (let i = 0; i < TRN.n; i++) pulseDelay[i] = mask[i] && span ? PASS_MS * Motion.clamp((L[i] - l0) / span, 0, 1) : 0;
   }
-  // The trail's tree: Prim's minimum spanning tree over a mask's firms by km distance, O(n^2) on typed arrays (5 to 10 ms for 2024's 1,480), each edge
-  // kept west end first so it traces with the sweep. One per mask: a year's mask is manualMask's, so one per year, built in idle time (warmTree) for the
-  // shown year and the next, so a pulse never waits for one.
-  const trees = new WeakMap();
-  function treeOf(mask) {
-    let T = trees.get(mask); if (T) return T;
-    const L = lonOf(), idx = []; for (let i = 0; i < TRN.n; i++) if (mask[i]) idx.push(i);
-    const m = idx.length, X = new Float64Array(m), Y = new Float64Array(m), best = new Float64Array(m).fill(Infinity), from = new Int32Array(m), used = new Uint8Array(m);
-    for (let j = 0; j < m; j++) { X[j] = TRN.x[idx[j]]; Y[j] = TRN.y[idx[j]]; }
-    const a = new Int32Array(Math.max(0, m - 1)), b = new Int32Array(Math.max(0, m - 1)); let n = 0, cur = 0; if (m) used[0] = 1;
-    for (let it = 1; it < m; it++) {
-      const cx = X[cur], cy = Y[cur]; let bi = -1, bd = Infinity;
-      for (let j = 0; j < m; j++) { if (used[j]) continue; const dx = X[j] - cx, dy = Y[j] - cy, d = dx * dx + dy * dy; if (d < best[j]) { best[j] = d; from[j] = cur; } if (best[j] < bd) { bd = best[j]; bi = j; } }
-      used[bi] = 1; const p = idx[from[bi]], q = idx[bi]; if (L[p] <= L[q]) { a[n] = p; b[n] = q; } else { a[n] = q; b[n] = p; } n++; cur = bi;
-    }
-    T = { a, b, n }; trees.set(mask, T); return T;
-  }
-  function warmTree(y) { if (!TRN || y < 2015 || y > 2025) return; const m = manualMask(y); if (m.count && !trees.has(m.mask)) onIdle(() => treeOf(m.mask)); }
-  // The trail, under the marks: each edge traces from its west end as the sweep passes, then holds and fades, so the lines follow the front and leave
-  // nothing behind. Edges shorter than a swelling disc's radius are skipped (they lie inside the swells), and edges off the view; the traced ones go in
-  // four opacity steps and the tracing ones in one, each batch stroked once on a casing in the stage colour, as the Cells view's dot has.
-  function drawTrail(c, t, st) {
-    const T = treeOf(pulse.mask), k = c.k, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width, H = stage.height;
-    const LR = MM.listedRule(markRule(k), k, kFit()), rr = LR.rMin + MM.swellPeak(LR.rMin), min2 = Math.max(36, rr * rr);
-    const live = new Path2D(), steps = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], A = [1, 0.75, 0.5, 0.25];
-    for (let e = 0; e < T.n; e++) {
-      const i = T.a[e], j = T.b[e], ax = ox + TRN.x[i] * k, ay = oy - TRN.y[i] * k, bx = ox + TRN.x[j] * k, by = oy - TRN.y[j] * k, dx = bx - ax, dy = by - ay;
-      if (dx * dx + dy * dy < min2) continue;
-      if ((ax < 0 && bx < 0) || (ax > W && bx > W) || (ay < 0 && by < 0) || (ay > H && by > H)) continue;
-      if (st) { steps[1].moveTo(ax, ay); steps[1].lineTo(bx, by); continue; }   // reduced motion: the whole tree, still
-      const da = pulseDelay[i], db = pulseDelay[j]; if (t < da) continue;
-      const f = db > da ? Math.min(1, (t - da) / (db - da)) : 1;
-      if (f < 1) { live.moveTo(ax, ay); live.lineTo(ax + dx * f, ay + dy * f); continue; }
-      const age = t - db - TRAIL_HOLD; if (age >= TRAIL_FADE) continue;
-      const q = age <= 0 ? 0 : Math.min(3, Math.floor(age / TRAIL_FADE * 4)); steps[q].moveTo(ax, ay); steps[q].lineTo(bx, by);
-    }
-    kctx.save(); kctx.lineCap = 'round';
-    for (let q = 3; q >= 0; q--) { kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6 * A[q]; kctx.lineWidth = 3.5; kctx.stroke(steps[q]); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 0.85 * A[q]; kctx.lineWidth = 1.5; kctx.stroke(steps[q]); }
-    kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6; kctx.lineWidth = 4.5; kctx.stroke(live); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 1; kctx.lineWidth = 2.5; kctx.stroke(live);
-    kctx.restore();
-  }
   const setLive = on => $('yearrow').classList.toggle('live', !!on);   // the context layer's live marker while a pulse runs (round 9)
   function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; setLive(false); }
   function beginPulse(mask, count) {
@@ -879,8 +837,7 @@ void main() {
     if (!TRN || yNew < yPrev) return;
     const mask = new Uint8Array(TRN.n), yi = yNew - 2014; let any = 0;
     for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] > yPrev && TRN.red_from[i] <= yNew && TRN.filed[i][yi] !== '-') { mask[i] = 1; any++; }
-    warmTree(yNew + 1);
-    if (any) beginPulse(yNew - yPrev === 1 && yNew > 2014 ? manualMask(yNew).mask : mask, any);   // a one-year step is the year's own set (undated firms date from 2014): its cached mask, so its tree is reused
+    if (any) beginPulse(yNew - yPrev === 1 && yNew > 2014 ? manualMask(yNew).mask : mask, any);   // a one-year step is the year's own set (undated firms date from 2014): its cached mask
   }
   function pulseTick() { pulseRaf = 0; if (!pulse) return; if (performance.now() - pulse.t0 >= PULSE_MS) pulse = null; if (state.mode === 'firms') drawMarks(cam()); if (pulse) pulseRaf = requestAnimationFrame(pulseTick); }
   const manualMasks = new Map();   // per year: the dated firms listed that year and present in it (undated firms never pulse)
@@ -892,9 +849,8 @@ void main() {
   function syncPulseButton() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
-    if (state.mode === 'firms' && FIRMS_OK) warmTree(y);   // the shown year's trail tree, in idle time (round 24)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}. Lines join them by distance only.` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
     const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
@@ -994,7 +950,6 @@ void main() {
     const st = !!(pulse && pulse.static), tNow = pulse ? (pulse.at != null ? pulse.at : now - pulse.t0) : 0;
     const ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN;
     if (markShared) sharedRings(c);   // round 16: the shared pairs, under the listed marks
-    if (pulse) drawTrail(c, tNow, st);   // round 24: the pulse's trail, under the listed marks
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
       const pulsing = !!(pulse && pulse.mask[i]);

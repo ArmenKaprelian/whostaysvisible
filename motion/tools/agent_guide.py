@@ -353,7 +353,7 @@ Typing c, a, t anywhere outside a text field puts a cat fact on the line. The tr
 
 8.3. BLINK flips the map between the year shown and a comparison year: 2021, or 2024 when the year shown is 2021. Holding B, anywhere outside a text field, does the same for as long as B is held. The button's tooltip carries a quotation about blinking.
 
-8.4. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a sweep of those firms, and lines join them by distance only, not by any relation between the firms. Its label counts the firms it shows that year: {pulse_2014} in 2014, {pulse_2021} in 2021, {pulse_2024} in 2024 and {pulse_2025} in 2025. These counts are lower than the context line's national counts of firms added (2.8). The page does not explain the difference, so do not guess at it. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
+8.4. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a west-to-east sweep in which each of those firms swells in turn. Its label counts the firms it shows that year: {pulse_2014} in 2014, {pulse_2021} in 2021, {pulse_2024} in 2024 and {pulse_2025} in 2025. These counts are lower than the context line's national counts of firms added (2.8). The page does not explain the difference, so do not guess at it. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
 8.5. GO TO holds FIND, a minimap of Russia whose city labels fly to the {n_windows} cities (on a phone, a row of city buttons takes its place), RUSSIA (fit the country), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
@@ -432,7 +432,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 13.2. A missing statement is absent from the RFSD release. The release does not recover the public archive as it stood in each year, so absence is not proof that a firm withheld or withdrew a statement.
 
-13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
+13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), and firms on no list are never named (1.4).
 
 ## 14. REFERENCES
 

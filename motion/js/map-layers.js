@@ -344,7 +344,7 @@
     ctx.restore();
   };
   // The atlas's listed pulse since round 22 (the author's pick A of 29 October 2026): each new red mark swells to r + swellPeak(r) and settles back over
-  // 0.9 s, with no ring, no glow and no pale core (since round 24 the marks start as a west-to-east sweep passes them, with the tree's trail: explorer-app.js); on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
+  // 0.9 s, with no ring, no glow and no pale core (since round 24 the marks start as a west-to-east sweep passes them: explorer-app.js); on the Cells view a red dot at each pulsing cell's centre swells and goes (swellDot), cased in the stage colour. The 44 to 64 px ring
   // before it read as an explosion, and painting 1,480 of them (2024) dropped about a third of the frames; the swell draws one disc per firm.
   M.SWELL = 0.9;   // seconds
   M.swellPeak = r => Math.min(18, Math.max(7.5, 3.6 * r));   // the extra radius at the peak, px: three times round 22's (the author's requests of 29 October 2026: 2.5 to 6 px read too quiet, round 23's 5 to 12 px too; round 24 doubled that, then took 25 percent off it with the trail)
