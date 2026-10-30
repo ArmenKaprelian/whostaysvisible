@@ -3024,10 +3024,6 @@ void main() {
       `<b>IBM Plex Mono</b> (IBM) and <b>Tomorrow</b>, SIL Open Font License 1.1, from Google Fonts.`,
       `<b>DejaVu Sans Mono</b>, Bitstream Vera licence with DejaVu's changes in the public domain, for the Armenian letters.`,
       `<b>The data passes</b>: R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.`]]);
-    S.push(['corrections', 'Corrections', [
-      `<b>29 October 2026</b>: corrected one chart, whose labels could sit beside the wrong points, and two statements that called the state-run firms largely the same as all state-related firms. They are about half of them and carry the group’s whole decline.`,
-      `<b>28 October 2026</b>: corrected three source references, six statements on the method and its disclosure rules, three figures or counts as labelled, one legend row and one tip. The round's record in the lab's README names each.`,
-      `<b>27 October 2026</b>: the city windows' shares with a statement now read the windows' own totals. Before, each window summed its cells, counting the firms of cells whose statements are withheld and none of their statements, so every window's share read 1.4 to 17.4 points low (median 7.2).`]]);
     S.push(['links', 'Links', [
       `<b>EMAIL</b> armenkaprelian@gmail.com <button class="btn sq" type="button" id="refscopy" aria-label="Copy the email address" title="COPY THE EMAIL ADDRESS"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 5V3h8v8h-2M3 5h8v8H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button><span class="copied" id="refscopied" hidden>&gt;text copied</span>`,
       `<b>WEBSITE</b> ${lnk(SITE_URL, 'armenkaprelian.github.io')}`,

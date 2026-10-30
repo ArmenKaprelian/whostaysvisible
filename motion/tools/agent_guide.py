@@ -5,7 +5,7 @@ on 29 October 2026 at the author's request, from the atlas's own texts only).
 Builds the Markdown guide from the fixed text below (TEMPLATE) and the figures of the shipped data files (figures()), formatted as the page
 formats them (tools/jsfmt.py), and writes it into js/agent-guide.js as a static string. The text describes only what the atlas shows: its terms,
 both views and every layer, the tile and panels, the context line, the controls and view links, the charts, the findings as the atlas states
-them, the limits and REFERENCES. Its CORRECTIONS entries are read from js/explorer-app.js. Its figures are the page's: each one is computed from
+them, the limits and REFERENCES. Its figures are the page's: each one is computed from
 the field the page reads, so a change of the data changes the guide and nothing in it is typed by hand.
 
 It is kept current without a hand in it (the author's revision of 26 October 2026): tools/publish-set.py rebuilds it at every publish from the
@@ -35,12 +35,8 @@ GUIDE_URL = ATLAS + 'agent-guide.md'
 def dec(v, d=3): return to_fixed(v, d)                                        # Motion.fmt.dec, three decimals by default here
 def share(a, n): return pct(100 * a / n)
 
-def app_js(data_dir):   # the page's script beside the data folder (the CORRECTIONS entries and the LAYERS list)
+def app_js(data_dir):   # the page's script beside the data folder (the LAYERS list)
     return open(os.path.join(data_dir, '..', 'js', 'explorer-app.js'), encoding='utf-8').read()
-def corrections(js):   # [(date, text)] of the REFERENCES panel's CORRECTIONS, newest first, as tools/publish-set.py reads them, tags removed
-    m = re.search(r"S\.push\(\['corrections'.*?\]\]\);", js, re.S)
-    out = re.findall(r"`<b>(\d{1,2} [A-Z][a-z]+ \d{4})</b>: (.*?)`", m.group(0), re.S) if m else []
-    return [(d, re.sub(r'<[^>]+>', '', t)) for d, t in out]
 def layers(js):   # [(id, label)] of the page's LAYERS, the array and the layers pushed after it
     return re.findall(r"\{ id: '(\w+)', label: '([^']+)'", js)
 
@@ -127,7 +123,6 @@ def figures(data_dir):
 def build(data_dir, published=None):
     js = app_js(data_dir); f = figures(data_dir)
     f['dated'] = ('Rebuilt from the atlas’s data when the atlas was published on %s.\n\n' % published) if published else ''   # the publish set's copy only
-    f['corrections'] = '\n'.join('- %s: %s' % (d, t) for d, t in corrections(js))
     f['atlas'] = ATLAS
     return TEMPLATE.format(**f)
 
@@ -317,7 +312,7 @@ The atlas computes this comparison from its address files. The chapter does not 
 
 6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "added later" (added to a list after the year shown). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
 
-6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are {med_rev} million rubles of revenue and {med_assets} million of total assets. The tile carries a short headline of the same sentence. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (14.5).
+6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are {med_rev} million rubles of revenue and {med_assets} million of total assets. The tile carries a short headline of the same sentence. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (14.4).
 
 6.5. A firm on the five lists. The tile gives the firm's display name, the year it was added to a list ("undated" for lists without dates) and, in brackets, its share of the revenue of every firm at its coordinate pair, from its most recent statement up to the year shown. The year is named when it is not the slider's year. Under the cursor adds:
 - the name as filed, in Cyrillic
@@ -439,22 +434,19 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
 
-## 14. REFERENCES and the corrections
+## 14. REFERENCES
 
-14.1. REFERENCES has eight tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, CORRECTIONS, LINKS and SUPERUSER.
+14.1. REFERENCES has seven tabs: DATA, DEFINITIONS, METHODS, INSIGHTS, TYPE AND SOFTWARE, LINKS and SUPERUSER.
 
 14.2. DATA gives the sources in 2.2, the five lists' provenance, the GDP deflator (World Bank, NY.GDP.DEFL.ZS.AD, rebased to 2021) and the industry and ownership classifications. DEFINITIONS gives the terms in section 2. METHODS names the chapter (chapter 2 of the dissertation in 2.1) and the tables and figures behind the panels: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map, the change layer's source) and Figure 2.8 (cohort inclusion). It also restates the models (9.2) and that they give associations, not effects.
 
 14.3. TYPE AND SOFTWARE: IBM Plex Mono and Tomorrow (SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
 
-14.4. CORRECTIONS lists the dated corrections to the published atlas, newest first. In its words:
-{corrections}
+14.4. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
 
-14.5. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
+14.5. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
 
-14.6. LINKS gives the author's email address, website and X account, a share-on-X link, and a video: James K. Galbraith, "Sanctions: To Russia with Love", Institute for New Economic Thinking, 2024.
-
-14.7. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
+14.6. SUPERUSER holds a one-line quotation in Armenian attributed to Nzhdeh. In English it reads roughly "Some notice the sun only during an eclipse." The translation is this guide's, not the atlas's.
 
 ## 15. How to cite
 

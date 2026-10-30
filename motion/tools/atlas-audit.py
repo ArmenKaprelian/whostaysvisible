@@ -202,7 +202,7 @@ def rgb_of(c):
     m = re.match(r"rgba?\((\d+(?:\.\d+)?), (\d+(?:\.\d+)?), (\d+(?:\.\d+)?)(?:, ([\d.]+))?\)", c or "")
     if m: return [float(m.group(i)) for i in (1, 2, 3)], float(m.group(4) or 1)
     return None, None
-# The REFERENCES panel's CORRECTIONS (round 17, the author's rule of 27 October 2026): an entry only where a published version showed something wrong that a reader
+# The REFERENCES panel's CORRECTIONS (round 17, the author's rule of 27 October 2026; the section was removed on the author's word on 30 October 2026, and the check below passes an empty list): an entry only where a published version showed something wrong that a reader
 # could have seen or quoted (a figure, a map mark, a count, a source or a factual claim); wording changes, records-only fixes and fixes made before a publish get none.
 # One entry per publish that corrects something (the author's decision of 27 October 2026), newest first: the publish date in bold in the page's long form, then one
 # or two sentences naming what it corrected by kind and count, at most CORRECTION_MAX_CHARS characters in all, with no semicolon, em-dash or "listed"; the round's
@@ -308,7 +308,7 @@ def refs_block(cdp, w, a, once, page_src):
     else: m = R["map"]; k = math.sqrt(0.8); ex = [m[0] + m[2] * (1 - k) / 2, m[1] + m[3] * (1 - k) / 2, m[2] * k, m[3] * k]
     if any(abs(u - v) > 1.0 for u, v in zip([x, y, bw, bh], ex)): F("the panel's box %s, expected %s" % ([round(v, 1) for v in (x, y, bw, bh)], [round(v, 1) for v in ex]))
     DD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"); gloss = json.load(open(os.path.join(DD, "glossary.json"), encoding="utf-8"))["terms"] if os.path.exists(os.path.join(DD, "glossary.json")) else None
-    want_secs = ["Data"] + (["Definitions"] if gloss else []) + ["Methods"] + (["Insights"] if os.path.exists(os.path.join(DD, "insights.json")) else []) + ["Type and software", "Corrections", "Links", "Superuser"]
+    want_secs = ["Data"] + (["Definitions"] if gloss else []) + ["Methods"] + (["Insights"] if os.path.exists(os.path.join(DD, "insights.json")) else []) + ["Type and software", "Links", "Superuser"]   # CORRECTIONS removed on the author's word, 30 October 2026
     if gloss and o["defs"] != ["%s: %s" % (t["term"], t["text"]) for t in gloss]: F("the DEFINITIONS section differs from glossary.json: %s" % json.dumps(o["defs"][:2])[:200])
     if R["sections"] != want_secs: F("sections %s, expected %s" % (R["sections"], want_secs))
     if [n["t"] for n in o["navs"]] != want_secs: F("shortcuts %s" % [n["t"] for n in o["navs"]])

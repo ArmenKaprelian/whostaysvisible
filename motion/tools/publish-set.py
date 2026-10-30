@@ -36,7 +36,7 @@ TEACH YOUR AGENT (round 15, the author's revision of 26 October 2026): the set's
 ships, with tools/agent_guide.py as of the commit the set comes from, and dated with the day of the publish; the set is refused if the guide breaks
 one of the builder's rules, the public-release checks among them. The page itself never fetches it.
 
-Publish dates (after v39, 28 October 2026): every date a publish writes is the UTC day of the publish, the guide's and the CORRECTIONS entry's
+Since 30 October 2026 the page has no CORRECTIONS section (the author's word), and the check below reports only the publish day. Publish dates (after v39, 28 October 2026): every date a publish writes is the UTC day of the publish, the guide's and the CORRECTIONS entry's
 alike. The set compares the REFERENCES panel's CORRECTIONS with the last publish's, read from the commit named in the build line of the
 publish copy committed at HEAD: at most one entry new since then, dated the publish day, on a day the last publish's entries do not
 already hold (one entry per date; a second publish with corrections on one UTC day needs the author). --dates runs this check alone and
@@ -208,6 +208,7 @@ def corrections_dates(cur, pub, day):
     if not bad: notes.append("CORRECTIONS: the new entry carries the publish day, %s (UTC)" % want)
     return bad, notes
 def dates_check():   # corrections_dates on the shipped script against the last publish's
+    if not re.search(r"S\.push\(\['corrections'", source("js/explorer-app.js").decode("utf-8")): return [], ["CORRECTIONS: the page has no such section (the author removed it on 30 October 2026); the publish day is %s (UTC)" % long_date(publish_day())]
     base = last_published()
     if base is None: return [], ["CORRECTIONS: no publish copy at HEAD names its commit, so the entries were not compared; the publish day is %s (UTC)" % long_date(publish_day())]
     cur = correction_entries(source("js/explorer-app.js").decode("utf-8")); pub = correction_entries(git("show", base + ":motion/js/explorer-app.js"))
@@ -222,7 +223,7 @@ def texts_check():   # round 24: every text-only rule, in seconds, before the fi
     entries = [{"lead": d, "text": d + ": " + html.unescape(re.sub(r"<[^>]+>", "", t))} for d, t in correction_entries(source("js/explorer-app.js").decode("utf-8"))]
     found = tool("atlas-audit").corrections_check(entries)   # the audit's own rule: sentences, characters with the date, wording, order, one date per entry
     bad += ["CORRECTIONS: " + f for f in found]
-    if not found: notes.append("CORRECTIONS: %d entries within the audit's rules" % len(entries))
+    if not found and entries: notes.append("CORRECTIONS: %d entries within the audit's rules" % len(entries))
     G = guide_module(); text = G.build(os.path.join(MOTION, "data"), published=long_date(publish_day()))   # the guide as the set will ship it, dated
     found = ["agent guide (as published): " + " | ".join(f) for f in G.rules(text)]
     if not FROM: found += ["agent guide: " + " | ".join(f) for f in G.check(MOTION) if f[0] not in [g[0] for g in G.rules(text)]]   # the working copy: stale or missing
