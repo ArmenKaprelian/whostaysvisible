@@ -40,7 +40,7 @@
     // to 9 used ColorBrewer YlGnBu and PRGn. dark stays true for the shared drawing code (map-layers.js), which the film also calls.
     const t = { dark: true, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'), panel: tok('panel'),
              ind9: (() => { const t = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => tok('ind-' + i)); return t.every(Boolean) ? t : IND_T ? IND_T.classes.colour_dark : []; })(),   // the tokens first (round 10), the pass's table as the fallback
-             cursor: tok('cursor') || '#FF45C8', cursorLive: tok('cursor-live') || '#FF8FDF', context: tok('context') || '#4DFF7F', contextLive: tok('context-live') || '#9AFFB8',   // the two accents (round 9): UI only, never data; the full neon rests, the live variant moves
+             cursor: tok('cursor') || '#EE69C0', cursorLive: tok('cursor-live') || '#F49ED2', context: tok('context') || '#57CE70', contextLive: tok('context-live') || '#93E09E',   // the two accents (round 9): UI only, never data; the full neon rests, the live variant moves
              accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), below: tok('below'), highlightBand: tok('highlight'), tick: tok('dim'), axis: tok('dim'), barMuted: tok('border'),
              ramp6: ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],
              ramp5: ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],

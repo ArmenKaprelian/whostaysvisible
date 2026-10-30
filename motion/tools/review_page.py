@@ -18,7 +18,7 @@ except ImportError:   # the builder needs Pillow for the figures; the text helpe
     Image = None
 
 CSS = """
-:root { color-scheme: dark; --bg: #03060E; --panel: #091023; --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C; --line: #2E333D; --acc: #4DFF7F; --fu: #FF45C8; --ice: #CFE6FF; }
+:root { color-scheme: dark; --bg: #03060E; --panel: #091023; --ink: #ECEEF1; --muted: #B4C0D0; --dim: #7D889C; --line: #2E333D; --acc: #57CE70; --fu: #EE69C0; --ice: #CFE6FF; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 "IBM Plex Mono", "DejaVu Sans Mono", ui-monospace, Menlo, monospace; }
 main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 80px; }
