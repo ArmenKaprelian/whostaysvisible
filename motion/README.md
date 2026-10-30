@@ -2314,6 +2314,13 @@ The author decided that Crimea and Sevastopol are drawn like every other region,
 
 Proof: `build/proof-r29b`, against HEAD's page served with round 28's publish data, since the tool links its base copy's data to the lab's current files. It found 18 text groups (REFERENCES, the region counts, the legend counts, one wire order swap) and no new rule hits. The author approved from before/after frames (`review/2026-10-30-round-29-frames.html`). Audits: 1,600 px, 284 states, 0 findings; review gate at 1,600 and 400 px, 558 states, 0 findings. Not published: the publish gate's five-width audit runs on the author's word.
 
+**Ready to publish** (30 October 2026, UTC), on the author's word, at the first run of `publish.sh`:
+- the text rules passed, and there is no CORRECTIONS entry, since nothing published was wrong;
+- the five-width audit had zero findings (1,376 states, 7 min 52 s);
+- the publish set is 141.2 MB from build 240d864, with 216 links, all on the expected list.
+
+The publish copy is 227b1d5 and the site's import 1201de8, which changes ten files: five changed data twins, `industry.js` (the author mark), `explorer-app.js`, the guide in both forms and the build line. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
