@@ -2360,6 +2360,8 @@ Checks: each step's change proof against 3b4a7cb showed only its own changes, an
 
 **Ready to publish** (30 October 2026, UTC), on the author's word, at the first run of `publish.sh`. The text rules passed, and the five-width audit had zero findings (1,296 states, 6 min 55 s). The publish set is 141.1 MB from build 25c003c, with 194 links, all on the expected list. It no longer holds `data/offwire.js` or the Tomorrow files. The publish copy is e04d508 and the site's import 0bb9cd7, which goes out with the site's own commits 5654abd (the stream) and 68daac9 (the colours). The site's push is the author's.
 
+**Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 41 s), and it pushed 840cdfb..0bb9cd7: the atlas, the stream and the colours together.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
