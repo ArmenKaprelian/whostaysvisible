@@ -2306,6 +2306,14 @@ The author asked for the hovered region's fill to fade out sooner on zoom. They 
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`, which pushed 885b4fb..b79f51f. The live `js/explorer-app.js` matches the site's copy byte for byte and holds the new fade.
 
+### Round 29 (30 October 2026): Crimea and Sevastopol drawn as regions
+
+The author decided that Crimea and Sevastopol are drawn like every other region, and the occupied mainland stays outside the outline. The names are the author's pick, Crimea and Sevastopol, and REFERENCES names the added sources plainly. The disclosure is the author's to write. Detail in `review/2026-10-30-round-29-crimea-sevastopol.md`.
+- **Sources (b640e6a):** geoBoundaries gbOpen UKR ADM1 at the RUS file's commit, UA-43 and UA-40. That file runs coastal shapes to the 12-nautical-mile line, so both shapes are cut to land with a pinned Natural Earth 1:10m extract: 26,160 and 907 km². `pin-sources.py --only boundaries` added three pins, and the script now prints its help for `-h`.
+- **Atlas (fd86dae):** Russia's parts and land rings stay byte-identical. The crosswalk maps the two labels, and M11, M12, M13 and M8 were rebuilt: only the two regions' rows and the outside row change, and the outside row splits exactly. 47 listed firms move to the two regions, and M8 now orders the listed firms by name. M11's outside-label check now names the labels: the geocoder places many Luhansk- and Donetsk-registered firms in Crimea. The explainer's part check is structural.
+
+Proof: `build/proof-r29b`, against HEAD's page served with round 28's publish data, since the tool links its base copy's data to the lab's current files. It found 18 text groups (REFERENCES, the region counts, the legend counts, one wire order swap) and no new rule hits. The author approved from before/after frames (`review/2026-10-30-round-29-frames.html`). Audits: 1,600 px, 284 states, 0 findings; review gate at 1,600 and 400 px, 558 states, 0 findings. Not published: the publish gate's five-width audit runs on the author's word.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
