@@ -851,7 +851,7 @@ void main() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
     const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
