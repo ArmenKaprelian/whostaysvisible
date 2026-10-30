@@ -1237,7 +1237,7 @@ void main() {
   }
   let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it
   const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
-  const regionFillFade = k => Motion.clamp(Math.log2(100 / k), 0, 1);   // round 15 (the author's item 10): full to k 50 (1 px = 20 m), gone at k 100 (1 px = 10 m), so the deepest zooms show the dots' own hues; the outline stays
+  const regionFillFade = k => Motion.clamp(Math.log2(8 * kFit() / k) / 2, 0, 1);   // round 28 (the author's request of 30 October 2026): full to twice the country view, gone at eight times, linear in log zoom, so the fill marks the region at the national zooms and leaves the dots once the camera is in; the outline stays (round 15 held it full to k 50 and gone at k 100)
   function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
     if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
     const fade = regionFillFade(c.k); if (fade <= 0) return;
