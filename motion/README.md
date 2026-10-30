@@ -2382,6 +2382,8 @@ Checks, kept to an essential minimum at the author's request (a one-time excepti
 
 **Not done:** the speed run in the author's Brave, the tile by transform, the DejaVu subset (needs `fonttools`), and comments stripped from the published copy (needs a JavaScript parser). The 12 stale `firms-YYYY.js` twins (about 107 MB, git-ignored) were deleted on the author's OK.
 
+**Ready to publish** (30 October 2026, UTC), on the author's word, at the first run of `publish.sh`. The text rules passed, and the five-width audit had zero findings (1,296 states, 3 min 22 s). The publish set is 112.7 MB from build 219785b, with 193 links, all on the expected list. The publish copy is 419bd68, and the site's import is 6cd95c9 (60 files, 71.7 MB).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
