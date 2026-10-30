@@ -2,9 +2,9 @@
 """Re-derives the atlas's profiles (round 15, the author's item 9 and the text rule of 26 October 2026) from the shipped data and checks the page's text.
 
 A region or a city window has a profile only when data/insights.json holds its researched insight: the insight's sentence (at most 200
-characters) and, from profiles.json (M12), the median revenue and total assets in 2024 against Russia's; the tile carries the insight's short form
-(at most 76 characters). The profile never restates what the atlas shows elsewhere, which the author audits; this checker rebuilds the size
-sentence by the page's rules and tests the rest: no semicolon in either form, the lengths, every text inside its box at the tile's width (the
+characters) and, from profiles.json (M12), the median revenue and total assets in 2024 against Russia's (the tile's short form left the data in
+round 31). The profile never restates what the atlas shows elsewhere, which the author audits; this checker rebuilds the size
+sentence by the page's rules and tests the rest: no semicolon, the length, every text inside its box at the tile's width (the
 page's own measure), and no profile at all without the insights file.
 
 Usage: profile_check.py --page profiles.json [--fit fit.json] [--data motion/data]
@@ -43,16 +43,15 @@ def derive(data_dir):
     if INS:
         for kind, sect, rows, key in (('region', 'regions', 'regions', 'region'), ('window', 'cities', 'windows', 'label')):
             for name, ins in (INS.get(sect) or {}).items():
-                if not ins or not ins.get('full') or not ins.get('short'): continue
+                if not ins or not ins.get('full'): continue
                 sz = size(rows, key, name)
-                out[kind][name] = {'full': [ins['full']] + ([sz] if sz else []), 'tile': ins['short']}
+                out[kind][name] = {'full': [ins['full']] + ([sz] if sz else [])}
     return out['region'], out['window'], bool(PROF), bool(INS)
 
 def rules(kind, name, p):
     out = []
-    if any(';' in t for t in p['full'] + [p['tile']]): out.append(('semicolon', kind, name))
+    if any(';' in t for t in p['full']): out.append(('semicolon', kind, name))
     if len(p['full'][0]) > 200: out.append(('length', kind, name, 'insight %d characters' % len(p['full'][0])))
-    if len(p['tile']) > 76: out.append(('length', kind, name, 'short form %d characters' % len(p['tile'])))
     return out
 
 def check(page, data_dir, fit=None):
@@ -68,7 +67,6 @@ def check(page, data_dir, fit=None):
             if name not in mine: out.append(('extra', kind, name)); continue
             a, b = mine[name], theirs[name]
             if a['full'] != b['full']: out.append(('text', kind, name, ' '.join(b['full']), ' '.join(a['full'])))
-            if a['tile'] != b['tile']: out.append(('tile', kind, name, b['tile'], a['tile']))
             out += rules(kind, name, b)
     if fit is not None:
         for pid in fit.get('overflow', []): out.append(('overflow', pid))

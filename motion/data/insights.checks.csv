@@ -1,7 +1,7 @@
 "check","pass","detail"
 "every region is a region of profiles.json","TRUE",""
 "every window is a window of profiles.json","TRUE",""
-"full at most 200 and short at most 76 characters","TRUE",""
+"full at most 200 characters","TRUE",""
 "no semicolon, em-dash or 'listed'","TRUE",""
 "no run of nine or more digits in a text","TRUE",""
 "no shipped field names a firm on no list","TRUE",""

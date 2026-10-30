@@ -2,7 +2,6 @@
  "regions": {
   "Moscow": {
    "full": "After the US Treasury designated the National Clearing Center, exchange trading in dollars and euros was suspended and the Bank of Russia began setting their official rates from over-the-counter data.",
-   "short": "Dollar and euro exchange trades halted by US sanctions on the clearinghouse",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -26,7 +25,6 @@
   },
   "Moscow Oblast": {
    "full": "A Moscow Oblast court transferred Domodedovo airport to state ownership in June 2025, and it was sold at a privatization auction for 66.1 billion rubles in January 2026.",
-   "short": "Domodedovo airport: state-owned from 2025, sold at auction in 2026",
    "sources": [
     {
      "publisher": "Interfax",
@@ -50,7 +48,6 @@
   },
   "Tver Oblast": {
    "full": "Italy's Enel sold its indirect 56.43% stake in the 2,520 MW Konakovo power station to Russian buyers in October 2022, after the Russian president approved the deal.",
-   "short": "Enel sold its stake in the Konakovo power station to Russian buyers in 2022",
    "sources": [
     {
      "publisher": "Kommersant",
@@ -74,7 +71,6 @@
   },
   "Yaroslavl Oblast": {
    "full": "Rybinsk's KB Luch, which designed the Korsar drone used by Russia's Ministry of Defence for reconnaissance, came under US blocking sanctions in June 2024.",
-   "short": "Rybinsk's KB Luch, designer of the Korsar military drone: under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -92,7 +88,6 @@
   },
   "Vladimir Oblast": {
    "full": "The US Treasury designated the Vladimir Elektropribor plant, which makes metal structures and printed circuits and partners with Almaz-Antey, the state-owned maker of air and missile defence systems.",
-   "short": "Vladimir Elektropribor, partner of state-owned Almaz-Antey: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -110,7 +105,6 @@
   },
   "Ivanovo Oblast": {
    "full": "The US designated Ivanovo-based Mekhatronika, a developer of computer numerical control technology, and a Chinese company that supplies it with electric drives and servo motors.",
-   "short": "Ivanovo CNC developer Mekhatronika and its Chinese supplier: US-designated",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -128,7 +122,6 @@
   },
   "Kostroma Oblast": {
    "full": "Kostroma-registered Sovcombank, which the US Treasury called Russia's ninth-largest bank, was one of seven Russian banks the EU cut off from the SWIFT messaging system from 12 March 2022.",
-   "short": "Kostroma's Sovcombank: one of seven Russian banks the EU cut off from SWIFT",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -170,7 +163,6 @@
   },
   "Ryazan Oblast": {
    "full": "Rosneft's Ryazan oil refinery came under US blocking sanctions in October 2025, when the Treasury designated Rosneft, until then under US sectoral sanctions only, and its refining subsidiaries.",
-   "short": "Rosneft's Ryazan refinery: under full US blocking sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -194,7 +186,6 @@
   },
   "Kaluga Oblast": {
    "full": "Volkswagen sold its Russian assets, including its Kaluga car and engine plants, to a Russian buyer in May 2023, and a car brand with Chinese roots began full-cycle production there in August 2025.",
-   "short": "Former VW plant: sold in 2023, builds a brand with Chinese roots since 2025",
    "sources": [
     {
      "publisher": "Interfax",
@@ -212,7 +203,6 @@
   },
   "Tula Oblast": {
    "full": "The US Treasury designated KBP Instrument Design Bureau in Tula, a developer of anti-tank missile systems and short-range air defence systems.",
-   "short": "Tula's KBP, an anti-tank missile developer: designated by the US Treasury",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -230,7 +220,6 @@
   },
   "Oryol Oblast": {
    "full": "The US Treasury designated Oryol's Proton, an optoelectronic equipment maker, and Proton-Elektroteks, a semiconductor maker.",
-   "short": "Oryol semiconductor maker Proton-Elektroteks: designated by the US Treasury",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -248,7 +237,6 @@
   },
   "Bryansk Oblast": {
    "full": "Kremny El in Bryansk, which the US Treasury says has supplied microelectronics to Russian military customers, is under US blocking sanctions.",
-   "short": "Bryansk microelectronics maker Kremny El: under US blocking sanctions",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -272,7 +260,6 @@
   },
   "Smolensk Oblast": {
    "full": "Kristall in Smolensk, Russia's largest diamond cutter and part of the Alrosa group since 2019, is under US blocking sanctions.",
-   "short": "Smolensk's Kristall, Russia's largest diamond cutter: under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -296,7 +283,6 @@
   },
   "Kursk Oblast": {
    "full": "Sudzha in Kursk Oblast was the only active entry point for Russian gas transiting Ukraine to Europe until the transit agreement expired on 1 January 2025.",
-   "short": "Sudzha: entry point for Russian gas transit via Ukraine until 1 Jan 2025",
    "sources": [
     {
      "publisher": "Bruegel",
@@ -320,7 +306,6 @@
   },
   "Belgorod Oblast": {
    "full": "The US designated Metalloinvest, which the Treasury links to the billionaire Alisher Usmanov, with its Belgorod plants, the Lebedinskiy iron ore mining plant in Gubkin and the Oskol steel plant.",
-   "short": "Usmanov-linked Metalloinvest's Belgorod plants: under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -344,7 +329,6 @@
   },
   "Lipetsk Oblast": {
    "full": "The US Treasury designated firms located in the Lipetsk special economic zone, among them Grazhdanskie Pripasy, a maker of cartridges for weapons.",
-   "short": "Lipetsk SEZ firms, among them an ammunition maker: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -362,7 +346,6 @@
   },
   "Tambov Oblast": {
    "full": "The US Treasury designated the Tambov Powder Plant, a federal state enterprise in Kotovsk, calling it one of Russia's main producers of artillery and small-arms ammunition.",
-   "short": "Tambov Powder Plant, a state-owned ammunition maker: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -386,7 +369,6 @@
   },
   "Voronezh Oblast": {
    "full": "The US Treasury designated Concern Sozvezdie in Voronezh, a developer of military control, communication and electronic warfare systems.",
-   "short": "Voronezh electronic warfare developer Sozvezdie: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -404,7 +386,6 @@
   },
   "Saint Petersburg": {
    "full": "State-controlled Gazprom, registered in St Petersburg since 2021, reported a 2023 net loss of 629 billion roubles, its first annual loss in more than 20 years, amid falling gas trade with Europe.",
-   "short": "Gazprom, registered in St Petersburg since 2021, lost 629 bn roubles in 2023",
    "sources": [
     {
      "publisher": "Al Jazeera",
@@ -422,7 +403,6 @@
   },
   "Leningrad oblast": {
    "full": "In February 2025, the EU banned transactions with the oblast's ports of Ust-Luga and Primorsk, citing their use to ship Russian oil on vessels with irregular and high-risk shipping practices.",
-   "short": "EU bans dealings with Ust-Luga and Primorsk over high-risk oil shipping",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -446,7 +426,6 @@
   },
   "Novgorod Oblast": {
    "full": "A government decree of 8 July 2021 created the Novgorodskaya special economic zone in the Novgorod district, with the oblast to spend at least 1.35 billion roubles on its infrastructure by 2024.",
-   "short": "A 2021 government decree created the Novgorodskaya special economic zone",
    "sources": [
     {
      "publisher": "Government of the Russian Federation",
@@ -464,7 +443,6 @@
   },
   "Pskov Oblast": {
    "full": "In February 2025 the EU banned transactions with Pskov International Airport, listing it as used to transport defence and security goods and technology to or from Russia.",
-   "short": "EU bans dealings with Pskov airport, citing defence and security cargo",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -488,7 +466,6 @@
   },
   "Kaliningrad": {
    "full": "When Estonia, Latvia and Lithuania left the Soviet-era BRELL power ring on 8 February 2025, the oblast's power system switched to autonomous operation.",
-   "short": "Grid switched to autonomous mode when Baltic states left BRELL in 2025",
    "sources": [
     {
      "publisher": "System Operator of the Unified Energy System of Russia",
@@ -506,7 +483,6 @@
   },
   "Arkhangelsk Oblast": {
    "full": "The US State Department's designations of April 2022 covered Sevmash and Zvezdochka, the Severodvinsk yards of the state-owned United Shipbuilding Corporation that build and repair submarines.",
-   "short": "US-designated Sevmash and Zvezdochka build and repair submarines",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -524,7 +500,6 @@
   },
   "Nenets Autonomous Okrug": {
    "full": "The US State Department, designating the developers of the okrug's planned Port of Indiga, said the port was designed to expand Russia's Arctic export capacity for energy and metals.",
-   "short": "US designated the developers of the planned Port of Indiga",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -548,7 +523,6 @@
   },
   "Komi Republic": {
    "full": "The US State Department described Vorkutaugol, the Vorkuta coal company it designated, as the parent of a network of firms supplying coking coal mainly to Severstal.",
-   "short": "US says Vorkutaugol heads a coking coal network supplying mainly Severstal",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -566,7 +540,6 @@
   },
   "Republic of Karelia": {
    "full": "Karelia has the longest border of any Russian region with the EU, and Finland closed the last crossing point on its border with Russia in November 2023.",
-   "short": "Russia's longest EU border, where Finland shut the last crossing in 2023",
    "sources": [
     {
      "publisher": "Government of the Republic of Karelia",
@@ -590,7 +563,6 @@
   },
   "Vologda Oblast": {
    "full": "Severstal, registered in Cherepovets, published no IFRS results after its 2021 report until August 2023, saying a large part of its shareholders could not make investment decisions.",
-   "short": "Severstal halted IFRS reports after 2021, resuming in August 2023",
    "sources": [
     {
      "publisher": "Reuters",
@@ -608,7 +580,6 @@
   },
   "Krasnodar Krai": {
    "full": "After Western sanctions on Russian oil in late 2022, dark shipping by tankers with their AIS transceivers off rose substantially near Novorossiysk, Taman and Tuapse, a 2025 NBER study found.",
-   "short": "Dark shipping rose near Novorossiysk, Taman and Tuapse after 2022 sanctions",
    "sources": [
     {
      "publisher": "National Bureau of Economic Research",
@@ -626,7 +597,6 @@
   },
   "Rostov Oblast": {
    "full": "In December 2025 the Bank of Russia released Taganrog's Beriev aircraft complex from its disclosure duties under securities law, and its 2025 statements showed a net loss of over 5 billion roubles.",
-   "short": "Bank of Russia freed Taganrog's Beriev plant from disclosure in Dec 2025",
    "sources": [
     {
      "publisher": "Bank of Russia",
@@ -650,7 +620,6 @@
   },
   "Volgograd Oblast": {
    "full": "From 2022 to October 2026 the Bank of Russia's Southern branch released 52 joint-stock companies from securities-law disclosure, 5 of them in Volgograd Oblast in 2023 and 2024.",
-   "short": "Bank of Russia freed 5 Volgograd Oblast firms from disclosure in 2023-2024",
    "sources": [
     {
      "publisher": "Bank of Russia",
@@ -662,7 +631,6 @@
   },
   "Astrakhan Oblast": {
    "full": "The US Treasury said in September 2024 that shipping companies operating in Olya port, Astrakhan Oblast, took part in Iran's transfer of lethal aid to Russia, including ballistic missiles.",
-   "short": "US Treasury: Olya port shippers took part in Iran's lethal aid to Russia",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -680,7 +648,6 @@
   },
   "Adygea": {
    "full": "After IKEA's 17 stores in Russia closed in 2022, their owner Ingka sold its 14 MEGA malls there, including one in Adygea, in 2023.",
-   "short": "After IKEA closed in Russia, Ingka sold its Adygea MEGA mall in 2023",
    "sources": [
     {
      "publisher": "Ingka Centres",
@@ -698,7 +665,6 @@
   },
   "Dagestan": {
    "full": "Kaspiysk's Dagdizel plant, which the EU says makes underwater weapons for the Russian Navy used against Ukraine, is under US sanctions and was added to the EU's asset freeze in February 2024.",
-   "short": "Dagdizel, Kaspiysk: underwater weapons maker under US and EU sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -722,7 +688,6 @@
   },
   "Ingushetia": {
    "full": "In 2025, transfers from other budgets of Russia's budget system made up 78% of the revenue of Ingushetia's regional budget, which totalled 36.9 billion rubles.",
-   "short": "Transfers made up 78% of Ingushetia's regional budget revenue in 2025",
    "sources": [
     {
      "publisher": "Republic of Ingushetia",
@@ -734,7 +699,6 @@
   },
   "Chechnya": {
    "full": "The US Treasury designated Chechenskie Mineralnye Vody and Megastroyinvest as owned or controlled by the Akhmat Kadyrov Foundation, which it said Ramzan Kadyrov controlled.",
-   "short": "US designated Chechenskie Mineralnye Vody, Megastroyinvest as Kadyrov-linked",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -752,7 +716,6 @@
   },
   "Kabardino-Balkaria": {
    "full": "Kabardino-Balkaria's budget law for 2026 forecasts revenue of 72.3 billion rubles, 65% of it transfers from other budgets of Russia's budget system.",
-   "short": "Transfers are 65% of revenue in Kabardino-Balkaria's 2026 budget law",
    "sources": [
     {
      "publisher": "Kabardino-Balkar Republic",
@@ -764,7 +727,6 @@
   },
   "Karachay-Cherkessia": {
    "full": "In October 2026, the EU froze the assets of Kaskad, a Cherkessk company, citing a Russian government list of defence-industry employers entitled to federal housing subsidies.",
-   "short": "EU froze Kaskad's assets, citing a Russian defence-employer subsidy list",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -782,7 +744,6 @@
   },
   "North Ossetia–Alania": {
    "full": "The US Treasury designated Baspik, a Vladikavkaz maker of microchannel plates for night vision equipment, for operating in Russia's technology sector.",
-   "short": "Vladikavkaz night-vision parts maker Baspik is designated by the US Treasury",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -800,7 +761,6 @@
   },
   "Stavropol Krai": {
    "full": "In December 2024, the EU froze the assets of the Stavropol Radio Plant Signal, a Rostec company that the EU says makes radio-electronic devices for Russia's armed forces.",
-   "short": "EU froze assets of Stavropol Radio Plant Signal, a Rostec military supplier",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -812,7 +772,6 @@
   },
   "Nizhny Novgorod Oblast": {
    "full": "VNIIEF, the federal nuclear centre in Sarov that the US Treasury says performs experimental testing of Russia's nuclear weapons, was designated by the UK and the US in February 2023.",
-   "short": "Sarov's VNIIEF tests Russia's nuclear weapons, the US Treasury says",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -836,7 +795,6 @@
   },
   "Chuvashia": {
    "full": "ELARA, a Cheboksary maker of electronic instruments for Russian military and amphibious aircraft, was designated by the US Treasury on 24 February 2023.",
-   "short": "Cheboksary's ELARA, maker of military aircraft electronics, US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -854,7 +812,6 @@
   },
   "Mari El": {
    "full": "The Mari Machine-Building Plant in Yoshkar-Ola, part of Almaz-Antey, develops air defence control systems, according to the EU, which froze its assets in February 2024.",
-   "short": "Yoshkar-Ola's MMZ, part of Almaz-Antey, develops air defence control systems",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -878,7 +835,6 @@
   },
   "Republic of Mordovia": {
    "full": "The US Treasury designated Unmanned Technologies of Mordovia, a Saransk company established in August 2023 that it says develops combat drones.",
-   "short": "Saransk's Unmanned Technologies of Mordovia develops combat drones, says US",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -896,7 +852,6 @@
   },
   "Penza Oblast": {
    "full": "Designating the Penza Electrotechnical Research Institute, the US State Department called it one of the largest Russian developers and producers of cryptographic information protection technology.",
-   "short": "Penza's PNIEI makes cryptographic protection technology, says the US",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -914,7 +869,6 @@
   },
   "Ulyanovsk Oblast": {
    "full": "Ulyanovsk-based Volga-Dnepr Airlines is sanctioned by the UK for heavy airlift to Russia's armed forces and by the US, which says it coordinated electronics shipments from China to Russia.",
-   "short": "Ulyanovsk's Volga-Dnepr Airlines is under UK and US sanctions",
    "sources": [
     {
      "publisher": "UK Foreign, Commonwealth and Development Office",
@@ -938,7 +892,6 @@
   },
   "Saratov Oblast": {
    "full": "SEPO-ZEM, a Saratov plant that the US Treasury says produces electronic control systems for military aircraft engines, was also designated by the UK in February 2026.",
-   "short": "Saratov's SEPO-ZEM makes military aircraft engine controls, says US Treasury",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -962,7 +915,6 @@
   },
   "Kirov Oblast": {
    "full": "Vyatka Machine Tool Plant, a Kirov maker of metalworking machines whose customers include a Russian missile manufacturer, is under US Treasury sanctions.",
-   "short": "Kirov machine-tool maker with a missile-maker customer: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -980,7 +932,6 @@
   },
   "Tatarstan": {
    "full": "In February 2024 the US Treasury designated the Alabuga special economic zone's operator, owned by Tatarstan's government, saying it assembles Iranian-designed Geran-2 drones.",
-   "short": "Tatarstan-owned Alabuga SEZ operator assembles Geran-2 drones, says US",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -998,7 +949,6 @@
   },
   "Bashkortostan": {
    "full": "In an action meant to undermine Russia's future energy capabilities, the US Treasury designated four makers of refining agents in Sterlitamak and Ishimbay, among them Rosneft's RN Kat.",
-   "short": "US sanctions four refining-agent makers in Sterlitamak and Ishimbay",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1016,7 +966,6 @@
   },
   "Samara Oblast": {
    "full": "In May 2022 Renault sold its 67.69% stake in AvtoVAZ, the Tolyatti carmaker, to the state institute NAMI, keeping an option to buy it back within 6 years.",
-   "short": "Renault sold its stake in Tolyatti's AvtoVAZ to state institute NAMI in 2022",
    "sources": [
     {
      "publisher": "Renault Group",
@@ -1040,7 +989,6 @@
   },
   "Perm Krai": {
    "full": "The US Treasury designated the Solikamsk Plant Ural, which it lists as a state-owned enterprise, saying the plant manufactures gunpowder and explosives.",
-   "short": "Solikamsk Plant Ural, a state-owned gunpowder maker, is under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1058,7 +1006,6 @@
   },
   "Udmurtia": {
    "full": "The US Treasury said in October 2024 that the Kupol plant in Izhevsk, a subsidiary of state-owned Almaz-Antey, coordinates production of Garpiya attack drones at factories in China.",
-   "short": "US Treasury: Izhevsk's Kupol plant has Garpiya attack drones made in China",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1076,7 +1023,6 @@
   },
   "Orenburg Oblast": {
    "full": "In its October 2025 sanctions on Rosneft, the US Treasury designated Orenburgneft, Rosneft's oil and gas producer in Buzuluk, which had already been under US sectoral sanctions.",
-   "short": "Rosneft's Orenburgneft: US sectoral sanctions, then US blocking sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1094,7 +1040,6 @@
   },
   "Sverdlovsk Oblast": {
    "full": "Uralvagonzavod in Nizhny Tagil, a state-owned maker of tanks and other military equipment, was designated by the US Treasury for operating in Russia's arms sector.",
-   "short": "Uralvagonzavod (Nizhny Tagil), state-owned tank maker: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1112,7 +1057,6 @@
   },
   "Chelyabinsk Oblast": {
    "full": "The US Treasury designated Magnitogorsk Iron and Steel Works (MMK), calling it one of Russia's largest taxpayers, and MMK suspended its financial disclosure after reporting for 2021.",
-   "short": "MMK (Magnitogorsk), US-designated top taxpayer, halted financial disclosure",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1136,7 +1080,6 @@
   },
   "Kurgan Oblast": {
    "full": "Kurganpribor, a Kurgan maker of components for rocket systems, missiles and bombs, was designated by the US Treasury, which said it was likely helping Russian drone makers develop engines.",
-   "short": "Kurganpribor (Kurgan), maker of missile and bomb parts: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1154,7 +1097,6 @@
   },
   "Tyumen Oblast": {
    "full": "The US blocking sanctions of October 2025 on Rosneft also named 2 of its subsidiaries with addresses in Tyumen that develop or manage oil and gas condensate fields.",
-   "short": "US blocking sanctions on Rosneft reached its Tyumen-based field operators",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1172,7 +1114,6 @@
   },
   "Khanty-Mansiysk Autonomous Okrug – Ugra": {
    "full": "Russia has withheld oil output statistics since an April 2023 government order, yet the head of Ugra's subsoil department said the okrug produced about 205 million tonnes in 2024.",
-   "short": "Oil data withheld since 2023, yet Ugra reported about 205 Mt for 2024",
    "sources": [
     {
      "publisher": "Meduza",
@@ -1196,7 +1137,6 @@
   },
   "Yamalo-Nenets Autonomous Okrug": {
    "full": "The US State Department designated Arctic LNG 2, operator of a liquefied natural gas project on the Gydan Peninsula, and the US later designated firms in China, India and the UAE linked to it.",
-   "short": "Arctic LNG 2 (Gydan): US-designated, as are linked firms in China and India",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1238,7 +1178,6 @@
   },
   "Omsk Oblast": {
    "full": "The company operating Gazprom Neft's Omsk refinery, Russia's largest, came under US blocking sanctions in January 2025, and drones attacked the refinery on 6 July 2026.",
-   "short": "Russia's largest refinery, in Omsk: US-sanctioned and attacked by drones",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1268,7 +1207,6 @@
   },
   "Novosibirsk Oblast": {
    "full": "Sibanthracite, which mines anthracite in the region, said after its addition to the US sanctions list that the Russian market had become its trading priority.",
-   "short": "Anthracite miner Sibanthracite: US-sanctioned, turned to the Russian market",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -1292,7 +1230,6 @@
   },
   "Tomsk Oblast": {
    "full": "BREST-OD-300, a 300 MW lead-cooled fast-neutron reactor, has been under construction at the Siberian Chemical Combine in Seversk since June 2021.",
-   "short": "Seversk: BREST-OD-300 lead-cooled reactor under construction since 2021",
    "sources": [
     {
      "publisher": "Nuclear Engineering International",
@@ -1310,7 +1247,6 @@
   },
   "Kemerovo Oblast": {
    "full": "The US Treasury designated coal miners Raspadskaya and Yuzhkuzbassugol and EVRAZ ZSMK, which it called the largest steel producer in Siberia, to reduce Russia's revenues from metals.",
-   "short": "Kuzbass coal miner Raspadskaya and steelmaker EVRAZ ZSMK: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1328,7 +1264,6 @@
   },
   "Altai Krai": {
    "full": "The US Treasury designated Biya Khim, a Biysk chemical maker that imports cotton pulp from Central Asia and Türkiye, among importers of inputs for nitrocellulose, an explosives precursor.",
-   "short": "Biysk cotton pulp importer Biya Khim: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1346,7 +1281,6 @@
   },
   "Altai Republic": {
    "full": "All 120 MW of the Altai Republic's power plant capacity was solar at the start of 2023, and these plants generated 142 million kWh that year, the System Operator reports.",
-   "short": "Altai Republic: all 120 MW of power capacity solar, 142 million kWh in 2023",
    "sources": [
     {
      "publisher": "System Operator of the Unified Energy System of Russia",
@@ -1364,7 +1298,6 @@
   },
   "Krasnoyarsk Krai": {
    "full": "In September 2026 Rosneft, under US blocking sanctions since October 2025, loaded the first crude from its new oil project on the Taymyr Peninsula at the Sever Bay terminal.",
-   "short": "Under US sanctions, Rosneft loaded first Taymyr project crude at Sever Bay",
    "sources": [
     {
      "publisher": "Rosneft",
@@ -1388,7 +1321,6 @@
   },
   "Irkutsk Oblast": {
    "full": "In December 2022 Gazprom started production at the Kovykta field, the largest gas field in eastern Russia, which feeds the Power of Siberia pipeline to China.",
-   "short": "Kovykta gas field has fed the Power of Siberia pipeline to China since 2022",
    "sources": [
     {
      "publisher": "Interfax",
@@ -1406,7 +1338,6 @@
   },
   "Khakassia": {
    "full": "The US State Department designated Razrez Beyskiy, owner of a coal mine in the republic, together with companies developing terminals at Wrangel Bay and Fokino designed to ship its coal.",
-   "short": "US designated Razrez Beyskiy and firms developing terminals for its coal",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1430,7 +1361,6 @@
   },
   "Tuva": {
    "full": "The US Treasury designated Tuvaasbest and Sibirskie Mineraly of Ak-Dovurak as subsidiaries of Bitriver AG, saying virtual currency miners help Russia monetize its natural resources.",
-   "short": "Tuvaasbest, US-designated as a subsidiary of crypto miner Bitriver",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1448,7 +1378,6 @@
   },
   "Buryatia": {
    "full": "The US Treasury designated the Ulan-Ude Aviation Plant, a helicopter maker, as a subsidiary of the state-owned holding company Russian Helicopters.",
-   "short": "Ulan-Ude Aviation Plant, a helicopter maker, is under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1466,7 +1395,6 @@
   },
   "Zabaykalsky Krai": {
    "full": "The US Treasury designated GRK Bystrinskoe, an ore mining and processing plant registered in Chita, for operating in Russia's metals and mining sector.",
-   "short": "Ore miner GRK Bystrinskoe in Chita is under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1484,7 +1412,6 @@
   },
   "Sakha Republic": {
    "full": "Alrosa stopped publishing its sales data and quarterly results in April 2022, and in May 2023 its chief executive said disclosure was unsafe while sanctions remained in force.",
-   "short": "Alrosa has withheld sales and financial data since 2022, citing sanctions",
    "sources": [
     {
      "publisher": "JCK",
@@ -1514,7 +1441,6 @@
   },
   "Amur Oblast": {
    "full": "The first road bridge between Russia and China, across the Amur from Blagoveshchensk to Heihe, opened in June 2022, at first for freight traffic only.",
-   "short": "First Russia–China road bridge, Blagoveshchensk–Heihe, opened June 2022",
    "sources": [
     {
      "publisher": "Interfax",
@@ -1532,7 +1458,6 @@
   },
   "Jewish Autonomous Oblast": {
    "full": "The first rail bridge between Russia and China, from Nizhneleninskoye across the Amur to Tongjiang, opened to traffic in November 2022.",
-   "short": "First Russia–China rail bridge, Nizhneleninskoye–Tongjiang, opened 2022",
    "sources": [
     {
      "publisher": "TASS",
@@ -1556,7 +1481,6 @@
   },
   "Khabarovsk Krai": {
    "full": "Rosneft's Komsomolsk-on-Amur refinery came under the US blocking sanctions of October 2025, which Treasury imposed on Russia's two largest oil companies and their subsidiaries.",
-   "short": "Rosneft's Komsomolsk-on-Amur refinery is under US blocking sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1574,7 +1498,6 @@
   },
   "Primorsky Krai": {
    "full": "The US State Department designated the Zvezda shipbuilding complex at Bolshoi Kamen for its work on up to 15 LNG tankers for the Arctic LNG 2 project.",
-   "short": "Zvezda shipyard at Bolshoi Kamen: US-designated for Arctic LNG 2 work",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1592,7 +1515,6 @@
   },
   "Sakhalin Oblast": {
    "full": "After a decree of 30 June 2022 on measures against unfriendly foreign actions, the government in April 2023 approved selling Shell's former 27.5% share in Sakhalin-2 to Novatek.",
-   "short": "Shell's 27.5% of Sakhalin-2 was approved for sale to Novatek in April 2023",
    "sources": [
     {
      "publisher": "The Moscow Times",
@@ -1610,7 +1532,6 @@
   },
   "Magadan Oblast": {
    "full": "The US State Department designated Polyus and Polymetal, owners of the Natalkinskoye gold and Dukat silver mines, and Polymetal's foreign parent then sold the Russian unit in March 2024.",
-   "short": "Natalkinskoye and Dukat owners Polyus and Polymetal are US-designated",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1640,7 +1561,6 @@
   },
   "Kamchatka Krai": {
    "full": "Novatek's Koryak floating LNG storage unit off Kamchatka, a transshipment point on the eastbound route for Arctic LNG 2, is blocked property under US sanctions.",
-   "short": "Novatek's Koryak LNG storage unit off Kamchatka is blocked by the US",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1664,7 +1584,6 @@
   },
   "Chukotka Autonomous Okrug": {
    "full": "The US designated the developer of the Baimskaya copper project, one of the world's largest undeveloped copper deposits, and the project has since won state-backed project finance.",
-   "short": "US-designated Baimskaya copper project has won state-backed project finance",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -1688,7 +1607,6 @@
   },
   "Crimea": {
    "full": "The EU banned imports of goods from Crimea in June 2014, and a US executive order of December 2014 barred US persons from new investment in Crimea and from most trade with it.",
-   "short": "2014: EU ban on imports from Crimea, US ban on investment and trade",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -1706,7 +1624,6 @@
   },
   "Sevastopol": {
    "full": "In July 2014 the EU froze the assets of the state Sevastopol commercial seaport, which it called the biggest commercial seaport in Crimea by volume of trade.",
-   "short": "EU froze the Sevastopol commercial seaport's assets in July 2014",
    "sources": [
     {
      "publisher": "Council of the European Union",
@@ -1720,7 +1637,6 @@
  "cities": {
   "Moscow": {
    "full": "Mikron, which the US Treasury called Russia's largest chipmaker when it imposed blocking sanctions in March 2022, has its plant in Moscow's Zelenograd district.",
-   "short": "Zelenograd's Mikron, Russia's largest chipmaker: under US blocking sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1744,7 +1660,6 @@
   },
   "Voronezh": {
    "full": "The US Treasury designated Voronezh firms that make radio monitoring equipment, radar and an attack drone used by the Russian military.",
-   "short": "Voronezh makers of radar and an attack drone: designated by the US Treasury",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1762,7 +1677,6 @@
   },
   "St Petersburg": {
    "full": "After the 2014 annexation of Crimea, ODK-Klimov in St Petersburg sped up its work on helicopter engines that Ukraine's Motor Sich had supplied, and had built 60 of them by 2016.",
-   "short": "By 2016 ODK-Klimov had made 60 engines once supplied by Ukraine's Motor Sich",
    "sources": [
     {
      "publisher": "Cambridge University Press",
@@ -1780,7 +1694,6 @@
   },
   "Kaliningrad": {
    "full": "A 2018 federal law created a special administrative region on Oktyabrsky Island to draw business from foreign jurisdictions, and 302 international companies were registered there in April 2024.",
-   "short": "Oktyabrsky Island special region: 302 international companies, April 2024",
    "sources": [
     {
      "publisher": "President of Russia",
@@ -1798,7 +1711,6 @@
   },
   "Murmansk": {
    "full": "The platforms for the Arctic LNG 2 plant were built at the Belokamenka yard near Murmansk, run by Novatek-Murmansk, which the US designated.",
-   "short": "Arctic LNG 2 platforms were built at US-designated Novatek-Murmansk's yard",
    "sources": [
     {
      "publisher": "US Treasury, Office of Foreign Assets Control",
@@ -1822,7 +1734,6 @@
   },
   "Krasnodar": {
    "full": "Krasnodar's airport, one of 11 Russian airports closed in February 2022, resumed passenger flights on 17 September 2025.",
-   "short": "Krasnodar airport: closed in February 2022, reopened on 17 September 2025",
    "sources": [
     {
      "publisher": "CAPA – Centre for Aviation",
@@ -1840,7 +1751,6 @@
   },
   "Rostov-on-Don": {
    "full": "The US Treasury designated Rostvertol, Rostov-on-Don's helicopter plant, as owned or controlled by the state-owned holding Russian Helicopters, whose helicopters it said Russia uses against Ukraine.",
-   "short": "Rostvertol helicopter plant: US-designated as a Russian Helicopters unit",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1858,7 +1768,6 @@
   },
   "Volgograd": {
    "full": "The US put Volgograd's Titan-Barrikady plant on its Entity List for making a ground-launched cruise missile system with an INF Treaty-banned range, then blocked its property in March 2022.",
-   "short": "Titan-Barrikady: on US Entity List over an INF-banned missile, later blocked",
    "sources": [
     {
      "publisher": "US Department of Commerce, Bureau of Industry and Security",
@@ -1876,7 +1785,6 @@
   },
   "Nizhny Novgorod": {
    "full": "GAZ Group, the Nizhny Novgorod maker of commercial vehicles, is under US Treasury sanctions as a company owned or controlled by Oleg Deripaska.",
-   "short": "GAZ Group: under US Treasury sanctions as a Deripaska-controlled company",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1900,7 +1808,6 @@
   },
   "Kazan": {
    "full": "After sanctions limited Boeing and Airbus supplies, Russia decided in 2022 to resume serial production of Tu-214 airliners at Tupolev's Kazan aircraft plant.",
-   "short": "In 2022 Russia chose to resume Tu-214 serial output in Kazan after sanctions",
    "sources": [
     {
      "publisher": "Interfax",
@@ -1924,7 +1831,6 @@
   },
   "Samara": {
    "full": "The Samara Metallurgical Plant is under UK and US sanctions, the UK citing its production and export of aluminium and other base metals.",
-   "short": "Samara Metallurgical Plant, aluminium exporter, under UK and US sanctions",
    "sources": [
     {
      "publisher": "UK Foreign, Commonwealth and Development Office",
@@ -1942,7 +1848,6 @@
   },
   "Ufa": {
    "full": "Citing US and EU sanctions, Bashkortostan decided in 2025 to sell up to a quarter of its 25%-plus-one-share Bashneft stake, and in 2026 sold part to Rosneft for 14.8 billion roubles.",
-   "short": "Citing sanctions, Bashkortostan sold some Bashneft shares to Rosneft in 2026",
    "sources": [
     {
      "publisher": "Interfax",
@@ -1960,7 +1865,6 @@
   },
   "Perm": {
    "full": "The Motovilikha Plants in Perm, which the UK says produce artillery platforms for Russia's armed forces, were designated by the UK in May 2023 and the US in January 2025.",
-   "short": "UK: Perm's Motovilikha Plants make artillery platforms for Russia's forces",
    "sources": [
     {
      "publisher": "UK Foreign, Commonwealth and Development Office",
@@ -1978,7 +1882,6 @@
   },
   "Yekaterinburg": {
    "full": "The US Treasury designated UMMC, based in Verkhnyaya Pyshma and one of Russia's top producers of copper, zinc, gold and silver, to reduce Russia's revenue from metals and mining.",
-   "short": "UMMC (Verkhnyaya Pyshma), copper and gold producer: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -1996,7 +1899,6 @@
   },
   "Chelyabinsk": {
    "full": "The US State Department designated the Chelyabinsk Tractor Plant-Uraltrak, which it says makes engines and weapons for heavy armoured vehicles, to curb Russia's replacement of battlefield losses.",
-   "short": "Chelyabinsk Tractor Plant, maker of armoured-vehicle engines: US-designated",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -2014,7 +1916,6 @@
   },
   "Tyumen": {
    "full": "The US Treasury designated the Tyumen Petroleum Research Center, Rosneft's corporate research and design institute, which works on oil and gas field development for Rosneft subsidiaries.",
-   "short": "Rosneft's research and design institute in Tyumen: US-designated",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -2032,7 +1933,6 @@
   },
   "Omsk": {
    "full": "In September 2023 the US State Department designated the Omsk Transport Machine-Building Plant, which ships T-80BVM tanks to Russia's army and repairs armoured vehicles.",
-   "short": "Omsk plant that builds and repairs tanks: US-designated",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -2056,7 +1956,6 @@
   },
   "Novosibirsk": {
    "full": "United Aircraft Corporation's Novosibirsk plant builds Su-34 bombers, and in June 2022 the US Treasury blocked the corporation as a state-controlled aerospace firm.",
-   "short": "Su-34 bombers are built in Novosibirsk by state-controlled, US-blocked UAC",
    "sources": [
     {
      "publisher": "Business FM",
@@ -2086,7 +1985,6 @@
   },
   "Krasnoyarsk": {
    "full": "In May 2024 the US Treasury said ISS Reshetnev, the satellite maker in Zheleznogorsk, had used a supplier in Türkiye to procure US-made equipment for military satellites.",
-   "short": "US said in 2024 ISS Reshetnev used a Turkish firm to buy US-made equipment",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -2104,7 +2002,6 @@
   },
   "Irkutsk": {
    "full": "The US Treasury designated Irkut, which makes fighter jets and civil aircraft, for operating in Russia's defence and aerospace sectors, along with its subsidiaries registered in Irkutsk.",
-   "short": "Irkut, maker of fighter jets and civil aircraft, is under US sanctions",
    "sources": [
     {
      "publisher": "US Treasury",
@@ -2122,7 +2019,6 @@
   },
   "Khabarovsk": {
    "full": "The US State Department designated the Khabarovsk Radio Engineering Plant, a defence firm in the city that it said works on Russia's anti-aircraft missile systems.",
-   "short": "Khabarovsk Radio Engineering Plant, a defence firm, is US-designated",
    "sources": [
     {
      "publisher": "US Department of State",
@@ -2140,7 +2036,6 @@
   },
   "Vladivostok": {
    "full": "Companies registered in the Russky Island special administrative region rose from 99 in April 2024 to about 140 by August 2026, three-quarters of them moved from Cyprus.",
-   "short": "About 140 firms in the Russky Island special administrative region by 2026",
    "sources": [
     {
      "publisher": "Gazeta.ru",
@@ -2171,7 +2066,7 @@
  },
  "approved": "27 October 2026, Crimea and Sevastopol 30 October 2026",
  "notes": [
-  "One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
+  "One researched, sourced sentence for each region and city window, shown in the profile of the UNDER THE CURSOR card.",
   "Each source is cited by publisher, document type and date, with its link."
  ],
  "author": "by Armen G. Kaprelian"

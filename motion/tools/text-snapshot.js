@@ -25,9 +25,10 @@
   for (const id of [...document.querySelectorAll('[id^="cr-"]')].map(e => e.id).concat('mixread')) out.fixed[id] = tx($(id));   // every card's reading block, read from the page (round 18), and the mix box's
   if (A.wireAt) { out.fixed.wire = {}; for (const y of [2014, 2021, 2024, 2025]) for (const r of ['Russia', 'Moscow Oblast', 'Novosibirsk Oblast']) out.fixed.wire[y + '/' + r] = A.wireAt(y, r).map(it => it.kind + ': ' + it.text); }   // the wire went in round 30
   out.fixed.profiles = A.profiles ? A.profiles() : null;
+  if (out.fixed.profiles) for (const k of ['regions', 'windows']) for (const p of Object.values(out.fixed.profiles[k] || {})) delete p.tile;   // round 31: the short form, unshown since the tile lost its profile (round 30), left the data
   out.fixed.tips = A.tipTexts ? A.tipTexts() : null;
   $('refsbtn').click(); await new Promise(r => setTimeout(r, 400)); out.fixed.refs = tx($('refs')); if ($('refsclose')) $('refsclose').click();
-  out.fixed.guide = typeof AGENT_GUIDE !== 'undefined' ? AGENT_GUIDE : (window.AGENT_GUIDE || null);
+  out.fixed.guide = window.AGENT_GUIDE || await fetch('agent-guide.md').then(r => r.ok ? r.text() : null, () => null);   // round 31: the guide is agent-guide.md beside the page, no longer in js/agent-guide.js
   out.fixed.footer = tx(document.querySelector('footer'));
   out.fixed.presets = [...document.querySelectorAll('#presets .btn')].map(b => [b.textContent.trim(), b.title]);
   out.fixed.header = tx(document.querySelector('header'));

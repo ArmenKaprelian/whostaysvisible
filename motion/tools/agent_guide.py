@@ -3,7 +3,8 @@
 on 29 October 2026 at the author's request, from the atlas's own texts only).
 
 Builds the Markdown guide from the fixed text below (TEMPLATE) and the figures of the shipped data files (figures()), formatted as the page
-formats them (tools/jsfmt.py), and writes it into js/agent-guide.js as a static string. The text describes only what the atlas shows: its terms,
+formats them (tools/jsfmt.py), and writes it to agent-guide.md beside the page and the link to it into js/agent-guide.js (round 31; the twin had carried the text
+as a static string too, about 37 KB that the page never showed). The text describes only what the atlas shows: its terms,
 both views and every layer, the tile and panels, the context line, the controls and view links, the charts, the findings as the atlas states
 them, the limits and REFERENCES. Its figures are the page's: each one is computed from
 the field the page reads, so a change of the data changes the guide and nothing in it is typed by hand.
@@ -14,8 +15,8 @@ the audits flag a working copy that no longer matches the data. The rules (29 Oc
 no semicolons, no "listed" for list membership, numbered sections from 1 and paragraphs numbered within them, every layer of the page's LAYERS
 named, and the public-release checks: no email address, no link but the atlas's own, no file path, no run of nine or more digits, no working note.
 
-Usage: agent_guide.py            writes js/agent-guide.js
-       agent_guide.py --check    rebuilds the guide and compares it with js/agent-guide.js and the rules (exit 1 on a finding)
+Usage: agent_guide.py            writes agent-guide.md and js/agent-guide.js
+       agent_guide.py --check    rebuilds the guide and compares it with agent-guide.md, js/agent-guide.js and the rules (exit 1 on a finding)
 As a module: build(data_dir, published=None) returns the guide (dated when published is given), check(motion_dir) the findings.
 """
 import argparse, json, os, re, sys
@@ -29,7 +30,7 @@ ATLAS = 'https://armenkaprelian.github.io/atlas/'   # the atlas on the author's 
 # The link must serve plain text to an agent without a session. A file inside the claude.ai artifact does not (its viewer loads the page through a token
 # exchange, and the frame host answers 404 to a bare request). Since 28 October 2026 the guide is served beside the atlas on the author's site:
 # tools/publish-set.py writes the dated guide to publish/agent-guide.md at each publish, the site's tools/import_atlas.py copies it to atlas/, and the site
-# serves files as they are (it carries .nojekyll). With GUIDE_URL None the page's js/agent-guide.js is as before and the button copies the text.
+# serves files as they are (it carries .nojekyll). Since round 31 js/agent-guide.js holds only this link, and the lab keeps the undated guide in agent-guide.md.
 GUIDE_URL = ATLAS + 'agent-guide.md'
 
 def dec(v, d=3): return to_fixed(v, d)                                        # Motion.fmt.dec, three decimals by default here
@@ -149,17 +150,17 @@ def rules(text, js=None):
             if not re.search(r'(?<![\w-])%s(?![\w-])' % re.escape(lid), text.split('10.4.', 1)[-1].split('10.5.', 1)[0]): out.append(('layer', 'the layer id %s is not in 10.4' % lid))
     return out
 
-def js_of(text):
-    return ('// The guide for a reader\'s AI agent (round 15, the author\'s item 19, TEACH YOUR AGENT), built by tools/agent_guide.py from the data files.\n'
-            '// A static string: the footer\'s button copies it, nothing is fetched. Do not edit by hand: change tools/agent_guide.py and run it.\n'
-            'window.AGENT_GUIDE = ' + json.dumps(text, ensure_ascii=False) + ';\n' +
-            ('window.AGENT_GUIDE_URL = ' + json.dumps(GUIDE_URL) + ';   // round 17: the button copies this link, and the field shown when the clipboard is refused holds it; the text above stays, checked against the data\n' if GUIDE_URL else ''))
+def js_of(text=None):   # the twin holds the link only (round 31); publish-set.py passes the text, which the publish set writes to agent-guide.md
+    return ('// The link that the footer\'s TEACH YOUR AGENT copies (round 17), set by tools/agent_guide.py. The guide is agent-guide.md beside the page,\n'
+            '// rebuilt from the data files (the publish set\'s copy dated). Do not edit by hand: change tools/agent_guide.py and run it.\n'
+            'window.AGENT_GUIDE_URL = ' + json.dumps(GUIDE_URL) + ';\n')
 
 def check(motion_dir=MOTION):
     data = os.path.join(motion_dir, 'data'); text = build(data); out = rules(text, app_js(data))
-    p = os.path.join(motion_dir, 'js', 'agent-guide.js')
-    if not os.path.exists(p): out.append(('missing', p))
-    elif open(p, encoding='utf-8').read() != js_of(text): out.append(('stale', 'js/agent-guide.js differs from the guide built from the data'))
+    for name, want in (('agent-guide.md', text), (os.path.join('js', 'agent-guide.js'), js_of())):
+        p = os.path.join(motion_dir, name)
+        if not os.path.exists(p): out.append(('missing', p))
+        elif open(p, encoding='utf-8').read() != want: out.append(('stale', '%s differs from the guide built from the data' % name))
     return out
 
 def main():
@@ -170,8 +171,9 @@ def main():
         sys.exit(1 if found else 0)
     data = os.path.join(MOTION, 'data'); text = build(data); found = rules(text, app_js(data))
     for f in found: print('rule: ' + ' | '.join(f))
-    open(os.path.join(MOTION, 'js', 'agent-guide.js'), 'w', encoding='utf-8').write(js_of(text))
-    print('agent guide: %d words, written to js/agent-guide.js%s' % (len(re.findall(r"[A-Za-z0-9’'.%–-]+", text)), '' if not found else ' (with rule findings)'))
+    open(os.path.join(MOTION, 'agent-guide.md'), 'w', encoding='utf-8').write(text)
+    open(os.path.join(MOTION, 'js', 'agent-guide.js'), 'w', encoding='utf-8').write(js_of())
+    print('agent guide: %d words, written to agent-guide.md (its link in js/agent-guide.js)%s' % (len(re.findall(r"[A-Za-z0-9’'.%–-]+", text)), '' if not found else ' (with rule findings)'))
 
 TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 

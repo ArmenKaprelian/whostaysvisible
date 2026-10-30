@@ -1,7 +1,7 @@
 {
  "id": "insights",
  "tool": "motion/tools/insights_build.py",
- "run_utc": "2026-10-30T03:23:38Z",
+ "run_utc": "2026-10-30T09:28:43Z",
  "approval": {
   "date": "2026-10-27",
   "time_utc": "09:22",
@@ -4578,8 +4578,8 @@
  ],
  "output": {
   "json": "data/insights.json",
-  "json_sha256": "65f290a31f2f6a277a0424199b8107de0d0536c0cd03fa1d03dc184a7df39cc3",
+  "json_sha256": "56d0fa958e28059c198d4f9c79d823fcbc26069fd004c587f0e73dfe9f3b7e0f",
   "js": "data/insights.js",
-  "js_sha256": "027aaa5b5416d79e1f7c32eb3d7d06ad7aacbb18026a199814e632d7b4211c1c"
+  "js_sha256": "e9c8a37c52631c534013f52a5aa9091e54828f0db7a5726f7357b6bf664fcb91"
  }
 }

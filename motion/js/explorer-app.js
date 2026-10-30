@@ -1621,7 +1621,7 @@ void main() {
   function profileUnit(kind, name, head) {
     const id = (kind === 'region' ? 'r:' : 'w:') + name; if (profCache.has(id)) return profCache.get(id);
     const ins = INS && INS[kind === 'region' ? 'regions' : 'cities'] ? INS[kind === 'region' ? 'regions' : 'cities'][name] : null; let p = null;
-    if (ins && ins.full && ins.short) { const sz = kind === 'region' ? sizeSentence('regions', 'region', name) : sizeSentence('windows', 'label', name); p = { id, kind, head, full: sz ? [ins.full, sz] : [ins.full], tile: ins.short }; }
+    if (ins && ins.full) { const sz = kind === 'region' ? sizeSentence('regions', 'region', name) : sizeSentence('windows', 'label', name); p = { id, kind, head, full: sz ? [ins.full, sz] : [ins.full] }; }
     profCache.set(id, p); return p;
   }
   const profileRegion = name => profileUnit('region', name, name);
@@ -2767,16 +2767,16 @@ void main() {
   function applyMixRead() { const b = $('mixinfo'), label = mixRead.on ? 'Show the revenue mix' : 'Show how to read the revenue mix'; $('mixread').hidden = !mixRead.on; $('mixkey').hidden = mixRead.on; b.setAttribute('aria-pressed', String(mixRead.on)); b.setAttribute('aria-label', label); b.title = label.toUpperCase(); }
   $('mixinfo').addEventListener('click', () => { mixRead.on = !mixRead.on; writePref('atlas-mix-read', mixRead.on ? 'open' : 'closed'); applyMixRead(); });
   fillReads(); applyReads(); applyMixRead();
-  // TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the guide built into the page (js/agent-guide.js) to the clipboard by the
-  // email copy's path, then a short notice, ">text copied", in a semi-transparent box above the button; where the clipboard is refused, the guide in a read-only
-  // field at the same place, selected. No download, no new window, no request, no data: or blob: URL; Escape or a click elsewhere closes the field.
+  // TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026; a link since round 17): the link to the guide (js/agent-guide.js; the guide is
+  // agent-guide.md beside the page) to the clipboard by the email copy's path, then a short notice in a semi-transparent box above the button; where the clipboard
+  // is refused, the link in a read-only field at the same place, selected. No download, no new window, no request, no data: or blob: URL; Escape or a click elsewhere closes the field.
   { const btn = $('teachagent'), toast = $('agenttoast'), box = $('agentbox'), field = $('agenttext'), url = window.AGENT_GUIDE_URL || ''; let tt = 0;
     if (url) { toast.textContent = '>link copied'; btn.title = 'COPY A LINK TO A GUIDE TO THIS ATLAS FOR YOUR AI AGENT'; btn.setAttribute('aria-label', 'Copy a link to a guide to this atlas for your AI agent'); box.classList.add('url'); field.setAttribute('aria-label', 'A link to the guide to this atlas for your AI agent, selected to copy'); }   // round 17 (the author's request of 27 October 2026): with a link set by tools/agent_guide.py the button copies it, for the reader to paste to their agent; without one, the text as before
     const above = (el, w, h) => { const r = btn.getBoundingClientRect(); el.style.left = Math.round(Math.max(12, Math.min(innerWidth - w - 12, r.left))) + 'px'; el.style.top = Math.round(Math.max(12, r.top - h - 8)) + 'px'; };
     const notice = () => { clearTimeout(tt); toast.classList.remove('out'); toast.hidden = false; above(toast, toast.offsetWidth, toast.offsetHeight); tt = setTimeout(() => { toast.classList.add('out'); tt = setTimeout(() => { toast.hidden = true; toast.classList.remove('out'); }, reduceMotion() ? 0 : 220); }, 1600); };
-    const showField = () => { field.value = url || window.AGENT_GUIDE || ''; box.hidden = false; above(box, box.offsetWidth, box.offsetHeight); field.focus(); field.select(); field.scrollTop = 0; };
+    const showField = () => { field.value = url; box.hidden = false; above(box, box.offsetWidth, box.offsetHeight); field.focus(); field.select(); field.scrollTop = 0; };
     const closeField = () => { box.hidden = true; };
-    btn.addEventListener('click', e => { e.stopPropagation(); const t = url || window.AGENT_GUIDE || ''; if (!t) return; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(notice, showField); else showField(); });
+    btn.addEventListener('click', e => { e.stopPropagation(); const t = url; if (!t) return; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(notice, showField); else showField(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !box.hidden) closeField(); });
     document.addEventListener('pointerdown', e => { if (!box.hidden && !box.contains(e.target) && e.target !== btn) closeField(); }); }
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });
@@ -2918,8 +2918,8 @@ void main() {
     extras() { return { on: true, run: runState.on }; },   // the year run (round 15, item 7B; the blink and the cat key went in round 30)
     profiles() {   // every region's and city window's profile (round 15, item 9): what profile_check.py re-derives
       const out = { regions: {}, windows: {}, medians: !!PROF, insights: !!INS };
-      if (REG) for (const name of regIndex.keys()) { if (name === 'Russia') continue; const p = profileRegion(name); if (p) out.regions[name] = { head: p.head, full: p.full, tile: p.tile }; }
-      for (const label of Object.keys(win1)) { const p = profileWindow(label); if (p) out.windows[label] = { head: p.head, full: p.full, tile: p.tile }; }
+      if (REG) for (const name of regIndex.keys()) { if (name === 'Russia') continue; const p = profileRegion(name); if (p) out.regions[name] = { head: p.head, full: p.full }; }
+      for (const label of Object.keys(win1)) { const p = profileWindow(label); if (p) out.windows[label] = { head: p.head, full: p.full }; }
       return out;
     },
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },

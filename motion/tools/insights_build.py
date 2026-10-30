@@ -4,9 +4,9 @@ the author approved on 27 October 2026 ("I approve all your recommendations": th
 
 Inputs: motion/build/insights-drafts/pass2/out-A.json to out-F.json, and out-G.json for Crimea and Sevastopol (round 29) (git ignores them; the provenance records their hashes), check-allow.json
 (the reviewed exceptions) and approval.json (the author's decision and the units left out). Output keys are the page's (profileUnit,
-explorer-app.js): {regions: {basemap region name: {full, short, sources}}, cities: {window label: {...}}}, each source as publisher,
+explorer-app.js): {regions: {basemap region name: {full, sources}}, cities: {window label: {...}}}, each source as publisher,
 document type, date and link; titles, snippets, statuses and notes stay in the provenance, out of every shipped file.
-Checks: every unit a region or a window of profiles.json; full at most 200 and short at most 76 characters; no semicolon, em-dash or
+Checks: every unit a region or a window of profiles.json; full at most 200 characters (the short form for the tile left the shipped file in round 31); no semicolon, em-dash or
 "listed"; no run of nine or more digits in a text; no shipped field naming a firm on no list (pass2/check.py's list); every source
 with a link and a date. The provenance keeps that list and the reviewed exceptions, so tools/publish-set.py runs the same checks (text_checks) on the
 shipped file from tracked files alone. Run: python3 -I motion/tools/insights_build.py"""
@@ -76,13 +76,13 @@ def text_checks(obj, regions_ok, windows_ok, off_list, allow):   # [(check, pass
     allu = [(u, "region", v) for u, v in obj["regions"].items()] + [(u, "window", v) for u, v in obj["cities"].items()]
     check("every region is a region of profiles.json", all(u in regions_ok for u in obj["regions"]), ", ".join(u for u in obj["regions"] if u not in regions_ok))
     check("every window is a window of profiles.json", all(u in windows_ok for u in obj["cities"]), ", ".join(u for u in obj["cities"] if u not in windows_ok))
-    bad = [u for u, k, v in allu if len(v["full"]) > 200 or len(v["short"]) > 76]; check("full at most 200 and short at most 76 characters", not bad, ", ".join(bad))
-    bad = [u for u, k, v in allu if any(c in v["full"] + v["short"] for c in (";", "\u2014")) or re.search(r"\blisted\b", v["full"] + v["short"], re.I)]; check("no semicolon, em-dash or 'listed'", not bad, ", ".join(bad))
-    bad = [u for u, k, v in allu if re.search(r"\d{9,}", v["full"] + v["short"])]; check("no run of nine or more digits in a text", not bad, ", ".join(bad))
+    bad = [u for u, k, v in allu if len(v["full"]) > 200]; check("full at most 200 characters", not bad, ", ".join(bad))
+    bad = [u for u, k, v in allu if any(c in v["full"] for c in (";", "\u2014")) or re.search(r"\blisted\b", v["full"], re.I)]; check("no semicolon, em-dash or 'listed'", not bad, ", ".join(bad))
+    bad = [u for u, k, v in allu if re.search(r"\d{9,}", v["full"])]; check("no run of nine or more digits in a text", not bad, ", ".join(bad))
     allowed = lambda u, f: any(a["unit"] == u and a["finding"] in f for a in allow)
     bad = []
     for u, k, v in allu:
-        fields = [v["full"], v["short"]] + [x for s in v["sources"] for x in (s["publisher"] or "", s["type"] or "", s["url"] or "")]
+        fields = [v["full"]] + [x for s in v["sources"] for x in (s["publisher"] or "", s["type"] or "", s["url"] or "")]
         for f in off_list:   # as pass2/check.py: the plain text, and the fields with their separators dropped (a link's path)
             if any(f in x.lower() or f.replace(" ", "") in re.sub(r"[-_ /.]", "", x.lower()) for x in fields) and not allowed(u, f): bad.append("%s: %s" % (u, f))
     check("no shipped field names a firm on no list", not bad, "; ".join(bad))
@@ -120,13 +120,13 @@ def main():
             if fe and fe.get("was") != body["short"] and fe.get("was") != body["full"]: raise SystemExit("insights_build: the fit edit for %s no longer matches its text" % u)
             ed = approval.get("edits", {}).get(u, {})   # a rewording the author approved, applied only over the exact text it replaces
             if ed and (ed["was_full"] != body["full"] or ed["was_short"] != body["short"]): raise SystemExit("insights_build: the edit for %s no longer matches its text" % u)
-            rec = {"full": ed.get("full", fe.get("full", body["full"])), "short": ed.get("short", fe.get("short", body["short"])), "sources": srcs}
+            rec = {"full": ed.get("full", fe.get("full", body["full"])), "sources": srcs}   # round 31: the short form stays in the drafts, unshipped since the tile lost its profile
             (out["regions"] if kind == "region" else out["cities"])[u] = rec; n_src += len(srcs)
             prov_units.append({"unit": u, "kind": kind, "agent": X, "text": "alternative" if alt else "edited" if ed else "draft", "status": o.get("status"), "classification": o.get("classification"), "changes": o.get("changes"),
                                "named_firms": o.get("named_firms"), "sources_lab": [{"publisher": s.get("publisher"), "type": s.get("type"), "title": s.get("title_lab"), "snippet": s.get("snippet_lab"), "bib": s.get("bib"), "url": s.get("url")} for s in body.get("sources") or []]})
     allow = json.load(open(os.path.join(P2, "check-allow.json"), encoding="utf-8"))
     checks = text_checks(out, regions_ok, windows_ok, OFF_LIST, allow)
-    obj = dict(out, approved="27 October 2026, Crimea and Sevastopol 30 October 2026", notes=["One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
+    obj = dict(out, approved="27 October 2026, Crimea and Sevastopol 30 October 2026", notes=["One researched, sourced sentence for each region and city window, shown in the profile of the UNDER THE CURSOR card.",
                                                         "Each source is cited by publisher, document type and date, with its link."], author="by Armen G. Kaprelian")
     failed = [c for c in checks if not c["pass"]]
     if "--write" not in sys.argv:   # round 19 (the author's decision of 28 October 2026): without --write the checks run and nothing is written
