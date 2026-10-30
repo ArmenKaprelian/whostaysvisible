@@ -319,13 +319,18 @@ def main():
         groups["pages"].append((n, convert(n)))
     for n in SCRIPTS:
         groups["scripts"].append(("js/" + n, copy("js", n)))
-    for n in page_fonts():
+    fonts = page_fonts()
+    for n in fonts:
         groups["fonts"].append(("fonts/" + n, copy("fonts", n)))
+    for n in (os.listdir(os.path.join(OUT, "fonts")) if os.path.isdir(os.path.join(OUT, "fonts")) else []):   # round 30: a font no page loads leaves the set (the wire's Tomorrow), so the site's import never copies it
+        if n not in fonts: os.remove(os.path.join(OUT, "fonts", n))
     data_dir = os.path.join(MOTION, "data"); loads = page_loads()
     for n in sorted(os.listdir(data_dir)):
         if not n.endswith(".js"): continue
         if loaded(n, loads): groups["data"].append(("data/" + n, copy("data", n)))
         elif os.path.exists(os.path.join(OUT, "data", n)): os.remove(os.path.join(OUT, "data", n))   # a twin no page loads: no stale copy stays in the set
+    for n in (os.listdir(os.path.join(OUT, "data")) if os.path.isdir(os.path.join(OUT, "data")) else []):   # round 30: a twin whose source is gone (data/offwire.js) leaves the set too
+        if n.endswith(".js") and not os.path.exists(os.path.join(data_dir, n)): os.remove(os.path.join(OUT, "data", n))
     years = range(2014, 2026)
     wanted = ["align.png"] + ["%s-%d%s.png" % (ext, y, suf) for y in years for ext, suf in (("city", "-all"), ("downtown", "-all"), ("downtown", ""), ("region", "-all"))]
     for n in wanted:   # the rasters the journey loads: every backdrop, the downtown and national outcome layers
@@ -361,8 +366,10 @@ def dry_report():   # round 19: what --write would change in publish/; the scrat
     def files(root): return {os.path.relpath(os.path.join(r, n), root) for r, _, fs in os.walk(root) for n in fs}
     new, old = files(OUT), files(PUBLISH) if os.path.isdir(PUBLISH) else set()
     changed = sorted(p for p in new & old if not filecmp.cmp(os.path.join(OUT, p), os.path.join(PUBLISH, p), shallow=False))
-    print("dry run, publish/ untouched: %d files would be added and %d changed; --write builds into publish/" % (len(new - old), len(changed)))
+    gone = sorted(p for p in old - new if p.startswith(("fonts/", "data/")) and p.count("/") == 1)   # round 30: the fonts and top-level twins --write removes (the rasters and address files are kept apart)
+    print("dry run, publish/ untouched: %d files would be added, %d changed and %d removed; --write builds into publish/" % (len(new - old), len(changed), len(gone)))
     for p in (sorted(new - old) + changed)[:12]: print("  " + p)
+    for p in gone: print("  removed: " + p)
 
 if __name__ == "__main__":
     code = main()

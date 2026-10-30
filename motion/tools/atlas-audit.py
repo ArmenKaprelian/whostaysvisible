@@ -666,7 +666,7 @@ def main():
                 x = r["extra"]; bad = []
                 if not x: return [("minimap", "dom", "no report")]
                 tt = x.get("titles") or []
-                if len(tt) != N_CITIES + 2: bad.append(("minimap", "title", "%d presets with titles, expected %d" % (len(tt), N_CITIES + 2)))
+                if len(tt) != N_CITIES + 1: bad.append(("minimap", "title", "%d presets with titles, expected %d" % (len(tt), N_CITIES + 1)))   # the cities and Central Moscow (Russia has had no button since round 30)
                 for t in tt:
                     if not t["button"]: bad.append(("minimap", "title", "%s: the button carries no title" % t["label"]))
                     if len(t["button"]) > 200: bad.append(("minimap", "title", "%s: the title runs to %d characters" % (t["label"], len(t["button"]))))
@@ -718,18 +718,19 @@ def main():
             cdp.call("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": ""}]})
             state("share", 2024, "A.mode('firms'); A.preset('Russia'); await A.ready(); { const el = document.getElementById('findinput'); el.focus(); const hits = A.find('zzqxw'); window.__extra = { hits: hits.length, none: document.querySelector('#findlist .none') ? document.querySelector('#findlist .none').textContent : null }; el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); el.blur(); }", "findnone",
                   lambda r: [] if r["extra"] and r["extra"]["hits"] == 0 and r["extra"]["none"] == "No list member by that name" else [("find", "none", json.dumps(r["extra"]))])
+            # (round 30: this state and the revenue mix states run with the context line at its default, collapsed on a phone-width map, the author's pick of 30 October 2026)
             # the tile on a phone (round 14, the author's decision of 25 October 2026), in a phone's viewport with touch: where the floating tile has no place, it docks along
             # the map's top edge at the map's width less 12 px margins, clear of the zoom box, the scale bar and the strip, the point below it with the hover's clearance, and a
             # hidden tile leaves the docked form; on a map under 450 px tall a search lands the firm at 62 percent of the map's height (360 by 800: a revenue-layer search whose
             # tile docks; 375 by 667: a share-layer search whose tile docks above the scale bar)
             if w == 400:
                 PHONEJS = "await A.ready(); { const el = document.getElementById('findinput'); el.focus(); const i = A.find(%r)[0].i; el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); for (let t = 0; t < 100 && !(A.foundState().found && A.foundState().found.i === i); t++) await new Promise(q => setTimeout(q, 100)); el.blur(); await new Promise(q => setTimeout(q, 200)); const T = MOTION_DATA.treatednational, c = A.camera(), m = document.getElementById('mapwrap').getBoundingClientRect(), t = A.tile(), tip = document.getElementById('tip'); window.__extra = { W: m.width, H: m.height, fy: m.height / 2 - (T.y[i] - c.cy) * c.k, fx: m.width / 2 + (T.x[i] - c.cx) * c.k, docked: !!t.docked, fallback: !!t.fallback, box: t.box, cursor: t.cursor, cls: tip.className, tw: tip.getBoundingClientRect().width }; A.hoverOff(); window.__extra.after = { cls: tip.className, width: tip.style.width }; A.hoverPx(t.cursor[0], t.cursor[1], { touch: true }); }"   # shown again for the overlap checks
-                def phone_ok(frac):
+                def phone_ok(frac, must_dock):   # round 30: with the line collapsed on phones, the 375 by 667 tile finds a floating place; the 360 by 800 one still docks
                     def f(r):
                         x = r["extra"]; bad = []
                         if not x: return [("phone", "state", "no report")]
-                        if not x["docked"] or x["fallback"]: bad.append(("phone", "dock", "docked %s, last resort %s" % (x["docked"], x["fallback"])))
-                        else:
+                        if x["fallback"] or (must_dock and not x["docked"]): bad.append(("phone", "dock", "docked %s, last resort %s" % (x["docked"], x["fallback"])))
+                        elif x["docked"]:
                             b = x["box"]
                             if abs(b["x"] - 12) > 0.5 or abs(b["y"] - 12) > 0.5 or abs(b["x1"] - (x["W"] - 2 - 12)) > 1.5: bad.append(("phone", "dock", "the docked tile at %s on a %s px map" % (json.dumps({k: round(b[k], 1) for k in ("x", "y", "x1", "y1")}), round(x["W"]))))
                             if x["cursor"][1] < b["y1"] + 14 - 0.5: bad.append(("phone", "dock", "the point at y %.1f under the docked tile ending at %.1f" % (x["cursor"][1], b["y1"])))
@@ -737,9 +738,9 @@ def main():
                         if abs(x["fy"] / x["H"] - frac) > 0.005 or abs(x["fx"] - x["W"] / 2) > 1: bad.append(("phone", "landing", "the firm at (%.1f, %.1f) on a %.0f by %.0f map, expected %.2f of its height" % (x["fx"], x["fy"], x["W"], x["H"], frac)))
                         return bad
                     return f
-                for pw, ph, lyr, q, frac in ((360, 800, "fin", "aeroflot", 0.5), (375, 667, "share", "gazprom", 0.62)):
+                for pw, ph, lyr, q, frac, dock in ((360, 800, "fin", "aeroflot", 0.5, True), (375, 667, "share", "gazprom", 0.62, False)):
                     cdp.call("Emulation.setDeviceMetricsOverride", {"width": pw, "height": ph, "deviceScaleFactor": 1, "mobile": True}); cdp.call("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 5}); time.sleep(0.5)
-                    state(lyr, 2024, "A.mode('firms'); A.preset('Russia'); " + PHONEJS % q, "phone%d" % ph, phone_ok(frac))
+                    state(lyr, 2024, "A.mode('firms'); A.strip(null); A.preset('Russia'); " + PHONEJS % q, "phone%d" % ph, phone_ok(frac, dock))
                 cdp.call("Emulation.setTouchEmulationEnabled", {"enabled": False}); cdp.call("Emulation.setDeviceMetricsOverride", {"width": w, "height": a.height, "deviceScaleFactor": 1, "mobile": False}); time.sleep(0.5)
             # links to the exact view (round 14): a settled view writes the address; the link button copies the artifact's address with it (or shows it in a field where the clipboard is
             # refused); the address read back restores the view, the layer, the year and the camera; a reload of it does too (below, with the presets' anchors)
@@ -889,16 +890,16 @@ def main():
                     if any(not x["colour"] for x in named): bad.append(("mix", "colour", "a division row without its class colour"))
                     return bad
                 return f
-            state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixhov100", mix_ok("100 km cell at the cursor"))
-            state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.redraw(); A.hoverKm(m[0] + 0.2, m[1] + 0.2, { show: true }); " + MIXJS, "mixhov1", mix_ok("1 km square at the cursor"))
-            state("industry", 2021, "A.mode('cells'); A.mixbox(true); A.preset('Russia'); A.hoverOff(); " + MIXJS, "mixview", mix_ok("100 km cells in view"))
-            state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); A.hoverKm(AN.a[0], AN.a[1], { show: true }); " + MIXJS, "mixaddr", mix_ok("coordinate pair at the cursor"))
-            state("industry", 2021, "A.mode('firms'); A.mixbox(true); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " % (side / 95) + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
+            state("industry", 2021, "A.mode('cells'); A.strip(null); A.mixbox(true); A.preset('Russia'); A.hoverKm(m[0], m[1], { show: true }); " + MIXJS, "mixhov100", mix_ok("100 km cell at the cursor"))
+            state("industry", 2021, "A.mode('cells'); A.strip(null); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.redraw(); A.hoverKm(m[0] + 0.2, m[1] + 0.2, { show: true }); " + MIXJS, "mixhov1", mix_ok("1 km square at the cursor"))
+            state("industry", 2021, "A.mode('cells'); A.strip(null); A.mixbox(true); A.preset('Russia'); A.hoverOff(); " + MIXJS, "mixview", mix_ok("100 km cells in view"))
+            state("industry", 2021, "A.mode('firms'); A.strip(null); A.mixbox(true); A.preset('Central Moscow (250 m)'); await A.ready(); const AN = A.anchors(); A.hoverKm(AN.a[0], AN.a[1], { show: true }); " + MIXJS, "mixaddr", mix_ok("coordinate pair at the cursor"))
+            state("industry", 2021, "A.mode('firms'); A.strip(null); A.mixbox(true); await A.jump({ cx: m[0], cy: m[1], k: %r }); await A.ready(); A.hoverKm(m[0], m[1], { show: true }); " % (side / 95) + MIXJS, "mixsq", mix_ok("pixel at the cursor"))
             # a tap at the map's centre (round 14: where the search lands a firm): on a 400 px map the revenue layer's tile at Moscow is about 260 px tall and has no place at
             # a tap's 24 px, so it must take the hover's clearance rather than the last resort over the controls
             state("fin", 2021, "A.mode('firms'); A.preset('Moscow'); await A.ready(); A.hoverKm(m[0], m[1], { show: true, touch: true }); window.__extra = A.tile();", "tapcentre",
                   lambda r: [] if r["extra"] and not r["extra"].get("fallback") else [("tile", "tap", "a tap at the map's centre left the tile on the last resort: %s" % json.dumps(r["extra"])[:200])])
-            state("industry", 2021, "A.mode('firms'); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverOff(); " + MIXJS, "mixviewf", mix_ok("coordinate pairs in view"))
+            state("industry", 2021, "A.mode('firms'); A.strip(null); A.mixbox(true); A.preset('Moscow'); await A.ready(); A.hoverOff(); " + MIXJS, "mixviewf", mix_ok("coordinate pairs in view"))
             state("share", 2021, "A.mode('cells'); A.preset('Russia'); " + MIXJS, "mixoff", lambda r: [] if r["extra"] and not r["extra"]["visible"] else [("mix", "hidden", "the box shows off the industry layer")])
             state("industry", 2021, "A.mode('cells'); A.mixbox(false); A.preset('Russia'); " + MIXJS, "mixclosed", mix_ok("", closed=True))
             state("industry", 2021, "A.mode('cells'); A.mixbox(null); A.preset('Russia'); " + MIXJS, "mixdef", lambda r: [] if r["extra"] and r["extra"]["visible"] and r["extra"]["open"] == (w >= 1200) else [("mix", "default", "open %s at %d px" % (r["extra"] and r["extra"]["open"], w))])   # open by default only where the map is at least 600 px wide and 640 px tall (the side-by-side layout)
