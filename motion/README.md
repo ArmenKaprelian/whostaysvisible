@@ -2321,6 +2321,8 @@ Proof: `build/proof-r29b`, against HEAD's page served with round 28's publish da
 
 The publish copy is 227b1d5 and the site's import 1201de8, which changes ten files: five changed data twins, `industry.js` (the author mark), `explorer-app.js`, the guide in both forms and the build line. The site's push is the author's.
 
+**Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 43 s), and it pushed b79f51f..1201de8. The ten changed files match the site's copy byte for byte when served live.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
