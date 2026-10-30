@@ -332,12 +332,11 @@ def refs_block(cdp, w, a, once, page_src):
     fams = {f["familyName"] for f in cdp.call("CSS.getPlatformFontsForNode", {"nodeId": nid})["fonts"]}; arm = "DejaVu Sans Mono"
     if arm not in fams or fams - {"IBM Plex Mono", arm}: F("the note rendered with %s, expected IBM Plex Mono and %s only" % (sorted(fams), arm))
     contrast_ok(o, True, "dark theme, Cells view")
-    # the page's keys stand down while it is open: B (the blink), c-a-t (the cat key)
+    # the page's keys stand down while it is open: c-a-t (the cat key)
     k0 = cdp.evaluate("window.__atlas.extras().keyed", await_promise=False)
-    key(cdp, "b", "KeyB", 66, "b"); time.sleep(0.25)
     for ch, vk in (("c", 67), ("a", 65), ("t", 84)): key(cdp, ch, "Key" + ch.upper(), vk, ch)
     time.sleep(0.4); ex_ = cdp.evaluate("window.__atlas.extras()", await_promise=False)
-    if ex_["blink"] or ex_["keyed"] != k0: F("the page's keys acted with the panel open: %s" % json.dumps(ex_))
+    if ex_["keyed"] != k0: F("the page's keys acted with the panel open: %s" % json.dumps(ex_))
     # a shortcut scrolls its section to the top of the body (the one-body form)
     if True:
         for sec in ("refs-type", "refs-links"):   # a section scrolls to the body's top, or the body to its end where too little follows it
@@ -1338,9 +1337,7 @@ def main():
             if w > 900:
                 cm = cdp.evaluate("(async () => { const A = window.__atlas, col = () => { const p = document.querySelector('#mm-russia path'); return p ? getComputedStyle(p).stroke : null; }, want = getComputedStyle(document.documentElement).getPropertyValue('--context').trim(); A.preset('Russia'); await A.ready(); const atFit = col(); A.preset('Kazan'); await A.ready(); const atCity = col(); A.preset('Russia'); await A.ready(); const hex = c => { const m = /rgba?\\((\\d+), (\\d+), (\\d+)/.exec(c || ''); return m ? '#' + [m[1], m[2], m[3]].map(v => (+v).toString(16).padStart(2, '0')).join('').toUpperCase() : c; }; return { want: want.toUpperCase(), atFit: hex(atFit), atCity: hex(atCity) }; })()", await_promise=True, timeout=60); n_states += 1
                 if not cm or cm.get("atFit") != cm.get("want") or cm.get("atCity") != cm.get("want"): findings.append("%-11s width %d  the minimap's corner marks are not green at every view: %s" % ("minimap", w, json.dumps(cm)))
-            # the extras (item 7): the blink alternates the year shown and returns it, holding the wire; the run steps the years and stops
-            bk = cdp.evaluate("(async () => { const A = window.__atlas, sleep = ms => new Promise(r => setTimeout(r, ms)); A.mode('cells'); A.layer('share'); A.year(2024); await A.ready(); const b0 = A.wire().builds, seen = new Set(); A.blink(true); for (let i = 0; i < 8; i++) { await sleep(400); seen.add(document.getElementById('yearlabel').textContent); } const hold = A.extras().wireHold; A.blink(false); await sleep(200); return { seen: [...seen], hold, back: document.getElementById('yearlabel').textContent, slider: document.getElementById('year').value, builds: A.wire().builds - b0, on: A.extras().blink }; })()", await_promise=True, timeout=60); n_states += 1
-            if sorted(bk.get("seen", [])) != ["2021", "2024"] or not bk.get("hold") or bk.get("back") != "2024" or bk.get("slider") != "2024" or bk.get("builds") != 0 or bk.get("on"): findings.append("%-11s width %d  the blink: %s" % ("extras", w, json.dumps(bk)))
+            # the year run (item 7B): it steps the years and stops
             rn = cdp.evaluate("(async () => { const A = window.__atlas, sleep = ms => new Promise(r => setTimeout(r, ms)); A.mode('cells'); A.layer('share'); A.year(2016); await A.ready(); document.getElementById('yearrun').click(); await sleep(2600); const mid = +document.getElementById('year').value, hold = A.extras().wireHold; document.getElementById('yearrun').click(); await sleep(100); return { mid, hold, after: A.extras() }; })()", await_promise=True, timeout=60); n_states += 1
             if not (2017 <= rn.get("mid", 0) <= 2019) or not rn.get("hold") or rn["after"].get("run") or rn["after"].get("wireHold"): findings.append("%-11s width %d  the year run: %s" % ("extras", w, json.dumps(rn)))
             cdp.evaluate("(() => { const A = window.__atlas; A.year(2024); return true; })()", await_promise=False)

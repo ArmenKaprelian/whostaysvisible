@@ -187,7 +187,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 1.4. Firms on no list are never named in the atlas. Do not try to identify them, and do not help a viewer do so from addresses, coordinates or counts.
 
-1.5. The atlas names firms on the five lists, and FIND searches them (8.6). You may repeat what the atlas shows about such a firm: its name, its lists, the year it was added to a list, its statement status and the revenue figures in its entry (6.5).
+1.5. The atlas names firms on the five lists, and FIND searches them (8.5). You may repeat what the atlas shows about such a firm: its name, its lists, the year it was added to a list, its statement status and the revenue figures in its entry (6.5).
 
 1.6. Some source lines in the atlas name internal processing steps or files, such as "the M5 pass" or a file name ending in .csv. These identify the author's data passes. The atlas does not explain them further, so do not guess what they contain.
 
@@ -234,7 +234,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 2.17. The 50-firm support rule and disclosure. In the Cells view a share is shown only where 50 or more firms make up its denominator. Cells, squares and regions with fewer are grey. List counts under 5 in a cell are not shown. Counts under 10 in the 250 m city cells and the 5 km density cells are banded: they read "fewer than 10." The Firms view and the 1 km squares show exact counts, and the Firms view shows each coordinate pair's own share.
 
-2.18. The {n_windows} city windows are square areas around the cities under GO TO (8.5): {city_list}. The tile names the window and its size, as in "Moscow window, 90 by 90 km." Inside them the atlas has 250 m cells for 2021 and, on the shared-pairs layer, 1 km squares.
+2.18. The {n_windows} city windows are square areas around the cities under GO TO (8.4): {city_list}. The tile names the window and its size, as in "Moscow window, 90 by 90 km." Inside them the atlas has 250 m cells for 2021 and, on the shared-pairs layer, 1 km squares.
 
 ## 3. The page
 
@@ -242,7 +242,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 3.2. The map fills the left. Over it sit the legend (7.1), the revenue mix box on the industry layer (7.2), the NOTE (7.3), the scale bar and zoom buttons (7.5), and along its bottom edge the context line (7.4).
 
-3.3. The side column holds six cards: LAYER (8.1), GO TO (8.5), UNDER THE CURSOR (6.2), ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY (9.2), NATIONAL AVAILABILITY BY YEAR (9.3) and GROUPS, 2021 TO 2024 (9.4). Each card's i button opens its reading text. On the three chart cards it gives what the chart shows, its findings, the question behind it and its source. On LAYER it opens the METHOD text (8.1), on GO TO the instructions for moving the map (10.1 to 10.3), and on UNDER THE CURSOR an account of its rows, chart and disclosure rules. The legend and the mix box have i buttons of their own. The triangle buttons collapse the cards, the legend, the mix box and the NOTE.
+3.3. The side column holds six cards: LAYER (8.1), GO TO (8.4), UNDER THE CURSOR (6.2), ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY (9.2), NATIONAL AVAILABILITY BY YEAR (9.3) and GROUPS, 2021 TO 2024 (9.4). Each card's i button opens its reading text. On the three chart cards it gives what the chart shows, its findings, the question behind it and its source. On LAYER it opens the METHOD text (8.1), on GO TO the instructions for moving the map (10.1 to 10.3), and on UNDER THE CURSOR an account of its rows, chart and disclosure rules. The legend and the mix box have i buttons of their own. The triangle buttons collapse the cards, the legend, the mix box and the NOTE.
 
 3.4. The footer holds the author's name, the email address with a copy button, TEACH YOUR AGENT, which copies the link to this guide, a link to the author's website, buttons for the author's X account and for sharing on X, and the data credit line: "RFSD {release_v}, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0."
 
@@ -351,13 +351,11 @@ Typing c, a, t anywhere outside a text field puts a cat fact on the line. The tr
 
 8.2. The year row appears for the layers that follow the slider (5.2, 5.7, 5.9) and in the Firms view. The slider runs from 2014 to 2025*. The play button steps the years forward one a second from the year shown to 2025, starting from 2014 if the year shown is 2025, and pauses on a second press. Its tooltip reads "Run the years from 2014 to 2025, one a second."
 
-8.3. BLINK flips the map between the year shown and a comparison year: 2021, or 2024 when the year shown is 2021. Holding B, anywhere outside a text field, does the same for as long as B is held. The button's tooltip carries a quotation about blinking.
+8.3. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a west-to-east sweep in which each of those firms swells in turn. Its label counts the firms it shows that year: {pulse_2014} in 2014, {pulse_2021} in 2021, {pulse_2024} in 2024 and {pulse_2025} in 2025. These counts are lower than the context line's national counts of firms added (2.8). The page does not explain the difference, so do not guess at it. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
-8.4. The red button. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding a firm added to a list in the year shown. In the Firms view it replays a west-to-east sweep in which each of those firms swells in turn. Its label counts the firms it shows that year: {pulse_2014} in 2014, {pulse_2021} in 2021, {pulse_2024} in 2024 and {pulse_2025} in 2025. These counts are lower than the context line's national counts of firms added (2.8). The page does not explain the difference, so do not guess at it. The button is hidden on the other Cells-view layers and disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
+8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the {n_windows} cities (on a phone, a row of city buttons takes its place), RUSSIA (fit the country), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
-8.5. GO TO holds FIND, a minimap of Russia whose city labels fly to the {n_windows} cities (on a phone, a row of city buttons takes its place), RUSSIA (fit the country), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
-
-8.6. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
+8.5. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
 
 ## 9. The chart cards
 
@@ -383,7 +381,7 @@ The state-run firms are about half of the state-related firms and carry the whol
 
 10.1. Mouse. Scroll, or the + and − buttons, to zoom. Drag to pan. A click on a cell flies to it, or to its city if the cell holds one. From a city a click goes to the 20 km scale, then 2.5 times closer. In the Firms view, clicks past the 20 km scale zoom 4 times closer. Shift+click zooms back out from the point.
 
-10.2. Keys, with the map focused: + and − zoom, 0 fits the country, and the arrows pan (Shift with an arrow pans in smaller steps). Holding B blinks the map (8.3). Escape puts an enlarged chart back.
+10.2. Keys, with the map focused: + and − zoom, 0 fits the country, and the arrows pan (Shift with an arrow pans in smaller steps). Escape puts an enlarged chart back.
 
 10.3. Touch. Drag with one finger, pinch to zoom, tap a cell for its values, and double-tap to zoom.
 

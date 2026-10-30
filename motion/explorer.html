@@ -347,13 +347,11 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 #modes .modelabel { align-self: center; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .yearrow { margin-top: 8px; }
 .yearrow .yline { display: flex; align-items: center; gap: 10px; }
-/* The year row's second line (round 15): the blink comparator at the left (item 7A), and at the right the label that says what the red button shows, the year and the
-   number of firms listed in it, with the button (item 4B). It wraps on a narrow card. */
-.yearrow .yline2 { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px 8px; margin-top: 8px; }   /* the red button, its counter and BLINK on one line (the author's request of 27 October 2026) */
+/* The year row's second line (round 15): the red button and the label that says what it shows, the year and the number of firms listed in it (item 4B). It wraps
+   on a narrow card. The blink comparator that shared the line (item 7A) was removed in round 30 (the author's request of 30 October 2026). */
+.yearrow .yline2 { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px 8px; margin-top: 8px; }   /* the red button and its counter on one line (the author's request of 27 October 2026) */
 .yearrow .yline2[hidden] { display: none; }
 .yearrow .plabel { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 12px; line-height: 1.3; color: var(--muted); }   /* the counter beside its button, on two lines where the line is short */
-.yearrow #blink { margin-left: auto; }
-.yearrow .yline2:has(#pulse[hidden]) #blink { margin-left: 0; }   /* alone, BLINK keeps to the left */
 .yearrow .plabel.zero { opacity: 0.55; }   /* no firm added that year: the counter and its sentence dim beside the disabled red button (0.4); text tied to a disabled control */
 .yearrow .plabel b { color: var(--treated); font-weight: 700; }   /* the count in the listed red, as the tile's and the legend's counts */
 .yearrow .ybtn { font-size: 12px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
@@ -558,7 +556,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
       <div class="controls" id="layers"></div>
       <div class="yearrow" id="yearrow">
       <div class="yline"><span class="ui" id="yearui">Year</span><button class="btn ybtn yrun" id="yearrun" type="button" aria-pressed="false" aria-label="Run the years from 2014 to 2025" title="RUN THE YEARS FROM 2014 TO 2025, ONE A SECOND" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="play" d="M4 2.5v11l9-5.5z" fill="currentColor"/><path class="pause" d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span></div>
-      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay sweep of firms added to a list in 2021" title="Replay sweep of firms added to a list in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span><button class="btn ybtn" id="blink" type="button" aria-pressed="false" hidden>Blink <span class="by">2021</span></button></div>
+      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay sweep of firms added to a list in 2021" title="Replay sweep of firms added to a list in 2021"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span></div>
       </div>
       </div>
     </section>

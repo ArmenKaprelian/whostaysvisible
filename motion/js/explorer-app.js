@@ -12,7 +12,7 @@
   // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
   let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
   const grpLayer = () => state.layer === 'gs';
-  const blinkState = { on: false, timer: 0, base: 0, alt: 0, held: false }, runState = { on: false, timer: 0 }, catKey = { buf: '', next: 0 };   // the extras' state (round 15, item 7)
+  const runState = { on: false, timer: 0 }, catKey = { buf: '', next: 0 };   // the extras' state (round 15, item 7)
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
   if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
@@ -1279,7 +1279,7 @@ void main() {
     const gname = band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name;
     f.slot = `<span class="loc">${esc(gname)}</span> · <span class="num">${state.year}${state.year === 2025 ? '*' : ''}</span>`;   // the slot's essentials (the author's request of 25 October 2026): the glyph's region and the slider's year; the full fact rides the wire as the set's first item
     setStripText(f, prev); setGlyph(gname);   // the first slot shows the hovered region at once (round 16: the author's pick of 27 October 2026, wsA)
-    if (wireHold) return;   // the blink and the year run (round 15): the slot follows the year shown, the track waits for the end
+    if (wireHold) return;   // the year run (round 15): the slot follows the year shown, the track waits for the end
     rebuildWire(band, name); scheduleTip();
   }
   function setStripText(f, prev) {   // crossfade the two stacked spans; when the previous fact had the same figures, the numbers count to the new values
@@ -1310,7 +1310,6 @@ void main() {
     { text: 'Type a name under GO TO to find a firm on the five lists.' },
     { text: 'The link button under GO TO copies a link to the current view.' },
     { text: 'Map focused: + and − zoom, 0 fits the country, the arrows pan.', mouse: true },
-    { text: 'Hold B to blink the map between 2021 and the year shown.', mouse: true },
   ];
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
@@ -2539,7 +2538,7 @@ void main() {
   const syncProv = () => { const Lx = LAYERS.find(x => x.id === state.layer), el = $('layerprov');   // round 16: a layer with a reading text shows it in standard terms
     if (state.mode !== 'firms' && Lx.read) el.innerHTML = Lx.read().map(([t, x]) => `<span class="rb"><span class="h">${esc(t)}</span> ${esc(x)}</span>`).join(''); else el.textContent = state.mode === 'firms' ? FIRMS_PROV : Lx.prov;
     for (const e of layersEl.querySelectorAll('.fmark')) e.style.display = state.mode === 'firms' ? '' : 'none'; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (blinkState.on) blinkStop(); if (runState.on) runEnd(); state.layer = L.id; endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (runState.on) runEnd(); state.layer = L.id; endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   // The LAYER card's groups (round 15, the author's choice of 27 October 2026: C, revised): each name at the left of its buttons, as VIEW is
   { const GROUPS = GROUP_ORDER.map(g => [g, LAYERS.filter(L => L.group === g).map(L => L.id)]), by = id => layersEl.querySelector('.btn[data-id="' + id + '"]'), loose = [...layersEl.querySelectorAll('.btn')];
     for (const [name, ids] of GROUPS) { const bs = ids.map(by).filter(Boolean); if (!bs.length) continue; const lab = document.createElement('span'); lab.className = 'glabel'; lab.textContent = name; lab.style.gridRow = 'span ' + bs.length; layersEl.appendChild(lab); bs.forEach(b => layersEl.appendChild(b)); }
@@ -2554,38 +2553,17 @@ void main() {
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (blinkState.on) blinkStop(); if (runState.on) runEnd(); state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (runState.on) runEnd(); state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); if (blinkState.on) blinkStop(true); drawNational(); syncMix(); updateContext(true); if (!wireHold) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
-  // ---- the author's three extras (round 15, item 7; each labelled optional in the review) ----------------------------------------
-  // 7A, the blink comparator: hold B, or press BLINK, and the map alternates once a second between 2021, the chapter's base year, and the year shown (2024 when 2021 is
-  // shown), so the places where statements stopped appearing flicker; the year value, the legend, the tile and the slot name the year on screen at every swap, while
-  // the slider, the wire and the charts hold until it stops. Under reduced motion the other year holds while B or the button is down, with no blinking. The button's
-  // tooltip is the quotation the author chose on 26 October 2026, without a citation; its accessible label says what the button does.
-  const blinkOther = y => (y === 2021 ? 2024 : 2021);
-  function showYear(y) {   // the map in year y without moving the slider
-    if (state.year === y) return; state.year = y; $('yearlabel').textContent = y + (y === 2025 ? '*' : '');
-    if (state.mode === 'firms') { endPulse(); fieldAnim.dissolve = { t0: null }; } else endCellPulse();
-    drawMap(); refreshHover(); updateContext(true);
-  }
-  function blinkStart(held) {
-    if (blinkState.on || $('yearrow').hidden) return; if (runState.on) runEnd();   // only where the year row shows: the other layers have a fixed year
-    blinkState.on = true; blinkState.held = !!held; blinkState.base = state.year; blinkState.alt = blinkOther(state.year); wireHold = true; syncYearLine2();
-    const go = () => { if (!blinkState.on) return; if (reduceMotion()) { showYear(blinkState.alt); return; }
-      const tick = () => { if (!blinkState.on) return; showYear(state.year === blinkState.base ? blinkState.alt : blinkState.base); blinkState.timer = setTimeout(tick, 1000); }; tick(); };
-    if (FIRMS_OK) Promise.race([ensureYear(blinkState.alt).catch(() => null), new Promise(r => setTimeout(r, 3000))]).then(go); else go();   // the other year's addresses loaded first, so the first swap never shows an empty field
-  }
-  function blinkStop(keepYear) {
-    if (!blinkState.on) return; blinkState.on = false; clearTimeout(blinkState.timer); blinkState.timer = 0;
-    if (!keepYear) showYear(blinkState.base); wireHold = false; syncYearLine2();
-  }
+  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); if (!wireHold) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
+  // ---- the author's extras (round 15, item 7; each labelled optional in the review): the year run; the blink comparator (7A) was removed in round 30 --
   // 7B, the year run: a play button by YEAR runs the years from 2014 (or from the year shown, after a pause) to 2025, one a second, through the slider, so every year
   // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line); the wire holds and rebuilds once, at the end or the pause.
   function setYear(y) { const yEl = $('year'); yEl.value = String(y); yEl.dispatchEvent(new Event('input')); }
   function runStart() {
-    if (runState.on) return; blinkStop();
+    if (runState.on) return;
     runState.on = true; wireHold = true; syncYearLine2();
     if (+$('year').value >= 2025) setYear(2014);
     runState.timer = setTimeout(runStep, 1000);
@@ -2600,23 +2578,17 @@ void main() {
     wireHold = false; syncYearLine2(); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); }
   }
   function syncYearLine2() {
-    const run = $('yearrun'), bl = $('blink'); run.hidden = false; bl.hidden = false;
+    const run = $('yearrun'); run.hidden = false;
     run.setAttribute('aria-pressed', String(runState.on)); { const t = runState.on ? 'Pause the run of the years' : 'Run the years from 2014 to 2025, one a second'; run.setAttribute('aria-label', t); run.title = t.toUpperCase(); }
-    bl.setAttribute('aria-pressed', String(blinkState.on)); bl.querySelector('.by').textContent = String(blinkOther(blinkState.on ? blinkState.base : state.year));
-    bl.setAttribute('aria-label', `Blink the map between ${blinkOther(blinkState.on ? blinkState.base : state.year)} and the year shown (hold B)`); bl.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked';
     $('yline2').hidden = ![...$('yline2').children].some(el => !el.hidden);
   }
   $('yearrun').addEventListener('click', () => { if (runState.on) runEnd(); else runStart(); });
-  $('blink').addEventListener('click', () => { if (blinkState.on) blinkStop(); else blinkStart(false); });
   document.addEventListener('keydown', e => {
     const t = e.target; if (e.ctrlKey || e.metaKey || e.altKey || refsIsOpen() || (t && t.closest && t.closest('input, textarea, select, [contenteditable]'))) return;   // the REFERENCES panel holds the page's keys (round 16)
     const k = (e.key || '').toLowerCase();
-    if (k === 'b' && !e.repeat && !blinkState.on) { blinkStart(true); return; }
     // 7C, the cat key: c-a-t typed anywhere outside a field puts the next cat fact on the wire just past the items in view (folklore; the wire checker knows these items by their source tag)
     if (k.length === 1 && !e.repeat) { catKey.buf = (catKey.buf + k).slice(-3); if (catKey.buf === 'cat') { catKey.buf = ''; wireCatNow(); } }
   });
-  document.addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'b' && blinkState.on && blinkState.held) blinkStop(); });
-  window.addEventListener('blur', () => { if (blinkState.on && blinkState.held) blinkStop(); });
   function wireCatNow() {
     if (!OFFWIRE || !OFFWIRE.facts || !OFFWIRE.facts.length || !wireScrolls() || !stripOpen() || !wireState.sets.length) return false;
     const ws = wireState, tr = wireTrack(), x = wireX(), right = x + wireVisW(); let target = null, owner = null, idx = -1;
@@ -2936,8 +2908,7 @@ void main() {
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
   // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
   // page behind is inert. Escape, the close toggle or a press outside close it, focus returns to the button, and the page's own keys stand down while it is open.
-  // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance;
-  // the blink's quotation is uncited by the author's choice.
+  // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance.
   const REFS_ALPHA = 98, GLOSS = D.glossary || null;
   const refsIsOpen = () => { const d = $('refs'); return !!(d && d.open); };
   const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text || url)}</a>`;
@@ -3048,7 +3019,7 @@ void main() {
   const pct1 = v => fmt.pct(v), ci = (lo, hi) => `95% confidence interval ${fmt.dec(lo, 3)} to ${fmt.dec(hi, 3)}`;
   function fillReads() {
     $('cr-goto').innerHTML = P(H('Mouse') + 'Scroll, or the + and − buttons, to zoom. Drag to pan. A click on a cell flies to it, and Shift+click steps back out.',
-      H('Keys, map focused') + '+ and − zoom, 0 fits the country, the arrows pan. Hold B to blink the map between 2021 and the year shown.',
+      H('Keys, map focused') + '+ and − zoom, 0 fits the country, the arrows pan.',
       H('Touch') + 'Drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom.',
       'FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. LINK TO CURRENT VIEW copies a link that opens the atlas on the same view.',
       'Region geometry: geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL).');
@@ -3128,7 +3099,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), blink: rel('blink'), pulselabel: rel('pulselabel'), tipbio: rel('tipbio'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), tipbio: rel('tipbio'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -3260,8 +3231,7 @@ void main() {
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     methodMore(more) { if (more != null) { ui.methodMore = more ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     popout(id) { if (id === null) closePop(); else if (id) openPop(id); return pop.id; },   // the pop-out (round 15, item 5.4)
-    extras() { return { on: true, blink: blinkState.on, run: runState.on, wireHold, catNext: catKey.next, keyed: $('wiretrack').querySelectorAll('.wi.keyed').length }; },   // the three extras (round 15, item 7)
-    blink(on) { if (on) blinkStart(false); else blinkStop(); return blinkState.on; },
+    extras() { return { on: true, run: runState.on, wireHold, catNext: catKey.next, keyed: $('wiretrack').querySelectorAll('.wi.keyed').length }; },   // the three extras (round 15, item 7)
     catNow() { return wireCatNow(); },
     profiles() {   // every region's and city window's profile (round 15, item 9): what profile_check.py re-derives
       const out = { regions: {}, windows: {}, medians: !!PROF, insights: !!INS };
