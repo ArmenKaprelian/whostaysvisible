@@ -1,7 +1,7 @@
 {
  "id": "insights",
  "tool": "motion/tools/insights_build.py",
- "run_utc": "2026-10-27T11:35:38Z",
+ "run_utc": "2026-10-30T03:23:38Z",
  "approval": {
   "date": "2026-10-27",
   "time_utc": "09:22",
@@ -44,7 +44,16 @@
    "Vologda Oblast": "A5: Severstal's IFRS halt from 2022 to August 2023",
    "Khanty-Mansiysk Autonomous Okrug – Ugra": "A5: oil output statistics withheld since April 2023 against the okrug's own figure"
   },
-  "individuals": "A4: kept where the designating authority names them as the reason (Belgorod, Chechnya, Nizhny Novgorod); Vologda's text is now the alternative, which names no one"
+  "individuals": "A4: kept where the designating authority names them as the reason (Belgorod, Chechnya, Nizhny Novgorod); Vologda's text is now the alternative, which names no one",
+  "added": {
+   "date": "2026-10-30",
+   "words": "Approve and publish (the two profile texts for Crimea and Sevastopol as shown, with their sources)",
+   "units": [
+    "Crimea",
+    "Sevastopol"
+   ],
+   "file": "out-G.json"
+  }
  },
  "off_list": [
   "moscow exchange",
@@ -121,12 +130,16 @@
    "sha256": "69046a38e36596966e76af58acc62d9e221f67890aed754512746980be5de6a2"
   },
   {
+   "path": "build/insights-drafts/pass2/out-G.json",
+   "sha256": "fc5d391ae0ce850e989ebeac1c54d3a0c9cd4ceedb69973239bf3735d1b75711"
+  },
+  {
    "path": "build/insights-drafts/pass2/check-allow.json",
    "sha256": "cae5d8eb67830539018c9627cb3d4980c432b81ca2d76d7fd68348ea7cc69aca"
   },
   {
    "path": "build/insights-drafts/pass2/approval.json",
-   "sha256": "e3281e05a1a281ce36da7b198808d7412c4e8e13a071c16732e241f7a2ececed"
+   "sha256": "5a79141f951c5a3de61239ee23e78613c957781ea1ef6d9c25350b7495598511"
   },
   {
    "path": "build/insights-drafts/pass2/BRIEF-2.md",
@@ -4513,12 +4526,60 @@
      "url": "https://cbr.ru/eng/press/event/?id=18790"
     }
    ]
+  },
+  {
+   "unit": "Crimea",
+   "kind": "region",
+   "agent": "G",
+   "text": "draft",
+   "status": "new (round 29)",
+   "classification": "territorial sanctions",
+   "changes": null,
+   "named_firms": null,
+   "sources_lab": [
+    {
+     "publisher": "Council of the European Union",
+     "type": "regulation",
+     "title": "Council Regulation (EU) No 692/2014 of 23 June 2014 concerning restrictions on the import into the Union of goods originating in Crimea or Sevastopol (read in the legislation.gov.uk copy as adopted)",
+     "snippet": "It shall be prohibited: (a) to import into the European Union goods originating in Crimea or Sevastopol",
+     "bib": null,
+     "url": "https://eur-lex.europa.eu/eli/reg/2014/692/oj"
+    },
+    {
+     "publisher": "President of the United States",
+     "type": "executive order",
+     "title": "Executive Order 13685, Blocking Property of Certain Persons and Prohibiting Certain Transactions With Respect to the Crimea Region of Ukraine (Daily Compilation of Presidential Documents)",
+     "snippet": "new investment in the Crimea region of Ukraine by a United States person, wherever located; the importation into the United States ... of any goods, services, or technology from the Crimea region of Ukraine",
+     "bib": null,
+     "url": "https://www.govinfo.gov/content/pkg/DCPD-201400947/html/DCPD-201400947.htm"
+    }
+   ]
+  },
+  {
+   "unit": "Sevastopol",
+   "kind": "region",
+   "agent": "G",
+   "text": "draft",
+   "status": "new (round 29)",
+   "classification": "strong designation",
+   "changes": null,
+   "named_firms": null,
+   "sources_lab": [
+    {
+     "publisher": "Council of the European Union",
+     "type": "implementing regulation",
+     "title": "Council Implementing Regulation (EU) No 810/2014 of 25 July 2014 implementing Regulation (EU) No 269/2014, Annex, entities, State enterprise 'Sevastopol commercial seaport' (read in the legislation.gov.uk copy as adopted)",
+     "snippet": "In terms of volume of trade, it is the biggest commercial seaport in Crimea. Date of listing 25.7.2014",
+     "bib": null,
+     "url": "https://eur-lex.europa.eu/eli/reg_impl/2014/810/oj"
+    }
+   ]
   }
  ],
  "output": {
   "json": "data/insights.json",
-  "json_sha256": "63cec2ddc922821d7b68cb37f295b96dc3b529ac991231573b168ae1a1ced631",
+  "json_sha256": "65f290a31f2f6a277a0424199b8107de0d0536c0cd03fa1d03dc184a7df39cc3",
   "js": "data/insights.js",
-  "js_sha256": "d8268346d126b43636aec3f527e27cdd4ef100bbbf46bba95cb605abc465e350"
+  "js_sha256": "027aaa5b5416d79e1f7c32eb3d7d06ad7aacbb18026a199814e632d7b4211c1c"
  }
 }

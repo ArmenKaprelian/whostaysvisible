@@ -2,7 +2,7 @@
 """The profiles' insights as shipped data (round 16): data/insights.json and its twin, provenance and checks, from the second research pass
 the author approved on 27 October 2026 ("I approve all your recommendations": the agents' texts as written, the alternatives not taken).
 
-Inputs: motion/build/insights-drafts/pass2/out-A.json to out-F.json (git ignores them; the provenance records their hashes), check-allow.json
+Inputs: motion/build/insights-drafts/pass2/out-A.json to out-F.json, and out-G.json for Crimea and Sevastopol (round 29) (git ignores them; the provenance records their hashes), check-allow.json
 (the reviewed exceptions) and approval.json (the author's decision and the units left out). Output keys are the page's (profileUnit,
 explorer-app.js): {regions: {basemap region name: {full, short, sources}}, cities: {window label: {...}}}, each source as publisher,
 document type, date and link; titles, snippets, statuses and notes stay in the provenance, out of every shipped file.
@@ -103,7 +103,7 @@ def main():
     regions_ok = set(prof["regions"]["region"]) if isinstance(prof["regions"], dict) else {r["region"] for r in prof["regions"]}
     windows_ok = set(prof["windows"]["label"]) if isinstance(prof["windows"], dict) else {w["label"] for w in prof["windows"]}
     out = {"regions": {}, "cities": {}}; prov_units = []; n_src = 0
-    for X in "ABCDEF":
+    for X in "ABCDEFG":   # G: round 29's Crimea and Sevastopol (the author's request of 30 October 2026)
         path = os.path.join(P2, "out-%s.json" % X)
         for o in json.load(open(path, encoding="utf-8")):
             u, kind = o["unit"], o["kind"]
@@ -126,7 +126,7 @@ def main():
                                "named_firms": o.get("named_firms"), "sources_lab": [{"publisher": s.get("publisher"), "type": s.get("type"), "title": s.get("title_lab"), "snippet": s.get("snippet_lab"), "bib": s.get("bib"), "url": s.get("url")} for s in body.get("sources") or []]})
     allow = json.load(open(os.path.join(P2, "check-allow.json"), encoding="utf-8"))
     checks = text_checks(out, regions_ok, windows_ok, OFF_LIST, allow)
-    obj = dict(out, approved="27 October 2026", notes=["One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
+    obj = dict(out, approved="27 October 2026, Crimea and Sevastopol 30 October 2026", notes=["One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
                                                         "Each source is cited by publisher, document type and date, with its link."], author="by Armen G. Kaprelian")
     failed = [c for c in checks if not c["pass"]]
     if "--write" not in sys.argv:   # round 19 (the author's decision of 28 October 2026): without --write the checks run and nothing is written
@@ -139,7 +139,7 @@ def main():
     jp, jsp = os.path.join(DATA, "insights.json"), os.path.join(DATA, "insights.js")
     with open(jp, "w", encoding="utf-8") as f: json.dump(obj, f, ensure_ascii=False, indent=1)
     with open(jsp, "w", encoding="utf-8") as f: f.write(js_of(obj))
-    inputs = [os.path.join(P2, n) for n in ["out-%s.json" % X for X in "ABCDEF"] + ["check-allow.json", "approval.json", "BRIEF-2.md"]]
+    inputs = [os.path.join(P2, n) for n in ["out-%s.json" % X for X in "ABCDEFG"] + ["check-allow.json", "approval.json", "BRIEF-2.md"]]
     prov = {"id": "insights", "tool": "motion/tools/insights_build.py", "run_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "approval": approval, "off_list": OFF_LIST, "allow": allow, "inputs": [{"path": os.path.relpath(p, MOTION), "sha256": sha256(p)} for p in inputs],
             "reports": ["build/insights-drafts/pass2/report-%s.md" % X for X in "ABCDEF"], "review_page": "review/2026-10-27-round-16-insights.html",

@@ -1685,6 +1685,36 @@
      "url": "https://www.interfax.ru/business/1001256"
     }
    ]
+  },
+  "Crimea": {
+   "full": "The EU banned imports of goods from Crimea in June 2014, and a US executive order of December 2014 barred US persons from new investment in Crimea and from most trade with it.",
+   "short": "2014: EU ban on imports from Crimea, US ban on investment and trade",
+   "sources": [
+    {
+     "publisher": "Council of the European Union",
+     "type": "regulation",
+     "date": "2014-06-23",
+     "url": "https://eur-lex.europa.eu/eli/reg/2014/692/oj"
+    },
+    {
+     "publisher": "President of the United States",
+     "type": "executive order",
+     "date": "2014-12-19",
+     "url": "https://www.govinfo.gov/content/pkg/DCPD-201400947/html/DCPD-201400947.htm"
+    }
+   ]
+  },
+  "Sevastopol": {
+   "full": "In July 2014 the EU froze the assets of the state Sevastopol commercial seaport, which it called the biggest commercial seaport in Crimea by volume of trade.",
+   "short": "EU froze the Sevastopol commercial seaport's assets in July 2014",
+   "sources": [
+    {
+     "publisher": "Council of the European Union",
+     "type": "implementing regulation",
+     "date": "2014-07-25",
+     "url": "https://eur-lex.europa.eu/eli/reg_impl/2014/810/oj"
+    }
+   ]
   }
  },
  "cities": {
@@ -2139,7 +2169,7 @@
    ]
   }
  },
- "approved": "27 October 2026",
+ "approved": "27 October 2026, Crimea and Sevastopol 30 October 2026",
  "notes": [
   "One researched, sourced sentence for each region and city window, in a full form for the card and a short form for the tile.",
   "Each source is cited by publisher, document type and date, with its link."
