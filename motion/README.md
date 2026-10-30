@@ -2340,6 +2340,10 @@ The publish copy is 227b1d5 and the site's import 1201de8, which changes ten fil
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`, whose two-engine check had zero findings (34 page loads, 39 s); it pushed 2c49ad2..6210302. The four changed files match the site's copy byte for byte when served live, and the live script has no CORRECTIONS section.
 
+**Ghost names on phones (the author's report of 30 October 2026).** The names were sized in fixed pixels (MOSCOW 44), so on a phone's map of 330 to 380 px they spanned half the map and faded by their width. Below a 560 px map they now scale by the map's width over 560 (9f047a1): at 412 px MOSCOW is 30 px and 11 names fit where 7 did. The narrowest desktop map is 578 px wide (a 1,024 px window), so desktop is unchanged. The change proof against 7cf5d6b came out identical (88 frames, every text and rule). The 400 px audit had zero findings, and no names appear at the city presets. The author approved from phone frames (`build/round29/ghost`).
+
+**Ready to publish.** The five-width audit had zero findings (1,376 states). The publish copy is fb233e5, and the site's import 840cdfb changes `explorer-app.js` and the build line. The site's push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
