@@ -38,4 +38,4 @@ The Firms view's first year costs 1.2 MB more than before. Every later year cost
 - Speed in the author's Brave, which needs the author present.
 - Comments stripped from the published copy: no JavaScript parser is installed, and a regex would break strings that hold `//`.
 - The DejaVu subset (343 KB to about 15 KB) needs `fonttools`, which is not installed.
-- On disk only: the 12 old `firms-YYYY.js` twins (about 107 MB, git-ignored, stale since this round) remain in `motion/data/firms/` until the author agrees to delete them.
+- On disk only: the 12 old `firms-YYYY.js` twins (about 107 MB, git-ignored, stale since this round) were deleted from `motion/data/firms/` on the author's OK of 30 October 2026.

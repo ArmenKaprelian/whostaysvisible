@@ -2380,7 +2380,7 @@ Round 30's plan, second half. Detail in `review/2026-10-30-round-31-lighter.md`.
 
 Checks, kept to an essential minimum at the author's request (a one-time exception, no rule change): the change proofs for D, L, M and Q came out identical, and M and Q were checked against their previous builds served with their previous data. Every address-file year decodes byte for byte to version 3, and M9 passes 351 of 351 checks. `shared_pairs.py` reads version 4 with identical outputs. The audit's fixed checks at 1,600 px had zero findings, and the film's frames are unchanged. The publish set's dry run: 112.7 MB (141.1 at round 30), 193 links, all expected.
 
-**Not done:** the speed run in the author's Brave, the tile by transform, the DejaVu subset (needs `fonttools`), and comments stripped from the published copy (needs a JavaScript parser). The 12 stale `firms-YYYY.js` twins (about 107 MB, git-ignored) wait for the author's OK to delete.
+**Not done:** the speed run in the author's Brave, the tile by transform, the DejaVu subset (needs `fonttools`), and comments stripped from the published copy (needs a JavaScript parser). The 12 stale `firms-YYYY.js` twins (about 107 MB, git-ignored) were deleted on the author's OK.
 
 ## How to add or change content
 
