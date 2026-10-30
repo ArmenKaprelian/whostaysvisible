@@ -42,7 +42,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.9. Located firms. Eligible firms whose registered address has map coordinates. Unlocated firms stay in the counts but are not drawn. 97.6% of eligible firms are located in 2021 (3,277,638 of 3,357,109) and 98.0% in 2024.
 
-2.10. Registered addresses. Every location in the atlas is a registered legal address, not an operating site. A registered address can be a business centre or an address rented for registration and correspondence, so several firms can share one. The Federal Tax Service tracks mass-registration addresses.
+2.10. Registered addresses. Every location in the atlas is a registered legal address. A registered address can be a business centre or an address rented for registration and correspondence, so several firms can share one. The Federal Tax Service tracks mass-registration addresses.
 
 2.11. Coordinate pairs. The distinct coordinates of geocoded registered addresses. In 2021 the located firms sit at 727,190 pairs. The most shared pair holds 7,928 firms, and 514,368 located firms sit at pairs shared by 100 or more.
 
@@ -55,7 +55,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.14. Industry. Firms are classed by division, the two-digit OKVED 2 code, which is identical to NACE Rev. 2 at two digits. The atlas uses NACE Rev. 2 division names and shows the code in brackets, as in "Wholesale trade (46)." The industry layer groups divisions into nine classes (5.7).
 
-2.15. Revenue. Nominal revenue is in current rubles. Real revenue is in constant 2021 rubles, deflated by the World Bank's linked GDP deflator for Russia, rebased to 2021. Revenue is counted where a firm is registered, not where it operates.
+2.15. Revenue. Nominal revenue is in current rubles. Real revenue is in constant 2021 rubles, deflated by the World Bank's linked GDP deflator for Russia, rebased to 2021. Revenue is counted where a firm is registered.
 
 2.16. The revenue cohort by cash share. Firms eligible in 2021 with usable 2021 statements for revenue, cash relative to assets and the controls: 1,503,198 firms. Membership is fixed in 2021. Later survival, filing and list membership do not change who belongs.
 
@@ -259,7 +259,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 13.2. A missing statement is absent from the RFSD release. The release does not recover the public archive as it stood in each year, so absence is not proof that a firm withheld or withdrew a statement.
 
-13.3. The other limits are stated where they apply: registered addresses are not operating sites (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
+13.3. The other limits are stated where they apply: locations are registered legal addresses (2.10), annual shares compare each year's population (2.4), ownership codes do not establish control (2.13), Median revenue change is descriptive (5.6), the sweep's lines join firms by distance only (8.4), and firms on no list are never named (1.4).
 
 ## 14. REFERENCES and the corrections
 
