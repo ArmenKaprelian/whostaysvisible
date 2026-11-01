@@ -11,7 +11,7 @@ SRC="${1:-$MOTION/build/who-stays-visible-full-244s.mp4}"; OUT="${SRC%.mp4}-720p
 times=$(grep -o 'data-t="[0-9.]*"' "$PAGE" | grep -o '[0-9.]*' | paste -sd,); n=$(tr ',' '\n' <<<"$times" | wc -l)
 ffmpeg -loglevel error -y -i "$SRC" -vf "scale=1280:720:flags=lanczos" -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -force_key_frames "$times" -movflags +faststart -an "$OUT"
 dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT")
-kf=$(ffprobe -v error -select_streams v:0 -skip_frame nokey -show_entries frame=pts_time -of csv=p=0 "$OUT" | tr '\n' ' ')
+kf=$(ffprobe -v error -select_streams v:0 -skip_frame nokey -show_entries frame=pts_time -of default=nw=1:nk=1 "$OUT" | tr '\n' ' ')
 missing=$(python3 -I -c "
 import sys; ts = [float(t) for t in sys.argv[1].split(',')]; kf = [float(x) for x in sys.argv[2].split()]
 print(','.join(str(t) for t in ts if not any(abs(t - k) < 1 / 30 for k in kf)))" "$times" "$kf")
