@@ -63,8 +63,9 @@
   const yearIndex = y => A.years.year.indexOf(y);
   const val = (f, key, y) => f.years[key][yearIndex(y)];
   // Profile rows: the neighbour on the left, Aeroflot on the right (east of the neighbour on the map, so the dots never cross).
+  const industryText = f => (f.okved === '51.10.10' ? 'Scheduled passenger air transport' : f.okved_text);   // round 32 (the author's pick of 1 November 2026): the workbook's rendering of OKVED 51.10.1, "Transportation by scheduled air passenger transport", in natural English order
   const ROWS = [
-    ['Industry', B.okved_text, A.okved_text],
+    ['Industry', industryText(B), industryText(A)],
     ['Legal form', cap1(B.legal.en), cap1(A.legal.en)],
     ['Ownership', ownText(B.ownership.en), ownText(A.ownership.en)],
     ['Founded', String(B.founded), String(A.founded)],
@@ -97,7 +98,7 @@
     return [`${en(gap.years_before)}: on average ${word(gap.before)}${Math.abs(gap.before) < 0.5 ? '' : ' the median'} of ${groupLabel}.`, `${en(gap.years_after)}: ${word(gap.after)}${Math.abs(gap.after) < 0.5 ? '' : ' it'}.`];
   };
   const groupName = g => (g === CMP.groups.listed2022 ? 'firms on a list from 2022' : g.label);   // the data's own label says "listed", never on screen for list membership (round 15)
-  const membersText = g => `${fmt.int(g.members)} ${groupName(g)}, ${fmt.int(Math.min(...g.by_year.n))} to ${fmt.int(Math.max(...g.by_year.n))} with a statement per year`;
+  const membersText = g => `Comparison group: ${fmt.int(g.members)} ${groupName(g)}, ${fmt.int(Math.min(...g.by_year.n))} to ${fmt.int(Math.max(...g.by_year.n))} with a positive-revenue statement per year.`;   // round 32 (1 November 2026): named as the comparison group, with the band's own condition (M7: members with a baseline, a statement and positive revenue in the year); two lines in the 780 px column
 
   // Cells (M7): one Path2D per grid, year and class; 'below' = 1-19 firms with a statement (faint outline).
   const TILES = {};
@@ -448,7 +449,7 @@
       }
     });
     if (big && textAlpha * gone > 0) {   // one key for both plots, centred under them
-      const ta = textAlpha * gone, ky = Motion.lerp(BIG.left.y, SMALL.left.y, u) + Motion.lerp(BIG.left.h, SMALL.left.h, u) + 76, s = 'median and interquartile range of each comparison group';
+      const ta = textAlpha * gone, ky = Motion.lerp(BIG.left.y, SMALL.left.y, u) + Motion.lerp(BIG.left.h, SMALL.left.h, u) + 76, s = 'median and interquartile range of each comparison group, Moscow and surroundings';   // round 32 (1 November 2026): the scope, the 160 by 90 km window, named on this screen
       const kw = 26 + 10 + 26 + 14 + measure(s, 22, 400), kx = 960 - kw / 2;
       ctx.save(); ctx.globalAlpha *= ta; ctx.strokeStyle = theme.cmpLine; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(kx, ky - 6); ctx.lineTo(kx + 26, ky - 6); ctx.stroke();
       ctx.globalAlpha *= 0.22; ctx.fillStyle = theme.cmpBand; ctx.fillRect(kx + 36, ky - 14, 26, 16); ctx.restore();
