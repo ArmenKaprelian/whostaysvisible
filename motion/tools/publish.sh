@@ -15,7 +15,8 @@
 #                                    only in text strings (round 24): tools/audit_carry.py checks the record of X's pass, the strings-only
 #                                    difference and change-proof.py --base X, and the gate stops when it refuses
 #
-# The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab.
+# The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab. PUBLISH_AUDIT_JOBS=N limits the
+# audit's browsers (round 32: one at a time after the crash of 1 November 2026).
 set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 LAB="$(git -C "$HERE" rev-parse --show-toplevel)"
@@ -58,8 +59,8 @@ if [[ -n "$audited" ]]; then
   say "2/5 the five-width audit of $audited carried over, if this build differs from it only in text strings (the proof takes about 5 minutes)"
   python3 -I motion/tools/audit_carry.py "$audited"
 else
-  say "2/5 the five-width audit (about 8 minutes)"
-  motion/tools/audit-five.sh
+  say "2/5 the five-width audit (about 8 minutes; PUBLISH_AUDIT_JOBS=1 runs the widths one at a time, the lab's rule since the crash of 1 November 2026)"
+  motion/tools/audit-five.sh ${PUBLISH_AUDIT_JOBS:+--jobs "$PUBLISH_AUDIT_JOBS"}
 fi
 
 say "3/5 the publish set"
@@ -69,7 +70,7 @@ day="$(date -u '+%-d %B %Y')"
 say "4/5 the publish copy, committed and pushed"
 git add -A motion/publish
 if git diff --cached --quiet; then say "the publish copy is unchanged"; else
-  git commit -q -m "Publish copy: round $round (from $src), $day (UTC)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+  git commit -q -m "Publish copy: round $round (from $src), $day (UTC)" -m "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
   git push -q origin HEAD
 fi
 
