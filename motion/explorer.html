@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Visibility Atlas</title>
 <meta name="author" content="Armen G. Kaprelian">
+<meta name="description" content="Visibility Atlas: which Russian firms stay visible under sanctions, and which do not. Financial statements of Russian firms by place, year and group, 2012 to 2025.">   <!-- round 32 (1 November 2026): the page had none; the site's other pages have one -->
 <meta name="build" content="the working tree">   <!-- publish-set.py writes the commit the publish set is built from (round 12, part D) -->
 <style>
 /* Layout: a map that fills the left, a reading panel on the right, provenance under every panel.
@@ -405,8 +406,8 @@ footer .byfoot { color: var(--muted); display: flex; flex-wrap: wrap; align-item
 footer .byfoot code { font-family: var(--font); color: var(--ink); user-select: all; }
 footer .byfoot a.site { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }   /* the author's site (28 October 2026), styled as the REFERENCES links */
 footer .byfoot a.site:hover, footer .byfoot a.site:focus-visible { color: var(--cursor-live); outline: none; }
-footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
-footer .btn.sq svg { width: 14px; height: 14px; display: block; }
+footer .btn.sq, .refs .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; vertical-align: middle; }   /* round 32 (1 November 2026): the REFERENCES panel's copy button had the class and no rule, so its glyph collapsed to an empty box */
+footer .btn.sq svg, .refs .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
 footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the header buttons' style beside the email copy */
 footer #copymail, footer #teachagent { vertical-align: middle; }   /* round 17: the copy button and TEACH YOUR AGENT sat on the text's baseline, TEACH YOUR AGENT 3.4 px under the copy button; centred on the line, both share the X buttons' centre */
@@ -460,7 +461,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol></defs></svg>
 <header id="hdr">
-  <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
+  <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Which Russian firms stay visible under sanctions, and which do not.</div></div>
   <a class="lockup" id="lockup" href="https://armenkaprelian.github.io/" target="_blank" rel="noopener" title="HOME"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></a>
   <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button></div>
 </header>

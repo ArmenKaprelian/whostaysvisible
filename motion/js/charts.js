@@ -82,7 +82,7 @@
   // line above its figures. pitch caps the row spacing; the rows sit in the middle of the box with the column headers just above them.
   // progress (the film, 29 October 2026): the bars grow from the zero line and the 2024 figures and changes fade in over its last 40 percent; at 1, the
   // default, the drawing is the atlas card's. The column gaps scale with the type above 14 px, so the card's 12 and 14 px keep their 12 px.
-  C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6, progress = 1 } = {}) {
+  C.changes = function (ctx, box, items, { theme, heads = ['2021', '2024', 'change (% points)'], fmt = v => v.toFixed(1) + '%', dfmt = v => Motion.fmt.signed(v), size = 12, pitch = 3 * size, bar = 6, progress = 1 } = {}) {
     const k = ctx.getTransform().a || 1, dev = v => Math.round(v * k) / k, g = 12 * Math.max(1, size / 14);
     const vw = Motion.measure(ctx, '00.0%', size, 500), dw = Math.max(...items.map(it => Motion.measure(ctx, dfmt(it.b - it.a), size, 500)));
     const nw = Math.max(...items.map(it => Motion.measure(ctx, it.label, size, 500)));

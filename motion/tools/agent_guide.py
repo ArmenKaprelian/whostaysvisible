@@ -195,7 +195,7 @@ TEMPLATE = '''# Visibility Atlas: a guide for AI agents
 
 ## 2. The data and its terms
 
-2.1. The atlas maps Russian firms and shows where their financial statements stop appearing. Its header gives its subtitle, "Where Russian firms file, and where their statements stop appearing," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (13.2).
+2.1. The atlas maps Russian firms and shows which of them stay visible in the public archive of financial statements, and which do not. Its header gives its subtitle, "Which Russian firms stay visible under sanctions, and which do not," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (13.2).
 
 2.2. The data. The statements come from the Russian Financial Statements Database (RFSD), release {release_v} of {release_date} (Bondarkov, Ledenev and Skougarevskiy 2025, Scientific Data, CC BY 4.0). The release holds {records} annual records for the financial years {years_span}. Region boundaries come from geoBoundaries (gbOpen, CC BY 4.0) and OpenStreetMap through Wambacher 2017 (ODbL 1.0).
 
@@ -364,7 +364,7 @@ The card's findings, in its words: larger asset quintiles have greater condition
 
 9.3. NATIONAL AVAILABILITY BY YEAR. The share of firms with a statement by financial year, 2012 to 2025*, for two populations: the year's eligible firms and those of them registered at year-end (Table B.1). The FNS years from 2019 are shaded, and the lines break between 2018 and 2019. On Statement share by year and Leading industry by year, a dashed line marks the year shown. The chart prints its end values: eligible {elig_end} and registered {reg_end} in 2025*. The NOTE on Statement share by year gives the eligible share for each year on the slider, for example {esh_2014} in 2014, {esh_2021} in 2021 and {esh_2024} in 2024.
 
-9.4. GROUPS, 2021 TO 2024. The share of eligible firms with a statement in 2021 and 2024, by ownership and legal form, with the change in points:
+9.4. GROUPS, 2021 TO 2024. The share of eligible firms with a statement in 2021 and 2024, by ownership and legal form, with the change in percentage points (the column header reads "change (% points)"):
 - joint-stock companies: {js_2021} to {js_2024}, {js_chg}
 - private firms: {pv_2021} to {pv_2024}, {pv_chg}
 - state-related firms: {st_2021} to {st_2024}, {st_chg}
@@ -428,7 +428,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 The atlas gives no citation form. This guide suggests:
 
-Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. {atlas}
+Kaprelian, Armen G. 2026. Visibility Atlas: which Russian firms stay visible under sanctions, and which do not. {atlas}
 
 To contact the author, use the email address shown in the atlas's footer.
 '''
