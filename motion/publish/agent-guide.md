@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 30 October 2026.
+Rebuilt from the atlas’s data when the atlas was published on 1 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.github.io/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
@@ -20,7 +20,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 ## 2. The data and its terms
 
-2.1. The atlas maps Russian firms and shows where their financial statements stop appearing. Its header gives its subtitle, "Where Russian firms file, and where their statements stop appearing," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (13.2).
+2.1. The atlas maps Russian firms and shows which of them stay visible in the public archive of financial statements, and which do not. Its header gives its subtitle, "Which Russian firms stay visible under sanctions, and which do not," its author, Armen G. Kaprelian, PhD candidate at Claremont Graduate University, and the dissertation it accompanies, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms. The panels restate chapter 2 of that dissertation, and their texts cite its tables and figures by number (13.2).
 
 2.2. The data. The statements come from the Russian Financial Statements Database (RFSD), release v3.1.0 of 2 September 2026 (Bondarkov, Ledenev and Skougarevskiy 2025, Scientific Data, CC BY 4.0). The release holds 63,308,662 annual records for the financial years 2011 to 2025. Region boundaries come from geoBoundaries (gbOpen, CC BY 4.0) and OpenStreetMap through Wambacher 2017 (ODbL 1.0).
 
@@ -91,21 +91,21 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 4.6. What colours the Firms view. On Statement share by year it is the share of the firms in each pixel or at each pair with a statement that year. On Median revenue change it is the firm-level revenue class (5.6). On Leading industry by year it is the leading class (5.7). On the other layers the Firms view shows firm counts by brightness, and its legend says the layer is a cell layer. At dot zoom those layers draw every coordinate pair in one colour.
 
-4.7. In the Firms view a toggle under the label MARKS, also named PAIRS SHARED BY 100+, draws a ring around each coordinate pair shared by 100 or more firms, on any layer. It adds a row to the legend and a line to the tile at such a pair. It is not the Cells-view layer of the same name (5.9).
+4.7. In the Firms view a toggle under the label MARKS, also named LOCATIONS SHARED BY 100+ FIRMS, draws a ring around each coordinate pair shared by 100 or more firms, on any layer. It adds a row to the legend and a line to the tile at such a pair. It is not the Cells-view layer of the same name (5.9).
 
 ## 5. The nine layers
 
-The LAYER card groups the layers under COUNTS, STATEMENTS and REVENUE. Some layers show a fixed year or comparison and hide the year row. The others follow the year slider (8.2).
+The LAYER card groups the layers under three tabs in a row under VIEW, COUNTS, STATEMENTS and REVENUE: the pressed tab shows its three layers, and a layer chosen by a link or the search opens its tab. Some layers show a fixed year or comparison and hide the year row. The others follow the year slider (8.2).
 
 5.1. Firm density, 2021 (COUNTS, fixed to 2021). Located eligible firms at registered addresses per cell in 2021. Grids: 5 km cells across the country, 1 km squares closer in (firms on no list with a house- or street-level geocode), and 250 m cells in the city windows. Classes: 1–2, 3–5, 6–10, 11–25, 26–60, 61–150, 151–400 and more than 400 firms. The tile also gives the cell's firms with a 2021 statement. The busiest 5 km cell, over central Moscow, holds 65,761 located firms.
 
 5.2. Statement share by year (STATEMENTS, follows the slider, 2014 to 2025). The share of located eligible firms with an original statement, per cell and year. The denominator is the cell's located eligible firms that year. Grids: 100 km cells, 25 km cells closer in, 1 km squares from the address files for every year, and 250 m cells in the city windows for 2021. Classes at 100 km: under 20%, 20–35, 35–50, 50–60, 60–70 and 70% or more. The 1 km squares use their own classes (under 55%, 55–62, 62–68, 68–74 and 74% or more) and count only firms on no list with house- or street-level geocodes. The tile adds the cell's firms registered at year-end and their share, and the cell's sanctions-list members. The note gives the national figure: 63.4% of eligible firms in 2021 and 66.3% in 2024.
 
-5.3. Change, 2024 against 2021 (STATEMENTS, fixed). The change in the located share with a statement, in percentage points, in 100 km cells with 50 or more located firms in both years. Six classes at ±2 and ±5 points: more than +5, +2 to +5, 0 to +2, −2 to 0, −5 to −2 and −5 or less. The legend gives each class's count of cells. 658 cells qualify at 100 km. Across these cells the located share moves from 64.0% to 66.5%. Closer in, 25 km cells follow the same rule (1,975 cells). The atlas notes that the chapter's figure shows only the 100 km cells. Each year counts the firms registered then, not the same firms. The tile gives both years' counts and shares and the change.
+5.3. Change, 2024 against 2021 (STATEMENTS, fixed). The change in the located share with a statement, in percentage points, in 100 km cells with 50 or more located firms in both years. Six classes at ±2 and ±5 points: more than +5, +2 to +5, 0 to +2, −2 to 0, −5 to −2 and −5 or less. The legend gives each class's count of cells. 658 cells qualify at 100 km. Across all located firms, the share with a statement moves from 64.0% in 2021 to 66.5% in 2024. Closer in, 25 km cells follow the same rule (1,975 cells). The atlas notes that the chapter's figure shows only the 100 km cells. Each year counts the firms registered then, not the same firms. The tile gives both years' counts and shares and the change.
 
 5.4. Change: state-related (STATEMENTS, fixed). The change in the share of eligible state-related firms (2.13) with a statement, 2024 against 2021, by region. Firms are counted in the region where they are registered, located or not. A region is classed only where 50 or more state-related firms are registered in both years. Amber regions lost availability among state-related firms and cyan regions gained it, in classes of 10 points: more than +20, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20 or less. The legend gives each class's count of regions and the count of grey regions. Nationally the share falls from 69.8% of 24,557 firms in 2021 to 61.3% of 20,710 in 2024. The layer shows where in the country the decline sits. The tile gives both years' counts and shares. Under the cursor shows no chart on this layer.
 
-5.5. Cohort inclusion (REVENUE, fixed to 2021). The share of a cell's located eligible firms in 2021 that belong to the revenue cohort by cash share (2.16). Five classes, pooled over the supported cells: 5–33%, over 33–38, over 38–43, over 43–48 and over 48–68%. 100 km cells only. The next layer (5.6) uses the same cohort.
+5.5. Usable 2021 accounts (REVENUE, fixed to 2021). The share of a cell's located eligible firms in 2021 with usable 2021 accounts, the firms in the revenue cohort by cash share (2.16), which the chapter calls cohort inclusion. Five classes, pooled over the supported cells: 5–33%, over 33–38, over 38–43, over 43–48 and over 48–68%. 100 km cells only. The next layer (5.6) uses the same cohort.
 
 5.6. Median revenue change (descriptive) (REVENUE, fixed). In the Cells view: the percent change of each cell's median real revenue among cohort firms observed in 2024, against the cell's 2021 median, in cells with 50 or more observed firms. Classes: more than +20%, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20% or less. 100 km cells only. It is descriptive because the firms observed change from year to year: a cell's median can move because the set of firms observed changes, not only because their revenue changed. Its source line says it is "Not a Chapter 3 estimate." Example: in the 100 km cell over Moscow, the one with the most cohort firms, 193,993 of 271,277 cohort firms are observed in 2024, and their median real revenue is 27.4% above the cell's 2021 median.
 In the Firms view the layer follows the slider and colours firms on no list by a firm-level measure: each firm's real revenue against its own 2019–2021 average, minus the year's median. Classes: −50% or less, −50 to −20, −20 to 0, 0 to +50, +50 to +150 and more than +150%. Faint marks have no usable baseline. Pixels count filers, not firms.
@@ -124,7 +124,7 @@ Wholesale trade (46) leads nationally and in 60 of 85 regions in 2021 and 62 of 
 
 5.8. List members, 2021 (COUNTS, fixed to 2021). Located members of the sanctions list per cell in 2021, at 100 km and 25 km. Classes: 5–19, 20–49 and 50 or more members, with each class's count of cells in the legend. Cells with 1 to 4 members show no count (2.17). The tile also gives the cell's members of the government strategic list. Example: the 100 km cell over Moscow holds 1,392 sanctions-list members and 239 government strategic list members among 629,730 located eligible firms.
 
-5.9. Pairs shared by 100+ (COUNTS, follows the slider). The share of a cell's firms registered at coordinate pairs shared by 100 or more firms, among located eligible firms on no list with a house- or street-level geocode, the Firms view's population. Firms with other geocodes are left out, since a shared city-centre coordinate is not a shared registration. Darker cyan means more of the cell's firms are at such pairs. Classes: none, under 2.5%, 2.5–5, 5–10, 10–20 and 20% or more. Grids: 100 km cells at the country scale, 25 km cells closer in and 1 km squares inside the 22 city windows. The tile and Under the cursor compare the share with a statement at the shared pairs and elsewhere in the cell, and the card's chart plots both by year. National figures from the note:
+5.9. Locations shared by 100+ firms (COUNTS, follows the slider). The share of a cell's firms registered at coordinate pairs shared by 100 or more firms, among located eligible firms on no list with a house- or street-level geocode, the Firms view's population. Firms with other geocodes are left out, since a shared city-centre coordinate is not a shared registration. Darker cyan means more of the cell's firms are at such pairs. Classes: none, under 2.5%, 2.5–5, 5–10, 10–20 and 20% or more. Grids: 100 km cells at the country scale, 25 km cells closer in and 1 km squares inside the 22 city windows. The tile and Under the cursor compare the share with a statement at the shared pairs and elsewhere in the cell, and the card's chart plots both by year. National figures from the note:
 - 2014: 918,643 of 4,288,612 such firms (21.4%) at 3,975 shared pairs, 29.6% with a statement against 40.3% elsewhere
 - 2021: 434,364 of 3,078,593 (14.1%) at 1,990 pairs, 60.7% against 64.7%
 - 2024: 417,933 of 2,884,476 (14.5%) at 1,831 pairs, 60.0% against 67.8%
@@ -185,11 +185,11 @@ Display names come from the list files, in Latin letters, with the legal form ab
 - Q2 vs Q1: the second quintile against the smallest, same sample, without whiskers. Dots for 2020 to 2024, flat near 2.
 - Sanctioned-only firms against firms on no list, for a statement in the year among eligible firms (Table B.7). Dots for 2019 to 2024, above 1 in 2019 and falling below 1 from 2021, lowest in 2024.
 The chart prints no values. Read levels from its axis and do not quote exact ratios beyond those in the card's text.
-The card's findings, in its words: larger asset quintiles have greater conditional availability in both provider eras. The Q5 vs Q1 odds ratio rises in 2022 against 2021, a ratio of odds ratios of 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (1.020 to 1.169), is smaller when wholesale trade is excluded. Sanctioned-only firms have lower availability than firms on no list by 2024.
+The card's findings, in its words: larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). The Q5 vs Q1 odds ratio rises in 2022 against 2021, a ratio of odds ratios of 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (1.020 to 1.169), is smaller when wholesale trade is excluded. Sanctioned-only firms have lower availability than firms on no list by 2024.
 
 9.3. NATIONAL AVAILABILITY BY YEAR. The share of firms with a statement by financial year, 2012 to 2025*, for two populations: the year's eligible firms and those of them registered at year-end (Table B.1). The FNS years from 2019 are shaded, and the lines break between 2018 and 2019. On Statement share by year and Leading industry by year, a dashed line marks the year shown. The chart prints its end values: eligible 64.3% and registered 72.1% in 2025*. The NOTE on Statement share by year gives the eligible share for each year on the slider, for example 36.9% in 2014, 63.4% in 2021 and 66.3% in 2024.
 
-9.4. GROUPS, 2021 TO 2024. The share of eligible firms with a statement in 2021 and 2024, by ownership and legal form, with the change in points:
+9.4. GROUPS, 2021 TO 2024. The share of eligible firms with a statement in 2021 and 2024, by ownership and legal form, with the change in percentage points (the column header reads "change (% points)"):
 - joint-stock companies: 73.0% to 78.2%, +5.2
 - private firms: 64.2% to 67.2%, +3.0
 - state-related firms: 69.8% to 61.3%, −8.5
@@ -206,7 +206,7 @@ The state-run firms are about half of the state-related firms and carry the whol
 
 10.4. View links. A view's address ends in a fragment of the form #mode_layer_year_lat_lon_SPANkm, for example #firms_industry_2024_55.76656_49.12078_44.6095km.
 - mode: cells or firms
-- layer: density, share, change, gs (Change: state-related), cohort, lists, fin (Median revenue change), industry or shared (Pairs shared by 100+)
+- layer: density, share, change, gs (Change: state-related), cohort, lists, fin (Median revenue change), industry or shared (Locations shared by 100+ firms)
 - year: 2014 to 2025
 - then the centre's latitude and longitude in decimal degrees, and the span in km across the map's shorter side
 The ending _fit in place of the coordinates fits the country, as in #cells_share_2021_fit. LINK TO CURRENT VIEW copies such a link.
@@ -253,6 +253,6 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 The atlas gives no citation form. This guide suggests:
 
-Kaprelian, Armen G. 2026. Visibility Atlas: where Russian firms file, and where their statements stop appearing. https://armenkaprelian.github.io/atlas/
+Kaprelian, Armen G. 2026. Visibility Atlas: which Russian firms stay visible under sanctions, and which do not. https://armenkaprelian.github.io/atlas/
 
 To contact the author, use the email address shown in the atlas's footer.

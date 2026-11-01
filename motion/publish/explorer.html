@@ -1,6 +1,6 @@
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit f957bd1b443b">
+<meta name="build" content="commit 6ac24c4b9c7c">
 <style>
 /* The atlas's IBM Plex Mono, served from its own fonts/ folder (round 20, the author's decision of 29 October 2026): Google Fonts'
    @font-face rules for the faces the page loads, copied with their unicode-range lines so a browser fetches the same subsets it fetched from
@@ -156,7 +156,7 @@
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
   --div-1: #FFB000; --div-2: #F39523; --div-3: #EA7719; --div-4: #50B5AA; --div-5: #79CDBF; --div-6: #A1E4D3; --zero: #6B7482;   /* the signed layers' pair (round 10): declines amber to orange, rises the cyan ramp's steps 3 to 5, the slate for no usable baseline */
   --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
-  --cursor: #EE69C0; --cursor-live: #F49ED2; --context: #57CE70; --context-live: #93E09E; --scheme: dark;
+  --cursor: #DB78B1; --cursor-live: #EB9AC6; --context: #9CC466; --context-live: #B9DC8D; --scheme: dark;   /* round 32 (1 November 2026, the author's instruction from a side chat's advice): warmer and a quarter less saturated than round 30's #EE69C0/#F49ED2 and #57CE70/#93E09E, OKLCH 0.70/0.14/346 and 0.77/0.13/128; measured: 6.6:1 and 9.5:1 as text on the panel, 7.1 and 10.1:1 for the stage on their fills, 27 normal, 22 protan and 14 deutan apart, 11.2 and 10.6 from the nearest data colour */
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
   --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 25 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
   --ghost: #1F3350;   /* one step above the land (round 10): the hand-over outline, the ghost names, the hairline borders */
@@ -418,7 +418,11 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .controls .btn { font-size: 13px; }
 #modes { margin-bottom: 8px; display: grid; grid-template-columns: auto 1fr 1fr; align-items: center; gap: 6px 8px; }   /* the view as an equal pair after its label; its label and the layers' group names share one column (round 15, the author's choice of 27 October 2026: C, revised) */
 #layers { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: start; }   /* the layers in three groups, each name at the left of its buttons, the buttons one width, their labels at the left */
-#layers .btn { grid-column: 2; text-align: left; }
+#layers .btn { grid-column: 1 / -1; text-align: left; }   /* round 32 (1 November 2026): the layer buttons span the card under the group tabs */
+#layers .gtabs { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }   /* the group tabs, COUNTS | STATEMENTS | REVENUE (round 32) */
+#layers .gtabs .btn { grid-column: auto; text-align: center; }
+#layers .btn.fmark { grid-column: 2; }
+#layers .btn[hidden] { display: none; }
 #layers .glabel { grid-column: 1; padding-top: 7px; }   /* level with the first button's text */
 #layerprov .h { color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; }   /* the new layers' reading texts (round 16) */
 #layerprov .rb { display: block; margin-top: 6px; }   /* one short block per head (round 16) */
@@ -541,8 +545,8 @@ footer .byfoot { color: var(--muted); display: flex; flex-wrap: wrap; align-item
 footer .byfoot code { font-family: var(--font); color: var(--ink); user-select: all; }
 footer .byfoot a.site { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }   /* the author's site (28 October 2026), styled as the REFERENCES links */
 footer .byfoot a.site:hover, footer .byfoot a.site:focus-visible { color: var(--cursor-live); outline: none; }
-footer .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; }
-footer .btn.sq svg { width: 14px; height: 14px; display: block; }
+footer .btn.sq, .refs .btn.sq { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; vertical-align: middle; }   /* round 32 (1 November 2026): the REFERENCES panel's copy button had the class and no rule, so its glyph collapsed to an empty box */
+footer .btn.sq svg, .refs .btn.sq svg { width: 14px; height: 14px; display: block; }
 footer .copied { color: var(--muted); }
 footer #teachagent { height: 28px; padding: 0 9px; font-size: 12px; }   /* TEACH YOUR AGENT (round 15, the author's item 19 as revised on 26 October 2026): the header buttons' style beside the email copy */
 footer #copymail, footer #teachagent { vertical-align: middle; }   /* round 17: the copy button and TEACH YOUR AGENT sat on the text's baseline, TEACH YOUR AGENT 3.4 px under the copy button; centred on the line, both share the X buttons' centre */
@@ -594,7 +598,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 </style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 24 24"><path d="M2 8V2h6M16 2h6v6M22 16v6h-6M8 22H2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol></defs></svg>
 <header id="hdr">
-  <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Where Russian firms file, and where their statements stop appearing.</div></div>
+  <div class="hleft" id="hleft"><h1><span class="striped">Visibility atlas</span></h1><div class="tagline">Which Russian firms stay visible under sanctions, and which do not.</div></div>
   <a class="lockup" id="lockup" href="https://armenkaprelian.github.io/" target="_blank" rel="noopener" title="HOME"><svg class="mk" aria-hidden="true" focusable="false"><use href="#mark"/></svg><div class="byline"><div class="who"><span class="name">Armen G. Kaprelian</span><span class="sep"> · </span><span class="aff">PhD Candidate, Claremont Graduate University</span></div><div class="what">Opacity and Adaptation under Sanctions. Geoeconomics in the Universe of Russian Firms</div></div></a>
   <div class="hright" id="hright"><button class="btn" id="refsbtn" type="button" aria-haspopup="dialog" aria-controls="refs" aria-expanded="false" title="THE ATLAS’S REFERENCES, LINKS AND NOTES">References</button></div>
 </header>
