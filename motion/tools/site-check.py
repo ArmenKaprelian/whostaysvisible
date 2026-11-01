@@ -7,7 +7,8 @@ desktop (the home page at all seven, the other pages and the atlas at the phone 
 127.0.0.1 and reports, per page, size and engine:
   - script errors and failed loads (an error event, an unhandled rejection, a console error);
   - a page wider than its window (sideways scroll) and IBM Plex Mono not loaded;
-  - on the home page, in the split layout: the photo's top edge off the index's top rule, a page taller than its window, the bio
+  - on the home page, in the split layout: the photo not spanning its column, its top edge below the index's top rule (or off it
+    where the band is the photo's height), a page taller than its window, the bio
     within 8 px of the index, an index row under 40 px; in the stacked layout: an index row under 44 px (a finger's target) and
     the photo not below the index.
 One screenshot per page, size and engine goes to motion/build/site-check/<UTC time>/ with report.txt; the tool prints one line per
@@ -29,7 +30,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.dirname(os.path.dirname(HERE))
 
 SIZES = [("phone", 390, 844, True), ("phone-landscape", 844, 390, True), ("tablet", 820, 1180, True), ("tablet-landscape", 1180, 820, True),
-         ("small-laptop", 1280, 800, False), ("laptop", 1440, 900, False), ("desktop", 1920, 1080, False)]
+         ("small-laptop", 1280, 800, False), ("laptop", 1440, 900, False), ("desktop", 1920, 1080, False),
+         ("laptop-browser", 1440, 790, False), ("laptop-short", 1440, 654, False), ("desktop-browser", 1920, 950, False)]   # round 32 (1 November 2026): viewports as a browser leaves them on a 1440 by 900 and a 1920 by 1080 screen, and a window that is not maximized
 PAGES = [("home", "", None), ("film", "film/", ("phone", "laptop")), ("research", "research/", ("phone", "laptop")),
          ("writing", "writing/", ("phone", "laptop")), ("contact", "contact/", ("phone", "laptop")), ("atlas", "atlas/", ("phone", "laptop"))]
 
@@ -52,7 +54,10 @@ CHECK_JS = r"""async () => {
     const rows = [...document.querySelectorAll('.index a')].map(a => a.getBoundingClientRect().height);
     const photo = box('.photo'), index = box('.index');
     if (getComputedStyle(home).display === 'grid') {
-      if (Math.abs(photo.top - index.top) > 1) f.push('split: the photo top ' + px(photo.top) + ' is off the index rule ' + px(index.top));
+      const vis = box('.visual');   // round 32 (1 November 2026): the photo spans the column at every size; its top is on the index's rule where the band is the photo's height and above it on a short window
+      if (Math.abs(photo.left - vis.left) > 1 || Math.abs(photo.width - vis.width) > 1) f.push('split: the photo spans ' + px(photo.width) + ' of the column\'s ' + px(vis.width));
+      if (photo.top > index.top + 1) f.push('split: the photo top ' + px(photo.top) + ' is below the index rule ' + px(index.top));
+      if (Math.abs(photo.height - index.height) <= 1 && Math.abs(photo.top - index.top) > 1) f.push('split: the photo top ' + px(photo.top) + ' is off the index rule ' + px(index.top));
       if (de.scrollHeight > innerHeight + 1) f.push('split: page taller than its window: ' + de.scrollHeight + ' px in ' + innerHeight);
       const ps = document.querySelectorAll('.lede p');
       const end = Math.max(ps[ps.length - 1].getBoundingClientRect().bottom, box('.portrait').bottom);

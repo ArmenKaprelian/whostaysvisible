@@ -32,7 +32,7 @@ BOXES_JS = """(named => { const out = []; for (const [name, sel] of named) { con
     const tag = e.dataset && e.dataset.k ? ' ' + e.dataset.k : els.length > 1 ? ' ' + (i + 1) : '';
     out.push([name + tag, r.left + scrollX, r.top + scrollY, r.right + scrollX, r.bottom + scrollY]); }); } return out; })(%s)"""
 
-SPLIT = [("1920", 1920, 1080), ("1440", 1440, 900), ("1280", 1280, 800)]
+SPLIT = [("1920", 1920, 1080), ("1440", 1440, 900), ("1280", 1280, 800), ("1440x790", 1440, 790), ("1440x654", 1440, 654), ("1920x950", 1920, 950)]   # the three browser viewports of round 32 (1 November 2026)
 def jobs():   # (name, path, width, height, density, phone, whole page, actions)
     j = []
     for tag, w, h in SPLIT:

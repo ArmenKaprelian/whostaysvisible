@@ -2387,6 +2387,16 @@ Checks, kept to an essential minimum at the author's request (a one-time excepti
 
 **Published** 30 October 2026 (UTC). The author ran `publish.sh --push`. Its two-engine check had zero findings (34 page loads, 43 s), and it pushed 0bb9cd7..6cd95c9.
 
+### Round 32 (1 November 2026): the review of rounds 19 to 31 and the author's ten items
+
+The author asked for a review of the rounds made with Opus 5.5 (sense, efficiency, accuracy against the dissertation) and ten fixes, with the audits kept to the critical ones for this session only; detail in `review/2026-11-01-round-32.md`, the picks page `review/2026-11-01-round-32.html`.
+- **The review:** the rounds match the materials (every figure checked traces to `series.json` or `statesplit.json` and to the manuscript). Found on the way: the résumé's methods line was the proposal's list; `site-check.py` tested full screens, never a browser's viewport; the atlas showed the eligible and the located shares side by side unexplained; the page had no meta description.
+- **Batch A (eca9cf6, the author's picks):** the tagline "Which Russian firms stay visible under sanctions, and which do not." (header, share text, guide), a meta description, "change (% points)" as `charts.js`'s shared header, and the REFERENCES copy button's glyph (its rule was scoped to the footer). Proof: 44 frames differ in the header, the Groups card and its pop-out only, no new rule hits.
+- **Batch B (for the picks):** the share layer's note with the located share first and the eligible share beside it, "Across all located firms" on the Change layer, the national chart's axis ending at 2025*, "Usable 2021 accounts" and "Locations shared by 100+ firms" for the two jargon labels, the five lists named in a tip and on the legend's reading side, the ODDS card's reading text spelt out, and the LAYER card's group tabs (321 px against GO TO's 385; 538 before).
+- **The site:** the photo at the column's full width on short windows (A; B, a crop, shown beside it), three browser viewports and a new split-layout rule in `site-check.py` and the proof; the résumé from the author's 1 November export, built by `site/resume/build.sh`: no phone line, "~10M Russian firms (2011–2025)" (the author's pasted count, 9,984,919 by INN, rerun read-only here in 38 s), the methods line from the decision record, Lightning AI (AWS) and Google Colab.
+- **The film:** the comparison groups named as such with their scope (Moscow and surroundings), "Scheduled passenger air transport", "change (% points)"; stills before and after, the render after the pick.
+- **Not changed:** the phone's overlays already start collapsed (item 7); the Aeroflot event line's provenance is noted; `lab-run.sh` kills a whole-release scan because its cap counts the page cache (noted in the review).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
