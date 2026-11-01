@@ -24,7 +24,7 @@ A full check (both engines, every page) with zero findings records the site's co
 uncommitted changes) and this tool's own hash in motion/build/site-check/passed.json. --if-new skips a check of content and tool
 already recorded (the author's request of 29 October 2026): publish.sh --push uses it, so a build checked before its commit is not
 checked again at the push. Any change to the site's files or to this tool runs the full check."""
-import argparse, base64, functools, hashlib, http.server, json, os, re, shutil, subprocess, sys, tempfile, threading, time
+import argparse, re, base64, functools, hashlib, http.server, json, os, re, shutil, subprocess, sys, tempfile, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.dirname(os.path.dirname(HERE))
@@ -247,6 +247,19 @@ def passed_record():
     except (OSError, ValueError): return {}
 
 
+PALETTE_TOKENS = ("stage", "panel", "ink", "muted", "dim", "cursor", "cursor-live", "context")
+
+def palette_drift(site):
+    """The colour tokens the site and its atlas copy both define, compared (round 32, 1 November 2026): round 30 changed them in both
+    by hand, and nothing checked they agreed. One finding per token that differs; none when the atlas is not imported."""
+    css = os.path.join(site, "css", "site.css"); atlas = os.path.join(site, "atlas", "index.html")
+    if not (os.path.exists(css) and os.path.exists(atlas)): return []
+    def tokens(path):
+        text = open(path, encoding="utf-8").read()
+        return {t: m.group(1).upper() for t in PALETTE_TOKENS for m in [re.search(r"--%s:\s*(#[0-9A-Fa-f]{6})" % re.escape(t), text)] if m}
+    a, b = tokens(css), tokens(atlas)
+    return ["%-8s %-17s %-6s palette: --%s is %s on the site and %s in the atlas" % ("site", "tokens", "both", t, a[t], b[t]) for t in PALETTE_TOKENS if t in a and t in b and a[t] != b[t]]
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--site", default=os.path.expanduser("~/Documents/website"), help="the site's folder (default ~/Documents/website)")
@@ -289,6 +302,7 @@ def main():
     for r in sorted(results, key=lambda r: (r["page"], r["size"], r["engine"])):
         for msg in r.get("findings", []) + r.get("errors", []):
             lines.append("%-8s %-17s %-6s %s" % (r["page"], r["size"], r["engine"], msg))
+    lines += palette_drift(a.site)
     n_pages = len(results)
     summary = "%d page loads in %s, %.0f s: %s" % (n_pages, " and ".join(sorted(engines)), time.time() - t0,
                                                    "zero findings" if not lines else "%d findings" % len(lines))
