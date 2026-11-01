@@ -2397,6 +2397,9 @@ The author asked for a review of the rounds made with Opus 5.5 (sense, efficienc
 - **The film:** the comparison groups named as such with their scope (Moscow and surroundings), "Scheduled passenger air transport", "change (% points)"; stills before and after, the render after the pick.
 - **Not changed:** the phone's overlays already start collapsed (item 7); the Aeroflot event line's provenance is noted; `lab-run.sh` kills a whole-release scan because its cap counts the page cache (noted in the review).
 
+**Approved** by the author on 1 November 2026 ("Approve all, A"): batch B committed as afb716e, the film's scenes as 913e36d, the site's photo A and résumé as ab9f36a. The site check at its ten sizes then showed the known 4 px overflow of short windows at 1,440 wide (the lede wraps to 334 px against the band's 330): the small-laptop rule widened from 1,400 to 1,500 px wide clears it (zero findings in both engines), shown to the author from the check's frames and approved (site 2bbbf26). `tools/film-site.sh` now holds the 720p recipe with the chapter keyframes.
+The phone's bio, on the author's friend's note: the headshot at 0.38 of the column and the statement at 13 px in full lines (site 2815ac5). The accent pair, on a side chat's advice the author took without an approval round: warmer and a quarter less saturated, fuchsia #DB78B1 (live #EB9AC6) and green #9CC466 (live #B9DC8D), measured against every floor of round 30 (`design/principles.md`), on the atlas, the site, the favicons and the link card. The audit's pressed-layer selector takes a `data-id` past the group tabs (1c849ea).
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
