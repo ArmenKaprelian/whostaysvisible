@@ -9,7 +9,7 @@ on the map (the legend, the note, the zoom box, the scale bar): none may leave t
 another, and a shown tooltip must stay inside the map (24 October 2026). (3) The camera after the click ladder, the zoom buttons
 and the presets, through the page's instant API. Zero findings is the acceptance rule.
 
-Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,768,1200,1600,2000] [--height 1000]"""
+Usage: atlas-audit.py --url http://127.0.0.1:8765/explorer.html [--widths 400,1200,1600,2000] [--height 1000]"""
 import re, argparse, base64, math, json, os, shutil, subprocess, sys, tempfile, time, unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from capture import brave_flags, wait_port_file, page_ws_url, remove_profile
@@ -372,7 +372,7 @@ def refs_block(cdp, w, a, once, page_src):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", required=True)
-    ap.add_argument("--widths", default="400,768,1200,1600,2000")
+    ap.add_argument("--widths", default="400,1200,1600,2000")   # 768 px dropped by the author on 1 November 2026 (round 32)
     ap.add_argument("--height", type=int, default=1000)
     ap.add_argument("--min-size", type=float, default=11)
     ap.add_argument("--overlap", type=float, default=0.15)

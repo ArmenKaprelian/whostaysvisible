@@ -3,7 +3,7 @@
 #
 #   motion/tools/publish.sh          the gate and the copies; nothing goes public:
 #     1. publish-set.py --texts      the publish day (UTC) and every text-only rule (round 24)
-#     2. audit-five.sh               the full five-width audit of the working tree, served for the run; zero findings, or it stops
+#     2. audit-five.sh               the full full audit of the working tree, served for the run; zero findings, or it stops
 #     3. publish-set.py --write      the publish set in motion/publish/, its checks passed
 #     4. the publish copy committed and pushed to the lab's repository (the lab's rule: commit at each checkpoint, push after each commit)
 #     5. the site's tools/import_atlas.py copies the set into the site's atlas/, and the site commits it
@@ -11,7 +11,7 @@
 #                                    and a site-only change: the site clean, an atlas change only from this gate's import, the site's check
 #                                    in both engines (site-check.py, about 45 s; skipped when this content already passed it) with zero findings, then the push. It pushes main only:
 #                                    site work waiting for the author's approval stays on a local branch until it is merged.
-#   motion/tools/publish.sh --audited X   the gate with the five-width audit of commit X in place of a new one, when this build differs from X
+#   motion/tools/publish.sh --audited X   the gate with the full audit of commit X in place of a new one, when this build differs from X
 #                                    only in text strings (round 24): tools/audit_carry.py checks the record of X's pass, the strings-only
 #                                    difference and change-proof.py --base X, and the gate stops when it refuses
 #
@@ -56,10 +56,10 @@ say "1/5 the publish day and the text rules (seconds; a text that breaks a rule 
 python3 -I motion/tools/publish-set.py --texts
 
 if [[ -n "$audited" ]]; then
-  say "2/5 the five-width audit of $audited carried over, if this build differs from it only in text strings (the proof takes about 5 minutes)"
+  say "2/5 the full audit of $audited carried over, if this build differs from it only in text strings (the proof takes about 5 minutes)"
   python3 -I motion/tools/audit_carry.py "$audited"
 else
-  say "2/5 the five-width audit (about 7 minutes at two widths at once, the default since 1 November 2026; PUBLISH_AUDIT_JOBS=N for another count)"
+  say "2/5 the full audit (about 7 minutes at two widths at once, the default since 1 November 2026; PUBLISH_AUDIT_JOBS=N for another count)"
   motion/tools/audit-five.sh --jobs "${PUBLISH_AUDIT_JOBS:-2}"
 fi
 

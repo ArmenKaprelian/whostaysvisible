@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Whether the five-width audit of an earlier build carries over to the current one (round 24, the author's approval of 29 October 2026).
+"""Whether the full audit of an earlier build carries over to the current one (round 24, the author's approval of 29 October 2026).
 
 The publish gate's audit counts for a later build when that build differs from the audited one only in text strings. tools/publish.sh
 --audited X runs this in place of the audit, after the text rules (publish-set.py --texts), and stops when it refuses. Four checks:
-  1. X passed a full five-width audit with zero findings: tools/audit_five.py records such a run in build/audit/passed.json, only when the
+  1. X passed a full full audit with zero findings: tools/audit_five.py records such a run in build/audit/passed.json, only when the
      shipped sources were committed and unchanged from start to end and the served page was the working tree's.
   2. X is an ancestor of the build (HEAD, or --trial).
   3. The shipped sources differ from X only inside string literals: the scripts are compared token by token with every string's contents
@@ -193,8 +193,8 @@ def main():
     trial = sys.argv[sys.argv.index("--trial") + 1] if "--trial" in sys.argv else None
     bad = []
     rec = (json.load(open(PASSED, encoding="utf-8")) if os.path.exists(PASSED) else {}).get(git("rev-parse", x).strip())
-    if not rec: bad.append("no full five-width audit with zero findings is recorded for %s (build/audit/passed.json)" % x)
-    else: print("audit carry: %s passed the five-width audit on %s (%s states, run %s)" % (x, rec["utc"], rec["states"], rec["run"]))
+    if not rec: bad.append("no full full audit with zero findings is recorded for %s (build/audit/passed.json)" % x)
+    else: print("audit carry: %s passed the full audit on %s (%s states, run %s)" % (x, rec["utc"], rec["states"], rec["run"]))
     if subprocess.run(["git", "merge-base", "--is-ancestor", x, trial or "HEAD"], cwd=LAB).returncode != 0: bad.append("%s is not an ancestor of %s" % (x, trial or "HEAD"))
     sb, pairs = strings_only(x, trial or "HEAD"); bad += sb
     for p, a, b in pairs: print("audit carry: string  %s: %r -> %r" % ((p,) + around(a, b)))

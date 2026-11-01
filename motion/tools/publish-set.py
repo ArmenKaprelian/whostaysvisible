@@ -40,7 +40,7 @@ Since 30 October 2026 the page has no CORRECTIONS section (the author's word), a
 alike. The set compares the REFERENCES panel's CORRECTIONS with the last publish's, read from the commit named in the build line of the
 publish copy committed at HEAD: at most one entry new since then, dated the publish day, on a day the last publish's entries do not
 already hold (one entry per date; a second publish with corrections on one UTC day needs the author). --dates runs this check alone and
-copies nothing: run it before the publish gate's five-width audit, so that a date edit lands before that run and needs no second one;
+copies nothing: run it before the publish gate's full audit, so that a date edit lands before that run and needs no second one;
 tools/audit_five.py shows its result as a note at the start of every run.
 
 Round 24 (the author's approval of 29 October 2026, after two publish gates stopped on text rules checked late): --texts runs every text-only
@@ -203,7 +203,7 @@ def corrections_dates(cur, pub, day):
     if want in {d for d, _ in pub}: bad.append("CORRECTIONS: a published entry is already dated %s, the publish day (UTC), and dates are one per entry: the author decides (fold the new entry into it, or publish after 00:00 UTC)" % want)
     else:
         for d, _ in new:
-            if d != want: bad.append("CORRECTIONS: the new entry is dated %s and the publish day is %s (UTC): date it %s before the gate's five-width run" % (d, want, want))
+            if d != want: bad.append("CORRECTIONS: the new entry is dated %s and the publish day is %s (UTC): date it %s before the gate's full run" % (d, want, want))
     if not bad: notes.append("CORRECTIONS: the new entry carries the publish day, %s (UTC)" % want)
     return bad, notes
 def dates_check():   # corrections_dates on the shipped script against the last publish's
@@ -216,7 +216,7 @@ def dates_check():   # corrections_dates on the shipped script against the last 
 def tool(name):   # another tool's own checks, imported, so each text rule keeps one home (round 24)
     import importlib.util
     spec = importlib.util.spec_from_file_location(name.replace("-", "_"), os.path.join(HERE, name + ".py")); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
-def texts_check():   # round 24: every text-only rule, in seconds, before the five-width audit (see the module's note); (problems, notes)
+def texts_check():   # round 24: every text-only rule, in seconds, before the full audit (see the module's note); (problems, notes)
     import html
     bad, notes = dates_check()
     entries = [{"lead": d, "text": d + ": " + html.unescape(re.sub(r"<[^>]+>", "", t))} for d, t in correction_entries(source("js/explorer-app.js").decode("utf-8"))]

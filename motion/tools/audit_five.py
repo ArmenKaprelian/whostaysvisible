@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""The atlas audit at the five widths, run in parallel (the lab's audit default of 26 October 2026; started by tools/audit-five.sh).
+"""The atlas audit at the four widths (400, 1,200, 1,600 and 2,000 px; 768 px until 1 November 2026), run in parallel (the lab's audit default of 26 October 2026; started by tools/audit-five.sh).
 
-Each width runs as its own atlas-audit.py process, all five at once since round 30 (the author's approval of 30 October 2026; two or three at a time before). Before every launch the machine must clear the lab's
+Each width runs as its own atlas-audit.py process, all four at once since round 30 (the author's approval of 30 October 2026; two or three at a time before). Before every launch the machine must clear the lab's
 memory floors, MemAvailable and SwapFree, read from config/lab.env as scripts/lab-run.sh reads them (atlas-audit.py does not
 run under lab-run.sh, so the check is made here). When the floors are not met the next launch waits, so fewer run at once, and
 with nothing running it waits up to --max-wait and then stops without a result; the floors are never bypassed. Each process
@@ -25,15 +25,15 @@ The merged result keeps atlas-audit.py's head line unchanged (the review pages r
 says which run it came from; a mixed result is marked as not valid for a publish. Every run keeps its own folder under runs/,
 named by its start time, with each width's result and log. Nothing earlier is replaced until the new merged result is complete.
 
-Usage: tools/audit-five.sh [--url URL] [--widths 400,768,...] [--jobs 5] [--out build/audit/audit-five.txt] [--max-wait 1800]
+Usage: tools/audit-five.sh [--url URL] [--widths 400,1200,...] [--jobs 5] [--out build/audit/audit-five.txt] [--max-wait 1800]
 """
 import argparse, atexit, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__)); MOTION = os.path.normpath(os.path.join(HERE, '..'))
 sys.path.insert(0, HERE)
-ALL = [400, 768, 1200, 1600, 2000]
-PASSED = os.path.join(MOTION, 'build', 'audit', 'passed.json')   # round 24: the commits a full five-width run passed, for tools/audit_carry.py
+ALL = [400, 1200, 1600, 2000]   # 768 px dropped by the author on 1 November 2026: in 29 recorded runs it found nothing of its own (round 32)
+PASSED = os.path.join(MOTION, 'build', 'audit', 'passed.json')   # round 24: the commits a full full run passed, for tools/audit_carry.py
 LEDGER = os.path.join(MOTION, 'build', 'audit', 'parallel-only.json')   # the parallel-only findings by check, with the runs that showed them
 HEAD = re.compile(r'^atlas audit: (\d+) states, (\d+) boxes, (\d+) finding\(s\); field renderers seen: ([^;]*); tiles placed over the note or the legend for want of a clear place: (\d+) \((.*)\)$')
 
@@ -127,7 +127,7 @@ def serve_if_needed(url):   # round 19: when nothing answers at a local --url, m
     raise SystemExit('audit-five: could not serve motion/ at %s' % url)
 
 def fold(prev, widths, par, solo, run, wall, jobs, once, seen):
-    """The new state: a run of all five widths starts afresh; a targeted run replaces only its own widths and keeps the rest. seen is the
+    """The new state: a run of all four widths starts afresh; a targeted run replaces only its own widths and keeps the rest. seen is the
     record of parallel-only findings before this run: a parallel-only finding whose check is in it is marked recurring, and counts."""
     state = prev if prev is not None and sorted(widths) != ALL else {'widths': {}, 'runs': {}}
     state.setdefault('runs', {})[run] = {'widths': widths, 'wall_s': round(wall, 1), 'jobs': jobs}
@@ -156,7 +156,7 @@ def merged_text(state):
     lines.append('once        run %s  %s' % (state['once']['run'], 'no once-per-audit check at this build' if once is None else 'the agent guide\'s and the glossary\'s checks: %d finding(s)' % len(once)))
     runs = sorted({W[str(w)]['run'] for w in widths})
     full = len(runs) == 1 and sorted(widths) == ALL and all(W[str(w)].get('full') for w in widths)
-    lines.append(('composition: one full run, %s, all five widths in %s wall clock' % (runs[0], clock(state['runs'][runs[0]]['wall_s']))) if full else
+    lines.append(('composition: one full run, %s, all four widths in %s wall clock' % (runs[0], clock(state['runs'][runs[0]]['wall_s']))) if full else
                  ('composition: %s; a targeted or partial result, never valid for a publish' % ', '.join('%s (%s)' % (r, ', '.join(str(w) for w in widths if W[str(w)]['run'] == r)) for r in runs)))
     lines += sorted(set(findings))
     par_only = sorted({(f, f in W[str(w)].get('recurring', [])) for w in widths for f in W[str(w)].get('par_only', [])})
@@ -216,7 +216,7 @@ def main():
     for path, body in ((statef, json.dumps(state, indent=1)), (LEDGER, json.dumps(seen, indent=1)), (out, text)):   # the new result replaces the old only now, complete
         tmp = path + '.new'; open(tmp, 'w', encoding='utf-8').write(body); os.replace(tmp, path)
     passed = record_pass(t0_state, a.url, widths, HEAD.match(text.splitlines()[0]), run)
-    if passed: say('  recorded: %s passed the five-width audit (build/audit/passed.json; tools/audit_carry.py reads it)' % passed[:7])
+    if passed: say('  recorded: %s passed the full audit (build/audit/passed.json; tools/audit_carry.py reads it)' % passed[:7])
     left = sorted(profiles() - before)   # this run's own; older ones are not counted
     say('audit-five %s done in %s wall clock; %s; %s' % (run, clock(wall), text.splitlines()[0][:120], ('%d Brave profile(s) of this run left in /tmp: %s' % (len(left), ' '.join(left))) if left else 'no Brave profile of this run left in /tmp'))
     return 1 if HEAD.match(text.splitlines()[0]).group(3) != '0' else 0
