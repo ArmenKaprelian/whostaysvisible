@@ -283,7 +283,11 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .controls .btn { font-size: 13px; }
 #modes { margin-bottom: 8px; display: grid; grid-template-columns: auto 1fr 1fr; align-items: center; gap: 6px 8px; }   /* the view as an equal pair after its label; its label and the layers' group names share one column (round 15, the author's choice of 27 October 2026: C, revised) */
 #layers { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: start; }   /* the layers in three groups, each name at the left of its buttons, the buttons one width, their labels at the left */
-#layers .btn { grid-column: 2; text-align: left; }
+#layers .btn { grid-column: 1 / -1; text-align: left; }   /* round 32 (1 November 2026): the layer buttons span the card under the group tabs */
+#layers .gtabs { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }   /* the group tabs, COUNTS | STATEMENTS | REVENUE (round 32) */
+#layers .gtabs .btn { grid-column: auto; text-align: center; }
+#layers .btn.fmark { grid-column: 2; }
+#layers .btn[hidden] { display: none; }
 #layers .glabel { grid-column: 1; padding-top: 7px; }   /* level with the first button's text */
 #layerprov .h { color: var(--ink); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 11px; }   /* the new layers' reading texts (round 16) */
 #layerprov .rb { display: block; margin-top: 6px; }   /* one short block per head (round 16) */
