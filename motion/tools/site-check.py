@@ -29,7 +29,7 @@ import argparse, re, base64, functools, hashlib, http.server, json, os, re, shut
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.dirname(os.path.dirname(HERE))
 
-SIZES = [("phone", 390, 844, True), ("phone-landscape", 844, 390, True), ("tablet", 820, 1180, True), ("tablet-landscape", 1180, 820, True),
+SIZES = [("phone", 390, 844, True), ("phone-android", 412, 915, True), ("phone-landscape", 844, 390, True), ("tablet", 820, 1180, True), ("tablet-landscape", 1180, 820, True),
          ("small-laptop", 1280, 800, False), ("laptop", 1440, 900, False), ("desktop", 1920, 1080, False),
          ("laptop-browser", 1440, 790, False), ("laptop-short", 1440, 654, False), ("desktop-browser", 1920, 950, False)]   # round 32 (1 November 2026): viewports as a browser leaves them on a 1440 by 900 and a 1920 by 1080 screen, and a window that is not maximized
 PAGES = [("home", "", None), ("film", "film/", ("phone", "laptop")), ("research", "research/", ("phone", "laptop")),
