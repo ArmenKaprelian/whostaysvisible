@@ -5,7 +5,7 @@
 # Usage: scripts/motion-capture.sh [--page PAGE] [capture.py arguments ...]   (--shards N, default 4: parallel browsers)
 #   e.g. --seconds 3 --out motion/build/smoke.mp4
 #        --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser-46s.mp4
-#        cut ids (one family; the side cuts were retired on 24 October 2026): full 287 s, teaser 46 s
+#        cut ids (one family; the side cuts were retired on 24 October 2026): full 244 s (cut B2, 29 October 2026; 287 s before), teaser 46 s
 set -uo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"; lab_load_env
 PAGE="explainer.html"

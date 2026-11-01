@@ -10,7 +10,7 @@ time, so any frame can be sought deterministically and captured to MP4.
 
 | Piece | Path | What it is |
 |---|---|---|
-| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 5: one cut family, `full` 287 s and `teaser` 46 s (the Moscow standalone and the two maps-and-firms cuts were retired on 24 October 2026), each cut with the Moscow section; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
+| Explainer | `explainer.html` (+ `js/`, `css/`, `data/*.js`) | round 5: one cut family, `full` 244 s (cut B2 of 29 October 2026; 287 s before it) and `teaser` 46 s (the Moscow standalone and the two maps-and-firms cuts were retired on 24 October 2026), each cut with the Moscow section; 1920x1080 at 30 fps, charcoal stage; play, pause, scrub, chapter buttons, a cut button; `?cut=NAME`, `?__render=1` capture mode, `?__debug=1` frame counter |
 | Videos | `build/who-stays-visible*.mp4` | H.264 yuv420p, captured frame by frame through headless Brave and ffmpeg (sharded); see the round-3 cuts table |
 | Teaser | `build/who-stays-visible-teaser-46s.mp4` (`-720p` copy beside it) | 46 s, 1,380 frames since round 4 (round 1: 40 s, 1,200 frames): the hook, the map through time, the Moscow zoom and the group divergence, played faster (scene `speed`), plus the closing card; `explainer.html?cut=teaser`, or the cut button on the page |
 | Treated cut (round 2; retired as a standalone cut on 24 October 2026, the sequence lives inside the full cut) | `js/treated-scenes.js` (the journey section; `?cut=moscow` and its file are gone) | 85 s, 2,550 frames: two firms on one street, a designation, and the Moscow field 2014-2025 at three extents; local only (it needs `data/points.js`, `data/treated.js`, `data/anchors.js` and the rasters under `data/points/`, none of which is published) |
@@ -72,7 +72,7 @@ python3 -I motion/tools/serve.py --port 8765          # then open http://127.0.0
 scripts/motion-capture.sh --probe --shards 1           # headless Brave loads the page, prints the render metadata
 scripts/motion-capture.sh --seconds 3 --out motion/build/smoke.mp4
 scripts/motion-capture.sh --frames 0,45,89 --png-dir motion/build/det-a
-scripts/motion-capture.sh --out motion/build/who-stays-visible-full-287s.mp4 --shards 8     # the default cut
+scripts/motion-capture.sh --out motion/build/who-stays-visible-full-244s.mp4     # the default cut, at the default 4 shards (8 crashed the desktop app, 25 October 2026)
 scripts/motion-capture.sh --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser-46s.mp4
 scripts/lab-run.sh --max 14G --duck-mem 9GB --duck-threads 6 --duck-temp 60GB --cpu 800% Rscript --vanilla R/motion/M9-firms.R a rel charcoal national   # the atlas's address files
 python3 -I motion/tools/atlas-audit.py --url http://127.0.0.1:8765/explorer.html --out motion/build/audit-atlas.txt
@@ -426,7 +426,8 @@ groups (firms listed in 2022: 429 members, 60 to 134 with a statement per year; 
 with a baseline: 335,342, 102,755 to 330,034) with yearly medians and quartiles over members with a
 statement and positive revenue; the two anchors located by coordinates (no identifier leaves
 DuckDB); the gap facts as distances from the median (Aeroflot 15.9 points above before 2022, 18.8
-after; the private firm 4 below, 15 below); 201 checks (cell sums against M6's region counts, the
+after; the private firm 4 below, 15 below, as first computed; since round 9's deflator correction the shipped
+figures are 22.1 and 6.5 above, 7 and 7 below); 201 checks (cell sums against M6's region counts, the
 city rectangle, the M5 interior cells and window totals 2019-2024, membership, the firms' indices).
 Absence is mapped at the downtown scale only (the ring); the city and region cells carry one
 variable, the median change among the cell's filers; a per-cell absent share was assessed at the
