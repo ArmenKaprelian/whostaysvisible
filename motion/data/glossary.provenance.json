@@ -1,7 +1,7 @@
 {
  "id": "glossary",
  "tool": "motion/tools/glossary_build.py",
- "run_utc": "2026-10-29T17:05:54Z",
+ "run_utc": "2026-11-02T17:24:08Z",
  "decision": "the author's pick of 27 October 2026 for the REFERENCES panel: rdB revised, the AUTHOR section removed, DEFINITIONS as a short glossary, wording from the dissertation where shared, sources in the provenance only",
  "files": [
   "motion/js/explorer-app.js",
@@ -209,8 +209,8 @@
  "checks": "25 of 25 passed (glossary.checks.csv)",
  "output": {
   "json": "data/glossary.json",
-  "json_sha256": "369c43ec2b175edf5a34883435a0db10cbf2aea17af8cb889a290309cc5741d6",
+  "json_sha256": "80df0df70f318a4bdf5c2dbee3458239e8436b65ebd1603a80ee9d4dd36ca88c",
   "js": "data/glossary.js",
-  "js_sha256": "c36582ec0ed1c74ea7cb05f06a88841fe8459bd9f3e022c7654f449aecf2ae7e"
+  "js_sha256": "5974703bc068b8d913b53ec9bf2364a465a8c52c15bd3b8a5263ad78cf48522c"
  }
 }

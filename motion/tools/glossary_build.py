@@ -44,7 +44,7 @@ TERMS = [   # term, definition (on screen), sources [(file, quoted sentence)]
     ("Firms on no list (comparison group)", "Eligible firms on none of the five lists. Firms whose list membership is unknown are kept apart from this group.",
      [(APP, "Comparison group: firms on none of the five lists."),
       (CH("02-data-and-samples.tex"), "Unknown membership remains separate from the comparison group.")]),
-    ("The 50-firm support rule", "In the Cells view a share is shown only where 50 or more firms make up its denominator, and cells, squares and regions with fewer are grey. The Firms view shows each coordinate pair’s own share.",
+    ("The 50-firm support rule", "In the Cells view a share is shown only for cells, squares and regions with 50 or more firms, and those with fewer are grey. The Firms view shows each coordinate pair’s own share.",
      [(APP, "Shares are shown only for cells with 50 or more firms."), (APP, "Disclosure: in the Cells view a share needs 50 firms")]),
     ("Revenue cohort", "Firms eligible in 2021 with usable 2021 statements for revenue, cash relative to assets and the controls (the revenue cohort by cash share). Later survival, filing and list membership do not change who belongs.",
      [(CH("07-financial-sample-implications.tex"), "Cohort entry requires usable 2021 statements with the outcome, baseline resource, and controls."),
