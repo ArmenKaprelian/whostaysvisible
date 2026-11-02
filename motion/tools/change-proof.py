@@ -9,7 +9,7 @@ Given two served copies of the atlas, a base and a trial, the tool
 - takes one set of frames from both (tools/atlas-frames.py, every shot with "settle" and "boxes", after a first shot per
   load that is not compared): both views on every layer, the Moscow preset, a hover per layer, a red mark, every card with its
   reading block, every chart that pops out, the footer, the REFERENCES panel and the legend's two sides, on the dark theme (the only one since round 30); at
-  1,600 px, or at the five widths with --full. The layers, cards and charts come from the pages (__atlas.layers, cards() and the
+  1,600 px, or at the audit's four widths with --full. The layers, cards and charts come from the pages (__atlas.layers, cards() and the
   canvases that pop out), so a new layer or card is covered without an edit here;
 - compares the frames pixel for pixel, finds the regions that differ, names the panels each touches, and says whether the map
   changed outside the panels drawn over it;
@@ -20,7 +20,7 @@ Two runs of one build give "identical". Browsers start only above the lab's memo
 once, and each removes its profile (capture.remove_profile, inside the tools called).
 
 Usage: python3 -I motion/tools/change-proof.py --base http://127.0.0.1:8783/explorer.html --trial http://127.0.0.1:8782/explorer.html
-         --out motion/build/round-18/proof/NAME [--full | --widths 1600,400] [--themes dark] [--jobs 3] [--title TEXT]
+         --out motion/build/round-18/proof/NAME [--full | --widths 1600,400] [--themes dark] [--jobs 4] [--title TEXT]
          [--labels base,trial] [--reuse-base DIR] [--skip-text] [--skip-frames]
 Round 19 (the author's decision of 28 October 2026): --base and --trial also take a git commit (HEAD, a hash) or "worktree" in place of an address.
 A commit's page, scripts, stylesheet and fonts are copied under build/proof-base/COMMIT with data/ linked to the lab's own, and each build is served
@@ -30,7 +30,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-FULL = [400, 768, 1200, 1600, 2000]
+FULL = [400, 1200, 1600, 2000]                         # the audit's widths; 768 px dropped on 2 November 2026, as from the audit on 1 November
 HEIGHT = 1000                                          # the audit's height at every width
 TEXT_SIZES = [(1600, 1000), (400, 1000)]
 OVERLAYS = ['legend', 'mixbox', 'mapnote', 'scalebar', 'zoombox', 'ctxstrip', 'tip', 'popout', 'refs', 'agenttoast']   # panels drawn over the map
@@ -267,6 +267,10 @@ def serve_build(spec, want_port):   # an address is used as given; a commit or "
             arch = subprocess.run(["git", "-C", lab, "archive", sha, "motion/explorer.html", "motion/js", "motion/css", "motion/fonts"], capture_output=True, check=True).stdout
             subprocess.run(["tar", "-x", "-C", root, "--strip-components=1"], input=arch, check=True)
             os.symlink(os.path.join(motion, "data"), os.path.join(root, "data"))   # the lab's own data, as round 18's proofs used them
+        guide = os.path.join(root, "agent-guide.md")   # the guide beside the page since round 31; base copies made before 2 November 2026 lack it
+        if not os.path.exists(guide):
+            g = subprocess.run(["git", "-C", lab, "show", sha + ":motion/agent-guide.md"], capture_output=True)
+            if g.returncode == 0: open(guide, "wb").write(g.stdout)
     port = free_port(want_port)
     p = subprocess.Popen([sys.executable, "-I", os.path.join(HERE, "serve.py"), "--port", str(port), "--dir", root], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     atexit.register(lambda: (p.terminate(), p.wait(10)))
@@ -282,7 +286,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--base", default="HEAD", help="an address, a git commit or worktree (default HEAD)"); ap.add_argument("--trial", default="worktree", help="an address, a git commit or worktree (default worktree)"); ap.add_argument("--out", required=True)
     ap.add_argument("--full", action="store_true"); ap.add_argument("--widths", default=None); ap.add_argument("--themes", default="dark")
-    ap.add_argument("--jobs", type=int, default=3); ap.add_argument("--title", default="Change proof"); ap.add_argument("--labels", default="base,trial")
+    ap.add_argument("--jobs", type=int, default=4); ap.add_argument("--title", default="Change proof"); ap.add_argument("--labels", default="base,trial")
     ap.add_argument("--reuse-base", default=None, help="an earlier run's --out: its base texts and frames are reused when its shots match")
     ap.add_argument("--skip-text", action="store_true"); ap.add_argument("--skip-frames", action="store_true")
     ap.add_argument("--compare-only", action="store_true", help="take nothing: compare the texts and frames an earlier run left in --out again")
