@@ -186,19 +186,20 @@
 
   DEFS.availability = { z: 1, draw({ ctx, local: l, theme }) {
     title(ctx, 'Availability rose while the archive shrank', l, 0.2, theme);
-    subtitle(ctx, 'Share of firms with a statement, by financial year and denominator', l, 0.6, theme);
-    const box = { x: 170, y: 250, w: 1000, h: 620 };
+    subtitle(ctx, 'Share of firms with a statement, by financial year', l, 0.6, theme);   // the author's wording of 2 November 2026: the lines name which firms are counted
+    const box = { x: 170, y: 250, w: 940, h: 620 };   // option B (2 November 2026): 940 px, the line labels on two lines, the name over the value
     const progress = step(l, 1.0, 5.6, E.inOutSine);
-    CH.lines(ctx, box, [
-      { label: 'registered {y}', color: theme.accentStrong, points: series.reg, gapAfter: [2018] },
-      { label: 'eligible {y}', color: theme.accent, points: series.el, gapAfter: [2018] },
-    ], { xDomain: [2011.4, 2025.6], yDomain: [0, 80], progress, theme, yTicks: [0, 20, 40, 60, 80], xTicks: [2012, 2014, 2016, 2018, 2020, 2022, 2024, 2025], xFmt: v => (v === 2025 ? '2025*' : String(v)),
+    const LN = CH.lines(ctx, box, [
+      { label: 'registered at year-end {y}', color: theme.accentStrong, points: series.reg, gapAfter: [2018] },
+      { label: 'all eligible firms {y}', color: theme.accent, points: series.el, gapAfter: [2018] },
+    ], { endLabels: false, xDomain: [2011.4, 2025.6], yDomain: [0, 100], progress, theme, yTicks: [0, 20, 40, 60, 80, 100], xTicks: [2012, 2014, 2016, 2018, 2020, 2022, 2024, 2025], xFmt: v => (v === 2025 ? '2025*' : String(v)),
          eras: [{ from: 2018.5, to: 2025.6, color: theme.highlightBand, label: 'FNS era' }, { from: 2011.4, to: 2018.5, color: 'rgba(0,0,0,0)', label: 'Rosstat era' }],
          // The event labels hang at the feet of their own lines, 40 px apart (the spacing pass of 29 October 2026: the three FNS-era labels had sat 28 px
          // apart with the lines running through them). Rows from the bottom: Crimea and Decree 35, then the invasion, then the access notice, so no line
          // passes through another event's label.
          events: [{ x: 2014, label: 'Crimea sanctions', row: 0 }, { x: 2020.05, label: 'Decree 35, Jan 2020', row: 0 }, { x: 2022.1, label: 'Invasion, Feb 2022', row: 1 }, { x: 2022.3, label: 'Access notice, Apr 2022', row: 2 }], eventLeaders: true, eventRowGap: 40 });
     const px = 1420;   // the column ends 50 px inside the frame (it had touched the frame's edge)
+    { const la = step(l, 5.2, 0.6); for (const [pts, name, color, dy] of [[series.reg, 'registered at year-end', theme.accentStrong, -6], [series.el, 'all eligible firms', theme.accent, 6]]) { const q = pts[pts.length - 1], x = LN.sx(q.x) + 14, y = LN.sy(q.y) + dy; Motion.text(ctx, name, x, y - 14, { size: 24, weight: 500, color, baseline: 'middle', alpha: la }); Motion.text(ctx, fmt.pct(q.y), x, y + 14, { size: 24, weight: 500, color, baseline: 'middle', alpha: la }); } }
     if (l > 7.4) {
       Motion.reveal(ctx, 'Share up, statements down', px, 300, l, 7.4, { size: 30, weight: 700, color: theme.ink });
       Motion.reveal(ctx, '2021 to 2024', px, 342, l, 7.7, { size: 26, color: theme.muted });
@@ -432,50 +433,9 @@
     }
     return { scenes, keyframes: keyframesFor(B, section), DURATION: total, timeline, B, sch };
   }
-  // makeCut re-cuts a full cut: entries [id, title, cutStart, cutEnd, fullStart, fullEnd] play the
-  // parent's window [fullStart, fullEnd] between cutStart and cutEnd (speed = window / slot). Every
-  // parent scene meeting the window is cloned with the matching start, end, speed and offset, and
-  // clipped scenes get a 0.5 s fade; the ground draws from the parent's clock through the same time
-  // map; map windows carry the parent's keyframes compressed by the speed, with a hold at each end so
-  // the camera moves between map windows only during the crossfade. Chart windows leave the camera
-  // where the last map window left it.
-  function makeCut(parent, entries, duration, mapWindows) {
-    const camFull = Motion.camera(parent.keyframes, 1920, 1080);
-    const tl = {}, sc = [], kf = [], maps = [], spans = [];
-    for (const [id, title, start, end, fs, fe, camEnd] of entries) {
-      if (!(fe > fs) || !(end > start)) throw new Error(`makeCut: the window ${id} is empty or reversed (${fs}-${fe} into ${start}-${end})`);
-      const speed = (fe - fs) / (end - start);
-      tl[id] = { id, start, end, title }; maps.push({ start, end, fs, speed });
-      // Windows that continue each other in both clocks (no gap, the same speed) form one span: its scenes
-      // are cloned once and the holds and clipping fades sit only at the span's ends, so a chapter boundary
-      // inside a contiguous stretch of the parent leaves no trace.
-      const last = spans[spans.length - 1];
-      // camEnd (parent time, optional): the camera stops following the parent there and holds, while the scenes play on to fe.
-      if (last && Math.abs(last.fe - fs) < 1e-9 && Math.abs(last.end - start) < 1e-9 && Math.abs(last.speed - speed) < 1e-9) { last.fe = fe; last.end = end; last.map = last.map || mapWindows.has(id); last.camEnd = camEnd; }
-      else spans.push({ id, start, end, fs, fe, speed, map: mapWindows.has(id), camEnd });
-    }
-    for (const w of spans) {
-      const { start, end, fs, fe, speed } = w;
-      for (const s of parent.scenes) {
-        if (s.id === 'ground' || s.end <= fs || s.start >= fe) continue;
-        const a = Math.max(s.start, fs), b = Math.min(s.end, fe);
-        sc.push(Object.assign({}, s, { id: s.id + '@' + w.id, start: start + (a - fs) / speed, end: start + (b - fs) / speed, speed, offset: a - s.start,
-                                       fadeIn: s.start < fs ? 0.5 : s.fadeIn, fadeOut: s.end > fe ? 0.5 : s.fadeOut }));
-      }
-      if (!w.map) continue;
-      const ce = w.camEnd == null ? fe : w.camEnd;
-      kf.push(Object.assign({}, camFull(fs), { t: start }));
-      for (const k of parent.keyframes) if (k.t > fs && k.t < ce) kf.push(Object.assign({}, k, { t: start + (k.t - fs) / speed }));
-      kf.push(Object.assign({}, camFull(ce), { t: end - 0.5 }));
-    }
-    const timeMap = t => { let m = maps[0]; for (const x of maps) if (t >= x.start) m = x; return m.fs + Math.min(Math.max(0, t - m.start), m.end - m.start) * m.speed; };
-    sc.push(groundScene(parent.sch, duration, timeMap));
-    kf.sort((a, b) => a.t - b.t);
-    return { scenes: sc, keyframes: kf, DURATION: duration, timeline: tl };
-  }
   // Consecutive windows of a parent played at full speed: [id, title, fs, fe] in order, start times from a running clock.
-  // The cuts (one family since round 5; the Moscow standalone and the two maps-and-firms cuts were retired by the
-  // author on 24 October 2026): the full cut and a 46 s teaser with a six-second excerpt of the designation.
+  // One cut (the Moscow standalone and the two maps-and-firms cuts were retired by the author on 24 October 2026, the
+  // 46 s teaser on 2 November 2026): the full cut, 244 s.
   // images may be null: the scenes draw without the rasters until TreatedScenes.setImages hands them over.
   function makeCuts(images, opts) {
     const TS = window.TreatedScenes;
@@ -483,10 +443,7 @@
     const c = TS.NATCAM, L = leftK();
     if (Math.abs(c.k - L.k) > 1e-9 || Math.abs(c.cx - L.cx) > 1e-6 || Math.abs(c.cy - L.cy) > 1e-6 || c.ox !== L.ox || c.oy !== L.oy) throw new Error('the national rasters were built at a different camera than the left framing');
     const fm = buildCut(beatList(TS.SEC), B => TS.journey(images, B.section.start));
-    const B = fm.B, S0 = B.section.start, SEC = TS.SEC;
-    const spec = [['hook', TITLES.hook, 0, 7.5, 0, B.hook.end], ['years', TITLES.years, 7.5, 17.5, B.years.start, B.years.end], ['zoom', 'Into the street', 17.5, 29, B.zoom.start, S0 + 6],   // the street zoom up to k 120, before the title (the excerpt that follows carries the story)
-                  ['designation', 'Designation', 29, 35, S0 + SEC.designation - 2, S0 + SEC.designation + 4], ['groups', TITLES.groups, 35, 43.5, B.groups.start, B.groups.end], ['credits', TITLES.credits, 43.5, 46, B.credits.start, B.credits.end]];
-    return { full: fm, teaser: makeCut(fm, spec, 46, new Set(['hook', 'years', 'zoom', 'designation'])) };
+    return { full: fm };
   }
   window.ExplainerScenes = { makeCuts, TITLES, frames: { left: leftK(), nat: natK(0.98) } };
 })();

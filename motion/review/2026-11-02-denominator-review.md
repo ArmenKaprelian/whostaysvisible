@@ -88,3 +88,7 @@ Read-only. Grouped by sense, with a rewrite for each.
 - line 80 "the denominator and ranking rule" → "which firms are counted and the ranking rule".
 
 The decision record (`research/decision-record.md`) uses the word in about twenty entries; those are dated records and were not reviewed for change.
+
+## Applied on the site (round 35, 2 November 2026)
+
+The atlas's glossary entry and the guide's 2.17 and 5.2 are committed as the author set them (ec7ba8a; the proof against fff06dc shows the guide's two text groups and 0 of 44 frames). The national card's reading text says "among all eligible firms and among those of them registered at year-end". The film's scene carries the subtitle and the two labels; the longer label forced a narrower chart, shown as two layouts on `2026-11-02-round-35.html` for the author's pick, both on the full 0 to 100% axis the author asked for the same day. The dissertation is the author's.

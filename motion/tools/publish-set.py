@@ -126,11 +126,9 @@ ID_KEY = re.compile(r"(^|_)(inn|ogrn)(_|$)", re.I)
 NAME_KEY = re.compile(r"^(name|name_alt|name_filed|name_shared|name_case|names|label_long)$", re.I)   # firm-name keys (25 October 2026): allowed only where listed below
 NAME_ALLOWED = {"treated.json": {"name", "name_filed", "name_case", "name_shared"}, "treatednational.json": {"name", "name_filed", "name_case", "name_shared"}, "anchors.json": {"label_long"},
                 "basemap.json": {"name"}}   # basemap: the names of regions and city windows (M1), place names, not firms
-# The video asset of the explainer artifact (the teaser's 720p cut under the 15 MB asset cap; the Moscow and 55 s
-# cuts were retired on 24 October 2026, and the 25 October re-render was byte-identical, so the asset stayed): the
-# published page links it; the local page keeps its build/ files instead.
-VIDEOS = [("Teaser, 46 s", "/_blob/21895bd12c78c044b081622745188895")]   # the round-15 teaser asset (27 October 2026: the darker stage and the round's wording; c5240020… of round 13 before it)
-VIDEO_NOTE = '<p class="note">Video at 720p: ' + ', '.join('<a href="%s">%s</a>' % (u, l) for l, u in VIDEOS) + '. The full cut (4:04) is larger than the asset cap and travels as a file.</p>'
+# The explainer page's video note (the teaser's 720p asset was the published page's video until 2 November 2026, when the author retired
+# the teaser; the film plays on the author's site, and the explainer artifact is a pointer to it since 29 October 2026).
+VIDEO_NOTE = '<p class="note">The film (4 min 4 s) plays on the author’s site.</p>'
 
 def convert(name):
     src = source(name).decode("utf-8")

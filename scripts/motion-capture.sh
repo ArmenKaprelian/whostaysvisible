@@ -4,8 +4,7 @@
 # a run folder under logs/, the Brave profile under the run's scratch, the read-only check at the end.
 # Usage: scripts/motion-capture.sh [--page PAGE] [capture.py arguments ...]   (--shards N, default 4: parallel browsers)
 #   e.g. --seconds 3 --out motion/build/smoke.mp4
-#        --page "explainer.html?cut=teaser" --out motion/build/who-stays-visible-teaser-46s.mp4
-#        cut ids (one family; the side cuts were retired on 24 October 2026): full 244 s (cut B2, 29 October 2026; 287 s before), teaser 46 s
+#        one cut since 2 November 2026 (the side cuts were retired on 24 October 2026, the teaser on 2 November): full, 244 s (cut B2, 29 October 2026; 287 s before)
 set -uo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"; lab_load_env
 PAGE="explainer.html"

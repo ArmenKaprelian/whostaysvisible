@@ -108,7 +108,7 @@
         // instead of dipping to the stage colour; its own clock starts at s.start.
         const fin = s.fadeIn == null ? 0.5 : s.fadeIn, fout = s.fadeOut == null ? 0.5 : s.fadeOut;
         if (t < s.start - fin || t >= s.end) continue;
-        // speed > 1 plays a scene's content faster than real time (a teaser cut); fades stay in real time.
+        // speed > 1 plays a scene's content faster than real time (a shorter cut); fades stay in real time.
         // offset starts the scene's own clock later than zero (an excerpt in a cut).
         const speed = s.speed || 1;
         const local = Math.max(0, t - s.start) * speed + (s.offset || 0), dur = (s.end - s.start) * speed + (s.offset || 0);

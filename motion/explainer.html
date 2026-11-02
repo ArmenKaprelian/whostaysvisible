@@ -64,7 +64,7 @@
   const D0 = window.MOTION_DATA;
   if (!(D0.points && D0.treated && D0.anchors && D0.moscowcells && D0.moscowcomparison && D0.national && D0.treatednational && window.TreatedScenes)) throw new Error('the explainer needs the firm-level data: points, treated, anchors, moscowcells, moscowcomparison, national, treatednational');
   const CUTS = ExplainerScenes.makeCuts(null, { align: q.get('__align') === '1' });
-  const NAMES = { full: 'Full cut', teaser: 'Teaser' };
+  const NAMES = { full: 'Full cut' };   // the teaser was retired on 2 November 2026
   window.__panels = () => Motion.audit.panels; window.__marks = () => Motion.audit.marks;
   window.__cuts = CUTS;   // the built cuts, for inspection from the DevTools client
   const wanted = q.get('cut');
