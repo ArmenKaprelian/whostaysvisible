@@ -16,14 +16,15 @@
 #                                    difference and change-proof.py --base X, and the gate stops when it refuses
 #
 # The site's folder is ~/Documents/website unless SITE names another. Run from anywhere inside the lab. PUBLISH_AUDIT_JOBS=N limits the
-# audit's browsers (round 32: two at once by default, which halves the gate against one at a time and loses no width; one at a time ran 12.5 minutes).
+# audit's browsers (all four at once by default since 2 November 2026: the crash of 1 November that had cut it to one, then two, was an R job's
+# out-of-memory kill, not the browsers; one at a time ran 12.5 minutes, two at once 5.3).
 set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 LAB="$(git -C "$HERE" rev-parse --show-toplevel)"
 SITE="${SITE:-$HOME/Documents/website}"
 say() { printf '%s\n' "publish: $*"; }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; fi
 audited=""
 if [[ "${1:-}" == "--audited" ]]; then audited="${2:?--audited takes the audited commit}"; fi
 
@@ -59,8 +60,8 @@ if [[ -n "$audited" ]]; then
   say "2/5 the full audit of $audited carried over, if this build differs from it only in text strings (the proof takes about 5 minutes)"
   python3 -I motion/tools/audit_carry.py "$audited"
 else
-  say "2/5 the full audit (about 7 minutes at two widths at once, the default since 1 November 2026; PUBLISH_AUDIT_JOBS=N for another count)"
-  motion/tools/audit-five.sh --jobs "${PUBLISH_AUDIT_JOBS:-2}"
+  say "2/5 the full audit (about 3.5 minutes with the four widths at once, the default since 2 November 2026; PUBLISH_AUDIT_JOBS=N for fewer)"
+  motion/tools/audit-five.sh --jobs "${PUBLISH_AUDIT_JOBS:-4}"
 fi
 
 say "3/5 the publish set"
