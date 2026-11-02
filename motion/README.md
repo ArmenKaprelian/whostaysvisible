@@ -2434,6 +2434,10 @@ The author asked for a review of "denominator" on the site and in the dissertati
 - **The full axis (the author's rule of 2 November 2026):** a chart of a share of firms draws 0 to 100%. The film's scene (0 to 80 before) and the atlas's national card and pop-out (0 to 80; ticks 0, 50, 100 in the card) are the only two drawn short; the odds charts, the 100% stacked bars and the count bars were checked and left. Proof of the card and its reading text against ec7ba8a: the text's two groups, 6 of 44 frames, all inside the card and the pop-out, the map unchanged, no new rule hits.
 - **One cut (the author's word):** the film is the 1080p master in `build/` and its 720p copy on the site, no teaser. Deleted from `build/`: the 287 s and 29 October renders, the teaser and its audit, the smoke test, three old site copies and the frame folders of rounds 10 to 12 and cut B2 (about 1 GB). The teaser's cut, its cut function and its name on the explainer's cut button are gone, the launcher's notes and the publish set's explainer note follow. The explainer artifact's teaser asset (5.6 MB, unlinked) is the author's to delete: the deletion was refused to this session.
 
+**Approved** by the author on 2 November 2026 ("B, two-line labels"): the film's scene, the card's axis and reading text and the teaser's retirement committed as ae41000; the film re-rendered (7,320 frames, 244.000 s, 280 s at 4 shards), encoded to 720p with the 20 chapter keyframes (26,037,753 bytes) and committed in the site as dbec587; the 1 November renders deleted.
+
+**Ready to publish** (2 November 2026, UTC), at the first run of `publish.sh`: the text rules passed; the four-width audit had zero findings (1,040 states, 48,602 boxes, 3 min 08 s wall clock); the publish set is 112.7 MB from ae41000, the publish copy 4419f5d and the site's import f2f50a7. The site's push (`publish.sh --push`) is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
