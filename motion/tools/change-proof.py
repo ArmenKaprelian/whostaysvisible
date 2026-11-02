@@ -322,6 +322,7 @@ def main():
                 if lb == labels[0] and src and os.path.exists(src): shutil.copyfile(src, dst); continue
                 tasks.append((probe_cmd(urls[lb], js_file=os.path.join(HERE, "text-snapshot.js"), w=w, h=h), dst, dst + ".err"))
     shots = shot_list(layers, cards, pops, a.themes.split(","))
+    frames = []   # 2 November 2026: the frame sets (about 100 s each) go first and the text snapshots (about 40 s) fill the other slots
     if not a.skip_frames:
         for w in widths:
             for lb in labels:
@@ -331,7 +332,8 @@ def main():
                     if old == new and len([f for f in os.listdir(src) if f.endswith(".png")]) == len(shots):
                         if os.path.exists(dst): shutil.rmtree(dst)
                         shutil.copytree(src, dst); continue
-                tasks.append((frames_cmd(urls[lb], dst, w, shots), os.path.join(logs, "frames-%s-%d.log" % (lb, w)), os.path.join(logs, "frames-%s-%d.err" % (lb, w))))
+                frames.append((frames_cmd(urls[lb], dst, w, shots), os.path.join(logs, "frames-%s-%d.log" % (lb, w)), os.path.join(logs, "frames-%s-%d.err" % (lb, w))))
+    tasks = frames + tasks
     if a.compare_only: tasks = []
     with ThreadPoolExecutor(max(1, len(tasks))) as ex:
         codes = list(ex.map(lambda t: run.run(*t), tasks))
