@@ -2406,6 +2406,17 @@ The author asked for a review of the rounds made with Opus 5.5 (sense, efficienc
 **Approved** by the author on 1 November 2026 ("Approve all, A"): batch B committed as afb716e, the film's scenes as 913e36d, the site's photo A and résumé as ab9f36a. The site check at its ten sizes then showed the known 4 px overflow of short windows at 1,440 wide (the lede wraps to 334 px against the band's 330): the small-laptop rule widened from 1,400 to 1,500 px wide clears it (zero findings in both engines), shown to the author from the check's frames and approved (site 2bbbf26). `tools/film-site.sh` now holds the 720p recipe with the chapter keyframes.
 The phone's bio, on the author's friend's note: the headshot at 0.38 of the column and the statement at 13 px in full lines (site 2815ac5). The accent pair, on a side chat's advice the author took without an approval round: warmer and a quarter less saturated, fuchsia #DB78B1 (live #EB9AC6) and green #9CC466 (live #B9DC8D), measured against every floor of round 30 (`design/principles.md`), on the atlas, the site, the favicons and the link card. The audit's pressed-layer selector takes a `data-id` past the group tabs (1c849ea).
 
+### Round 33 (2 November 2026): the phone's top block as a card
+
+The author's Android phone (412 px, text scaled by about 1.13) ran the statement's last line under the headshot in the 1 November runaround; detail in `review/2026-11-02-round-33.md`, the page `review/2026-11-02-round-33.html`.
+- **Reproduced first:** the published page rendered headless at 412 px with every font size and line height multiplied by 1.13 breaks at the screenshot's words and hangs the last line; the 1 November frames were at scale 1, six lines beside the picture.
+- **The card:** beside the headshot the lines that identify him ("Economist." at 15 px, the degree and the dissertation at 13 px muted), the statement at 15 px across the column below. The headshot's frame takes 0.40 of the column and the height of those lines, cropping the square picture taller (`object-fit: cover`, at most 1.6 times its width), so no line falls under it and no space stands beside it at any text scale up to about 1.4; past the cap the lines run on below it in their column (360 px scaled, the 1.3 scale). The four pieces are spans in the two paragraphs, placed by the grid below 760 px only.
+- **Rejected on the way:** the plain grid (a hole under the picture beside the statement's tail; the author's rule against dead space) and a card with a 0.30 headshot (the picture a third smaller).
+- **Proof:** 1 frame in 48 differs, the phone; the two-engine check 42 loads, zero findings; WebKit renders the card as Brave does.
+- **The résumé the same day:** Lightning AI and the renv-pinned pipelines out, em dashes replaced (lab a9ed4df, site 204e5f0), then the Computing row "AWS, Google Colab; DuckDB and Parquet; Git and GitHub", Positron dropped (lab 9cbff2f, site 9514103); the author pushed the first, the second rides with this round.
+
+**Approved** by the author on 2 November 2026 ("Approve, publish"): site commit 8ff7fbc; the push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
