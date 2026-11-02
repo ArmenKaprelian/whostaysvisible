@@ -2417,6 +2417,15 @@ The author's Android phone (412 px, text scaled by about 1.13) ran the statement
 
 **Approved and published** by the author on 2 November 2026 ("Approve, publish"): site commit 8ff7fbc, pushed by the author (204e5f0..8ff7fbc, with the résumé's 9514103).
 
+### Round 34 (2 November 2026): the laptop's bio follows the headshot
+
+The author's laptop (a 2,000 × 1,211 window) showed the bio at 16 px beside the top third of a 372 px headshot, and the author asked for the bio and the photo set as on the phone, scalable across laptop screens, simple, and not brittle to wording; detail in `review/2026-11-02-round-34.md`, the page `review/2026-11-02-round-34.html`.
+- **The mirror of round 33:** the headshot's width stays the given (the height left above the index's band, at most half the column); the bio's type is proportional to it (the statement 0.062, the credentials 0.05, floors 16 and 13 px, ceilings 26 and 21); the bio's measure is 1.4 headshots while the type is proportional; the headshot's frame is as tall as the bio (`object-fit: cover`, at most 1.6 times its width). The bio ends within 6 px of the headshot's bottom at eleven windows from 1280 × 720 to 2560 × 1440.
+- **The band yields:** the content column has a definite height and the index's row is `minmax(0, var(--band))`, so a top block that needs more than the window leaves compresses the index instead of overflowing. The 330 and 352 px reservations and the small-laptop rule are deleted; a wording change can only move the band a few px. Phones and tablets unchanged.
+- **Proof:** 31 of 48 frames differ, all the split layout's; the two-engine check 42 loads, zero findings (a first run flagged the bio touching the index on short windows; 16 px under the bio fixed it).
+
+**Approved** by the author on 2 November 2026 ("Approve, publish"): site commit 3405f78; the push is the author's.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
