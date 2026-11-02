@@ -2438,6 +2438,8 @@ The author asked for a review of "denominator" on the site and in the dissertati
 
 **Ready to publish** (2 November 2026, UTC), at the first run of `publish.sh`: the text rules passed; the four-width audit had zero findings (1,040 states, 48,602 boxes, 3 min 08 s wall clock); the publish set is 112.7 MB from ae41000, the publish copy 4419f5d and the site's import f2f50a7. The site's push (`publish.sh --push`) is the author's.
 
+**Published** 2 November 2026 (UTC). The author ran `publish.sh --push`: the site's check in both engines had zero findings (42 page loads, 54 s), and it pushed 3405f78..f2f50a7, the film and the atlas import.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
