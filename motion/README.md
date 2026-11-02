@@ -2424,7 +2424,7 @@ The author's laptop (a 2,000 × 1,211 window) showed the bio at 16 px beside the
 - **The band yields:** the content column has a definite height and the index's row is `minmax(0, var(--band))`, so a top block that needs more than the window leaves compresses the index instead of overflowing. The 330 and 352 px reservations and the small-laptop rule are deleted; a wording change can only move the band a few px. Phones and tablets unchanged.
 - **Proof:** 31 of 48 frames differ, all the split layout's; the two-engine check 42 loads, zero findings (a first run flagged the bio touching the index on short windows; 16 px under the bio fixed it).
 
-**Approved** by the author on 2 November 2026 ("Approve, publish"): site commit 3405f78; the push is the author's.
+**Approved and published** by the author on 2 November 2026 ("Approve, publish"): site commit 3405f78, pushed by the author (8ff7fbc..3405f78).
 
 ## How to add or change content
 
