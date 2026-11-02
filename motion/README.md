@@ -2415,7 +2415,7 @@ The author's Android phone (412 px, text scaled by about 1.13) ran the statement
 - **Proof:** 1 frame in 48 differs, the phone; the two-engine check 42 loads, zero findings; WebKit renders the card as Brave does.
 - **The résumé the same day:** Lightning AI and the renv-pinned pipelines out, em dashes replaced (lab a9ed4df, site 204e5f0), then the Computing row "AWS, Google Colab; DuckDB and Parquet; Git and GitHub", Positron dropped (lab 9cbff2f, site 9514103); the author pushed the first, the second rides with this round.
 
-**Approved** by the author on 2 November 2026 ("Approve, publish"): site commit 8ff7fbc; the push is the author's.
+**Approved and published** by the author on 2 November 2026 ("Approve, publish"): site commit 8ff7fbc, pushed by the author (204e5f0..8ff7fbc, with the résumé's 9514103).
 
 ## How to add or change content
 
