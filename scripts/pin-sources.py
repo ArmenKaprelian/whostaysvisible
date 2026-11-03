@@ -179,10 +179,6 @@ add_small("motion.nace-rev2-codelist", f"{LAB}/data/external/nace-rev2/NACE_R2-E
 add_small("motion.nace-rev2-sdmx", f"{LAB}/data/external/nace-rev2/NACE_R2-ESTAT-20.1.sdmx.xml", "motion", kind="xml")
 add_small("motion.classifier-crosswalk", f"{PROG}/metadata/chapter2-addendum-classifier-crosswalk.csv", "motion")
 add_small("motion.classifier-sources", f"{PROG}/metadata/chapter2-addendum-classifier-sources.csv", "motion")
-add_small("motion.font-plex-mono-400", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf", "motion", kind="ttf")
-add_small("motion.font-plex-mono-500", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf", "motion", kind="ttf")
-add_small("motion.font-plex-mono-700", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Bold.ttf", "motion", kind="ttf")
-add_small("motion.font-plex-mono-licence", f"{LAB}/data/external/fonts/ibm-plex-mono/OFL.txt", "motion", kind="txt")
 # Geist Mono (round 36, the author's decision of 2 November 2026: Vercel's monospace in place of IBM Plex Mono on every page and in the renders),
 # from the geist npm package 1.9.0 (SIL Open Font License 1.1); the three static faces for the installed family, the variable woff2 for the pages.
 # Named motion.font.* (a dot) so `--only motion.font` pins these alone; data/external/fonts/README.md records the tarball's hash and the files'.

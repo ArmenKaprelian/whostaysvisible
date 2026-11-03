@@ -1,6 +1,6 @@
 <title>Who stays visible?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit 09b855c50602">
+<meta name="build" content="commit 9b44dcb6b4e9">
 <style>
 /* The atlas's and the explainer's Geist Mono, served from their own fonts/ folder (round 36, the author's decision of 2 November 2026, in
    place of IBM Plex Mono's fifteen subset files of round 20): Vercel's variable file, one face for every weight the pages use (400, 500 and
@@ -255,7 +255,7 @@ html[data-render] * { transition: none !important; animation: none !important; }
   console.log(['+--      --+', '|          |', '      o', '|          |', '+--      --+', 'Who stays visible? · Armen G. Kaprelian', 'Built from ' + ((document.querySelector('meta[name="build"]') || {}).content || 'the working tree'), 'github.com/ArmenKaprelian/whostaysvisible'].join('\n'));
   window.__ready = (async () => {
     await document.fonts.ready;
-    try { await Promise.all([document.fonts.load('400 28px "IBM Plex Mono"'), document.fonts.load('500 28px "IBM Plex Mono"'), document.fonts.load('700 28px "IBM Plex Mono"')]); } catch (e) { /* fallback fonts */ }
+    try { await Promise.all([document.fonts.load('400 28px "Geist Mono"'), document.fonts.load('500 28px "Geist Mono"'), document.fonts.load('700 28px "Geist Mono"')]); } catch (e) { /* fallback fonts */ }
     if (window.TreatedScenes && TreatedScenes.remeasure) TreatedScenes.remeasure();   // the anchor labels' offsets, measured with the loaded face (round 10)
     const D = window.MOTION_DATA; const problems = [];
     if (D.cells100.avail.year.length !== 7013) problems.push('cells100.avail rows ' + D.cells100.avail.year.length);
