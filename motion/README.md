@@ -2456,6 +2456,10 @@ The author previewed the home page in Vercel's Geist Serif and Geist Mono (`buil
 
 **The film (step 5, the author's approval of 3 November 2026 from six frames of the published master beside the page's renders and the new master):** the explainer's three font loads name Geist Mono (the theme's token had changed with the atlas); the master re-rendered (`scripts/motion-capture.sh`, run 20261103T050319Z: 7,320 frames, 244.000 s, 264 s capture at 4 shards, 280 s run; `motion/build/who-stays-visible-full-244s.mp4`, the round-35 master kept beside it as `-r35-plex`); the full text audit at every sixth frame 1,220 frames, 25,268 boxes, 13 findings, the counted box-over-mark lines of round 32's full audit line for line; the 720p copy by `film-site.sh --write` (244.000 s, 20 chapter keyframes, 25,980,676 bytes), the poster at 7.6 s and the preview picture remade.
 
+**The film published** 3 November 2026 (UTC): the site's check in both engines had zero findings (42 page loads), and `publish.sh --push` pushed fd92d4f..7fdeb1d (the 720p copy, the poster, the preview picture).
+
+**Plex removed (step 6, fdbff46):** the local install, `data/external/fonts/ibm-plex-mono/` and the four pins gone (`config/sources.json` 195 entries), the fonts README reduced to a two-line history; the publish copies rebuilt from 9b44dcb so the explainer's copy loads Geist Mono (the site's atlas not re-imported: its copy differs only in the build stamp). Proofs: `fc-list` names no Plex; the tracked sources name it only in dated comments and the two pointer pages; `change-proof.py --base 09b855c` with Plex uninstalled came out identical, and its frames equal the round's earlier proof frames pixel for pixel (shot while Plex was still installed), so no render depended on it.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
