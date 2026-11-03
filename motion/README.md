@@ -2452,6 +2452,8 @@ The author previewed the home page in Vercel's Geist Serif and Geist Mono (`buil
 
 **Ready to publish** (3 November 2026, UTC), at the second run of `publish.sh` (the first stopped at the audit: a scratch server of the session was answering port 8765): the text rules passed; the four-width audit had zero findings (1,040 states, 48,602 boxes, 3 min 05 s wall clock; its font checks name Geist Mono as the rendered face); the publish set is 112.6 MB from 09b855c (fonts 4 files, 0.4 MB; 191 links, none off the list), the publish copy b359a6d and the site's import fc7ce90.
 
+**Published** 3 November 2026 (UTC). The author ran `publish.sh --push`: the site's check in both engines had passed on this content (42 page loads, zero findings, recorded), and it pushed f2f50a7..fd92d4f (the pages, the atlas import and the atlas preview picture). The film and the Plex removal follow as their own steps.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
