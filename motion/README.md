@@ -2454,6 +2454,8 @@ The author previewed the home page in Vercel's Geist Serif and Geist Mono (`buil
 
 **Published** 3 November 2026 (UTC). The author ran `publish.sh --push`: the site's check in both engines had passed on this content (42 page loads, zero findings, recorded), and it pushed f2f50a7..fd92d4f (the pages, the atlas import and the atlas preview picture). The film and the Plex removal follow as their own steps.
 
+**The film (step 5, the author's approval of 3 November 2026 from six frames of the published master beside the page's renders and the new master):** the explainer's three font loads name Geist Mono (the theme's token had changed with the atlas); the master re-rendered (`scripts/motion-capture.sh`, run 20261103T050319Z: 7,320 frames, 244.000 s, 264 s capture at 4 shards, 280 s run; `motion/build/who-stays-visible-full-244s.mp4`, the round-35 master kept beside it as `-r35-plex`); the full text audit at every sixth frame 1,220 frames, 25,268 boxes, 13 findings, the counted box-over-mark lines of round 32's full audit line for line; the 720p copy by `film-site.sh --write` (244.000 s, 20 chapter keyframes, 25,980,676 bytes), the poster at 7.6 s and the preview picture remade.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
