@@ -840,7 +840,7 @@ void main() {
     b.hidden = !show; b.disabled = !count;
     const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay the pulse of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
-    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
+    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = count ? `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added in ${y}` : `No firm added in ${y}`; pl.classList.toggle('zero', on && !count); }   // the LISTS row (round 37): the count and the year on one line under the slider; at zero the sentence dims with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
   }
   // ---- the Cells view's squares and pulse (round 14, the author's decisions of 25 October 2026) ---------------------------------------------------------------------
@@ -2316,7 +2316,7 @@ void main() {
   function syncYearLine2() {
     const run = $('yearrun'); run.hidden = false;
     run.setAttribute('aria-pressed', String(runState.on)); { const t = runState.on ? 'Pause the run of the years' : 'Run the years from 2014 to 2025, one a second'; run.setAttribute('aria-label', t); run.title = t.toUpperCase(); }
-    $('yline2').hidden = ![...$('yline2').children].some(el => !el.hidden);
+    $('yline2').hidden = $('pulse').hidden;   // the LISTS row shows with its button (round 37)
   }
   $('yearrun').addEventListener('click', () => { if (runState.on) runEnd(); else runStart(); });
 

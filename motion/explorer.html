@@ -306,27 +306,34 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 #modes .modelabel, #layers .glabel { width: calc(10ch + 0.8em); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* one width for VIEW and the three names, the width of STATEMENTS */
 #modes .modelabel { align-self: center; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .yearrow { margin-top: 8px; }
-.yearrow .yline { display: flex; align-items: center; gap: 10px; }
-/* The year row's second line (round 15): the red button and the label that says what it shows, the year and the number of firms listed in it (item 4B). It wraps
-   on a narrow card. The blink comparator that shared the line (item 7A) was removed in round 30 (the author's request of 30 October 2026). */
-.yearrow .yline2 { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px 8px; margin-top: 8px; }   /* the red button and its counter on one line (the author's request of 27 October 2026) */
+/* The year block as two rows of the card (round 37, the author's request of 3 November 2026 after four forms were set aside): each row is a label at the start of
+   the card's label column (the VIEW label's width, 10ch + 0.8em at 12 px), its button at the column's end, and its content in the column where CELLS and the layer
+   buttons begin, so the slider and the LISTS sentence share one left edge and the run and red buttons stand in one column. YEAR: the run button, the slider, the
+   value. LISTS: the red button and its count, the firms added to one of the five lists in the year shown (round 15's item 4B, shortened to one line). The blink
+   comparator that shared the second line (item 7A) was removed in round 30. */
+.yearrow .yline, .yearrow .yline2 { display: grid; grid-template-columns: calc(10ch + 0.8em) minmax(80px, 1fr) auto; column-gap: 8px; align-items: center; font-size: 12px; }
+.yearrow .yline2 { margin-top: 8px; }
 .yearrow .yline2[hidden] { display: none; }
-.yearrow .plabel { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 12px; line-height: 1.3; color: var(--muted); }   /* the counter beside its button, on two lines where the line is short */
+.yearrow .rlabel { grid-area: 1 / 1; justify-self: start; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* as VIEW and MARKS */
+.yearrow .yrun, .yearrow .pulse { grid-area: 1 / 1; justify-self: end; }
+.yearrow .slider { grid-column: 2; }
+.yearrow .yr { grid-column: 3; }
+.yearrow .plabel { grid-column: 2 / -1; min-width: 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-size: 12px; line-height: 1.3; color: var(--muted); }   /* the count and its sentence under the slider, on two lines only where the column is short */
 .yearrow .plabel.zero { opacity: 0.55; }   /* no firm added that year: the counter and its sentence dim beside the disabled red button (0.4); text tied to a disabled control */
 .yearrow .plabel b { color: var(--treated); font-weight: 700; }   /* the count in the listed red, as the tile's and the legend's counts */
-.yearrow .ybtn { font-size: 12px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.yearrow .ybtn { font-size: 12px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; gap: 6px; }
 .yearrow .yrun { width: 28px; padding: 0; justify-content: center; }
 .yearrow .yrun svg { width: 12px; height: 12px; display: block; }
 .yearrow .yrun .pause, .yearrow .yrun[aria-pressed="true"] .play { display: none; }
 .yearrow .yrun[aria-pressed="true"] .pause { display: inline; }
 @media (pointer: coarse) { .yearrow .ybtn { height: 36px; } .yearrow .yrun { width: 36px; } }
-/* The year row (round 10, the author's corrections of 25 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Geist Mono 700 in tracked capitals on one
-   baseline, the value in tabular figures and unstriped (under the display floor); the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
+/* The year row (round 10, the author's corrections of 25 October): the value in the neon green at 16 px Geist Mono 700 in tracked capitals, tabular figures, unstriped (under the
+   display floor); YEAR was its equal in the ink until round 37 made it the card's 12 px label, as VIEW and MARKS; the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
    neon green, drawn whole as every symbol is; while a pulse runs the value and the thumb step up to the live green and settle back over 0.3 s; the track and its fill stay fuchsia;
    the brackets open outward by 2 px over 0.12 s while hovered or dragged and close on release, no motion at rest and none under reduced motion; the native thumb is a 24 px
    transparent hit area under the mark. The mark repeats the #mark symbol's geometry inline so its four brackets can move apart. The pulse button is the one red control: a red
    border and the red ring-and-dot glyph, filled red while a pulse runs, since it belongs to the red marks. */
-.yearrow .ui, .yearrow .yr { font-size: 16px; line-height: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.yearrow .yr { font-size: 16px; line-height: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .yearrow .yr { font-variant-numeric: tabular-nums; min-width: 56px; color: var(--context); transition: color 0.3s; }
 .yearrow.live .yr { color: var(--context-live); }
 .slider { position: relative; flex: 1 1 120px; min-width: 80px; height: 24px; }
@@ -347,7 +354,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .slider input[type=range]:hover ~ .thumb .br, .slider input[type=range]:active ~ .thumb .br { transform: translate(2.4px, 2.4px); }
 .slider input[type=range]:hover ~ .thumb .bl, .slider input[type=range]:active ~ .thumb .bl { transform: translate(-2.4px, 2.4px); }
 .slider:has(input:focus-visible)::after { content: ""; position: absolute; inset: -6px; pointer-events: none; z-index: 6; background: var(--mk-tl) left top / 8px 8px no-repeat, var(--mk-tr) right top / 8px 8px no-repeat, var(--mk-bl) left bottom / 8px 8px no-repeat, var(--mk-br) right bottom / 8px 8px no-repeat; }
-.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--treated); border-color: var(--treated); flex: 0 0 auto; transition: background-color 0.3s, color 0.3s; }   /* the one red control */
+.yearrow .pulse { width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: var(--treated); border-color: var(--treated); transition: background-color 0.3s, color 0.3s; }   /* the one red control */
 .yearrow .pulse:hover, .yearrow .pulse:focus-visible { background: color-mix(in srgb, var(--treated) 18%, var(--control)); }
 .yearrow.live .pulse { background: var(--treated); color: var(--stage); }
 .yearrow .pulse svg { width: 16px; height: 16px; display: block; }
@@ -506,8 +513,8 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
       <div class="controls" id="modes"></div>
       <div class="controls" id="layers"></div>
       <div class="yearrow" id="yearrow">
-      <div class="yline"><span class="ui" id="yearui">Year</span><button class="btn ybtn yrun" id="yearrun" type="button" aria-pressed="false" aria-label="Run the years from 2014 to 2025" title="RUN THE YEARS FROM 2014 TO 2025, ONE A SECOND" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="play" d="M4 2.5v11l9-5.5z" fill="currentColor"/><path class="pause" d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span></div>
-      <div class="yline2" id="yline2"><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay sweep of firms added to a list in 2021" title="We’re eyeball to eyeball, and I think the other fellow just blinked"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span></div>
+      <div class="yline"><span class="rlabel" id="yearui">Year</span><button class="btn ybtn yrun" id="yearrun" type="button" aria-pressed="false" aria-label="Run the years from 2014 to 2025" title="RUN THE YEARS FROM 2014 TO 2025, ONE A SECOND" hidden><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="play" d="M4 2.5v11l9-5.5z" fill="currentColor"/><path class="pause" d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button><span class="slider" id="yearslider"><input id="year" type="range" min="2014" max="2025" step="1" value="2024" aria-label="Financial year"><svg class="thumb" id="yearthumb" viewBox="-2.4 -2.4 28.8 28.8" aria-hidden="true" focusable="false"><path class="tl" d="M2 8V2h6"/><path class="tr" d="M16 2h6v6"/><path class="br" d="M22 16v6h-6"/><path class="bl" d="M8 22H2v-6"/><circle class="dot" cx="12" cy="12" r="2.5"/></svg></span><span class="yr ui" id="yearlabel">2024</span></div>
+      <div class="yline2" id="yline2"><span class="rlabel" id="pulseui">Lists</span><button class="btn pulse" id="pulse" type="button" hidden aria-label="Replay sweep of firms added to a list in 2021" title="We’re eyeball to eyeball, and I think the other fellow just blinked"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.8"/></svg></button><span class="plabel" id="pulselabel" aria-live="polite"></span></div>
       </div>
       </div>
     </section>
