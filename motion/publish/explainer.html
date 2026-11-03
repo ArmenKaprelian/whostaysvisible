@@ -1,7 +1,13 @@
 <title>Who stays visible?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="commit ae410008ce9c">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">
+<meta name="build" content="commit 09b855c50602">
+<style>
+/* The atlas's and the explainer's Geist Mono, served from their own fonts/ folder (round 36, the author's decision of 2 November 2026, in
+   place of IBM Plex Mono's fifteen subset files of round 20): Vercel's variable file, one face for every weight the pages use (400, 500 and
+   700), from the geist npm package 1.9.0. SIL Open Font License 1.1: GeistMono-OFL.txt beside it. tools/publish-set.py inlines this file into
+   both published pages; the lab's pages use the installed family and never load it. */
+@font-face { font-family: 'Geist Mono'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('fonts/GeistMono-Variable.woff2') format('woff2'); }
+</style>
 <style>
 /* Motion pages: one dark stage by choice for the explainer; the explorer adds a light theme.
    Layout: a 16:9 stage centred in the viewport, controls below it. Tokens are read by the canvas
@@ -36,7 +42,7 @@
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0 0.333 0.333 0.333 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.75'/%3E%3CfeFuncA type='linear' slope='2.5' intercept='-0.75'/%3E%3C/feComponentTransfer%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0 1'/%3E%3CfeFuncG type='discrete' tableValues='0 1'/%3E%3CfeFuncB type='discrete' tableValues='0 1'/%3E%3CfeFuncA type='table' tableValues='0.375 0 0.025'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23g)'/%3E%3C/svg%3E");   /* the surface grain (round 10, item 22) */
   --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");   /* the focus-visible corners: the mark's brackets (W14b) */
-  --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;   /* one typeface since round 10: IBM Plex Mono, installed for the renders and linked from Google Fonts on the published page */
+  --font: "Geist Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;   /* one typeface since round 10; Geist Mono since round 36 (the author's decision of 2 November 2026; IBM Plex Mono before), installed for the renders and served from the published pages' own fonts/ folder */
   color-scheme: dark;
 }
 html, body { height: 100%; }
