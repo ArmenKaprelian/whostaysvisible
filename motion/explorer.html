@@ -97,7 +97,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #field, #field2d, #marks, #overlay { pointer-events: none; }
 .mapwrap { --lift: 0px; }
-.mapwrap.strip-open { --lift: 34px; }   /* the context line lifts the legend and the zoom box while it is open (round 9's strip at 26 px, 34 px since round 10) */
+.mapwrap.strip-open { --lift: 34px; }   /* the open line lifts the legend clear of itself (round 9's strip at 26 px, 34 px since round 10); since round 37 the zoom buttons sit inside the bar on a wide map and only a phone-width map's zoom column lifts with it */
 .mapwrap.strip-open.narrow { --lift: 58px; }   /* the two-line form on a phone-width map (round 12, part D) */
 .maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
@@ -139,6 +139,13 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap.narrow .zoombox { flex-direction: column; width: 100px; }   /* a phone-width map keeps the column */
 .mapwrap.narrow .zoombox .btn { flex: 0 0 auto; width: 100%; }
 @media (pointer: coarse) { .zoombox .btn { height: 44px; } }
+/* Round 37 (the author's request of 3 November 2026): on a map 600 px wide or more the zoom buttons sit at the right end of the context line, the map's footer, in
+   place of a box floating above it; the script moves the box into the line there (applyStrip). The line is the box's frame, so the box loses its own. */
+.ctx > .zoombox { position: static; margin-left: auto; width: auto; flex: 0 0 auto; border: 0; padding: 0; background: transparent; background-image: none; gap: 4px; pointer-events: auto; z-index: auto; }
+.ctx > .zoombox .btn { flex: 0 0 32px; width: 32px; height: 28px; font-size: 18px; }
+.ctx > .zoombox #zoom-fit { flex: 0 0 auto; width: auto; padding: 0 8px; gap: 8px; }
+.ctx > .zoombox .btn svg { width: 14px; height: 14px; }
+@media (pointer: coarse) { .ctx > .zoombox .btn { height: 36px; } .ctx:not(.narrow) { height: 44px; } .mapwrap.strip-open:not(.narrow) { --lift: 44px; } }
 /* The cursor tile (round 9): the glance view that follows the cursor, its border in the cursor colour (muted at rest, full while
    the cursor moves), tabular monospace figures, a class-mix bar on the industry layer and a footer with the coordinate and the scale. */
 .tooltip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 2px solid var(--cursor); border-radius: 0; padding: 7px 9px; font-size: 13px; line-height: 1.35; max-width: min(320px, calc(100% - 16px)); display: none; z-index: 5; font-variant-numeric: tabular-nums; transition: border-color .15s; }
@@ -189,8 +196,12 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .linkrow .lstatus { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
 .linkfield { margin-top: 6px; font-size: 12px; }   /* the tile's text in the GO TO card's ice (round 14, the author's request); the footer keeps the reading green, the listed count its red */
 @supports (-webkit-touch-callout: none) { .fbox input, .linkfield { font-size: 16px; } }   /* round 19 (WebKit): iOS zooms the page into a focused field under 16 px; only iOS WebKit knows this property, so other browsers keep 13 and 12 px */
-/* The context strip (round 9): one quiet line along the bottom of the map in the context colour, with the region's outline. */
-.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the context line: 34 px (round 10) */
+/* The context line (round 9: one quiet line along the bottom of the map in the context colour, with the region's outline; round 37, the author's request of
+   3 November 2026: the map's footer, the sentence at its left and the zoom buttons at its right end, so nothing floats above it and nothing changes size;
+   its rule the neutral of the page's bands with the .neutral class, the reading green without it, for the author's pick). */
+.ctx { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 10px; box-sizing: border-box; background: color-mix(in srgb, var(--panel) 92%, transparent); border-top: 2px solid var(--context); font-size: 13px; color: var(--context); z-index: 3; pointer-events: none; }   /* the context line: 34 px (round 10) */
+.ctx.neutral:not(.narrow) { border-top: 1px solid var(--border); }
+.ctx:not(.narrow) .toggle { display: none; }   /* round 37: the map's footer does not collapse; the phone's two-line form keeps its toggle */
 .ctx .toggle { pointer-events: auto; color: var(--context); }
 .ctx.narrow .ctxt .t { white-space: normal; }   /* the phone's two-line form (round 12, part D) */
 .ctx .toggle:hover { color: var(--context-live); }
@@ -208,7 +219,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .ctxt { position: relative; flex: 1 1 auto; min-width: 0; height: 24px; line-height: 24px; font-size: 14px; overflow: hidden; pointer-events: auto; display: flex; align-items: center; }
 .ctxt > .lead { display: grid; flex: 1 1 auto; width: auto; max-width: 100%; min-width: 0; height: 24px; color: var(--context); }
 .ctx.narrow .ctxt, .ctx.narrow .ctxt > .lead { height: 48px; font-size: 13px; }   /* 36 characters a line */
-.ctx.narrow:not(.closed) { height: 58px; }
+.ctx.narrow:not(.closed) { height: 58px; padding: 0 6px 0 10px; }
 .ctx.narrow .ctxt .t.tip { text-transform: none; letter-spacing: 0; font-weight: 400; }   /* a tip of up to 68 characters fits two lines in sentence case; in capitals it would need three */
 .ctxt .t:not(.tip) { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* the line in tracked capitals (round 15, the author's decision of 26 October 2026); unit symbols keep their case through .u */
 .ctxt .t { grid-area: 1 / 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; transition: opacity .3s, color .3s; }

@@ -803,33 +803,19 @@ void main() {
   // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
   // and never rimmed or pulsed. The marks' size, halo, opacity and rim follow MM.listedRule by zoom (25 October 2026):
   // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red pulse
-  // once (round 24, the author's pick E of 29 October 2026): a sweep crosses the view west to east by longitude in 1.5 s, each
-  // firm swells (MM.swellPeak) as it passes. The minimum spanning tree that traced behind the sweep (round 24) was removed on the
-  // author's request of 30 October 2026 (round 30). Backward changes show nothing, and the Cells view keeps its dot. The pulse
-  // button beside the year slider replays the pulse for the firms added to a list in the shown year; under prefers-reduced-motion
-  // a pulse is a still highlight (the swell held at 0.6) for the same 2.4 s.
-  const PASS_MS = 1500, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
+  // once: every mark swells (MM.swellPeak) at the same moment and settles back over 0.9 s, and its alpha eases to its resting value
+  // over 1.6 s (round 37, the author's request of 3 November 2026). Round 24's sweep, which crossed the view west to east by longitude
+  // in 1.5 s with each firm swelling as it passed, went with it; the minimum spanning tree that traced behind the sweep had gone in
+  // round 30. Backward changes show nothing, and the Cells view keeps its dot. The pulse button beside the year slider replays the
+  // pulse for the firms added to a list in the shown year; under prefers-reduced-motion a pulse is a still highlight (the swell held
+  // at 0.6) for the same 1.6 s.
+  const DECAY_MS = 1600, PULSE_MS = Math.max(MM.SWELL * 1000, DECAY_MS), BLOOM_MS = 1800;   // the pulse lasts as long as its longest effect, the swell (MM.SWELL, 0.9 s) or the alpha's settling (DECAY_MS, 1.6 s), so it ends with nothing left to jump (the author's rule of 3 November 2026); BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
   let pulse = null, pulseRaf = 0, pulseTimer = 0;
-  const pulseDelay = new Float32Array(TRN.n);   // each firm's start delay in the running pulse (ms), filled once per pulse: the west-to-east sweep
-  // The sweep goes by longitude. The km plane is spherical LAEA about 60 N, 100 E (map-layers.js), so a firm's longitude is the inverse projection, computed once.
-  let LON = null;
-  const lonOf = () => {
-    if (!LON) { LON = new Float32Array(TRN.n); const R = 6371, sp = Math.sin(Math.PI / 3), cp = Math.cos(Math.PI / 3);
-      for (let i = 0; i < TRN.n; i++) { const x = TRN.x[i], y = TRN.y[i], rho = Math.hypot(x, y), cc = 2 * Math.asin(Math.min(1, rho / (2 * R))); LON[i] = rho < 1e-9 ? 100 : 100 + Math.atan2(x * Math.sin(cc), rho * cp * Math.cos(cc) - y * sp * Math.sin(cc)) * 180 / Math.PI; } }
-    return LON;
-  };
-  function makePulse(mask) {   // delays 0 to PASS_MS by longitude, from the westernmost to the easternmost pulsing mark inside the view and its margin
-    const c = cam(), k = c.k, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN, yi = state.year - 2014, L = lonOf();
-    let l0 = Infinity, l1 = -Infinity;
-    for (let i = 0; i < TRN.n; i++) { if (!mask[i] || TRN.filed[i][yi] === '-') continue; const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue; if (L[i] < l0) l0 = L[i]; if (L[i] > l1) l1 = L[i]; }
-    const span = l1 > l0 ? l1 - l0 : 0;
-    for (let i = 0; i < TRN.n; i++) pulseDelay[i] = mask[i] && span ? PASS_MS * Motion.clamp((L[i] - l0) / span, 0, 1) : 0;
-  }
   const setLive = on => $('yearrow').classList.toggle('live', !!on);   // the context layer's live marker while a pulse runs (round 9)
   function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; setLive(false); }
   function beginPulse(mask, count) {
     endPulse();
-    makePulse(mask); pulse = { t0: performance.now(), mask, count, static: reduceMotion(), at: null }; setLive(true);
+    pulse = { t0: performance.now(), mask, count, static: reduceMotion(), at: null }; setLive(true);
     if (pulse.static) { if (state.mode === 'firms') drawMarks(cam()); pulseTimer = setTimeout(() => { pulseTimer = 0; pulse = null; setLive(false); if (state.mode === 'firms') drawMarks(cam()); }, PULSE_MS); }
     else pulseRaf = requestAnimationFrame(pulseTick);
   }
@@ -852,7 +838,7 @@ void main() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
+    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay the pulse of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
     const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
@@ -908,8 +894,8 @@ void main() {
     drawLabels(kctx, c, 'marks');
   }
   // The Cells view's pulse (round 14): the button pulses every cell at the shown level that holds a firm listed in the shown year (dated and present that year;
-  // undated firms never pulse), a red dot at the cell's centre swelling and gone in 0.9 s (round 22; the Firms view's ring before), with the west-to-east
-  // stagger over the cells in view; under reduced motion the dot held for the same 1.8 s. The automatic pulse on a forward year change stays in the Firms view.
+  // undated firms never pulse), a red dot at the cell's centre swelling and gone in 0.9 s (round 22; the Firms view's ring before), every cell at once
+  // since round 37 (the west-to-east stagger over the cells in view before); under reduced motion the dot held for the same 1.8 s. The automatic pulse on a forward year change stays in the Firms view.
   const CELL_PULSE_LAYERS = new Set(LAYERS.filter(L => L.pulse).map(L => L.id));   // from the layers' facts (round 18)
   let cellPulse = null, cellPulseRaf = 0, cellPulseTimer = 0;
   function endCellPulse() { if (cellPulseRaf) cancelAnimationFrame(cellPulseRaf); cellPulseRaf = 0; if (cellPulseTimer) clearTimeout(cellPulseTimer); cellPulseTimer = 0; if (cellPulse) { cellPulse = null; setLive(false); } }
@@ -923,11 +909,9 @@ void main() {
   function cellsPulse() {
     endCellPulse(); if (!TRN || !CELL_PULSE_LAYERS.has(state.layer)) return 0;
     const m = manualMask(state.year); if (!m.count) return 0;
-    const c = cam(), k = c.k, LR = MM.listedRule(markRule(k), k, kFit()), seen = new Map();
+    const c = cam(), seen = new Map();
     for (let i = 0; i < TRN.n; i++) { if (!m.mask[i]) continue; const x = TRN.x[i], y = TRN.y[i], G = cellGridAt(x, y, c), jx = Math.floor((x - G.o[0]) / G.g), jy = Math.floor((y - G.o[1]) / G.g), key = G.g + ':' + jx + ':' + jy; if (!seen.has(key)) seen.set(key, { x: G.o[0] + (jx + 0.5) * G.g, y: G.o[1] + (jy + 0.5) * G.g, delay: 0 }); }
-    const cells = [...seen.values()], ox = c.ox - c.cx * k, oy = c.oy + c.cy * k; let x0 = Infinity, x1 = -Infinity;
-    for (const q of cells) { const px = ox + q.x * k, py = oy - q.y * k; if (px < -MARK_MARGIN || px > stage.width + MARK_MARGIN || py < -MARK_MARGIN || py > stage.height + MARK_MARGIN) continue; if (q.x < x0) x0 = q.x; if (q.x > x1) x1 = q.x; }
-    const span = x1 > x0 ? x1 - x0 : 0; for (const q of cells) q.delay = span ? LR.spreadMs * Motion.clamp((q.x - x0) / span, 0, 1) : 0;
+    const cells = [...seen.values()];   // every dot starts at once (round 37); delay stays in the record for the audit, 0 throughout
     cellPulse = { t0: performance.now(), cells, count: cells.length, static: reduceMotion(), at: null }; setLive(true);
     if (cellPulse.static) cellPulseTimer = setTimeout(() => { cellPulseTimer = 0; cellPulse = null; setLive(false); if (state.mode !== 'firms') drawCellsMarks(cam()); }, BLOOM_MS);
     else cellPulseRaf = requestAnimationFrame(cellPulseTick);
@@ -944,7 +928,7 @@ void main() {
   }
   const MARK_MARGIN = 80;   // CSS px beyond the view inside which marks are drawn: the street zoom's flash and ring reach 72.6 px (round 9)
   const PH = { on: false, swell: 0, release: 0, grow: 0, glowA: 0, p: 0 };   // the bloom phase of the mark being drawn, reused (no allocation per frame)
-  // The listed marks and the pulse: each pulsing firm runs its own clock, started by its stagger delay, and its red mark swells and settles back
+  // The listed marks and the pulse: every pulsing firm runs on the pulse's clock (round 37; its own stagger delay before), and its red mark swells and settles back
   // (MM.swellPhase, round 22, the author's pick A of 29 October 2026); rounds 9 to 21 added a glow pass under the marks and a ring pass above the names.
   function drawMarks(c) {
     clearMarks(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
@@ -957,7 +941,7 @@ void main() {
       const pulsing = !!(pulse && pulse.mask[i]);
       const px = ox + TRN.x[i] * k, py = oy - TRN.y[i] * k; if (px < -MARK_MARGIN || px > W || py < -MARK_MARGIN || py > H) continue;
       const r = MM.listedRadius(LR, TRN.pile[i]);
-      if (pulsing) { if (st) { PH.on = true; PH.swell = 0.6; PH.release = 1; PH.grow = 1; PH.glowA = 0; PH.p = 1; } else MM.swellPhase((tNow - pulseDelay[i]) / 1000, PH); }   // still: held at 0.6 of the swell
+      if (pulsing) { if (st) { PH.on = true; PH.swell = 0.6; PH.release = 1; PH.grow = 1; PH.glowA = 0; PH.p = 1; } else MM.swellPhase(tNow / 1000, PH); }   // still: held at 0.6 of the swell
       const fade = pulsing && PH.on ? 1 - PH.grow : 1;   // the ordinary fill and rim fade as the bloom grows; a firm whose stagger has not started is still rimmed
       if (TRN.red_from[i] > year || (pulsing && fade > 0.001)) {
         const sc = TRN.state[i][yi], col = L === 'fin' && sc >= '1' && sc <= '6' ? theme.div6[+sc - 1] : L === 'share' ? theme.ramp6[ch === '1' ? 5 : 0] : theme.neutral;
@@ -966,7 +950,7 @@ void main() {
       if (TRN.red_from[i] <= year) {
         if (pulsing) {
           if (!PH.on) continue;   // before its own start the firm shows its rimmed mark only
-          const rr = r + MM.swellPeak(r) * PH.swell, tt = st ? 0 : Motion.clamp((tNow - pulseDelay[i]) / DECAY_MS, 0, 1);
+          const rr = r + MM.swellPeak(r) * PH.swell, tt = st ? 0 : Motion.clamp(tNow / DECAY_MS, 0, 1);
           MM.listedMark(kctx, px, py, rr, ch === '1' ? 1 : 0, PH.grow * (1 - (1 - LR.alpha) * tt), theme, LR.halo, null, LR);
         } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo, null, LR);
       }
@@ -1166,8 +1150,9 @@ void main() {
   function citySum(label, y) { const d = cityYear[label] && cityYear[label][y] ? cityYear[label][y].d : null; if (!d) return null; citySums[label] = citySums[label] || {}; if (!citySums[label][y]) citySums[label][y] = { n: d.sum_n, a: d.sum_a }; return citySums[label][y]; }   // the window's own totals (round 15: the sum over the cells had counted the firms of the cells whose statements are withheld, under 10 firms, and not their statements, so every window's share read 2 to 8 points low)
   const stripState = { fact: null, tip: null, lastFactAt: 0, tipTimer: 0, tipEnd: 0, glyphName: null, cur: 'A', seen: new Set(), tickRaf: 0 };
   try { const v = JSON.parse(sessionStorage.getItem('atlas-tips') || '[]'); if (Array.isArray(v)) v.forEach(i => stripState.seen.add(+i)); } catch (e) { /* no storage */ }
-  const stripOpen = () => (ui.ctx ? ui.ctx === 'open' : !narrow());   // round 30 (the author's pick of 30 October 2026): on a map under 600 px wide the line starts collapsed, as the legend and the note do, and opens in two rows; a viewer's own choice is kept
-  function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'); el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
+  const stripOpen = () => (narrow() ? ui.ctx === 'open' : true);   // round 37: on a map 600 px wide or more the line is the map's footer and always open; on a narrower map (round 30, the author's pick of 30 October 2026) it starts collapsed, as the legend and the note do, opens in two rows, and the viewer's own choice is kept
+  function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'), zb = $('zoombox'); if (!narrow()) { if (zb.parentElement !== el) el.appendChild(zb); } else if (zb.parentElement === el) wrap.insertBefore(zb, el);   // round 37: the zoom buttons sit at the bar's right end on a wide map, in their own box above the line on a phone-width map
+    el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
   $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); syncNoteDefault(); if (v === 'open') updateContext(true); });
   const pts = (n, d) => `${fmt.signed(d)} points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
@@ -1314,7 +1299,10 @@ void main() {
   ];
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
-  function nextTip() { for (let i = 0; i < TIPS.length; i++) { const t = TIPS[i]; if (stripState.seen.has(i)) continue; if (t.firms && !FIRMS_OK) continue; if (t.mouse && coarse()) continue; return [i, coarse() && t.touch ? t.touch : t.text]; } return null; }
+  const tipFits = str => {   // round 37: measured in the hidden span as it would show; a tip wider than the slot (the bar less the zoom buttons) is skipped at this width, never clipped
+    if (narrow()) return true; const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'), keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip'); el.innerHTML = units(esc(str));
+    const ok = el.scrollWidth <= el.clientWidth + 1; el.innerHTML = keep; el.classList.toggle('tip', had); return ok; };
+  function nextTip() { for (let i = 0; i < TIPS.length; i++) { const t = TIPS[i]; if (stripState.seen.has(i)) continue; if (t.firms && !FIRMS_OK) continue; if (t.mouse && coarse()) continue; const text = coarse() && t.touch ? t.touch : t.text; if (!tipFits(text)) continue; return [i, text]; } return null; }
   function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }
   function maybeTip(force) {
     if (!stripOpen() || stripState.tip || (!force && (flight || press || pinch || !cursorStill || performance.now() - stripState.lastFactAt < 12000))) return false;
@@ -2255,7 +2243,7 @@ void main() {
     const canvasH = Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
     el.hidden = false; const H = el.getBoundingClientRect().height;
     const ctrl = ['zoombox'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
-    const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 34 : 0)) - 12;
+    const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 42 : 0)) - 12;
     el.style.top = Math.round(Math.max(12, floor - H)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
   }
   function openPop(id) {
@@ -2829,7 +2817,7 @@ void main() {
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
     redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return { boxes: Motion.audit.boxes, dom: domBoxes() }; },
     tips() {   // every tip measured in the strip's hidden span as it would show (round 10): the audit asserts none is clipped at any width
-      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip');   // measured in the line's full width, where the tips show (round 12)
+      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip');   // measured in the line's slot, where the tips show (round 12); since round 37 the page skips a tip that would clip at this width (tipFits), so a clipped one here is one the page never shows
       const out = TIPS.flatMap((t, i) => [t.text, t.touch].filter(Boolean).map(str => { el.innerHTML = units(esc(str)); return { i, text: str, w: el.scrollWidth, slot: el.clientWidth, h: el.scrollHeight, hslot: el.clientHeight, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 }; }));
       el.innerHTML = keep; el.classList.toggle('tip', had); return out;
     },
@@ -2908,7 +2896,7 @@ void main() {
     overlayCost(n = 30) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); drawOverlay(state.hover); mx = Math.max(mx, performance.now() - a); } return { mean: +((performance.now() - t0) / n).toFixed(3), max: +mx.toFixed(3) }; },
     contextCost(n = 30) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); updateContext(true); mx = Math.max(mx, performance.now() - a); } return { mean: +((performance.now() - t0) / n).toFixed(3), max: +mx.toFixed(3) }; },
     listedRule() { const c = cam(), L = MM.listedRule(markRule(c.k), c.k, kFit()), rMax = MM.listedRadius(L, 65535), rMin = MM.listedRadius(L, 1); return Object.assign({ k: c.k, rMin, rMax, cull: MARK_MARGIN, pulseMs: PULSE_MS, decayMs: DECAY_MS, flashMax: MM.flashPeak(rMax), glowMax: 2 * (rMax + MM.flashPeak(rMax)) }, L); },   // the rule at the current zoom, for the audit
-    pulseAt(ms) { if (ms == null) { endPulse(); drawMarks(cam()); return 0; } const m = manualMask(state.year); if (!m.count) return 0; endPulse(); makePulse(m.mask); pulse = { t0: performance.now() - ms, mask: m.mask, count: m.count, static: false, at: ms }; setLive(true); drawMarks(cam()); return m.count; },   // a frozen pulse frame at ms, for the comparison pictures; pulseAt(null) clears it
+    pulseAt(ms) { if (ms == null) { endPulse(); drawMarks(cam()); return 0; } const m = manualMask(state.year); if (!m.count) return 0; endPulse(); pulse = { t0: performance.now() - ms, mask: m.mask, count: m.count, static: false, at: ms }; setLive(true); drawMarks(cam()); return m.count; },   // a frozen pulse frame at ms, for the comparison pictures; pulseAt(null) clears it
     ready() { const micro = state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && FIRMS_OK, y = microYear(); return Promise.all([ensureGrid25(), state.mode === 'firms' ? ensureYear(state.year) : micro ? ensureYear(y).then(() => { if (!mosaicCache.has(y + '|1')) { mosaicBins(y, 1); layersDirty(); drawMap(); } }) : Promise.resolve()]).then(() => {}); },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
