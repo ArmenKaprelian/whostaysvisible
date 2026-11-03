@@ -124,10 +124,11 @@
     return stage;
   };
 
-  // Text helpers in design space. One typeface on both pages since round 10 (26 October 2026): IBM Plex Mono, read from the
-  // page's --font token (the installed family for the lab's renders, Google Fonts on the published pages), 400 for prose,
+  // Text helpers in design space. One typeface on both pages since round 10 (26 October 2026), Geist Mono since round 36 (the author's
+  // decision of 2 November 2026; IBM Plex Mono before), read from the page's --font token (the installed family for the lab's renders,
+  // the pages' own fonts/ folder when published), 400 for prose,
   // 500 for labels and figures, 700 for headings and emphasis; the fallbacks are monospace faces of the same 0.6 em advance.
-  Motion.family = (() => { try { const f = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (f) return f; } catch (e) { /* no document */ } return '"IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace'; })();
+  Motion.family = (() => { try { const f = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (f) return f; } catch (e) { /* no document */ } return '"Geist Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace'; })();
   Motion.font = (px, weight, family) => `${weight || 400} ${px}px ${family || Motion.family}`;
 
   // Text audit (page opened with ?__audit=1): every drawn string records its design-space box, its
@@ -145,9 +146,10 @@
                    x: Math.min(...xs), y: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), ax: anchor[0], ay: anchor[1] });
   };
   // The striped display style (round 10, the author's item 18): large type cut by horizontal hairline gaps in the IBM manner, eight bars per
-  // capital height (IBM Plex Mono's cap height is 0.698 em), the gaps cut out of the drawn shape on an offscreen canvas so the true background
+  // capital height (Geist Mono's cap height is 0.710 em, its OS/2 sCapHeight, the same in all three weights; Plex Mono's was 0.698), the gaps
+  // cut out of the drawn shape on an offscreen canvas so the true background
   // shows through them; the audit's ink boxes are recorded before the cut and do not change. Nothing under about 28 px takes it.
-  Motion.CAP = 0.698;
+  Motion.CAP = 0.710;
   let stripeCv = null;
   Motion.striped = function (ctx, x0, y0, w, h, pitch, gap, draw) {
     const tr = ctx.getTransform(), s = Math.hypot(tr.a, tr.b) || 1, W = Math.ceil(w * s) + 2, H = Math.ceil(h * s) + 2;

@@ -6,7 +6,8 @@ sizes the pages must hold: a phone upright and in landscape, a tablet upright an
 desktop (the home page at all seven, the other pages and the atlas at the phone and the laptop). The tool serves the site itself on
 127.0.0.1 and reports, per page, size and engine:
   - script errors and failed loads (an error event, an unhandled rejection, a console error);
-  - a page wider than its window (sideways scroll) and IBM Plex Mono not loaded;
+  - a page wider than its window (sideways scroll) and Geist Mono not loaded (a loaded FontFace of the page's own, since round 36: an
+    installed family would satisfy document.fonts.check, and WebKit answers true when no face matches);
   - on the home page, in the split layout: the photo not spanning its column, its top edge below the index's top rule (or off it
     where the band is the photo's height), a page taller than its window, the bio
     within 8 px of the index, an index row under 40 px; in the stacked layout: an index row under 44 px (a finger's target) and
@@ -47,7 +48,7 @@ CHECK_JS = r"""async () => {
   await new Promise(r => setTimeout(r, 1200));
   const de = document.documentElement, f = [], px = v => Math.round(v);
   if (de.scrollWidth > innerWidth + 1) f.push('page wider than its window: ' + de.scrollWidth + ' px in ' + innerWidth);
-  if (!document.fonts.check('16px "IBM Plex Mono"')) f.push('IBM Plex Mono not loaded');
+  if (![...document.fonts].some(x => x.family.replace(/"/g, '') === 'Geist Mono' && x.status === 'loaded')) f.push('Geist Mono not loaded');
   const home = document.querySelector('main.home');
   if (home) {
     const box = s => document.querySelector(s).getBoundingClientRect();

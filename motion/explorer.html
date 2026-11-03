@@ -20,7 +20,7 @@
   --accent: #79CDBF; --accent-strong: #C7F8E7; --fall: #F39523; --rise: #79CDBF; --below: #3C4852; --highlight: rgba(121,205,191,0.10);   /* the cyan ramp's steps 4 and 6; the diverging pair's classes 2 and 5 (round 10) */
   --ind-1: #E8B533; --ind-2: #2882F9; --ind-3: #ED7D43; --ind-4: #4CB3A4; --ind-5: #FBEB87; --ind-6: #E090FD; --ind-7: #9887C7; --ind-8: #ECF4FE; --ind-9: #6D747A;   /* the industry nine (round 10): the author's lit hues moved inside their semantic windows by the validator; the pairs in motion/README.md */
   --div-1: #FFB000; --div-2: #F39523; --div-3: #EA7719; --div-4: #50B5AA; --div-5: #79CDBF; --div-6: #A1E4D3; --zero: #6B7482;   /* the signed layers' pair (round 10): declines amber to orange, rises the cyan ramp's steps 3 to 5, the slate for no usable baseline */
-  --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
+  --control: #172A45; --control-on: #1F6F80; --treated: #E31A1C; --font: "Geist Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --cursor: #DB78B1; --cursor-live: #EB9AC6; --context: #9CC466; --context-live: #B9DC8D; --scheme: dark;   /* round 32 (1 November 2026, the author's instruction from a side chat's advice): warmer and a quarter less saturated than round 30's #EE69C0/#F49ED2 and #57CE70/#93E09E, OKLCH 0.70/0.14/346 and 0.77/0.13/128; measured: 6.6:1 and 9.5:1 as text on the panel, 7.1 and 10.1:1 for the stage on their fills, 27 normal, 22 protan and 14 deutan apart, 11.2 and 10.6 from the nearest data colour */
   --by: "Armen G. Kaprelian";   /* the authorship mark in the stylesheet (round 10, the author's item 17; read by nothing) */
   --go: #9CC8FF; --go-leader: #CFE6FF; --go-live: #FFFFFF;   /* the GO TO card's neutral: a cold pale blue for the card, its buttons, the minimap's dots and box strokes (the author's correction of 25 October, validated: 15.5 from the cyan ramp's pale end, 22.7 from the Manufacturing blue, 29.2 and 11.3 deutan from the fuchsia, 27.0 from the green); the minimap's leaders keep the paler ice; the hover full white */
@@ -309,7 +309,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .yearrow .yrun .pause, .yearrow .yrun[aria-pressed="true"] .play { display: none; }
 .yearrow .yrun[aria-pressed="true"] .pause { display: inline; }
 @media (pointer: coarse) { .yearrow .ybtn { height: 36px; } .yearrow .yrun { width: 36px; } }
-/* The year row (round 10, the author's corrections of 25 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Plex Mono 700 in tracked capitals on one
+/* The year row (round 10, the author's corrections of 25 October, final): YEAR in the ink and the value in the neon green, alike at 16 px Geist Mono 700 in tracked capitals on one
    baseline, the value in tabular figures and unstriped (under the display floor); the slider's thumb is the project mark at 20 px with 2.5 px strokes and a 4 px centre dot in the
    neon green, drawn whole as every symbol is; while a pulse runs the value and the thumb step up to the live green and settle back over 0.3 s; the track and its fill stay fuchsia;
    the brackets open outward by 2 px over 0.12 s while hovered or dragged and close on release, no motion at rest and none under reduced motion; the native thumb is a 24 px
@@ -425,11 +425,11 @@ footer .lic { margin-left: auto; }   /* round 17 (the author's pick): the data l
 @media (prefers-reduced-motion: reduce) { .agenttoast { transition: none; } }
 footer a { color: var(--cursor); }   /* a link acts (Part B item 4); the footer's only links are buttons, which set their own colour */
 /* The REFERENCES panel (round 16, the author's General 7 of 26 October 2026, as picked on 27 October 2026: raC, rdB revised, refA, rxA, rlA, riA, rtA, rfA, rsA): a fuchsia button
-   in the header opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Plex Mono, section
+   in the header opens a modal dialog over the centred 80 percent of the map's area, the stage made translucent (no blur), a restrained terminal: Geist Mono, section
    heads as prompt lines, a still block cursor. The icon at its top left, the green i meshed with a wire globe, carries the 3B treatment of round 15's wire, scanlines and the glow. */
 .hright { gap: 10px; }
 @media (min-width: 901px) and (max-width: 1020px) { header { display: flex; flex-wrap: wrap; align-items: center; } .hleft { flex: 1 1 auto; } .hright { margin-left: auto; } .lockup { flex: 1 0 100%; justify-content: flex-start; order: 3; } .byline .who { white-space: normal; } }   /* the fallback: below the width where two buttons and the centred lock-up would meet (about 1,020 px, with DARK THEME), the lock-up takes its own row, as on phones */
-@font-face { font-family: 'Atlas Armenian Mono'; src: url('fonts/DejaVuSansMono.ttf') format('truetype'); unicode-range: U+0530-058F, U+FB13-FB17; font-display: swap; }   /* DejaVu Sans Mono (Bitstream Vera licence, DejaVu's changes in the public domain), for Armenian letters only: Plex Mono has none */
+@font-face { font-family: 'Atlas Armenian Mono'; src: url('fonts/DejaVuSansMono.ttf') format('truetype'); unicode-range: U+0530-058F, U+FB13-FB17; font-display: swap; }   /* DejaVu Sans Mono (Bitstream Vera licence, DejaVu's changes in the public domain), for Armenian letters only: Geist Mono has none, as Plex Mono had none */
 dialog.refs { position: fixed; inset: auto; margin: 0; padding: 0; box-sizing: border-box; border: 3px solid var(--context); border-radius: 0; color: var(--ink); background-color: color-mix(in srgb, var(--stage) var(--refs-alpha, 98%), transparent); background-image: var(--grain); background-size: 128px 128px; font-size: 13px; line-height: 1.5; max-width: none; max-height: none; overflow: hidden; transform-origin: 50% 50%; }
 dialog.refs[open] { display: flex; flex-direction: column; }
 dialog.refs::backdrop { background: transparent; }
@@ -447,7 +447,7 @@ dialog.refs::backdrop { background: transparent; }
 .refs li b { color: var(--ink); font-weight: 500; }
 .refs a { color: var(--cursor); text-decoration: none; border-bottom: 1px solid currentColor; }
 .refs a:hover, .refs a:focus-visible { color: var(--cursor-live); }
-.refs .note { white-space: pre-wrap; margin: 4px 0 0; color: var(--ink); font-size: 14px; font-family: "IBM Plex Mono", 'Atlas Armenian Mono', "DejaVu Sans Mono", monospace; text-transform: none; letter-spacing: 0; }
+.refs .note { white-space: pre-wrap; margin: 4px 0 0; color: var(--ink); font-size: 14px; font-family: "Geist Mono", 'Atlas Armenian Mono', "DejaVu Sans Mono", monospace; text-transform: none; letter-spacing: 0; }
 .refs .rcursor { display: inline-block; width: 0.6em; height: 1.15em; margin-top: 10px; background: var(--context); }
 .refs .ricon { width: 40px; height: 40px; flex: 0 0 auto; color: var(--context); }
 .refs .rglow { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }

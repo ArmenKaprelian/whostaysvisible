@@ -416,7 +416,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 13.2. DATA gives the sources in 2.2, the five lists' provenance, the GDP deflator (World Bank, NY.GDP.DEFL.ZS.AD, rebased to 2021) and the industry and ownership classifications. DEFINITIONS gives the terms in section 2. METHODS names the chapter (chapter 2 of the dissertation in 2.1) and the tables and figures behind the panels: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map, the change layer's source) and Figure 2.8 (cohort inclusion). It also restates the models (9.2) and that they give associations, not effects.
 
-13.3. TYPE AND SOFTWARE: IBM Plex Mono (SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
+13.3. TYPE AND SOFTWARE: Geist Mono (Vercel, SIL Open Font License 1.1), DejaVu Sans Mono for Armenian letters, data passes in R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.
 
 13.4. INSIGHTS lists the sources of each region's and city window's profile sentence (6.4) by publisher, type and date: government press releases and notices, sanctions list entries, news reports and analyses.
 

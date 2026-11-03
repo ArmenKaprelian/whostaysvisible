@@ -2,8 +2,8 @@
 """Assemble the publish set of the two pages under motion/publish/.
 
 The claude.ai artifact wraps a page in its own document skeleton, so the page copies drop the
-doctype, html, head and body tags, keep the <title>, inline css/theme.css, add the Google Fonts
-fallback (IBM Plex Mono (Google Fonts, the same build as the installed family) is metric-compatible with the Liberation/Arial family the pages use locally) and the
+doctype, html, head and body tags, keep the <title>, inline css/theme.css and fonts/web-fonts.css (the
+pages' own font, round 36) and the
 viewport-fit meta the page contract asks for. Beside them: the six shared scripts, every data file
 (the aggregates and, since the author's rule change of 23 October 2026, the firm-level files: the
 Moscow and national manifests, the listed firms, the anchors, the Moscow cells and comparison groups,
@@ -24,7 +24,9 @@ file differs from the commit's. The build stamp then names that commit.
 Round 16: the fonts the atlas loads from its own folder (fonts/DejaVuSansMono.ttf, for the Armenian letters of the REFERENCES panel's note) ship in
 fonts/ with their licence beside them, read from the --from commit like the scripts. Round 20 (the author's decision of 29 October 2026): the atlas's
 IBM Plex Mono too, as Google Fonts serves them (Tomorrow too until round 30) (fonts/web-fonts.css, inlined into the page in place of the Google Fonts link; the
-explainer keeps the link). Every http(s) link in the shipped pages, scripts and data
+explainer kept the link). Round 36 (the author's decision of 2 November 2026): Geist Mono's one variable file in place of Plex's fifteen, and the
+explainer's publish copy inlines the same rule, so no page links Google Fonts (a publish copy pasted as a single page would fall to DejaVu Sans
+Mono; the artifacts at the old addresses are pointers and load nothing). Every http(s) link in the shipped pages, scripts and data
 twins must be on the expected list: the insights' sources (insights.json) and the page's own links
 below (the footer's, the references', the fonts', the basemap's). A link that is on none of them refuses the set.
 
@@ -66,8 +68,7 @@ WRITE = "--write" in sys.argv   # round 19: the publish copy is written only on 
 PUBLISH = os.path.join(MOTION, "publish")
 OUT = PUBLISH if WRITE or DATES_ONLY else tempfile.mkdtemp(prefix="publish-dry-", dir=os.path.join(MOTION, "build"))
 if not DATES_ONLY: os.makedirs(OUT, exist_ok=True)
-FONT = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap">'   # the explainer's Plex, from Google Fonts
-FONT_LOCAL = {"explorer.html": "fonts/web-fonts.css"}   # round 20 (the author's decision of 29 October 2026): the atlas's Plex from its own fonts/ folder, Google's rules inlined
+FONT_LOCAL = {"explorer.html": "fonts/web-fonts.css", "explainer.html": "fonts/web-fonts.css"}   # round 20 (the author's decision of 29 October 2026): the atlas's font from its own fonts/ folder, the rules inlined; round 36: the explainer too (Geist Mono, no Google Fonts)
 META = '<meta name="claude:viewport-fit-sides" content="cover">'
 def git(*args, text=True):
     return subprocess.run(["git"] + list(args), cwd=MOTION, capture_output=True, text=text, check=True).stdout
@@ -87,13 +88,13 @@ def source(path):   # a page, the stylesheet or a script: from the working tree,
 BUILD = build_id()
 BUILD_META = '<meta name="build" content="%s">' % BUILD
 TEXT_CAP = 16 * 1024 * 1024; BIN_CAP = 15 * 1024 * 1024
-FONT_LICENCE = {"DejaVuSansMono.ttf": "DejaVuSansMono-LICENSE.txt", "IBMPlexMono-": "IBMPlexMono-OFL.txt"}   # a font file (or a family's file prefix, round 20) and the licence that ships beside it (round 16)
+FONT_LICENCE = {"DejaVuSansMono.ttf": "DejaVuSansMono-LICENSE.txt", "GeistMono-": "GeistMono-OFL.txt"}   # a font file (or a family's file prefix, round 20) and the licence that ships beside it (round 16)
 def licence(n): return FONT_LICENCE.get(n) or next((v for k, v in FONT_LICENCE.items() if k.endswith("-") and n.startswith(k)), None)
 LINKS = {"https://armenkaprelian.github.io/", "https://armenkaprelian.github.io/atlas/", "https://x.com/ArmenKaprelian", "https://www.youtube.com/watch?v=y4T5gmAndFk",   # 28 October 2026: the author's site and the atlas on it, the Galbraith video
          "https://doi.org/10.1038/s41597-025-05150-1", "https://doi.org/10.1371/journal.pone.0231866", "https://doi.org/10.5281/zenodo.22257046",
-         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS.AD", "https://www.openstreetmap.org/copyright", "https://opendatacommons.org/licenses/odbl/1-0/", "https://fonts.gstatic.com", "http://www.w3.org/2000/svg",
+         "https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS.AD", "https://www.openstreetmap.org/copyright", "https://opendatacommons.org/licenses/odbl/1-0/", "http://www.w3.org/2000/svg",
          "https://armenkaprelian.github.io/atlas/agent-guide.md"}   # TEACH YOUR AGENT's link (tools/agent_guide.py GUIDE_URL; on the author's site since 28 October 2026)
-LINK_PREFIXES = ("https://x.com/intent/post?text=", "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono", "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/")
+LINK_PREFIXES = ("https://x.com/intent/post?text=", "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/")
 def page_fonts():   # the font files the pages load from fonts/ (round 16), read from the pages themselves so the set follows --from
     names = []
     for page in ("explainer.html", "explorer.html"):
@@ -137,7 +138,7 @@ def convert(name):
     body = re.search(r"<body>(.*?)</body>", src, re.S).group(1)
     style = re.search(r"<style>.*?</style>", head, re.S)
     css_link = re.search(r'<link rel="stylesheet" href="css/theme.css">', head)
-    parts = [title, META, BUILD_META, "<style>\n" + source(FONT_LOCAL[name]).decode("utf-8") + "</style>" if name in FONT_LOCAL else FONT]
+    parts = [title, META, BUILD_META, "<style>\n" + source(FONT_LOCAL[name]).decode("utf-8") + "</style>"]   # both pages load the font from the set's fonts/ (round 36)
     if style:
         parts.append(style.group(0))
     if css_link:

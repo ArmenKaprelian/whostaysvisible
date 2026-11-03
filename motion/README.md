@@ -2440,6 +2440,10 @@ The author asked for a review of "denominator" on the site and in the dissertati
 
 **Published** 2 November 2026 (UTC). The author ran `publish.sh --push`: the site's check in both engines had zero findings (42 page loads, 54 s), and it pushed 3405f78..f2f50a7, the film and the atlas import.
 
+### Round 36 (2 November 2026): Geist Mono in place of IBM Plex Mono
+
+The author previewed the home page in Vercel's Geist Serif and Geist Mono (`build/geist-preview/`) and chose Geist Mono everywhere Plex Mono was used: the site, the atlas, the film and the lab's review pages; not the résumé (Charter) and not the Armenian note (DejaVu Sans Mono). The note is `review/2026-11-02-round-36.md`, the page `review/2026-11-02-round-36.html`. (In progress: the entry is completed at the round's records step.)
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
