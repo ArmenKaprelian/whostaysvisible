@@ -2472,6 +2472,8 @@ The author asked for three revisions: the red marks' swell at the same moment in
 
 **Ready to publish** (3 November 2026, UTC), at the second run of `publish.sh`: the first stopped at the audit on the tips rule's own threshold at 1,200 px (3 of 13 tips fit the footer's slot there, the rule asked for 4; set to the measured count in d384579); the second had zero findings at the four widths (1,040 states, 48,602 boxes, 3 min 02 s wall clock). The text rules passed; the publish set is 112.6 MB from d384579 (191 links, none off the list), the publish copy 464ebbc and the site's import b277d98. The site's push (`publish.sh --push`) is the author's.
 
+**Published** 3 November 2026 (UTC). The author ran `publish.sh --push`: the site's check in both engines had zero findings (42 page loads, 48 s), and it pushed 7fdeb1d..b277d98, the atlas import.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
