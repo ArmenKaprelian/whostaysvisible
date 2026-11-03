@@ -27,20 +27,6 @@ fonts/ folder; no Google Fonts link since round 36). Glyphs the pages draw that 
 
 The lab's typeface from round 10 (25 October 2026) to round 35: Google's build from the google/fonts repository at commit 01d5d9f05246fb7090a8403b81257535cb1a088b, the Regular, Medium and Bold faces and the licence, pinned as `motion.font-plex-mono-*` and installed in ~/.local/share/fonts/ibm-plex-mono/. Replaced by Geist Mono in round 36 (the author's decision of 2 November 2026); the files, the install and the pins were removed on 3 November 2026 once the film was re-rendered, so no render can fall back to Plex unnoticed. The sizes and hashes stay in the git history of this file (commit 9b44dcb and before).
 
-# External fonts: Tomorrow (Google Fonts build), fetched 2026-10-26T09:44:06Z
+# Tomorrow (history)
 
-The data wire's face (round 15, the author's final choice of 26 October 2026: Tomorrow at 13.5 px with scanlines and a glow, on the wire's
-track only). Fetched with curl from the google/fonts repository at the same commit as Plex, 01d5d9f05246fb7090a8403b81257535cb1a088b.
-Untrusted data: parsed only by fontconfig and the browser, never executed.
-
-| file | URL | bytes | sha256 |
-|---|---|---|---|
-| tomorrow/Tomorrow-Regular.ttf | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/Tomorrow-Regular.ttf | 59520 | 6bb5534178637f472be093b2df876d580e7cb50df53e1a4b2be9f94070ff1767 |
-| tomorrow/Tomorrow-Medium.ttf | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/Tomorrow-Medium.ttf | 59020 | ed82147f4fdefa4a89cefdbeff0d6d0fc6af5a3fac073884918bfba846e5b88b |
-| tomorrow/OFL.txt | https://raw.githubusercontent.com/google/fonts/01d5d9f05246fb7090a8403b81257535cb1a088b/ofl/tomorrow/OFL.txt | 4477 | 1dd4eaacd1da1bfb7e1d14dd5af0279c17d4503fde55abc628bdaccc63ae9eca |
-
-Format: TrueType, static weights 400 (Regular) and 500 (Medium); the family name is "Tomorrow" (copyright 2019 The Tomorrow Project
-Authors). Licence: SIL Open Font License 1.1 (OFL.txt beside the files). Pinned by `scripts/pin-sources.py` as `motion.font-tomorrow-400`,
-`-500` and `motion.font-tomorrow-licence`. Used by: the lab's headless renders and audits (both weights installed into
-~/.local/share/fonts/tomorrow/ on 26 October 2026) and, on the published page, the same family from Google Fonts
-(css2?family=Tomorrow:wght@400;500).
+The data wire's face from round 15 (26 October 2026) to round 30, when the wire went: Google's build from google/fonts at commit 01d5d9f05246fb7090a8403b81257535cb1a088b, the Regular and Medium faces and the licence, pinned as `motion.font-tomorrow-*` and installed in ~/.local/share/fonts/tomorrow/. Unused since round 30; the files, the install and the pins were removed on 3 November 2026 (round 36's housekeeping). The sizes and hashes stay in this file's git history.

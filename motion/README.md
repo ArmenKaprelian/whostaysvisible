@@ -2460,6 +2460,8 @@ The author previewed the home page in Vercel's Geist Serif and Geist Mono (`buil
 
 **Plex removed (step 6, fdbff46):** the local install, `data/external/fonts/ibm-plex-mono/` and the four pins gone (`config/sources.json` 195 entries), the fonts README reduced to a two-line history; the publish copies rebuilt from 9b44dcb so the explainer's copy loads Geist Mono (the site's atlas not re-imported: its copy differs only in the build stamp). Proofs: `fc-list` names no Plex; the tracked sources name it only in dated comments and the two pointer pages; `change-proof.py --base 09b855c` with Plex uninstalled came out identical, and its frames equal the round's earlier proof frames pixel for pixel (shot while Plex was still installed), so no render depended on it.
 
+**Housekeeping (3 November 2026, the author's word):** Tomorrow, the wire's face unused since round 30, removed the same way (the files, the install, the three pins; `config/sources.json` 192 entries); `motion/build/` cleared of every round's output before this one (15.2 GB), keeping `build/audit`, `build/insights-drafts` (read by `insights_build.py`), `build/site-check/passed.json`, the master and this round's proofs; the session's scratch copies deleted.
+
 ## How to add or change content
 
 Visible changes still need frames first and the audits in the lab's `CLAUDE.md`. The names below are functions and constants in `js/explorer-app.js` unless a file is named; line numbers are left out because they move.
