@@ -1,3 +1,28 @@
+# External fonts: Geist Mono (Vercel's release), fetched 2026-11-03T04:37:32Z
+
+The pages' and the renders' one typeface since round 36 (the author's decision of 2 November 2026, in place of IBM Plex Mono). Fetched with
+curl from the npm registry: the `geist` package 1.9.0, tarball https://registry.npmjs.org/geist/-/geist-1.9.0.tgz (5,240,746 bytes, sha256
+80c7cd136d43444d26a3d6aa425e0b957d1962993e76d97716731e7dc32f14c6), unpacked into an empty folder under motion/build/ and these five files
+copied out of it. Untrusted data: parsed only by fontconfig and the browser, never executed.
+
+| file | path in the package | bytes | sha256 |
+|---|---|---|---|
+| geist-mono/GeistMono-Regular.ttf | dist/fonts/geist-mono/GeistMono-Regular.ttf | 148516 | bbc6e86aec043518fe50a981f452a027b195cf95a9b3bfe21b88560dc7240023 |
+| geist-mono/GeistMono-Medium.ttf | dist/fonts/geist-mono/GeistMono-Medium.ttf | 149328 | 5fac27efaa3bcf330d7d402a12d1db1607aa820ab71e5d63153e9a009a4c4fd1 |
+| geist-mono/GeistMono-Bold.ttf | dist/fonts/geist-mono/GeistMono-Bold.ttf | 150492 | 4dfd7f9b146984efb6f7ccb9f84938faa37d854bdeee56cd9836c8f578e54b93 |
+| geist-mono/GeistMono-Variable.woff2 | dist/fonts/geist-mono/GeistMono-Variable.woff2 | 71272 | cf5bf55f69e043b1ecf04b0719119b7298e94add67ebcaa709a925b945b46b25 |
+| geist-mono/OFL.txt | LICENSE.txt | 4368 | 930853ee1daa68554d9e35c8a9175affb74f699fad9a5da6ee5ebe76379d9137 |
+
+Format: the three TrueType static faces at 400 (Regular), 500 (Medium) and 700 (Bold), and the variable WOFF2 (weight axis 100 to 900,
+upright); the family name is "Geist Mono" (the Medium's own name is "Geist Mono Medium" with "Geist Mono" as its typographic family, as Plex's
+was). Metrics: 1,000 units per em, cap height 710, x-height 530 to 536, ascent 1,005 and descent 295 (a 1.3 em line box, as Plex's), advance
+600 (0.6 em, as Plex's). Licence: SIL Open Font License 1.1 (OFL.txt beside the files; copyright 2023 Vercel, in collaboration with
+basement.studio). Pinned by `scripts/pin-sources.py` as `motion.font.geist-mono-400`, `-500`, `-700`, `-variable-woff2` and
+`motion.font.geist-mono-licence` (`--only motion.font`). Used by: the lab's headless renders and audits (the three static faces installed
+into ~/.local/share/fonts/geist-mono/ on 2 November 2026, round 36) and the published pages (the variable file, served from each page's own
+fonts/ folder; no Google Fonts link since round 36). Glyphs the pages draw that Geist Mono lacks (Armenian, U+2011, U+036F) fall to
+"DejaVu Sans Mono", the second family of the stack.
+
 # External fonts: IBM Plex Mono (Google Fonts build), fetched 2026-10-25T10:56:39Z
 
 Fetched with curl from the google/fonts repository at commit 01d5d9f05246fb7090a8403b81257535cb1a088b (the build Google Fonts serves, so the

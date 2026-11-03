@@ -183,6 +183,14 @@ add_small("motion.font-plex-mono-400", f"{LAB}/data/external/fonts/ibm-plex-mono
 add_small("motion.font-plex-mono-500", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf", "motion", kind="ttf")
 add_small("motion.font-plex-mono-700", f"{LAB}/data/external/fonts/ibm-plex-mono/IBMPlexMono-Bold.ttf", "motion", kind="ttf")
 add_small("motion.font-plex-mono-licence", f"{LAB}/data/external/fonts/ibm-plex-mono/OFL.txt", "motion", kind="txt")
+# Geist Mono (round 36, the author's decision of 2 November 2026: Vercel's monospace in place of IBM Plex Mono on every page and in the renders),
+# from the geist npm package 1.9.0 (SIL Open Font License 1.1); the three static faces for the installed family, the variable woff2 for the pages.
+# Named motion.font.* (a dot) so `--only motion.font` pins these alone; data/external/fonts/README.md records the tarball's hash and the files'.
+add_small("motion.font.geist-mono-400", f"{LAB}/data/external/fonts/geist-mono/GeistMono-Regular.ttf", "motion", kind="ttf")
+add_small("motion.font.geist-mono-500", f"{LAB}/data/external/fonts/geist-mono/GeistMono-Medium.ttf", "motion", kind="ttf")
+add_small("motion.font.geist-mono-700", f"{LAB}/data/external/fonts/geist-mono/GeistMono-Bold.ttf", "motion", kind="ttf")
+add_small("motion.font.geist-mono-variable-woff2", f"{LAB}/data/external/fonts/geist-mono/GeistMono-Variable.woff2", "motion", kind="woff2")
+add_small("motion.font.geist-mono-licence", f"{LAB}/data/external/fonts/geist-mono/OFL.txt", "motion", kind="txt")
 add_small("motion.font-tomorrow-400", f"{LAB}/data/external/fonts/tomorrow/Tomorrow-Regular.ttf", "motion", kind="ttf")   # the data wire's face (round 15, the author's final choice of 26 October 2026)
 add_small("motion.font-tomorrow-500", f"{LAB}/data/external/fonts/tomorrow/Tomorrow-Medium.ttf", "motion", kind="ttf")
 add_small("motion.font-tomorrow-licence", f"{LAB}/data/external/fonts/tomorrow/OFL.txt", "motion", kind="txt")

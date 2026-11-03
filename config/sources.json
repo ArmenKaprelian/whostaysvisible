@@ -2,7 +2,7 @@
  "pinned_utc": "2026-10-18T19:22:42Z",
  "programming_head": "2bc780046529846c5e54ebb2fa3a6ce55c73ee97",
  "programming_dirty_files": 8,
- "count": 194,
+ "count": 199,
  "sources": {
   "acct.accounting-metadata": {
    "name": "acct.accounting-metadata",
@@ -2137,6 +2137,61 @@
    "sha256": "ff00edddc6b97de8eb9a461a5a0732b3dba8cf718747b159d21b0daaede4f741",
    "sha256_source": "computed",
    "stage": "motion"
+  },
+  "motion.font.geist-mono-400": {
+   "name": "motion.font.geist-mono-400",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/geist-mono/GeistMono-Regular.ttf",
+   "kind": "ttf",
+   "generation": null,
+   "size": 148516,
+   "mtime": 1793680697,
+   "sha256": "bbc6e86aec043518fe50a981f452a027b195cf95a9b3bfe21b88560dc7240023",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font.geist-mono-500": {
+   "name": "motion.font.geist-mono-500",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/geist-mono/GeistMono-Medium.ttf",
+   "kind": "ttf",
+   "generation": null,
+   "size": 149328,
+   "mtime": 1793680697,
+   "sha256": "5fac27efaa3bcf330d7d402a12d1db1607aa820ab71e5d63153e9a009a4c4fd1",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font.geist-mono-700": {
+   "name": "motion.font.geist-mono-700",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/geist-mono/GeistMono-Bold.ttf",
+   "kind": "ttf",
+   "generation": null,
+   "size": 150492,
+   "mtime": 1793680697,
+   "sha256": "4dfd7f9b146984efb6f7ccb9f84938faa37d854bdeee56cd9836c8f578e54b93",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font.geist-mono-variable-woff2": {
+   "name": "motion.font.geist-mono-variable-woff2",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/geist-mono/GeistMono-Variable.woff2",
+   "kind": "woff2",
+   "generation": null,
+   "size": 71272,
+   "mtime": 1793680697,
+   "sha256": "cf5bf55f69e043b1ecf04b0719119b7298e94add67ebcaa709a925b945b46b25",
+   "sha256_source": "computed",
+   "stage": "motion"
+  },
+  "motion.font.geist-mono-licence": {
+   "name": "motion.font.geist-mono-licence",
+   "path": "/home/armen/Documents/PhD/CGU/Dissertation/00 Full Dissertation/Claude Code/current/dataviz-lab/data/external/fonts/geist-mono/OFL.txt",
+   "kind": "txt",
+   "generation": null,
+   "size": 4368,
+   "mtime": 1793680697,
+   "sha256": "930853ee1daa68554d9e35c8a9175affb74f699fad9a5da6ee5ebe76379d9137",
+   "sha256_source": "computed",
+   "stage": "motion"
   }
  },
  "partial_pins": [
@@ -2352,6 +2407,19 @@
     "boundaries.ne-land-crimea-box",
     "boundaries.ukr-adm1",
     "boundaries.ukr-adm1-meta"
+   ]
+  },
+  {
+   "prefix": "motion.font",
+   "pinned_utc": "2026-11-03T04:38:27Z",
+   "programming_head": "3b4792e62ca77a1e7c8ce3818806772537c41789",
+   "programming_dirty_files": 20,
+   "entries": [
+    "motion.font.geist-mono-400",
+    "motion.font.geist-mono-500",
+    "motion.font.geist-mono-700",
+    "motion.font.geist-mono-licence",
+    "motion.font.geist-mono-variable-woff2"
    ]
   }
  ]
